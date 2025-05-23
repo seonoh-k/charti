@@ -140,3 +140,6 @@ replay_pid*
 
 # key *
 charti-acKey.json
+
+### MacOS ###
+.DS_Store
