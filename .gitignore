@@ -140,3 +140,5 @@ replay_pid*
 
 # key *
 charti-acKey.json
+ChartiKey.pem
+application.yml
