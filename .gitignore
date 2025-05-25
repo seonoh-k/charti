@@ -142,3 +142,6 @@ replay_pid*
 charti-acKey.json
 ChartiKey.pem
 application.yml
+
+### MacOS ###
+.DS_Store
