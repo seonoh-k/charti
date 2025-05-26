@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
         <div style="padding-left: 40px; border-left: 3px solid #ccc;"> 
             <h1>건강 검진 문진표</h1>
             <p>어쩌고 저쩌고 </p>
-            <button>건강 검진 문진표 작성하기</button>
+            <a th:href="@{/historyQuestion}" target="_blank">건강 검진 문진표 작성하기</a>
         </div>
     </div>
 </body>
