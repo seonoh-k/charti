@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Charti</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
@@ -13,7 +13,7 @@
         body { font-family: 'Poppins', sans-serif; }
     </style>
 </head>
-<body>
+<th:block layout:fragment="content">
     <div class="text-center bg-gray-100 h-[330px] content-center">
         <h2 class="pb-3 text-2xl">서비스 소개</h2>
         <p class="pb-7">서비스 설명</p>
@@ -40,5 +40,5 @@
             <button class="bg-blue-500 text-white p-3 rounded-lg w-[150px] hover:bg-blue-600">서비스 이동하기</button>
         </div>
     </div>
-</body>
+</th:block>
 </html>
