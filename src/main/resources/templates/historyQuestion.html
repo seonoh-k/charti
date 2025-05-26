@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>건강 설문조사</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 p-6">
+<div class="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6">
+    <h1 class="text-2xl font-bold text-center mb-6">건강 설문조사 (총 40문항)</h1>
+    <form class="space-y-6">
+        <!-- 1~10번 항목 유지 -->
+        <div class="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6">
+            <h2 class="text-xl font-semibold mt-8 mb-4">신체 정보 & 생활 습관 (1~10번)</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="font-medium block">1. 현재 키는 얼마입니까? (cm)</label>
+                    <input type="number" name="height" min="50" max="250" class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="font-medium block">2. 현재 체중은 얼마입니까? (kg)</label>
+                    <input type="number" name="weight" min="10" max="300" class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="font-medium block">3. 흡연을 하고 계십니까?</label>
+                    <div class="space-y-1 pl-4">
+                        <label><input type="radio" name="smoking" value="yes" class="mr-2">예</label><br>
+                        <label><input type="radio" name="smoking" value="no" class="mr-2">아니오</label><br>
+                        <label><input type="radio" name="smoking" value="quit" class="mr-2">금연 중</label>
+                    </div>
+                </div>
+                <div>
+                    <label class="font-medium block">4. 주당 음주 빈도는 어떻게 되십니까?</label>
+                    <div class="space-y-1 pl-4">
+                        <label><input type="radio" name="drinking" value="0" class="mr-2">전혀 안 함</label><br>
+                        <label><input type="radio" name="drinking" value="1-2" class="mr-2">1~2회</label><br>
+                        <label><input type="radio" name="drinking" value="3-4" class="mr-2">3~4회</label><br>
+                        <label><input type="radio" name="drinking" value="5+" class="mr-2">5회 이상</label>
+                    </div>
+                </div>
+                <div>
+                    <label class="font-medium block">5. 하루 평균 수면 시간은?</label>
+                    <div class="space-y-1 pl-4">
+                        <label><input type="radio" name="sleep_hours" value="lt5" class="mr-2">5시간 미만</label><br>
+                        <label><input type="radio" name="sleep_hours" value="5-6" class="mr-2">5~6시간</label><br>
+                        <label><input type="radio" name="sleep_hours" value="7-8" class="mr-2">7~8시간</label><br>
+                        <label><input type="radio" name="sleep_hours" value="gt9" class="mr-2">9시간 이상</label>
+                    </div>
+                </div>
+                <div>
+                    <label class="font-medium block">6. 수면의 질은 어떤가요?</label>
+                    <div class="space-y-1 pl-4">
+                        <label><input type="radio" name="sleep_quality" value="good" class="mr-2">양호</label><br>
+                        <label><input type="radio" name="sleep_quality" value="normal" class="mr-2">보통</label><br>
+                        <label><input type="radio" name="sleep_quality" value="bad" class="mr-2">나쁨</label>
+                    </div>
+                </div>
+                <div>
+                    <label class="font-medium block">7. 일주일에 운동을 몇 회 하십니까?</label>
+                    <input type="number" name="exercise_days" min="0" max="7" class="w-full border rounded px-3 py-2"></div>
+                <div>
+                    <label class="font-medium block">8. 주로 어떤 종류의 운동을 하십니까?</label>
+                    <input type="text" name="exercise_type" class="w-full border rounded px-3 py-2"></div>
+                <div>
+                    <label class="font-medium block">9. 운동 시 1회 평균 소요 시간은?</label>
+                    <div class="space-y-1 pl-4">
+                        <label><input type="radio" name="exercise_duration" value="lt30" class="mr-2">30분 미만</label><br>
+                        <label><input type="radio" name="exercise_duration" value="30-60" class="mr-2">30분~1시간</label><br>
+                        <label><input type="radio" name="exercise_duration" value="gt60" class="mr-2">1시간 이상</label>
+                    </div>
+                </div>
+                <div>
+                    <label class="font-medium block">10. 운동 강도는 어느 정도인가요?</label>
+                    <div class="space-y-1 pl-4">
+                        <label><input type="radio" name="exercise_intensity" value="low" class="mr-2">낮음 (걷기)</label><br>
+                        <label><input type="radio" name="exercise_intensity" value="medium" class="mr-2">중간 (조깅)</label><br>
+                        <label><input type="radio" name="exercise_intensity" value="high" class="mr-2">높음 (헬스 등)</label>
+                    </div>
+                </div>
+            </div>
+            <!-- 11~40번 항목 확장 -->
+            <h2 class="text-xl font-semibold mt-8 mb-4">식습관 & 정신건강 (11~20번)</h2>
+            <div class="space-y-4">
+                <div><label class="font-medium block">11. 아침 식사를 얼마나 자주 하십니까?</label><input type="text" name="breakfast_freq" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">12. 야식을 자주 드십니까?</label><input type="text" name="latenight_snack" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">13. 하루에 채소를 얼마나 드십니까?</label><input type="text" name="vegetable_intake" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">14. 하루 물 섭취량은?</label><input type="text" name="water_intake" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">15. 간식을 얼마나 자주 드십니까?</label><input type="text" name="snack_freq" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">16. 스트레스를 자주 느끼십니까?</label><input type="text" name="stress_level" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">17. 최근 우울감을 느낀 적이 있습니까?</label><input type="text" name="depression" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">18. 최근 불면증을 경험한 적이 있습니까?</label><input type="text" name="insomnia" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">19. 집중력이 떨어진다고 느낀 적이 있습니까?</label><input type="text" name="concentration" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">20. 자살에 대한 생각이 든 적이 있습니까?</label><input type="text" name="suicidal_thoughts" class="w-full border rounded px-3 py-2"></div>
+            </div>
+
+            <h2 class="text-xl font-semibold mt-8 mb-4">질환 이력 & 가족력 (21~30번)</h2>
+            <div class="space-y-4">
+                <div><label class="font-medium block">21. 고혈압 진단 여부</label><input type="text" name="hypertension" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">22. 당뇨병 진단 여부</label><input type="text" name="diabetes" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">23. 고지혈증 진단 여부</label><input type="text" name="hyperlipidemia" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">24. 심장 질환 진단 여부</label><input type="text" name="heart_disease" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">25. 암 진단 여부</label><input type="text" name="cancer" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">26. 가족 중 고혈압 병력이 있습니까?</label><input type="text" name="family_hypertension" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">27. 가족 중 당뇨병 병력이 있습니까?</label><input type="text" name="family_diabetes" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">28. 가족 중 심장 질환 병력이 있습니까?</label><input type="text" name="family_heart_disease" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">29. 가족 중 뇌졸중 병력이 있습니까?</label><input type="text" name="family_stroke" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">30. 가족 중 암 병력이 있습니까?</label><input type="text" name="family_cancer" class="w-full border rounded px-3 py-2"></div>
+            </div>
+
+            <h2 class="text-xl font-semibold mt-8 mb-4">최근 상태 & 기타 (31~40번)</h2>
+            <div class="space-y-4">
+                <div><label class="font-medium block">31. 최근 6개월 내 입원 여부</label><input type="text" name="recent_hospitalization" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">32. 최근 6개월 내 수술 여부</label><input type="text" name="recent_surgery" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">33. 최근 체중의 변화</label><input type="text" name="weight_change" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">34. 현재 복용 중인 약이 있습니까?</label><input type="text" name="current_medication" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">35. 건강보조제를 복용하십니까?</label><input type="text" name="supplement" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">36. 민간요법(한방/전통요법)을 사용하십니까?</label><input type="text" name="folk_therapy" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">37. 시력에 이상이 있습니까?</label><input type="text" name="vision" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">38. 청력에 이상이 있습니까?</label><input type="text" name="hearing" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">39. 최근 건강검진을 받았습니까?</label><input type="text" name="recent_checkup" class="w-full border rounded px-3 py-2"></div>
+                <div><label class="font-medium block">40. 본인의 건강에 대해 걱정하고 있습니까?</label><input type="text" name="health_concern" class="w-full border rounded px-3 py-2"></div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 mt-8 rounded hover:bg-blue-700">제출</button>
+            </div>
+        </div>
+    </form>
+    </div>
+    </div>
+
+</body>
+</html>

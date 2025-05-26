@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+    --color-google-red: #EA4335;
+    --color-google-yellow: #FBBC05;
+    --color-google-green: #34a854;
+    --color-google-blue: #4285F4;
+}
+:root {
+    --kakao-color : #FEE500;
+    --google-bd-color : #dadce0;
+    --google-color-g : #4285F4;
+    --google-color-g : #34a854;
+    --google-color-y : #FBBC05;
+    --google-color-r : #EA4335;
+}
+
+.kakao{
+    background-color: var(--kakao-color);
+}
+.google{
+    border: 1px solid var(--google-bd-color);
+}
