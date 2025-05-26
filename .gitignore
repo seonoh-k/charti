@@ -17,6 +17,11 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+!**/src/main/resources/template/
+!**/src/main/resources/static/css/
+!**/src/main/resources/static/html/
+!**/src/main/resources/static/js/
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
