@@ -23,8 +23,8 @@
             <nav id="hdNav">
 				<ul id="hdUl" class="flex gap-6">
 				    <th:block th:if="${session.userId == null}">
-				        <li><a id="joinBtn" href="/signup" method="GET">회원가입</a></li>
-				        <li><a id="loginBtn" href="/login" method="POST">로그인</a></li>
+				        <li><a id="joinBtn" href="/patientJoinForm" method="GET">회원가입</a></li>
+				        <li><a id="loginBtn" href="/patientLoginForm" method="POST">로그인</a></li>
 				    </th:block>
 				    <th:block th:if="${session.userId != null}">
 				        <li><a id="mypagenBtn" href="/mypage">마이페이지</a></li>
@@ -37,7 +37,7 @@
   <nav class="bg-blue-900 bg-opacity-90 text-white">
     <div class="container mx-auto flex justify-center items-center py-1 px-8">
       <ul class="flex space-x-12">
-        <button><a href="/static" class="hover:text-blue-100 p-4 mx-3 text-md">홈</a></button>
+        <button><a href="/" class="hover:text-blue-100 p-4 mx-3 text-md">홈</a></button>
         <button><a href="/about" class="hover:text-blue-100 p-4 mx-3 text-md">About</a></button>
 
         <!-- 문진표 -->
