@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/survey")
 public class SurveyController {
 
+    @GetMapping("/questionnaire")
+    public String questionnaire() {
+        return "questionnaire";
+    }
     @GetMapping("/health")
     public String health() {
         return "questionnaire01";

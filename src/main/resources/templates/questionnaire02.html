@@ -1,35 +1,27 @@
-
 <!DOCTYPE html>
-
-<html lang="en" >
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>문진표</title>
+
 </head>
-<body>
-    <div style="display: flex;">
-    <div id="submenu01"></div>
-        <div style="padding-left: 40px; border-left: 3px solid #ccc;"> 
-            <h1>주요 질병 문진표</h1>
-            <p>어쩌고 저쩌고 </p>
-            <p>어쩌고 저쩌고</p>
-            <p>어쩌고 저쩌고</p>
-            <p>어쩌고 저쩌고</p>
-            <p>어쩌고 저쩌고</p>
-            <p>어쩌고 저쩌고</p>
-            <p>어쩌고 저쩌고</p>
-            <p>어쩌고 저쩌고</p>
-            <button>주요 질병 문진표 작성하기</button>
+
+<th:block layout:fragment="content">
+    <div class="flex max-w-6xl mx-auto mt-10 space-x-10">
+        <!-- 왼쪽 서브메뉴 -->
+        <div th:replace="fragments/submenu01 :: submenuFragment"></div>
+
+        <!-- 오른쪽 메인 콘텐츠 -->
+        <div class="flex-1 bg-white shadow-md rounded-lg p-8">
+            <h2 class="text-2xl font-bold mb-6 text-center">주요 질병 문진표</h2>
+
+            <div class="flex justify-center space-x-6">
+                <p>어쩌고 저쩌고 </p>
+                <a th:href="@{/historyQuestion}" target="_blank">주요 질병 문진표 작성하기</a>
+            </div>
         </div>
     </div>
-</body>
-
-<script>
-fetch("submenu01.html")
-  .then(response => response.text())
-  .then(data => {
-    document.getElementById("submenu01").innerHTML = data;
-  });
-</script>
+</th:block>
 </html>
