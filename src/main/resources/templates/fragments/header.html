@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Charti</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+      <!-- Pretendard & Inter 폰트 -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <style>
+    body { font-family: 'Pretendard', 'Inter', sans-serif; }
+  </style>
+</head>
+<th:block th:fragment="headerFragment">
+    <!-- 헤더 -->
+    <header id="header" th:fragment="fragment-header" 
+                class="sticky top-0 bg-white/80 backdrop-blur z-70 shadow">
+        <div class="container mx-auto flex justify-between items-center py-4 px-6">
+            <img id="homeLogo" th:src="@{/img/logo.png}" onclick="location.href='/'"
+                     class="w-[130px] h-auto cursor-pointer">
+            <nav id="hdNav">
+				<ul id="hdUl" class="flex gap-6">
+				    <th:block th:if="${session.userId == null}">
+				        <li><a id="joinBtn" href="/patientJoinForm" method="GET">회원가입</a></li>
+				        <li><a id="loginBtn" href="/patientLoginForm" method="POST">로그인</a></li>
+				    </th:block>
+				    <th:block th:if="${session.userId != null}">
+				        <li><a id="mypagenBtn" href="/mypage">마이페이지</a></li>
+				        <li><a id="logoutBtn" href="/logout">로그아웃</a></li>
+				    </th:block>
+				</ul>
+             </nav>
+        </div>
+    </header>
+  <nav class="bg-blue-900 bg-opacity-90 text-white">
+    <div class="container mx-auto flex justify-center items-center py-1 px-8">
+      <ul class="flex space-x-12">
+        <button><a href="/" class="hover:text-blue-100 p-4 mx-3 text-md">홈</a></button>
+        <button><a href="/about" class="hover:text-blue-100 p-4 mx-3 text-md">About</a></button>
+
+        <!-- 문진표 -->
+        <li class="relative group">
+          <button class="hover:text-blue-100 p-4 text-md mx-3">문진표</button>
+
+          <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-black bg-opacity-70 text-white shadow-lg mt-1 min-w-[180px] text-center z-50 py-2">
+            <li><a href="/survey/health" class="block px-4 py-2 hover:text-gray-300">건강검진 문진표</a></li>
+            <li><a href="/survey/disease" class="block px-4 py-2 hover:text-gray-300">주요질병 문진표</a></li>
+            <li><a href="/survey/history" class="block px-4 py-2 hover:text-gray-300">작성 이력 보기</a></li>
+          </ul>
+        </li>
+
+        <!-- 진단요청 -->
+        <li class="relative group">
+        <button class="hover:text-blue-100 p-4 text-md mx-3">진단요청</button>
+
+          <!-- 수정된 서브 메뉴 -->
+          <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-black bg-opacity-70 text-white shadow-lg mt-1 min-w-[180px] text-center z-50 py-2">
+            <li><a href="/request/list" class="block px-4 py-2 hover:text-gray-300">진단요청 목록</a></li>
+            <li><a href="/request/new" class="block px-4 py-2 hover:text-gray-300">진단요청 작성</a></li>
+          </ul>
+        </li>
+
+
+        <button><a href="/board" class="hover:text-blue-100 p-4 text-md mx-3">건강 게시판</a></button>
+        <button><a href="/faq" class="hover:text-blue-100 p-4 text-md mx-3">FAQ</a></button>
+      </ul>
+    </div>
+  </nav>
+    
+</th:block>
+</html>
