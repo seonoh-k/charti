@@ -14,6 +14,7 @@ public abstract class BaseService<T, R extends JpaRepository<T, Integer>> {
 
     // 이 추상 클래스로 인해 기본적인 CRUD는 각 서비스 클래스에 작성하지 않아도 됨.
 
+    // 전달 받은 타입의 리포지토리 객체 생성
     private final R repository;
 
     // 단일 조회
