@@ -1,5 +1,6 @@
 package com.example.demo.util;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import groovy.util.logging.Slf4j;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -109,6 +110,13 @@ public class GlobalExceptionHandler {
         logger.error(e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(APIResponse.error(e.getMessage()));
+    }
+
+    @ExceptionHandler(AmazonS3Exception.class)
+    public ResponseEntity<APIResponse<?>> handleAmazonS3Exception(AmazonS3Exception e) {
+        logger.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(APIResponse.error("파일을 찾을 수 없습니다 : " + e.getMessage()));
     }
 
     // 작성한 예외 타입과 다른 예외가 발생했을 때 동작

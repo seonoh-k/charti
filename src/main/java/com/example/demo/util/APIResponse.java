@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 // RestController에 메소드 작성 시 사용
 // public ResponseEntity<APIResponse<Child>> getChild(Integer id)
 // 성공 시 반환값 - return ResponseEntity<APIResponse.ok(Child)>
-// 실패 시 반환값 - return ResponseEntity<APIResponse.fail("에러 메세지 입력")>
+// 실패 시 반환값 - return ResponseEntity<APIResponse.error("에러 메세지 입력")>
 @AllArgsConstructor
 public class APIResponse<T> {
     private boolean success;
