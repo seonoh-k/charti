@@ -1,9 +1,6 @@
 HELP.md
 .gradle
-build/*
-!build/libs/
-!build/libs/*.jar
-!gradle/wrapper/gradle-wrapper.jar
+build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -152,3 +149,5 @@ application.yml
 
 ### MacOS ###
 .DS_Store
+
+!gradle/wrapper/gradle-wrapper.jar
