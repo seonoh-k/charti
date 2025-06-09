@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<th:block layout:fragment="content">
+<h1 class="text-2xl font-bold mb-4">데일리 문진</h1>
+
+<!-- 연령대 선택 -->
+<label for="ageGroup" class="block mb-2 font-semibold">연령대 선택:</label>
+<select id="ageGroup" class="border p-2 rounded mb-4">
+    <option value="">-- 연령대를 선택하세요 --</option>
+    <option value="0~12개월">0~12개월</option>
+    <option value="1~2세">1~2세</option>
+    <option value="3~4세">3~4세</option>
+    <option value="5세">5세</option>
+</select>
+
+<!-- 질문 출력 -->
+<div id="survey-container" class="mb-4"></div>
+
+<!-- 제출 버튼 -->
+<button onclick="submitSurvey()"
+        class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+    제출하기
+</button>
+
+<script>
+    const surveyContainer = document.getElementById("survey-container");
+    const ageGroupSelect = document.getElementById("ageGroup");
+    let surveys = [];
+
+    ageGroupSelect.addEventListener("change", () => {
+        const selectedAgeGroup = ageGroupSelect.value;
+        if (selectedAgeGroup) {
+            fetch(`/api/surveys/${selectedAgeGroup}`)
+                .then(response => response.json())
+                .then(data => {
+                    surveys = data;
+                    renderSurveys();
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert("문진 데이터를 불러오는 데 실패했습니다.");
+                });
+        } else {
+            surveyContainer.innerHTML = "";
+        }
+    });
+
+    function renderSurveys() {
+        surveyContainer.innerHTML = "";
+        surveys.forEach((survey, index) => {
+            const questionDiv = document.createElement("div");
+            questionDiv.className = "mb-4";
+            questionDiv.innerHTML = `
+                <p class="font-semibold mb-2">Q${index + 1}. ${survey.question}</p>
+                <label><input type="radio" name="q${survey.id}" value="1"> ${survey.answer1}</label><br>
+                <label><input type="radio" name="q${survey.id}" value="2"> ${survey.answer2}</label><br>
+                <label><input type="radio" name="q${survey.id}" value="3"> ${survey.answer3}</label><br>
+                <label><input type="radio" name="q${survey.id}" value="4"> ${survey.answer4}</label><br>
+                <label><input type="radio" name="q${survey.id}" value="5"> ${survey.answer5}</label><br>
+            `;
+            surveyContainer.appendChild(questionDiv);
+        });
+    }
+
+function submitSurvey() {
+    const answers = [];
+    let allAnswered = true;
+
+    surveys.forEach(survey => {
+        const selected = document.querySelector(`input[name="q${survey.id}"]:checked`);
+        if (selected) {
+            answers.push(parseInt(selected.value));
+        } else {
+            allAnswered = false;
+        }
+    });
+
+    // 🔍 1️⃣ answers 배열 확인
+    console.log("answers 배열 >>>", answers);
+
+    if (!answers || answers.length === 0) {
+        alert("모든 질문에 답변해주세요!");
+        return;
+    }
+
+    // 🔍 2️⃣ 서버로 전송할 데이터 확인
+    console.log("서버로 전송할 데이터:", {
+        ageGroup: ageGroupSelect.value,
+        answers: answers
+    });
+
+    fetch("/api/surveys/submit", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json; charset=UTF-8"
+        },
+        body: JSON.stringify({
+            ageGroup: ageGroupSelect.value,
+            answers: answers
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`서버 오류 (${response.status})`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("서버에서 받은 데이터:", data);
+        const riskScores = encodeURIComponent(JSON.stringify(data));
+        const answersParam = encodeURIComponent(JSON.stringify(answers));
+        window.location.href = `/daily-survey-result?ageGroup=${encodeURIComponent(ageGroupSelect.value)}&riskScores=${riskScores}&answers=${answersParam}`;
+    })
+    .catch(error => {
+        console.error(error);
+        alert("제출 중 오류가 발생했습니다.");
+    });
+}
+
+</script>
+</th:block>
+</html>
