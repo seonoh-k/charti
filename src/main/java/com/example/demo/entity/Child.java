@@ -1,10 +1,43 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-// 아이 엔티티
-@Getter @Setter
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "child")
+@Getter
+@Setter
 public class Child {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "child_id")
+    private Long id;  // 자녀 고유 ID
+
+
+
+
+
+
+    @Column(nullable = false)
+    private String name;
+
+
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "users_id", nullable = false)
+    private Member parent;
+
+
     private String nickname;
+    private LocalDateTime birthday;
+    private String weight;
+    private String height;
+    private String gender;
+    private Integer birthOrder;
+    private Boolean riskGroup;
 }
