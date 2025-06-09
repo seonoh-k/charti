@@ -15,4 +15,14 @@ public class MainController {
         return "index";
     }
 
+    @GetMapping("/daily-survey")
+    public String getDailySurveyPage() {
+        return "layout/DailySurvey";
+    }
+
+    @GetMapping("/daily-survey-result")
+    public String getSurveyResultPage() {
+        return "layout/DailySurveyResult";
+    }
+
 }

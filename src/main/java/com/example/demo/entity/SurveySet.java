@@ -4,17 +4,17 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+
 
 @Entity
-@Table(name = "daily_survey")
+@Table(name = "survey_set")
 @Getter
 @Setter
-public class DailySurvey extends BaseEntity {
+public class SurveySet extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long setId;
 
     @Column(name = "age_group", nullable = false)
     private String ageGroup;
@@ -42,6 +42,4 @@ public class DailySurvey extends BaseEntity {
 
     @Column(nullable = false)
     private String answer5;
-
-    // 추가로 필요한 생성자, Builder 패턴 등은 필요에 따라 추가
 }
