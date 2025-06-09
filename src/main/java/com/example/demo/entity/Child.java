@@ -16,22 +16,15 @@ public class Child {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "child_id")
-    private Long id;  // 자녀 고유 ID
+    private Long id;
 
-
-
-
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "users_id", nullable = false)
+    @JsonBackReference
+    private Member parent;  // 부모 회원 참조
 
     @Column(nullable = false)
     private String name;
-
-
-    @JsonBackReference
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id", nullable = false)
-    private Member parent;
-
 
     private String nickname;
     private LocalDateTime birthday;

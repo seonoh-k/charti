@@ -1,10 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>기록 문진 일괄 응답</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+          const response = await fetch("/api/record-surveys");
+          const questions = await response.json();
+          const container = document.getElementById("questions");
+
+          questions.forEach((q, index) => {
+            const div = document.createElement("div");
+            div.innerHTML = `
+              <p><strong>${index + 1}. ${q.question}</strong></p>
+              <input type="hidden" name="surveyId" value="${q.surveyId}" />
+              <textarea name="answer" rows="2" cols="60" placeholder="답변 입력"></textarea>
+              <hr/>
+            `;
+            container.appendChild(div);
+          });
+        });
+
+        async function submitAllAnswers() {
+          const childId = document.getElementById("childId").value;
+          const surveyIds = document.getElementsByName("surveyId");
+          const answers = document.getElementsByName("answer");
+
+          const payload = [];
+
+          for (let i = 0; i < surveyIds.length; i++) {
+            const answerText = answers[i].value.trim();
+            if (answerText) {
+              payload.push({
+                surveyId: Number(surveyIds[i].value),
+                childId: Number(childId),
+                answer: answerText
+              });
+            }
+          }
+
+          if (payload.length === 0) {
+            alert("답변을 하나 이상 입력해주세요.");
+            return;
+          }
+
+          const response = await fetch("/api/record-answers/batch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            alert("답변이 성공적으로 저장되었습니다!");
+          } else {
+            const err = await response.json();
+            alert("에러 발생: " + JSON.stringify(err));
+          }
+        }
+    </script>
 </head>
 <body>
-ssstext00
+<h2>기록 문진 전체 응답</h2>
+
+<label for="childId">자녀 ID:</label>
+<input type="number" id="childId" placeholder="예: 1" required />
+<hr/>
+
+<div id="questions">
+    <!-- 질문 + 답변 입력창이 여기에 동적으로 추가됨 -->
+</div>
+
+<button onclick="submitAllAnswers()">전체 제출</button>
 </body>
 </html>

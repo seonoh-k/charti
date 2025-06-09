@@ -1,5 +1,6 @@
 package com.example.demo.util;
 
+//import com.amazonaws.services.s3.model.AmazonS3Exception;
 import groovy.util.logging.Slf4j;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -14,7 +15,6 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -112,13 +112,12 @@ public class GlobalExceptionHandler {
                 .body(APIResponse.error(e.getMessage()));
     }
 
-    // 스토리지 관련 예외
-    @ExceptionHandler(S3Exception.class)
-    public ResponseEntity<APIResponse<?>> handleAmazonS3Exception(S3Exception e) {
-        logger.error(e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(APIResponse.error("파일을 찾을 수 없습니다 : " + e.getMessage()));
-    }
+//    @ExceptionHandler(AmazonS3Exception.class)
+//    public ResponseEntity<APIResponse<?>> handleAmazonS3Exception(AmazonS3Exception e) {
+//        logger.error(e.getMessage());
+//        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                .body(APIResponse.error("파일을 찾을 수 없습니다 : " + e.getMessage()));
+//    }
 
     // 작성한 예외 타입과 다른 예외가 발생했을 때 동작
     @ExceptionHandler(Exception.class)

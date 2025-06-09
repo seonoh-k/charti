@@ -17,6 +17,9 @@ public abstract class BaseService<T, R extends JpaRepository<T, Long>> {
     // 전달 받은 타입의 리포지토리 객체 생성
     private final R repository;
 
+    protected R getRepository() {
+        return repository;
+    }
     // 단일 조회
     public T get(Long id) {
         return repository.findById(id).get();
