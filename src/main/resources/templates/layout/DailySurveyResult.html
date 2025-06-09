@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<th:block layout:fragment="content">
+<h1 class="text-2xl font-bold mb-4">데일리 문진 결과</h1>
+<div id="result-container" class="mb-4"></div>
+<button onclick="goHome()" class="bg-gray-400 hover:bg-gray-500 text-white py-2 px-4 rounded">
+    홈으로 돌아가기
+</button>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const ageGroup = params.get("ageGroup");
+    const answersParam = params.get("answers"); // answers를 URL에서 배열로 받는다
+
+    let answers = [];
+    try {
+      answers = JSON.parse(decodeURIComponent(answersParam));
+    } catch (error) {
+      console.error("답변 데이터 파싱 오류:", error);
+    }
+
+    const resultContainer = document.getElementById("result-container");
+
+    // 서버로 POST 요청 보내서 결과 받아오기
+    fetch("http://localhost:8080/api/surveys/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ageGroup: ageGroup,
+        answers: answers
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // 결과 출력
+      const totalRiskScore = data.totalRiskScore;
+      const categoryScores = data.categoryScores;
+
+      for (const [category, score] of Object.entries(categoryScores)) {
+        const div = document.createElement("div");
+        div.className = "mb-2";
+        div.innerHTML = `<p class="font-semibold">${category} 위험도: ${score.toFixed(2)}%</p>`;
+        resultContainer.appendChild(div);
+      }
+
+      const overallDiv = document.createElement("div");
+      const categoryCount = 4;
+      overallDiv.className = "mt-4 font-bold text-lg";
+      overallDiv.innerHTML = `통합 위험도: ${(totalRiskScore / categoryCount).toFixed(2)}%`;
+      resultContainer.appendChild(overallDiv);
+    })
+    .catch(error => {
+      console.error("데이터 불러오기 오류:", error);
+      resultContainer.innerHTML = `<div class="mt-4 text-red-500">⚠️ 결과를 불러오는데 실패했습니다.</div>`;
+    });
+
+    function goHome() {
+      window.location.href = "/daily-survey";
+    }
+</script>
+</th:block>
+</html>
