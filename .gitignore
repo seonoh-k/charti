@@ -1,7 +1,6 @@
 HELP.md
 .gradle
 build/
-!build/libs/charti-0.0.1-SNAPSHOT.jar
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -151,3 +150,5 @@ application.yml
 
 ### MacOS ###
 .DS_Store
+
+!gradle/wrapper/gradle-wrapper.jar
