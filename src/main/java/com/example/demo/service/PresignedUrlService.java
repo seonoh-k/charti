@@ -34,7 +34,7 @@ public class PresignedUrlService {
     private String bucketName;
 
     // 업로드 URL 생성
-    public URL presignedUploasUrl(String uploadFilename, String mimeType) {
+    public URL presignedUploadUrl(String uploadFilename, String mimeType) {
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName) // R2 스토리지 버킷 이름
                 .key(uploadFilename) // 업로드할 파일 이름
@@ -71,14 +71,14 @@ public class PresignedUrlService {
     }
 
     // 이미지 조회 URL 생성
-    public URL getPresignedUrl(String filename) {
+    public URL getPresignedUrl(String filename, Duration duration) {
         GetObjectRequest objectRequest = GetObjectRequest.builder()
                 .bucket(bucketName) // R2 스토리지 버킷 이름
                 .key(filename) // 다운로드할 파일 이름
                 .build();
 
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofSeconds(EXPIRE_TIME)) // 유효 기간을 24시간으로 설정
+                .signatureDuration(duration) // 유효 기간을 24시간으로 설정
                 .getObjectRequest(objectRequest).build();
 
         return presigner.presignGetObject(presignRequest).url();

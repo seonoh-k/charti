@@ -36,4 +36,7 @@ public class MainController {
         return "test-pointadmin";
     }
 
+    @GetMapping("/albums")
+    public String getAlbumsPage() { return "albums";}
+
 }
