@@ -25,4 +25,15 @@ public class MainController {
         return "layout/DailySurveyResult";
     }
 
+    // 아래 두개는 테스트용
+    @GetMapping("/point")
+    public String getUserPointPage() {
+        return "test-point";
+    }
+
+    @GetMapping("/admin/point")
+    public String getAdminPointPage() {
+        return "test-pointadmin";
+    }
+
 }

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>기록 문진 테스트 (회원 선택)</title>
+    <script>
+        let currentUserId = 1;
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const response = await fetch("/api/record-surveys");
+            const questions = await response.json();
+            const container = document.getElementById("questions");
+
+            questions.forEach((q, index) => {
+                const div = document.createElement("div");
+                div.innerHTML = `
+                    <p><strong>${index + 1}. ${q.question}</strong></p>
+                    <input type="hidden" name="surveyId" value="${q.surveyId}" />
+                    <textarea name="answer" rows="2" cols="60" placeholder="답변 입력"></textarea>
+                    <hr/>
+                `;
+                container.appendChild(div);
+            });
+
+            loadMyAnswers();
+        });
+
+        function setUserId(select) {
+            currentUserId = Number(select.value);
+            loadMyAnswers();
+        }
+
+        async function submitAllAnswers() {
+            const childId = document.getElementById("childId").value;
+            const surveyIds = document.getElementsByName("surveyId");
+            const answers = document.getElementsByName("answer");
+
+            const payload = [];
+
+            for (let i = 0; i < surveyIds.length; i++) {
+                const answerText = answers[i].value.trim();
+                if (answerText) {
+                    payload.push({
+                        surveyId: Number(surveyIds[i].value),
+                        childId: Number(childId),
+                        answer: answerText,
+                        userId: currentUserId  // 선택한 사용자 ID 추가 (컨트롤러에서 처리 필요)
+                    });
+                }
+            }
+
+            if (payload.length === 0) {
+                alert("답변을 하나 이상 입력해주세요.");
+                return;
+            }
+
+            const response = await fetch("/api/record-answers/batch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                alert("답변이 성공적으로 저장되었습니다!");
+                loadMyAnswers();  // 등록 후 즉시 조회 갱신
+            } else {
+                const err = await response.json();
+                alert("에러 발생: " + JSON.stringify(err));
+            }
+        }
+
+        async function loadMyAnswers() {
+            const response = await fetch(`/api/record-answers/me?userId=${currentUserId}`);
+            const answers = await response.json();
+
+            const resultDiv = document.getElementById("myAnswers");
+            resultDiv.innerHTML = "<h3>내가 쓴 문진 답변</h3>";
+
+            answers.forEach(ans => {
+                resultDiv.innerHTML += `<p><strong>[${ans.createdAt}] ${ans.question}</strong><br/>답변: ${ans.answer}</p><hr/>`;
+            });
+        }
+    </script>
+</head>
+<body>
+<h2>기록 문진 응답 테스트</h2>
+
+<label>사용자 ID 선택: </label>
+<select onchange="setUserId(this)">
+    <option value="1">user_id 1</option>
+    <option value="2">user_id 2</option>
+    <option value="3">user_id 3</option>
+    <option value="4">user_id 4</option>
+    <option value="5">user_id 5</option>
+</select>
+
+<br/><br/>
+
+<label for="childId">자녀 ID:</label>
+<input type="number" id="childId" placeholder="예: 10" /><br/><br/>
+
+<div id="questions"></div>
+
+<button onclick="submitAllAnswers()">제출</button>
+
+<hr/>
+<div id="myAnswers"></div>
+</body>
+</html>

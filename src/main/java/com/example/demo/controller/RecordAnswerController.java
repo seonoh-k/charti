@@ -7,6 +7,7 @@ import com.example.demo.entity.Member;
 import com.example.demo.entity.RecordAnswer;
 import com.example.demo.entity.RecordSurvey;
 import com.example.demo.mapper.RecordAnswerMapper;
+import com.example.demo.repository.MemberRepository;
 import com.example.demo.service.ChildService;
 import com.example.demo.service.RecordAnswerService;
 import com.example.demo.service.RecordSurveyService;
@@ -24,6 +25,7 @@ public class RecordAnswerController {
     private final RecordAnswerService recordAnswerService;
     private final RecordSurveyService recordSurveyService;
     private final ChildService childService;
+    private final MemberRepository memberRepository;
 
     // 기록 문진 답변 저장
     @PostMapping
@@ -60,4 +62,27 @@ public class RecordAnswerController {
         recordAnswerService.softDelete(id);
         return ResponseEntity.noContent().build();
     }
+
+//    @PostMapping("/batch")
+//    public ResponseEntity<?> submitBatch(@RequestBody List<RecordAnswerRequest> requestList) {
+//        System.out.println("== Batch Submit Start ==");
+//
+//        for (RecordAnswerRequest request : requestList) {
+//            if (request.getSurveyId() == null || request.getChildId() == null) {
+//                throw new IllegalArgumentException("surveyId 또는 childId 누락");
+//            }
+//
+//            RecordSurvey survey = recordSurveyService.get(request.getSurveyId());
+//            Child child = childService.get(request.getChildId());
+//
+//            Member mockMember = memberRepository.findById(1L)
+//                    .orElseThrow(() -> new IllegalArgumentException("임시 유저 없음"));
+//
+//            RecordAnswer entity = RecordAnswerMapper.toEntity(request, survey, mockMember, child);
+//            recordAnswerService.create(entity);
+//        }
+//
+//        return ResponseEntity.ok().build();
+//    }
+
 }
