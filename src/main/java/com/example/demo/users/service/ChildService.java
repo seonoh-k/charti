@@ -1,19 +1,20 @@
-package com.example.demo.service;
+package com.example.demo.users.service;
 
-import com.example.demo.entity.Child;
-import com.example.demo.repository.ChildRepository;
+import com.example.demo.service.BaseService;
+import com.example.demo.users.entity.Child;
+import com.example.demo.users.repository.ChildRepository;
 import groovy.util.logging.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class ChildService extends BaseService<Child, Long, ChildRepository> {
-//        extends BaseService<Child, ChildRepository> {
+public class ChildService extends BaseService<Child, ChildRepository> {
 
-    // 리포지토리 생성자
     public ChildService(ChildRepository repository) {
         super(repository);
     }
+//        extends BaseService<Child, ChildRepository> {
 
     // 수정 메소드 작성 예시
     public void updateChild(Integer id, String name, String nickname) {
@@ -26,7 +27,7 @@ public class ChildService extends BaseService<Child, Long, ChildRepository> {
     }
 
     public Child findById(Long id) {
-        return getRepository().findById(id)
+        return repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 자녀를 찾을 수 없습니다. ID=" + id));
     }
 
