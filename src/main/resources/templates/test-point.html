@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<th:block layout:fragment="content">
+<head><title>포인트 조회</title></head>
+    <div class="flex justify-center mt-6 space-x-6">
+        <a href="/point" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            포인트 조회
+        </a>
+        <a href="/admin/point" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            포인트 지급
+        </a>
+    </div>
+
+
+    <div class="max-w-4xl mx-auto p-6">
+        <h2 class="text-2xl font-bold mb-4">포인트 조회</h2>
+
+        <label>회원 ID:
+            <input type="number" id="memberId" value="1" class="border rounded p-1">
+        </label>
+        <button onclick="getPoint()" class="ml-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">조회</button>
+
+        <p class="mt-4" id="pointResult">현재 포인트: -</p>
+
+        <h4 class="mt-6 font-semibold">포인트 이력 (최신순 최대 10건)</h4>
+        <table class="w-full mt-2 border text-center">
+            <thead>
+            <tr class="bg-gray-100">
+                <th>일시</th><th>포인트 변화</th><th>변동 내용</th>
+            </tr>
+            </thead>
+            <tbody id="historyTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function getPoint() {
+            const memberId = document.getElementById('memberId').value;
+            const pointRes = await fetch(`/points/current?memberId=${memberId}`);
+            const point = await pointRes.text();
+            document.getElementById('pointResult').innerText = `현재 포인트: ${point}`;
+
+            const historyRes = await fetch(`/points/history/view?memberId=${memberId}`);
+            const historyList = await historyRes.json();
+            const tableBody = document.getElementById('historyTable');
+            tableBody.innerHTML = '';
+
+            if (historyList.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3">이력이 없습니다.</td></tr>';
+            } else {
+                [...historyList].reverse().forEach(h => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${h.createdAt.replace('T', ' ').substring(0, 19)}</td>
+                        <td>${h.beforePoint} ➡ ${h.afterPoint}</td>
+                        <td>${h.changeAmount > 0 ? '+' : ''}${h.changeAmount} [${h.description}]</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+    </script>
+</th:block>
+</html>

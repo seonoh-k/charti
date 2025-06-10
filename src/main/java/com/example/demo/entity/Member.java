@@ -11,14 +11,13 @@ import java.util.List;
 
 @Entity
 @Table(name = "member")
-@Getter
-@Setter
-public class Member {
+@Getter @Setter
+public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "users_id")
-    private Long id;  // 회원 고유 ID
+    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -32,20 +31,11 @@ public class Member {
     @Column
     private String phone;
 
-    @Column(name = "profile_image")
-    private String profileImage;
-
     @Column(name = "group_id")
     private Long groupId;
 
-    @Column(nullable = false)
-    private boolean deleted = false;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    @Column(name = "total_point")
+    private int totalPoint;
 
     // 자녀랑 양방향관계 / 부모 아이디 탈퇴시 자녀 2명이상 등록되어있을경우 전부 삭제
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
