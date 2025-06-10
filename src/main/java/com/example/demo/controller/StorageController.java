@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.UUID;
 
 @RestController
@@ -27,7 +28,7 @@ public class StorageController {
         String mimeType = Files.probeContentType(Paths.get(file.getOriginalFilename()));
         String filename = UUID.randomUUID() + "_" + originalFilename;
 
-        URL presignedUrl = urlService.presignedUploasUrl(filename, mimeType);
+        URL presignedUrl = urlService.presignedUploadUrl(filename, mimeType);
 
         return ResponseEntity.ok(new UrlResponse(presignedUrl.toString(), filename));
     }
@@ -43,7 +44,7 @@ public class StorageController {
     @GetMapping("/api/file/show/{filename}")
     public ResponseEntity<UrlResponse> showFile(@PathVariable("filename") String filename) throws IOException {
 
-        URL presignedUrl = urlService.getPresignedUrl(filename);
+        URL presignedUrl = urlService.getPresignedUrl(filename, Duration.ofMinutes(15));
 
         return ResponseEntity.ok(new UrlResponse(presignedUrl.toString(), filename));
     }

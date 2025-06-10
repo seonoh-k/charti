@@ -1,9 +1,9 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.PointHistoryView;
-import com.example.demo.entity.Member;
+import com.example.demo.users.entity.Member;
 import com.example.demo.entity.PointHistory;
-import com.example.demo.repository.MemberRepository;
+import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.repository.PointHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
