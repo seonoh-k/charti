@@ -41,6 +41,4 @@ public class DailySurvey extends BaseEntity {
 
     @Column(nullable = false)
     private String answer5;
-
-    // 추가로 필요한 생성자, Builder 패턴 등은 필요에 따라 추가
 }

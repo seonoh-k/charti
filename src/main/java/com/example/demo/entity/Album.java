@@ -25,8 +25,8 @@ public class Album extends BaseEntity {
 
     private String thumbnail; // 썸네일 파일 이름
 
-    @Column(columnDefinition = "BOOLEAN DEFAULT true")
-    private Boolean isPublic; // 공개 여부
+    // 공개 여부 - 디폴트 true : 공개
+    private Boolean isPublic = true;
 
     // 사진 테이블과 1:N 관계 설정
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)

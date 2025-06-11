@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>육아정보 게시판</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<th:block layout:fragment="content">
+<h1>육아정보 게시판</h1>
+<form th:action="@{/community/parenting/list}" method="get">
+    카테고리:
+    <select name="subCategory">
+        <option value="전체" th:selected="${subCategory=='전체'}">전체</option>
+        <option th:each="cat: ${subCategories}"
+                th:value="${cat}"
+                th:text="${cat}"
+                th:selected="${cat==subCategory}"></option>
+    </select>
+    연령대:
+    <select name="ageGroup">
+        <option th:each="age: ${ageGroups}"
+                th:value="${age}"
+                th:text="${age}"
+                th:selected="${age==ageGroup}"></option>
+    </select>
+    제목: <input type="text" name="keyword" th:value="${keyword}" />
+    정렬:
+    <select name="sort">
+        <option value="popular" th:selected="${sort=='popular'}">인기순</option>
+        <option value="new"     th:selected="${sort=='new'}">최신순</option>
+    </select>
+    <button>검색</button>
+</form>
+
+<a th:href="@{/community/parenting/new}">작성하기</a>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>카테고리</th>
+        <th>제목</th>
+        <th>연령대</th>
+        <th>조회수</th>
+        <th>작성자</th>
+        <th>작성일</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="b: ${boards}">
+        <td th:text="${b.category2}"></td>
+        <td>
+            <a th:href="@{/community/parenting/{id}(id=${b.communityId})}"
+               th:text="${b.title}"></a>
+        </td>
+        <td th:text="${b.ageGroup}"></td>
+        <td th:text="${b.views}"></td>
+        <td th:text="${b.usersId}"></td>
+        <td th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div>
+    <span th:if="${pageData.hasPrevious()}">
+      <a th:href="@{/community/parenting/list(page=${pageData.number-1},sort=${sort},subCategory=${subCategory},ageGroup=${ageGroup},keyword=${keyword})}">&lt; 이전</a>
+    </span>
+    <span th:each="i: ${#numbers.sequence(0,pageData.totalPages-1)}">
+      <a th:href="@{/community/parenting/list(page=${i},sort=${sort},subCategory=${subCategory},ageGroup=${ageGroup},keyword=${keyword})}"
+         th:text="${i+1}"
+         th:classappend="${i==pageData.number}?'current':''"></a>
+    </span>
+    <span th:if="${pageData.hasNext()}">
+      <a th:href="@{/community/parenting/list(page=${pageData.number+1},sort=${sort},subCategory=${subCategory},ageGroup=${ageGroup},keyword=${keyword})}">다음 &gt;</a>
+    </span>
+</div>
+</th:block>
+</html>

@@ -31,5 +31,4 @@ public class SurveySet extends BaseEntity {
     @Column(nullable = false)
     private int weight;
 
-
 }

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<th:block layout:fragment="content">
+    <h1>관리자 - 데일리 문진 관리</h1>
+
+    <form th:action="@{/admin/surveys/list}" method="get" class="flex gap-2">
+        <select name="ageGroup">
+            <option th:each="age: ${ageGroups}"
+                    th:value="${age}"
+                    th:text="${age}"
+                    th:selected="${age == ageGroup}"></option>
+        </select>
+        <select name="category">
+            <option value="" th:selected="${category==''}">전체카테고리</option>
+            <option th:each="cat: ${categories}"
+                    th:value="${cat}"
+                    th:text="${cat}"
+                    th:selected="${cat == category}"></option>
+        </select>
+        <button type="submit">필터</button>
+    </form>
+
+    <a th:href="@{/admin/surveys/new}">➕ 문진 추가</a>
+
+    <table class="mt-4 border">
+        <thead>
+        <tr>
+            <th>연령대</th><th>카테고리</th><th>질문</th><th>가중치</th><th>수정/삭제</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s: ${surveys}">
+            <td th:text="${s.ageGroup}"></td>
+            <td th:text="${s.category}"></td>
+            <td th:text="${s.question}"></td>
+            <td th:text="${s.weight}"></td>
+            <td>
+                <a th:href="@{/admin/surveys/{id}/edit(id=${s.id})}">수정</a>
+                <form th:action="@{/admin/surveys/{id}/delete(id=${s.id})}"
+                      method="post" style="display:inline"
+                      onsubmit="return confirm('삭제하시겠습니까?');">
+                    <button type="submit">삭제</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</th:block>
+</html>

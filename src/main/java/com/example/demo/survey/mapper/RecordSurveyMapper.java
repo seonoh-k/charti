@@ -8,7 +8,9 @@ public class RecordSurveyMapper {
 
     public static RecordSurvey toEntity(RecordSurveyRequest request) {
         RecordSurvey entity = new RecordSurvey();
+        entity.setAgeGroup(request.getAgeGroup());
         entity.setQuestion(request.getQuestion());
+        entity.setAnswer("");
         return entity;
     }
 
@@ -16,6 +18,7 @@ public class RecordSurveyMapper {
         return new RecordSurveyResponse(
                 entity.getSurveyId(),
                 entity.getQuestion(),
+                entity.getAgeGroup(),
                 entity.getCreatedAt()
         );
     }

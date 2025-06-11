@@ -2,6 +2,7 @@ package com.example.demo.survey.service;
 
 import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.repository.DailySurveyRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ public class DailySurveyService {
     private final DailySurveyRepository dailySurveyRepository;
 
     public List<DailySurvey> getSurveysByAgeGroup(String ageGroup) {
-        return dailySurveyRepository.findByAgeGroupAndDeletedFalse(ageGroup);
+        return dailySurveyRepository.findByAgeGroupAndDeletedFalse(ageGroup.trim());
     }
 
     public List<DailySurvey> getSurveysByAgeAndCategory(String ageGroup, String category) {
@@ -86,4 +87,26 @@ public class DailySurveyService {
         return categoryScore >= 60.0; // 위험도 60 이상 시 특별 문진
     }
 
+    // (관리자) 새로운 설문을 저장
+    @Transactional
+    public DailySurvey save(DailySurvey survey) {
+        return dailySurveyRepository.save(survey);
+    }
+
+    // (관리자/공통) ID로 설문을 조회
+    public DailySurvey findById(Long id) {
+        return dailySurveyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("설문을 찾을 수 없습니다. id=" + id));
+    }
+
+    // (관리자) 설문 삭제
+    @Transactional
+    public void delete(Long id) {
+        dailySurveyRepository.deleteById(id);
+    }
+
+    // (관리자) 모든 카테고리 목록 (필터링용)
+    public List<String> getDistinctCategories() {
+        return dailySurveyRepository.findDistinctCategories();
+    }
 }

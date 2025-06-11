@@ -15,14 +15,14 @@ public class MainController {
         return "index";
     }
 
-    @GetMapping("/daily-survey")
+    @GetMapping("/dailySurvey")
     public String getDailySurveyPage() {
-        return "layout/DailySurvey";
+        return "dailySurvey";
     }
 
-    @GetMapping("/daily-survey-result")
+    @GetMapping("/dailySurvey/result")
     public String getSurveyResultPage() {
-        return "layout/DailySurveyResult";
+        return "dailySurveyResult";
     }
 
     // 아래 두개는 테스트용
@@ -33,10 +33,15 @@ public class MainController {
 
     @GetMapping("/admin/point")
     public String getAdminPointPage() {
-        return "test-pointadmin";
+        return "test-point-admin";
     }
 
-    @GetMapping("/albums")
-    public String getAlbumsPage() { return "albums";}
+    @GetMapping("/albums/create")
+    public String getAlbumsPage() { return "albumsCreate";}
+
+    @GetMapping("/admin/record-survey")
+    public String getAdminRecordSurveyPage() {
+        return "test-record-admin";
+    }
 
 }
