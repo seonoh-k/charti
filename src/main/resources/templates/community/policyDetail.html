@@ -30,6 +30,18 @@
     <textarea name="content" required></textarea><br/>
     <button type="submit">댓글 등록</button>
 </form>
-<a th:href="@{/community/policy/list}">목록으로</a>
+    
+<!-- 수정/삭제 버튼 -->
+<div style="margin-top:1em;">
+    <a th:href="@{/community/policy/{id}/edit(id=${board.communityId})}">✏️ 수정</a>
+    <form th:action="@{/community/policy/{id}/delete(id=${board.communityId})}"
+          method="post" style="display:inline"
+          onsubmit="return confirm('정말 삭제하시겠습니까?');">
+        <button type="submit">🗑️ 삭제</button>
+    </form>
+</div>
+
+<br/>
+<a th:href="@{/community/policy/list}">◀ 목록으로 돌아가기</a>
 </th:block>>
 </html>
