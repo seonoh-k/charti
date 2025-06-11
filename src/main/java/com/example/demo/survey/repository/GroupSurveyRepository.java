@@ -1,5 +1,10 @@
 package com.example.demo.survey.repository;
 
-public interface GroupSurveyRepository {
-//        extends JpaRepository<GroupSurvey, Integer> {
+import com.example.demo.survey.entity.GroupSurvey;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface GroupSurveyRepository extends JpaRepository<GroupSurvey, Long> {
+    List<GroupSurvey> findByChild_Id(Long childId);
 }
