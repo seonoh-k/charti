@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charti</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<th:block layout:fragment="content">
+    <h1 th:text="${survey.id} == null ? '문진 새로 만들기' : '문진 수정하기'"></h1>
+
+    <form th:action="@{${survey.id} == null ? '/admin/surveys' : '/admin/surveys/' + ${survey.id}}"
+          method="post" class="flex flex-col gap-2 max-w-lg">
+        <label>연령대:
+            <select name="ageGroup" th:value="${survey.ageGroup}">
+                <option th:each="age: ${ageGroups}"
+                        th:value="${age}"
+                        th:text="${age}"
+                        th:selected="${age == survey.ageGroup}"></option>
+            </select>
+        </label>
+
+        <label>카테고리:
+            <select name="category" th:value="${survey.category}">
+                <option th:each="cat: ${categories}"
+                        th:value="${cat}"
+                        th:text="${cat}"
+                        th:selected="${cat == survey.category}"></option>
+            </select>
+        </label>
+
+        <label>질문:
+            <input type="text" name="question" th:value="${survey.question}" required/>
+        </label>
+
+        <label>위험도 가중치:
+            <input type="number" name="weight" th:value="${survey.weight}" min="1" required/>
+        </label>
+
+        <label>답변1: <input type="text" name="answer1" th:value="${survey.answer1}" required/></label>
+        <label>답변2: <input type="text" name="answer2" th:value="${survey.answer2}" required/></label>
+        <label>답변3: <input type="text" name="answer3" th:value="${survey.answer3}" required/></label>
+        <label>답변4: <input type="text" name="answer4" th:value="${survey.answer4}" required/></label>
+        <label>답변5: <input type="text" name="answer5" th:value="${survey.answer5}" required/></label>
+
+        <button type="submit" class="mt-4">저장</button>
+    </form>
+</th:block>
+</html>
