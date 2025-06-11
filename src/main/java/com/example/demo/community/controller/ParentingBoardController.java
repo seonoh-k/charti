@@ -75,7 +75,7 @@ public class ParentingBoardController {
     /**
      * 새 게시글을 생성하고 리스트 페이지로 리다이렉트합니다.
      */
-    @PostMapping("/")
+    @PostMapping("")
     public String create(@ModelAttribute CommunityBoard board) {
         board.setCategory("parentingInformation");
         board.setStatus("Y");
@@ -129,7 +129,7 @@ public class ParentingBoardController {
         model.addAttribute("board", board);
         model.addAttribute("subCategories", subCategories);
         model.addAttribute("ageGroups", ageGroups);
-        return "community/form";
+        return "community/parentingForm";
     }
 
     /**
