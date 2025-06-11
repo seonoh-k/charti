@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<th:block layout:fragment="content">
+<h1>공지사항</h1>
+
+<form th:action="@{/community/announcement/list}" method="get">
+    하위카테고리:
+    <select name="subCategory">
+        <option value="전체" th:selected="${subCategory=='전체'}">전체</option>
+        <option th:each="c: ${subCategories}"
+                th:value="${c}"
+                th:text="${c}"
+                th:selected="${c==subCategory}"></option>
+    </select>
+    제목:
+    <input type="text" name="keyword" th:value="${keyword}" />
+    <button type="submit">검색</button>
+</form>
+
+<a th:href="@{/community/announcement/new}">새 공지 작성</a>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>번호</th>
+        <th>제목</th>
+        <th>조회수</th>
+        <th>작성자</th>
+        <th>작성일</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="b, stat: ${boards}">
+        <td th:text="${stat.index + 1 + pageData.number*pageData.size}"></td>
+        <td>
+            <a th:href="@{/community/announcement/{id}(id=${b.communityId})}"
+               th:text="${b.title}"></a>
+        </td>
+        <td th:text="${b.views}"></td>
+        <td th:text="${b.usersId}"></td>
+        <td th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- 페이징 -->
+<div>
+  <span th:if="${pageData.hasPrevious()}">
+    <a th:href="@{/community/announcement/list(
+                  page=${pageData.number-1},
+                  subCategory=${subCategory},
+                  ageGroup=${ageGroup},
+                  keyword=${keyword})}">&lt; 이전</a>
+  </span>
+    <span th:each="i: ${#numbers.sequence(0,pageData.totalPages-1)}">
+    <a th:href="@{/community/announcement/list(
+                  page=${i},
+                  subCategory=${subCategory},
+                  ageGroup=${ageGroup},
+                  keyword=${keyword})}"
+       th:text="${i+1}"
+       th:classappend="${i==pageData.number}?'current':''"></a>
+  </span>
+    <span th:if="${pageData.hasNext()}">
+    <a th:href="@{/community/announcement/list(
+                  page=${pageData.number+1},
+                  subCategory=${subCategory},
+                  ageGroup=${ageGroup},
+                  keyword=${keyword})}">다음 &gt;</a>
+  </span>
+</div>
+</th:block>>
+</html>

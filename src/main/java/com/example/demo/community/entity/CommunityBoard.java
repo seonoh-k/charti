@@ -22,7 +22,7 @@ public class CommunityBoard extends BaseEntity {
     @Column(length = 50, nullable = false)
     private String category2;            // 하위 카테고리
 
-    @Column(name = "age_group", length = 20, nullable = false)
+    @Column(name = "age_group", length = 20, nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'N/A'")
     private String ageGroup;             // 연령대
 
     @Column(length = 255, nullable = false)
