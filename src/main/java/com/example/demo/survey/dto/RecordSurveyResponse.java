@@ -10,5 +10,6 @@ import java.time.LocalDateTime;
 public class RecordSurveyResponse {
     private Long id;
     private String question;
+    private String ageGroup;
     private LocalDateTime createdAt;
 }

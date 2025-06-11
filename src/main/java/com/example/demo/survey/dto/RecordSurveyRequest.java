@@ -5,5 +5,6 @@ import lombok.Setter;
 
 @Getter @Setter
 public class RecordSurveyRequest {
+    private String ageGroup;
     private String question;
 }
