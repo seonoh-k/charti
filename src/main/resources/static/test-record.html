@@ -2,32 +2,42 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>기록 문진 테스트 (회원 선택)</title>
+    <title>기록 문진 테스트 (회원)</title>
     <script>
         let currentUserId = 1;
 
         document.addEventListener("DOMContentLoaded", async () => {
-            const response = await fetch("/api/record-surveys");
-            const questions = await response.json();
-            const container = document.getElementById("questions");
-
-            questions.forEach((q, index) => {
-                const div = document.createElement("div");
-                div.innerHTML = `
-                    <p><strong>${index + 1}. ${q.question}</strong></p>
-                    <input type="hidden" name="surveyId" value="${q.surveyId}" />
-                    <textarea name="answer" rows="2" cols="60" placeholder="답변 입력"></textarea>
-                    <hr/>
-                `;
-                container.appendChild(div);
-            });
-
+            loadQuestionsByAgeGroup();
             loadMyAnswers();
         });
 
         function setUserId(select) {
             currentUserId = Number(select.value);
             loadMyAnswers();
+        }
+
+        async function loadQuestionsByAgeGroup() {
+            const ageGroup = document.getElementById("ageGroupSelect").value;
+            let url = "/api/record-surveys";
+            if (ageGroup) {
+                url += `?ageGroup=${encodeURIComponent(ageGroup)}`;
+            }
+
+            const response = await fetch(url);
+            const questions = await response.json();
+            const container = document.getElementById("questions");
+            container.innerHTML = "";
+
+            questions.forEach((q, index) => {
+                const div = document.createElement("div");
+                div.innerHTML = `
+                    <p><strong>${index + 1}. ${q.question}</strong></p>
+                    <input type="hidden" name="surveyId" value="${q.id}" />
+                    <textarea name="answer" rows="2" cols="60" placeholder="답변 입력"></textarea>
+                    <hr/>
+                `;
+                container.appendChild(div);
+            });
         }
 
         async function submitAllAnswers() {
@@ -43,8 +53,7 @@
                     payload.push({
                         surveyId: Number(surveyIds[i].value),
                         childId: Number(childId),
-                        answer: answerText,
-                        userId: currentUserId  // 선택한 사용자 ID 추가 (컨트롤러에서 처리 필요)
+                        answer: answerText
                     });
                 }
             }
@@ -54,18 +63,24 @@
                 return;
             }
 
-            const response = await fetch("/api/record-answers/batch", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            console.log("payload", payload);
 
-            if (response.ok) {
-                alert("답변이 성공적으로 저장되었습니다!");
-                loadMyAnswers();  // 등록 후 즉시 조회 갱신
-            } else {
-                const err = await response.json();
-                alert("에러 발생: " + JSON.stringify(err));
+            try {
+                const response = await fetch("/api/record-answers/batch", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert("답변이 성공적으로 저장되었습니다!");
+                    loadMyAnswers();
+                } else {
+                    const err = await response.json();
+                    alert("에러 발생: " + JSON.stringify(err));
+                }
+            } catch (error) {
+                alert("요청 실패: " + error);
             }
         }
 
@@ -77,13 +92,27 @@
             resultDiv.innerHTML = "<h3>내가 쓴 문진 답변</h3>";
 
             answers.forEach(ans => {
-                resultDiv.innerHTML += `<p><strong>[${ans.createdAt}] ${ans.question}</strong><br/>답변: ${ans.answer}</p><hr/>`;
+                resultDiv.innerHTML += `
+                    <p>
+                        <strong>[${ans.createdAt}] ${ans.question}</strong><br/>
+                        답변: ${ans.answer}
+                    </p><hr/>
+                `;
             });
         }
     </script>
 </head>
 <body>
 <h2>기록 문진 응답 테스트</h2>
+
+<label>연령대 선택: </label>
+<select id="ageGroupSelect" onchange="loadQuestionsByAgeGroup()">
+    <option value="0~12개월">0~1세</option>
+    <option value="1~2세">1~2세</option>
+    <option value="3~4세">3~4세</option>
+    <option value="5세">5세</option>
+</select>
+<br/><br/>
 
 <label>사용자 ID 선택: </label>
 <select onchange="setUserId(this)">

@@ -63,26 +63,25 @@ public class RecordAnswerController {
         return ResponseEntity.noContent().build();
     }
 
-//    @PostMapping("/batch")
-//    public ResponseEntity<?> submitBatch(@RequestBody List<RecordAnswerRequest> requestList) {
-//        System.out.println("== Batch Submit Start ==");
-//
-//        for (RecordAnswerRequest request : requestList) {
-//            if (request.getSurveyId() == null || request.getChildId() == null) {
-//                throw new IllegalArgumentException("surveyId 또는 childId 누락");
-//            }
-//
-//            RecordSurvey survey = recordSurveyService.get(request.getSurveyId());
-//            Child child = childService.get(request.getChildId());
-//
-//            Member mockMember = memberRepository.findById(1L)
-//                    .orElseThrow(() -> new IllegalArgumentException("임시 유저 없음"));
-//
-//            RecordAnswer entity = RecordAnswerMapper.toEntity(request, survey, mockMember, child);
-//            recordAnswerService.create(entity);
-//        }
-//
-//        return ResponseEntity.ok().build();
-//    }
+    @PostMapping("/batch")
+    public ResponseEntity<?> submitBatch(@RequestBody List<RecordAnswerRequest> requestList) {
+        for (RecordAnswerRequest request : requestList) {
+            if (request.getSurveyId() == null || request.getChildId() == null || request.getAnswer() == null) {
+                return ResponseEntity.badRequest().body("surveyId, childId, answer는 필수입니다.");
+            }
+
+            RecordSurvey survey = recordSurveyService.get(request.getSurveyId());
+            Child child = childService.get(request.getChildId());
+
+            //  현재 로그인 정보가 없으므로 임시 사용자 (id=1L) 사용
+            Member mockMember = memberRepository.findById(1L)
+                    .orElseThrow(() -> new IllegalArgumentException("임시 유저 없음"));
+
+            RecordAnswer entity = RecordAnswerMapper.toEntity(request, survey, mockMember, child);
+            recordAnswerService.create(entity);
+        }
+
+        return ResponseEntity.ok().body("{\"success\": true}");
+    }
 
 }

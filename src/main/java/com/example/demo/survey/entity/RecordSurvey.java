@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "record_survey")
 @Getter @Setter
@@ -22,4 +24,11 @@ public class RecordSurvey extends BaseEntity {
 
     @Column(nullable = false)
     private String answer;
+
+    public void markAsDeleted() {
+        this.setDeleted(true);
+        this.setDeletedAt(LocalDateTime.now());
+    }
+
+
 }

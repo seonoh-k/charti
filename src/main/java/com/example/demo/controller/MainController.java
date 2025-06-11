@@ -33,10 +33,15 @@ public class MainController {
 
     @GetMapping("/admin/point")
     public String getAdminPointPage() {
-        return "test-pointadmin";
+        return "test-point-admin";
     }
 
     @GetMapping("/albums/create")
     public String getAlbumsPage() { return "albumsCreate";}
+
+    @GetMapping("/admin/record-survey")
+    public String getAdminRecordSurveyPage() {
+        return "test-record-admin";
+    }
 
 }
