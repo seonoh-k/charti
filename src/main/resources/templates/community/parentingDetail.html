@@ -34,27 +34,27 @@
 <!-- 댓글 페이징 -->
 <div>
     <span th:if="${commentsPage.hasPrevious()}">
-      <a th:href="@{/community/granulation/{id}(id=${board.communityId},commentPage=${commentsPage.number-1})}">이전</a>
+      <a th:href="@{/community/parenting/{id}(id=${board.communityId},commentPage=${commentsPage.number-1})}">이전</a>
     </span>
     <span th:each="i: ${#numbers.sequence(0,commentsPage.totalPages-1)}">
-      <a th:href="@{/community/granulation/{id}(id=${board.communityId},commentPage=${i})}"
+      <a th:href="@{/community/parenting/{id}(id=${board.communityId},commentPage=${i})}"
          th:text="${i+1}"
          th:classappend="${i==commentsPage.number}?'current':''"></a>
     </span>
     <span th:if="${commentsPage.hasNext()}">
-      <a th:href="@{/community/granulation/{id}(id=${board.communityId},commentPage=${commentsPage.number+1})}">다음</a>
+      <a th:href="@{/community/parenting/{id}(id=${board.communityId},commentPage=${commentsPage.number+1})}">다음</a>
     </span>
 </div>
 
-<form th:action="@{/community/granulation/{id}/comments(id=${board.communityId})}" method="post">
+<form th:action="@{/community/parenting/{id}/comments(id=${board.communityId})}" method="post">
     <textarea name="content" rows="3" cols="50" placeholder="댓글을 입력하세요." required></textarea><br/>
     <button type="submit">등록하기</button>
 </form>
 
 <!-- 수정/삭제 버튼 -->
 <div style="margin-top:1em;">
-    <a th:href="@{/community/granulation/{id}/edit(id=${board.communityId})}">✏️ 수정</a>
-    <form th:action="@{/community/granulation/{id}/delete(id=${board.communityId})}"
+    <a th:href="@{/community/parenting/{id}/edit(id=${board.communityId})}">✏️ 수정</a>
+    <form th:action="@{/community/parenting/{id}/delete(id=${board.communityId})}"
           method="post" style="display:inline"
           onsubmit="return confirm('정말 삭제하시겠습니까?');">
         <button type="submit">🗑️ 삭제</button>
@@ -62,6 +62,6 @@
 </div>
 
 <br/>
-<a th:href="@{/community/granulation/list}">◀ 목록으로 돌아가기</a>
+<a th:href="@{/community/parenting/list}">◀ 목록으로 돌아가기</a>
 </th:block>
 </html>

@@ -17,8 +17,8 @@
 <h1 th:text="${board.communityId}!=null ? '수정' : '작성'"></h1>
 
 <form th:action="${board.communityId}!=null
-                   ? @{/community/granulation/{id}(id=${board.communityId})}
-                   : @{/community/granulation}"
+                   ? @{/community/parenting/{id}(id=${board.communityId})}
+                   : @{/community/parenting}"
       method="post">
     <label>하위 카테고리:</label>
     <select name="category2">

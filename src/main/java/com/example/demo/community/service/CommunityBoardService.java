@@ -18,12 +18,10 @@ public class CommunityBoardService {
     }
 
     /**
-     * 게시글 목록을 조회하면서
-     * - 카테고리, 연령대, 제목 키워드로 필터링
-     * - 인기순(조회수) 또는 최신순(등록일) 정렬
-     * - 페이징 처리
-     */
-    public Page<CommunityBoard> getList(
+      * 게시글 목록 조회 (상위카테고리, 하위카테고리, 연령대, 제목, 정렬, 페이징)
+      */
+      public Page<CommunityBoard> getList(
+            String mainCategory,
             String subCategory,
             String ageGroup,
             String keyword,
@@ -36,6 +34,9 @@ public class CommunityBoardService {
         Pageable pageable = PageRequest.of(page, 10, sort);
 
         Specification<CommunityBoard> spec = Specification.where(null);
+
+        spec = spec.and((r, q, cb) -> cb.equal(r.get("category"), mainCategory));
+
         if (!"전체".equals(subCategory)) {
             spec = spec.and((r, q, cb) -> cb.equal(r.get("category2"), subCategory));
         }
