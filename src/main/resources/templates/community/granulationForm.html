@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 작성/수정</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<th:block layout:fragment="content">
+<h1 th:text="${board.communityId}!=null ? '수정' : '작성'"></h1>
+
+<form th:action="${board.communityId}!=null
+                   ? @{/community/granulation/{id}(id=${board.communityId})}
+                   : @{/community/granulation}"
+      method="post">
+    <label>하위 카테고리:</label>
+    <select name="category2">
+        <option th:each="cat: ${subCategories}"
+                th:value="${cat}"
+                th:text="${cat}"
+                th:selected="${cat==board.category2}"></option>
+    </select><br/>
+
+    <label>연령대:</label>
+    <select name="ageGroup">
+        <option th:each="age: ${ageGroups}"
+                th:value="${age}"
+                th:text="${age}"
+                th:selected="${age==board.ageGroup}"></option>
+    </select><br/>
+
+    <label>제목:</label>
+    <input type="text" name="title" th:value="${board.title}" required/><br/>
+    <label>내용:</label>
+    <textarea name="content" rows="10" cols="50" th:text="${board.content}" required></textarea><br/>
+
+    <button type="submit">저장</button>
+</form>
+</th:block>
+</html>
