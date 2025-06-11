@@ -1,4 +1,31 @@
 package com.example.demo.users.entity;
-// 담당자 엔티티
-public class Manager {
+
+import com.example.demo.entity.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+
+@Entity
+@Table(name = "manager")
+@Getter
+@Setter
+public class Manager extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "manager_id")
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    private String phone;
+    private String email;
+    private String organization; // 유치원, 어린이집 등
+
+
+
 }

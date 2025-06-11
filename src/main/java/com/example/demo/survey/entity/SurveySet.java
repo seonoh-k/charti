@@ -5,8 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-
-
 @Entity
 @Table(name = "survey_set")
 @Getter
@@ -23,24 +21,15 @@ public class SurveySet extends BaseEntity {
     @Column(nullable = false)
     private String category;
 
+    // 설문 세트 이름 (예: "0~12개월_생활습관")
+    @Column(name = "title")
+    private String title;
+
     @Column(nullable = false)
     private String question;
 
     @Column(nullable = false)
     private int weight;
 
-    @Column(nullable = false)
-    private String answer1;
 
-    @Column(nullable = false)
-    private String answer2;
-
-    @Column(nullable = false)
-    private String answer3;
-
-    @Column(nullable = false)
-    private String answer4;
-
-    @Column(nullable = false)
-    private String answer5;
 }
