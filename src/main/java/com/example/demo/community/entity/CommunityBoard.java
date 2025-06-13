@@ -31,10 +31,10 @@ public class CommunityBoard extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @Column(length = 1, columnDefinition = "STRING DEFAULT 'Y'")
-    private String status;
+    @Column(length = 1)
+    private String status = "Y";
 
-    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
-    private int views;
+    @Column(nullable = false)
+    private Integer views = 0;
 }
 

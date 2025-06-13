@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+        <!-- 우편번호 찾기 스크립트 -->
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+    function execDaumPostcode() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                // 1) 시도, 구군
+                const sido    = data.sido;      // ex. "서울특별시" :contentReference[oaicite:0]{index=0}
+                const sigungu = data.sigungu;   // ex. "강남구" :contentReference[oaicite:1]{index=1}
+
+                // 2) 지번주소 → 동, 번지 분리
+                //    data.jibunAddress 예: "서울특별시 강남구 역삼동 123-45"
+                const jibun = data.jibunAddress.replace(`${sido} ${sigungu} `, "");
+                // jibun === "역삼동 123-45"
+                const [dong, ...beonjiParts] = jibun.split(" ");
+                const beonji = beonjiParts.join(" ");  // "123-45"
+
+                // 3) 각 필드에 값 채우기
+                document.getElementById('zip_num').value = data.zonecode;
+                document.getElementById("sido").value    = sido;
+                document.getElementById("gugun").value = sigungu;
+                document.getElementById("dong").value     = dong;
+                document.getElementById("beonji").value   = beonji;
+            }
+        }).open();
+    }       // 우편번호 찾기 스크립트 end
+
+</script>
+</head>
+<body class="bg-black text-white flex items-center justify-center h-screen">
+<div class="bg-white text-black rounded-2xl shadow-lg p-10 w-full max-w-md">
+    <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/> <br/><br/> <br/> <br/> <br/>*길어지니까 위쪽이 안보여서 공백 만든거임 나중에 수정하고 지우기* <br/> <br/> 
+    <h2 class="text-2xl font-bold mb-6 text-center">전문가 회원가입</h2>
+    <!-- id="signupForm" 추가, th:action/@{...}은 제거 -->
+    <form id="signupForm" class="space-y-4"  enctype="multipart/form-data">
+        <!-- ① 사용자 실제 이름(name) 입력란 -->
+        <div>
+            <label for="name" class="block mb-1">이름</label>   *이름이 테이블별로 따로있다?<br/> 관리자 승인시 필요하다면 추가정보로 내리는걸로?*
+            <input type="text" name="name" id="name"
+                class="w-full p-2 rounded border border-gray-300" required>
+        </div>
+
+        <!-- ② username 입력란(이메일) -->
+        <div>
+            <label for="username" class="block mb-1">아이디(이메일)</label>
+            <input type="email" name="username" id="username"
+                class="w-full p-2 rounded border border-gray-300" required>
+        </div>
+
+        <!-- ③ password 입력란 -->
+        <div>
+            <label for="password" class="block mb-1">비밀번호</label>
+            <input type="password" name="password" id="password"
+                class="w-full p-2 rounded border border-gray-300" required>
+        </div>
+
+        <div>
+            <label for="email" class="block mb-1">실제이메일 (인증이 필요할수도)</label>
+            <input type="email" name="email" id="email"
+                class="w-full p-2 rounded border border-gray-300" required>
+        </div>
+
+<!--        sms 인증 부분-->
+        <div id="recaptcha-container"></div>
+        <div class="mt-4">
+            <label for="phone1">휴대전화</label>
+            <div class="flex space-x-2">
+                <select id="phone1" class="p-2 rounded border" style="width:70px">
+                    <option value="010">010</option>
+                    <option value="011">011</option>
+                    <option value="016">016</option>
+                    <option value="017">017</option>
+                    <option value="018">018</option>
+                    <option value="019">019</option>
+                </select>
+                <input id="phone2" type="text" maxlength="4" pattern="\d*" placeholder="1234"
+                        class="p-2 rounded border w-20" />
+                <input id="phone3" type="text" maxlength="4" pattern="\d*" placeholder="5678"
+                        class="p-2 rounded border w-20" />
+                <button type="button" id="send-otp-btn"
+                        class="px-4 py-2 bg-blue-600 text-white rounded">
+                    인증번호 받기
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-2">
+            <label for="otp">인증번호</label>
+            <input id="otp" type="text" placeholder="6자리 코드"
+                    class="w-full p-2 rounded border" disabled />
+            <button type="button" id="verify-otp-btn"
+                    class="mt-2 px-4 py-2 bg-green-600 text-white rounded"
+                    disabled>
+                인증 확인
+            </button>
+        </div>
+        <!-- ========================== 추가정보 ======================================================================================================= -->
+        <p>=======추가 정보===============</p>
+        <div>
+            <label for="nickname" class="block mb-1">닉네임</label>*이것도 테이블마다 있다 공통이면 회원에 가능?*
+            <input type="text" name="nickname" id="nickname"
+                class="w-full p-2 rounded border border-gray-300" required>
+        </div>
+
+        <div>
+            <label for="phone" class="block mb-1">전화번호</label> *인증과 별개로 일단 테이블에 있으니까 넣음<br/> sms인증할때 받는 번호로 대체 가능?*
+            <input type="text" name="phone" id="phone"
+                class="w-full p-2 rounded border border-gray-300" required>
+        </div>
+
+        <div>
+            <label for="major" class="block mb-1">전공</label> 
+            <input type="text" name="major" id="major"
+                class="w-full p-2 rounded border border-gray-300" required>
+        </div>
+
+          <div>
+            <label for="career" class="block mb-1">경력사항</label> 
+            <input type="text" name="career" id="career"
+                class="w-full p-2 rounded border border-gray-300" required>
+        </div>
+
+        <!-- 파일 업로드 필드 -->
+        <div>
+            <label>자격증 파일:
+                <input type="file" name="license" accept=".pdf,.jpg,.png" required>
+            </label><br>
+        </div>
+
+
+                <!-- 주소   상세주소는  테이블에 없긴한데 일단 넣음-->
+        <div>   
+                <input type="text" id="zip_num" name="zip_num" placeholder="우편번호" readonly>
+                <input type="text" id="sido" name="sido" placeholder="시도" readonly>
+                <input type="text" id="gugun" name="gugun" placeholder="구.군" readonly>
+                <input type="text" id="dong" name="dong" placeholder="동" readonly>
+                <input type="text" id="beonji" name="beonji" placeholder="지번" readonly>
+                <input type="text" id="detailAddress" name="detailAddress" placeholder="상세주소">
+
+            <button type="button" onclick="execDaumPostcode()">우편번호 찾기</button>
+        </div>
+        
+
+        <div class="mt-6">
+            <button type="submit"
+                    class="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition">
+                회원가입
+            </button>
+        </div>
+    </form>
+
+    <div class="mt-4 text-center">
+        <a th:href="@{/loginForm}" class="text-sm text-gray-700 hover:underline">로그인</a>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<!-- th:inline="javascript"를 추가하여 Thymeleaf가 @{/join}을 치환 -->
+<script  type="module" th:inline="javascript">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+        getAuth,
+        RecaptchaVerifier,
+        signInWithPhoneNumber
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+    // 테스트할때 본인 걸로 바꾸기
+    // 1) Firebase 초기화
+const firebaseConfig = {
+  apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
+  authDomain: "charti-5da7d.firebaseapp.com",
+  projectId: "charti-5da7d",
+  storageBucket: "charti-5da7d.firebasestorage.app",
+  messagingSenderId: "308166362794",
+  appId: "1:308166362794:web:00035f97aca288228972d3",
+  measurementId: "G-TYBBZC80J9"
+};
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+      // 2) Invisible reCAPTCHA 준비
+    window.recaptchaVerifier = new RecaptchaVerifier(
+        'recaptcha-container',
+        { size: 'invisible' },
+        auth
+    );
+
+       // 전역 변수
+    let confirmationResult = null;
+    let smsIdToken = null;
+
+      // 3) SMS 전송 함수
+    window.sendSmsOtp = async () => {
+ //       const phone = document.getElementById('phone').value.trim();
+ //       if (!phone) { alert('전화번호를 입력하세요.'); return; }
+
+    // 각 부분의 값을 가져옴
+    const p1 = document.getElementById('phone1').value;
+    const p2 = document.getElementById('phone2').value.trim();
+    const p3 = document.getElementById('phone3').value.trim();
+
+    // 숫자 검사
+    if (!/^\d{4}$/.test(p2) || !/^\d{4}$/.test(p3)) {
+        alert('휴대폰 번호를 정확히 입력하세요 (4자리씩).');
+        return;
+    }
+
+    // 국제 전화번호로 변환
+    // 01012345678 → +821012345678
+    const phoneNumber = `+82${p1.substring(1)}${p2}${p3}`;
+
+    // 1. 먼저 서버에 중복 체크 요청
+    const checkRes = await fetch('/api/check-phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({phoneNumber})
+    });
+    const checkData = await checkRes.json();
+    if (!checkRes.ok || checkData.exists) {
+        alert('이미 가입된 전화번호입니다.');
+        return;
+    }
+
+    try {
+        confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+        alert('인증번호가 전송되었습니다.');
+        // 인증 입력란 활성화
+        document.getElementById('otp').disabled         = false;
+        document.getElementById('verify-otp-btn').disabled = false;
+    } catch (err) {
+        console.error(err);
+        alert('인증번호 전송 실패: ' + err.message);
+    }
+};
+
+    // 4) OTP 확인 함수
+    window.verifySmsOtp = async () => {
+        const code = document.getElementById('otp').value.trim();
+        if (!code) { alert('인증번호를 입력하세요.'); return; }
+        try {
+            const userCredential = await confirmationResult.confirm(code);
+            const users = userCredential.users;
+            smsIdToken = await users.getIdToken();
+
+            alert('휴대전화 인증이 완료되었습니다.');
+            // 입력란·버튼 비활성화
+            document.getElementById('phone1').disabled       = true;
+            document.getElementById('phone2').disabled       = true;
+            document.getElementById('phone3').disabled       = true;
+            document.getElementById('send-otp-btn').disabled = true;
+            document.getElementById('otp').disabled         = true;
+            document.getElementById('verify-otp-btn').disabled = true;
+        } catch (err) {
+            console.error(err);
+            alert('인증 실패: ' + err.message);
+        }
+    };
+
+    document.getElementById('send-otp-btn').addEventListener('click', sendSmsOtp);
+    document.getElementById('verify-otp-btn').addEventListener('click', verifySmsOtp);
+
+    const joinURL = '/join';
+
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // SMS 인증 토큰 체크
+        if (!smsIdToken) {
+            alert('휴대전화 인증을 먼저 완료해주세요.');
+            return;
+        }
+
+        const name = document.getElementById('name').value.trim();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (!name || !username || !password) {
+            alert('모든 필드를 입력해주세요.');
+            return;
+        }
+
+        try {
+
+            const response = await fetch(joinURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': "application/json"
+                },
+                body: JSON.stringify({
+                    name: name,
+                    username: username,
+                    password: password,
+                    smsIdToken
+                })
+            });
+
+           // 여기서 응답 body를 JSON으로 파싱 시도
+            let data = null;
+            try {
+                data = await response.json();
+                alert('회원가입 성공: ' + data);
+            } catch (jsonErr) {
+                console.error('응답 JSON 파싱 오류:', jsonErr);
+            }
+
+            if (response.ok) {
+                // 서버에서 반환한 메시지를 보여 줍니다.
+                const msg = data && data.message ? data.message : '가입 완료';
+                alert('회원가입 성공: ' + msg);
+
+                window.location.href = /*[[@{/loginForm}]]*/ '/loginForm';
+                
+            } else {
+                // 400, 500 등 에러 코드인 경우
+                const errorMsg = data && data.message ? data.message :
+                                '서버 오류 코드 ' + response.status;
+                alert("회원가입 실패" + data.message);
+                alert("회원가입 실패" + data.message);
+                alert('회원가입 실패: ' + errorMsg);
+            }
+        } catch (err) {
+            console.error('Fetch 통신 중 오류 발생:', err);
+            alert('통신 오류: ' + err.message);
+        }
+    });
+</script>
+</body>
+</html>

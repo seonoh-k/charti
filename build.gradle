@@ -39,11 +39,16 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	implementation 'com.google.firebase:firebase-admin:9.1.1'
+	// FireBase Dependency
+	implementation 'com.google.firebase:firebase-admin:9.2.0'
 	// Layout Dialect
 	implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.3.0'
 	implementation 'software.amazon.awssdk:s3:2.25.4'
 	implementation 'software.amazon.awssdk:auth:2.25.4'
+	// Json Web Token Dependency
+	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 }
 
 tasks.named('test') {

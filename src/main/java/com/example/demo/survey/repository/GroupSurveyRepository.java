@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface GroupSurveyRepository extends JpaRepository<GroupSurvey, Long> {
     List<GroupSurvey> findByAgeGroupAndCategoryAndDeletedFalse(String ageGroup, String category);
-    List<GroupSurvey> findByTargetGroupAndCategoryAndDeletedFalse(String targetGroup);
+    List<GroupSurvey> findByTargetGroupAndCategoryAndDeletedFalse(String targetGroup,String category);
 
     List<GroupSurvey> findByAgeGroupAndDeletedFalse(String ageGroup);
 
