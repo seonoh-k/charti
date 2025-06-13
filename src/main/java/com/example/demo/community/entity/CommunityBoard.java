@@ -10,7 +10,8 @@ import lombok.Setter;
 @Table(name = "community_board")
 public class CommunityBoard extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long communityId;
 
     @Column(nullable = true) // 아직 계정 구현 안된 관계로 임시 null값 허용
@@ -31,10 +32,10 @@ public class CommunityBoard extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @Column(length = 1, columnDefinition = "STRING DEFAULT 'Y'")
+
+    @Column(length = 1, nullable = false, columnDefinition = "VARCHAR(1) DEFAULT 'Y'")
     private String status;
 
     @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
     private int views;
 }
-

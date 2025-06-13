@@ -44,4 +44,10 @@ public class MainController {
         return "test-record-admin";
     }
 
+    @GetMapping("/test/group-survey")
+    public String showGroupSurveyTestPage() {
+        return "test-groupSurvey"; // templates/test-groupSurvey.html
+    }
+
+
 }
