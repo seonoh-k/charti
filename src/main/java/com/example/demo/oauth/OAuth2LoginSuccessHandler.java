@@ -12,7 +12,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -28,7 +28,7 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-@Log4j2
+@Slf4j
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final UserService userService;

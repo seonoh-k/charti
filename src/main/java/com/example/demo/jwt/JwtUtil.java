@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,7 +21,7 @@ import java.util.Date;
 import java.util.List;
 
 @Component
-@Log4j2
+@Slf4j
 public class JwtUtil {
 
     // 생성자 방식으로 @Value 값을 주입하면,

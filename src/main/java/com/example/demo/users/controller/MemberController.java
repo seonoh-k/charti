@@ -23,7 +23,7 @@ public class MemberController {
         return "member";
     }
 
-    @GetMapping({"/","/main"})
+    @GetMapping("/main")
     public String showMainPage(Model model){
         log.info("[GET] 🟢 AuthController.showMainPage");
 

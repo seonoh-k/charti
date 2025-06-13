@@ -7,6 +7,7 @@ import com.example.demo.users.repository.UserRepository;
 import com.example.demo.util.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +16,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Log4j2
+@Slf4j
 public class UserService {
 
 

@@ -3,6 +3,7 @@ package com.example.demo.oauth;
 import com.example.demo.users.entity.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-@Log4j2
+@Slf4j
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final UserRepository userRepository;

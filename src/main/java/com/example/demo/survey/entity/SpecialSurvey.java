@@ -21,12 +21,14 @@ public class SpecialSurvey extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "child_id", nullable = false)
-    private Child child;  // ✅ 객체 참조로 변경
-
     @Column(nullable = false)
     private String question;
+
+    @Column(name = "age_group", nullable = false)
+    private String ageGroup;
+
+    @Column(nullable = false)
+    private String category;
 
     @ManyToMany
     @JoinTable(
