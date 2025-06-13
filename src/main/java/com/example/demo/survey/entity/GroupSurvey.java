@@ -27,22 +27,11 @@ public class GroupSurvey extends BaseEntity {
     @Column(name = "question", nullable = false)
     private String question;
 
+    @Column(nullable = false)
+    private String category;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "child_id", nullable = false)
-    private Child child;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id", nullable = false)
-    private Manager manager;
-
-//    @ManyToMany(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "survey_set_id", nullable = false)
-//    private List<SurveySet> surveySets;
 
 
     @ManyToMany

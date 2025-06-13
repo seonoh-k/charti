@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Group Survey 테스트</title>
+    <script>
+        let ageGroupSurveys = [];
+        let targetGroupSurveys = [];
+
+        function renderSurveyList(surveys, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+
+            surveys.forEach((survey, idx) => {
+                const div = document.createElement("div");
+                div.innerHTML = `
+                    <p><strong>문항 ${idx + 1}:</strong> ${survey.question}</p>
+                    <div>
+                        <label><input type="radio" name="${containerId}-answer-${idx}" value="1"> ${survey.answer1}</label>
+                        <label><input type="radio" name="${containerId}-answer-${idx}" value="2"> ${survey.answer2}</label>
+                        <label><input type="radio" name="${containerId}-answer-${idx}" value="3"> ${survey.answer3}</label>
+                        <label><input type="radio" name="${containerId}-answer-${idx}" value="4"> ${survey.answer4}</label>
+                        <label><input type="radio" name="${containerId}-answer-${idx}" value="5"> ${survey.answer5}</label>
+                    </div><hr>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function submitSurvey(surveys, containerId, ageGroup) {
+            const answers = [];
+            for (let i = 0; i < surveys.length; i++) {
+                const radios = document.getElementsByName(`${containerId}-answer-${i}`);
+                let selected = -1;
+                for (const radio of radios) {
+                    if (radio.checked) selected = parseInt(radio.value);
+                }
+                if (selected === -1) {
+                    alert(`${i + 1}번 문항에 응답하지 않았습니다.`);
+                    return;
+                }
+                answers.push(selected);
+            }
+
+            fetch("/api/group-surveys/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ageGroup: ageGroup, answers: answers })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (!res.success) throw new Error("응답 오류");
+                alert("📊 위험도 분석 결과\n\n총점: " + res.data.totalRiskScore.toFixed(2) + "\n" +
+                    Object.entries(res.data.categoryScores)
+                          .map(([cat, score]) => `${cat}: ${score.toFixed(2)}점`)
+                          .join("\n")
+                );
+            })
+            .catch(err => {
+                alert("제출 실패");
+                console.error(err);
+            });
+        }
+
+        window.onload = () => {
+            document.getElementById("loadAgeBtn").addEventListener("click", () => {
+                const ageGroup = document.getElementById("ageGroup").value;
+                if (!ageGroup) return alert("연령대를 선택해주세요.");
+
+                fetch(`/api/group-surveys/by-age/${ageGroup}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        if (!res.success) throw new Error();
+                        ageGroupSurveys = res.data;
+                        renderSurveyList(ageGroupSurveys, "ageSurveyContainer");
+                        document.getElementById("ageSubmitBtn").onclick = () =>
+                            submitSurvey(ageGroupSurveys, "ageSurveyContainer", ageGroup);
+                    })
+                    .catch(err => alert("ageGroup 문진 로드 실패"));
+            });
+
+            document.getElementById("loadTargetBtn").addEventListener("click", () => {
+                const targetGroup = document.getElementById("targetGroup").value;
+                if (!targetGroup) return alert("대상 그룹을 선택해주세요.");
+
+                fetch(`/api/group-surveys/by-target/${targetGroup}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        if (!res.success) throw new Error();
+                        targetGroupSurveys = res.data;
+                        renderSurveyList(targetGroupSurveys, "targetSurveyContainer");
+                        document.getElementById("targetSubmitBtn").onclick = () =>
+                            submitSurvey(targetGroupSurveys, "targetSurveyContainer", targetGroupSurveys[0]?.ageGroup || "5세");
+                    })
+                    .catch(err => alert("targetGroup 문진 로드 실패"));
+            });
+        };
+    </script>
+</head>
+<body>
+<h2>✅ Group Survey 테스트</h2>
+
+<!-- AgeGroup 영역 -->
+<section style="border:1px solid #ccc; padding:10px; margin-bottom:20px;">
+    <h3>① 연령대 문진</h3>
+    <label for="ageGroup">연령대 선택:</label>
+    <select id="ageGroup">
+        <option value="">-- 선택 --</option>
+        <option value="0~12개월">0~12개월</option>
+        <option value="1~2세">1~2세</option>
+        <option value="3~4세">3~4세</option>
+        <option value="5세">5세</option>
+    </select>
+    <button id="loadAgeBtn">불러오기</button>
+    <div id="ageSurveyContainer"></div>
+    <button id="ageSubmitBtn">제출</button>
+</section>
+
+<!-- TargetGroup 영역 -->
+<section style="border:1px solid #ccc; padding:10px;">
+    <h3>② 대상 그룹 문진</h3>
+    <label for="targetGroup">대상 선택:</label>
+    <select id="targetGroup">
+        <option value="">-- 선택 --</option>
+        <option value="유치원A">유치원A</option>
+        <option value="유치원B">유치원B</option>
+        <option value="어린이집C">어린이집C</option>
+        <option value="유치원D">유치원D</option>
+        <option value="유치원E">유치원E</option>
+    </select>
+    <button id="loadTargetBtn">불러오기</button>
+    <div id="targetSurveyContainer"></div>
+    <button id="targetSubmitBtn">제출</button>
+</section>
+</body>
+</html>
