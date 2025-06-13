@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>메인 페이지</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen flex items-center justify-center">
+<div class="bg-white shadow-lg rounded-xl p-10 text-center w-full max-w-md">
+  <h1 class="text-3xl font-bold mb-4">🎉 메인 페이지</h1>
+  <p class="text-lg mb-6">로그인을 성공하셨습니다! [[${email}]]</p>
+  <p class="text-lg mb-6">당신의 권한은 :  [[${role}]]</p>
+
+  <!-- 주요 페이지 네비게이션 -->
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <a th:href="@{/member}"  class="block bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">유저</a>
+    <a th:href="@{/manager}" class="block bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">매니저</a>
+    <a th:href="@{/expert}"  class="block bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">전문가</a>
+    <a th:href="@{/admin}"   class="block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">관리자</a>
+  </div>
+
+  <!-- 역할 업데이트 액션 -->
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <a th:href="@{/updateRole/member}"  class="block bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition">유저로 변경</a>
+    <a th:href="@{/updateRole/manager}" class="block bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition">매니저로 변경</a>
+    <a th:href="@{/updateRole/expert}"  class="block bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition">전문가로 변경</a>
+    <a th:href="@{/updateRole/admin}"   class="block bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition">관리자로 변경</a>
+  </div>
+
+  <!-- 로그아웃 -->
+  <div>
+    <a th:href="@{/logout}" class="inline-block bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition">
+      로그아웃
+    </a>
+  </div>
+</div>
+</body>
+</html>

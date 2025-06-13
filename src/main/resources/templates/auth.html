@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+<script type="module" th:inline="javascript">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword,signInWithCustomToken } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
+  authDomain: "charti-5da7d.firebaseapp.com",
+  projectId: "charti-5da7d",
+  storageBucket: "charti-5da7d.firebasestorage.app",
+  messagingSenderId: "308166362794",
+  appId: "1:308166362794:web:00035f97aca288228972d3",
+  measurementId: "G-TYBBZC80J9"
+};
+
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    async function getFirebaseToken() {
+
+        const firebaseCustomToken = [[${firebaseCustomCookie}]];  
+        console.log(firebaseCustomToken);
+    
+
+        // Firebase Auth 로그인 시도
+        //  Custom Token으로 로그인
+        try {
+            // Firebase Auth 로그인 시도
+            console.log("signInWithEmailAndPassword start");
+            const userCredential = await signInWithCustomToken(auth, firebaseCustomToken);
+            console.log("signInWithEmailAndPassword Execute");
+            const idToken = await userCredential.user.getIdToken();
+            console.log("userCredential.user.getIdToken Execute");
+
+            // 서버로 ID 토큰 전송
+            const response = await fetch("/oauth2/login", {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.status === 200 && result.code === 'SLS') {
+                window.location.href = '/main';
+            } else {
+                window.location.href = '/main';
+            }
+        } catch (error) {
+            alert('Firebase 로그인 오류: ' + error.message);
+            window.location.href = '/main';
+
+        }
+    }
+    getFirebaseToken();
+    
+</script>
+</body>
+</html>

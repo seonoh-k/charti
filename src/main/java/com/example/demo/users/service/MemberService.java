@@ -23,10 +23,10 @@ public class MemberService extends BaseService<Member, MemberRepository> {
         Address address = addressRepository.findById(1L).get();
 
         Member newMember = new Member();
-        newMember.setName("이병건");
-        newMember.setNickname("침착맨");
+//        newMember.setName("이병건");
+//        newMember.setNickname("침착맨");
         newMember.setAddress(address);
-        newMember.setPhone("0000");
+//        newMember.setPhone("0000");
 
         repository.save(newMember);
 

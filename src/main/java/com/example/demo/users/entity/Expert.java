@@ -29,6 +29,7 @@ public class Expert extends BaseEntity{
     private Boolean isApproved;
 
     @OneToOne()
+    @JoinColumn(name = "address_id")
     private Address address;
 
 

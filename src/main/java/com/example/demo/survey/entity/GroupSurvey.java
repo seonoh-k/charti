@@ -27,6 +27,7 @@ public class GroupSurvey extends BaseEntity {
     @Column(name = "question", nullable = false)
     private String question;
 
+    private String category;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "child_id", nullable = false)
