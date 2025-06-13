@@ -1,23 +1,26 @@
-package com.example.demo.users.entity;
+package com.example.demo.dto;
 
-import com.example.demo.entity.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+
 import lombok.*;
 
-@Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Admin extends BaseEntity {
+@ToString
+public class UserDTO {
 
-    @Id
     private Long id;
+    private String uuid;
     private String name;
     private String username;
     private String password;
+    private String role;
+    private String provider;
+    private String providerId;
+    private String smsIdToken; // sms 인증
     private String phoneNumber;
+
 
 }

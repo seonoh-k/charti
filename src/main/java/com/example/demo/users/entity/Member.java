@@ -5,8 +5,7 @@ import com.example.demo.entity.Album;
 import com.example.demo.entity.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,27 +16,18 @@ import java.util.List;
 public class Member extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "users_id")
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
-    private String nickname;
+    @OneToOne()
+    @MapsId()
+    @JoinColumn(name = "users_id")
+    private Users users;
 
     @OneToOne
     @JoinColumn(name = "address_id")
     private Address address;
 
-    @Column
-    private String phone;
-
-    @Column(name = "group_id")
-    private Long groupId;
-
-    @Column(name = "total_point")
     private Integer totalPoint;
 
     // 자녀랑 양방향관계 / 부모 아이디 탈퇴시 자녀 2명이상 등록되어있을경우 전부 삭제

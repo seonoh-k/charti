@@ -1,29 +1,34 @@
 package com.example.demo.users.entity;
 
+import com.example.demo.entity.Address;
 import com.example.demo.entity.BaseEntity;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.example.demo.entity.Group;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.util.List;
+import lombok.*;
 
 @Entity
-@Table(name = "manager")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Manager extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "manager_id")
+    @Column(name = "users_id")
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
+    @OneToOne()
+    @MapsId
+    @JoinColumn(name = "users_id")
+    private Users users;
 
-    private String phone;
-    private String email;
+    @OneToOne
+    @JoinColumn(name = "group_id")
+    private Group group;
+
+    private Boolean isApproved;
+
     private String organization; // 유치원, 어린이집 등
 
 

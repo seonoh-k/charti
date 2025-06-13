@@ -31,4 +31,6 @@ public class Address {
 
     @OneToOne(mappedBy = "address")
     private Member member;
+    @OneToOne(mappedBy = "address")
+    private Group group;
 }
