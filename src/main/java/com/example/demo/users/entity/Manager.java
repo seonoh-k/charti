@@ -1,7 +1,6 @@
 package com.example.demo.users.entity;
 
 import com.example.demo.entity.BaseEntity;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,7 +23,7 @@ public class Manager extends BaseEntity {
 
     private String phone;
     private String email;
-    private String organization; // 유치원, 어린이집 등
+    private String target; // 유치원, 어린이집 등
 
 
 

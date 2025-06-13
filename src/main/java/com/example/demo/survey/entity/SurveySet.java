@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "survey_set")
 @Getter
@@ -15,20 +18,22 @@ public class SurveySet extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long setId;
 
+    @Column(nullable = false)
+    private String setTitle;
+
     @Column(name = "age_group", nullable = false)
-    private String ageGroup;
+    private String ageGroup;  // 예: "0~1세"
 
     @Column(nullable = false)
-    private String category;
-
-    // 설문 세트 이름 (예: "0~12개월_생활습관")
-    @Column(name = "title")
-    private String title;
+    private String type; // 예: "GROUP" / "SPECIAL"
 
     @Column(nullable = false)
-    private String question;
+    private String category; // 예: "사회성/정서", "생활습관"
 
-    @Column(nullable = false)
-    private int weight;
 
+    @ManyToMany(mappedBy = "surveySets")
+    private List<SpecialSurvey> specialSurveys = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "surveySets")
+    private List<GroupSurvey> groupSurveys = new ArrayList<>();
 }
