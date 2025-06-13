@@ -10,13 +10,13 @@ import java.util.List;
 
 @Repository
 public interface GroupSurveyRepository extends JpaRepository<GroupSurvey, Long> {
-    List<GroupSurvey> findByAgeGroupAndCategoryAndDeletedFalse(String ageGroup, String category);
-    List<GroupSurvey> findByTargetGroupAndCategoryAndDeletedFalse(String targetGroup);
-
-    List<GroupSurvey> findByAgeGroupAndDeletedFalse(String ageGroup);
-
-    List<GroupSurvey>findByTargetGroupAndDeletedFalse(String targetGroup);
-
-    @Query("select distinct d.category from GroupSurvey d where d.deleted = false")
-    List<String> findDistinctCategories();
+//    List<GroupSurvey> findByAgeGroupAndCategoryAndDeletedFalse(String ageGroup, String category);
+//    List<GroupSurvey> findByTargetGroupAndCategoryAndDeletedFalse(String targetGroup);
+//
+//    List<GroupSurvey> findByAgeGroupAndDeletedFalse(String ageGroup);
+//
+//    List<GroupSurvey>findByTargetGroupAndDeletedFalse(String targetGroup);
+//
+//    @Query("select distinct d.category from GroupSurvey d where d.deleted = false")
+//    List<String> findDistinctCategories();
 }

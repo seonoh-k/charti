@@ -35,7 +35,9 @@ public class CommunityBoardService {
 
         Specification<CommunityBoard> spec = Specification.where(null);
 
-        spec = spec.and((r, q, cb) -> cb.equal(r.get("category"), mainCategory));
+        if (!"전체".equals(subCategory)) {
+            spec = spec.and((r, q, cb) -> cb.equal(r.get("category"), mainCategory));
+        }
 
         if (!"전체".equals(subCategory)) {
             spec = spec.and((r, q, cb) -> cb.equal(r.get("category2"), subCategory));

@@ -31,9 +31,19 @@ public class SurveySet extends BaseEntity {
     private String category; // 예: "사회성/정서", "생활습관"
 
 
-    @ManyToMany(mappedBy = "surveySets")
-    private List<SpecialSurvey> specialSurveys = new ArrayList<>();
-
-    @ManyToMany(mappedBy = "surveySets")
+    @ManyToMany  // ← owning side
+    @JoinTable(
+            name = "group_survey_set",
+            joinColumns =  @JoinColumn(name = "survey_set_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_survey_id")
+    )
     private List<GroupSurvey> groupSurveys = new ArrayList<>();
+
+    @ManyToMany  // ← owning side
+    @JoinTable(
+            name = "special_survey_set",
+            joinColumns =  @JoinColumn(name = "survey_set_id"),
+            inverseJoinColumns = @JoinColumn(name = "special_survey_id")
+    )
+    private List<SpecialSurvey> specialSurveys = new ArrayList<>();
 }

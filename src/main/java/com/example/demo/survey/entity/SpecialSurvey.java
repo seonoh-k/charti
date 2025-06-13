@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -15,29 +16,26 @@ import java.util.List;
 @Table(name = "special_survey")
 @Getter
 @Setter
-public class SpecialSurvey extends BaseEntity {
+public class SpecialSurvey extends BaseEntity implements BaseSurvey {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "child_id", nullable = false)
-    private Child child;  // ✅ 객체 참조로 변경
-
     @Column(nullable = false)
     private String question;
 
-    @ManyToMany
-    @JoinTable(
-            name = "special_survey_set", // 중간 테이블 이름
-            joinColumns = @JoinColumn(name = "special_survey_id"), // 현재 엔티티의 FK
-            inverseJoinColumns = @JoinColumn(name = "survey_set_id") // 반대편 FK
-    )
-    private List<SurveySet> surveySets;
+    @ManyToMany(mappedBy = "specialSurveys") // ← inverse side
+    private List<SurveySet> surveySets = new ArrayList<>();
 
     @Column(name = "survey_date", nullable = false)
     private LocalDate surveyDate;
+
+    @Column(name = "age_group", nullable = false)
+    private String ageGroup;
+
+    @Column(nullable = false)
+    private String category;
 
 
     @Column(nullable = false)

@@ -30,6 +30,7 @@ public class Member extends BaseEntity {
 
     private Integer totalPoint;
 
+
     // 자녀랑 양방향관계 / 부모 아이디 탈퇴시 자녀 2명이상 등록되어있을경우 전부 삭제
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

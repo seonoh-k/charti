@@ -22,8 +22,8 @@ public class CommunityBoard extends BaseEntity {
     @Column(length = 50, nullable = false)
     private String category2;            // 하위 카테고리
 
-    @Column(name = "age_group", length = 20, nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'N/A'")
-    private String ageGroup;             // 연령대
+    @Column(name = "age_group", length = 20, nullable = false)
+    private String ageGroup = "N/A";             // 연령대
 
     @Column(length = 255, nullable = false)
     private String title;
@@ -31,10 +31,10 @@ public class CommunityBoard extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @Column(length = 1, columnDefinition = "STRING DEFAULT 'Y'")
-    private String status;
+    @Column(length = 1)
+    private String status = "Y";
 
-    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
-    private int views;
+    @Column(nullable = false)
+    private Integer views = 0;
 }
 
