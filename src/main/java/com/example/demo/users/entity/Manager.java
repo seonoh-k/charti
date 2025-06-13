@@ -29,8 +29,6 @@ public class Manager extends BaseEntity {
 
     private Boolean isApproved;
 
-    private String organization; // 유치원, 어린이집 등
-
-
+    private String organization; // 유치원, 어린이집 
 
 }

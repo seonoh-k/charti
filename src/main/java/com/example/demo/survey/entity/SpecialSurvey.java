@@ -2,11 +2,13 @@ package com.example.demo.survey.entity;
 
 import com.example.demo.entity.BaseEntity;
 
+import com.example.demo.users.entity.Child;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 
 @Entity
@@ -19,15 +21,24 @@ public class SpecialSurvey extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "child_id", nullable = false)
-    private Long childId;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "set_id", nullable = false)
-    private SurveySet surveySet;
+    @JoinColumn(name = "child_id", nullable = false)
+    private Child child;  // ✅ 객체 참조로 변경
+
+    @Column(nullable = false)
+    private String question;
+
+    @ManyToMany
+    @JoinTable(
+            name = "special_survey_set", // 중간 테이블 이름
+            joinColumns = @JoinColumn(name = "special_survey_id"), // 현재 엔티티의 FK
+            inverseJoinColumns = @JoinColumn(name = "survey_set_id") // 반대편 FK
+    )
+    private List<SurveySet> surveySets;
 
     @Column(name = "survey_date", nullable = false)
     private LocalDate surveyDate;
+
 
     @Column(nullable = false)
     private String answer1;
@@ -35,16 +46,18 @@ public class SpecialSurvey extends BaseEntity {
     @Column(nullable = false)
     private String answer2;
 
-    @Column(nullable = false)
+    @Column
     private String answer3;
 
-    @Column(nullable = true)
+    @Column
     private String answer4;
 
-    @Column(nullable = true)
+    @Column
     private String answer5;
 
-    @Column(name = "title", nullable = true)
-    private String title;
+    @Column(name = "selected_answer", nullable = false)
+    private String selectedAnswer;
 
+    @Column(name = "calculated_score", nullable = false)
+    private int calculatedScore;
 }
