@@ -2,11 +2,13 @@ package com.example.demo.entity;
 
 import com.example.demo.users.entity.Member;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Address {
 
     @Id
@@ -31,6 +33,8 @@ public class Address {
 
     @OneToOne(mappedBy = "address")
     private Member member;
+
     @OneToOne(mappedBy = "address")
     private Group group;
+
 }

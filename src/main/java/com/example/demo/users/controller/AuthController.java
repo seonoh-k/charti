@@ -1,13 +1,21 @@
 package com.example.demo.users.controller;
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.request.ExpertJoinRequest;
+import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.exception.JwtTokenFormatInvalidException;
+import com.example.demo.exception.JwtTokenNotFoundException;
 import com.example.demo.jwt.JwtUtil;
 import com.example.demo.users.entity.Role;
+import com.example.demo.users.exception.UserAlreadyExistsException;
+import com.example.demo.users.exception.UserNotFoundException;
+import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.FirebaseService;
 import com.example.demo.users.service.UserService;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.UserStatus;
+import com.google.api.Http;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +31,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * 회원가입/로그인/인가(Authorization) 및 인증(Authentication) 처리를 담당
+ */
 @Controller
 @RequiredArgsConstructor
 @Log4j2
@@ -31,39 +42,68 @@ public class AuthController {
     private final FirebaseService firebaseService;
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final AuthService authService;
 
 
+    /**
+     * 로그인 Users 테이블에 있는 데이터로 검사를 진행한다.
+     *
+     * @param authHeader
+     * @return ApiResponse StatusCode : ["AF","AS"]
+     */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> loginUser(@RequestHeader("Authorization") String authHeader) {
         try {
             // JWT TOKEN FORMAT => "Bearer TokenValueIsRandomTextAndIncludingNumber"
-            String idToken = authHeader.replace("Bearer ", "");
-
+            String idToken = jwtUtil.removeBearerPrefix(authHeader);
             FirebaseToken decoded = firebaseService.verifyIdToken(idToken);
+            String email = decoded.getEmail();
+
+            userService.getMemberByEmail(email);
 
             String jwt = jwtUtil.createToken(decoded);
-
             ResponseCookie jwtCookie = jwtUtil.createCookie(jwt);
 
             return ResponseEntity.status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                     .body(new ApiResponse(AuthStatus.AUTHENTICATION_SUCCESS));
 
+        } catch (JwtTokenNotFoundException jwtTokenNotFoundException){
 
-        } catch (FirebaseAuthException e) {
-            log.info("⚠️ [AuthController.loginMember] FirebaseAuthException : {}",e.getMessage());
+            jwtTokenNotFoundException.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(AuthStatus.TOKEN_NOT_FOUND));
+
+        } catch (JwtTokenFormatInvalidException jwtTokenFormatInvalidException){
+
+            jwtTokenFormatInvalidException.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.TOKEN_INVALID_FORMAT));
+
+        } catch (FirebaseAuthException firebaseAuthException) {
+
+            log.info("⚠️ [AuthController.loginMember] FirebaseAuthException : {}",
+                    firebaseAuthException.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse(AuthStatus.AUTHENTICATION_FAIL));
+
+        } catch (UserNotFoundException userNotFoundException){
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.USER_NOT_REGISTRATION));
+
         }
     }
 
     @PostMapping(value ="/api/check-phone")
     @ResponseBody
     public Map<String, Boolean> checkPhone(@RequestBody Map<String, String> req) {
+
         String phoneNumber = req.get("phoneNumber");
         log.info("👋[AuthController.checkPhone]  phoneNumber : {}", phoneNumber);
         boolean exists = userService.existsByPhoneNumber(phoneNumber);
         return Map.of("exists", exists);
+
     }
 
     /**
@@ -73,10 +113,10 @@ public class AuthController {
      * @return
      */
     @PostMapping("/join")
-    public ResponseEntity<ApiResponse> joinUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<ApiResponse> joinMember(@RequestBody UserDTO userDTO) {
         // 1. 유효성 검사 실패하면 파이어베이스 계정 삭제
-        // 2.
         try {
+
             FirebaseToken firebaseToken = firebaseService.verifyIdToken(userDTO.getSmsIdToken());
 
             String uid = firebaseToken.getUid();
@@ -101,22 +141,56 @@ public class AuthController {
             firebaseService.setFirebaseMemberRoleToMember(savedUserDTO);
 
             if (userStatus == UserStatus.JOIN_SUCCESS) {
+
                 return ResponseEntity.status(HttpStatus.OK)
                         .body(new ApiResponse(userStatus));
+
             } else {
+
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(new ApiResponse(userStatus));
+
             }
 
-        } catch (FirebaseAuthException e) {
+        } catch (FirebaseAuthException firebaseAuthException) {
 
-            return ResponseEntity.status(500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(AuthStatus.SERVER_ERROR));
-        } catch (IllegalArgumentException e) {
 
-            return ResponseEntity.status(400)
+        } catch (IllegalArgumentException illegalArgumentException) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse(AuthStatus.AUTHENTICATION_FAIL));
+
         }
+    }
+
+    @PostMapping("/joinExpert")
+    public ResponseEntity<ApiResponse> joinExpert(@RequestBody ExpertJoinRequest expertJoinRequest){
+        try{
+            AuthStatus authStatus = authService.createExpertJoinRequest(expertJoinRequest);
+        } catch (UserAlreadyExistsException userAlreadyExistsException){
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
+
+        }
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse(AuthStatus.EXPERT_JOIN_REQUEST_SUCCESS));
+    }
+    @PostMapping("/joinManager")
+    public ResponseEntity<ApiResponse> joinManager(@RequestBody ManagerJoinRequest managerJoinRequest){
+        try{
+            AuthStatus authStatus = authService.createManagerJoinRequest(managerJoinRequest);
+        } catch (UserAlreadyExistsException userAlreadyExistsException){
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
+
+        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse(AuthStatus.MANAGER_JOIN_REQUEST_SUCCESS));
     }
 
 
@@ -131,12 +205,11 @@ public class AuthController {
         log.info("[POST] 🎈 AuthController.getToken");
         try{
 
-            String idToken = authHeader.replace("Bearer ", "");
+            String idToken = jwtUtil.removeBearerPrefix(authHeader);
 
             FirebaseToken decoded = firebaseService.verifyIdToken(idToken);
 
             String jwt = jwtUtil.createToken(decoded);
-            log.info("🍪 [POST] AuthController.getToken : createToken : " + jwt);
 
             ResponseCookie jwtCookie = jwtUtil.createCookie(jwt);
 
@@ -144,11 +217,24 @@ public class AuthController {
                     .header(HttpHeaders.SET_COOKIE,jwtCookie.toString())
                     .body(new ApiResponse(UserStatus.SOCIAL_LOGIN_SUCCESS));
 
-        } catch (FirebaseAuthException e){
+        } catch (JwtTokenNotFoundException jwtTokenNotFoundException){
 
-            e.printStackTrace();
+            jwtTokenNotFoundException.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(AuthStatus.TOKEN_NOT_FOUND));
+
+        } catch (JwtTokenFormatInvalidException jwtTokenFormatInvalidException){
+
+            jwtTokenFormatInvalidException.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.TOKEN_INVALID_FORMAT));
+
+        } catch (FirebaseAuthException firebaseAuthException){
+
+            firebaseAuthException.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse(UserStatus.SOCIAL_LOGIN_FAIL));
+
         }
     }
 
@@ -175,8 +261,11 @@ public class AuthController {
 
     @GetMapping("/updateRole/admin")
     public String updateRoleAdmin(){
+
         log.info("🟠 AuthController.updateRoleAdmin 요청");
+
         try{
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String uuid = (String) authentication.getPrincipal();
             UserDTO userDTO = userService.getMemberByUUID(uuid);
@@ -189,13 +278,16 @@ public class AuthController {
         } catch (FirebaseAuthException e){
             log.info("⚠️ AuthController.changeRoleAdmin FirebaseAuthException");
         }
-
         return "redirect:/logout";
+
     }
     @GetMapping("/updateRole/manager")
     public String updateRoleManager(){
+
         log.info("🟠 AuthController.updateRoleManager 요청");
+
         try{
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String uuid = (String) authentication.getPrincipal();
             UserDTO userDTO = userService.getMemberByUUID(uuid);
@@ -213,8 +305,11 @@ public class AuthController {
     }
     @GetMapping("/updateRole/expert")
     public String updateRoleExpert(){
+
         log.info("🟠 AuthController.updateRoleExpert 요청");
+
         try{
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String uuid = (String) authentication.getPrincipal();
             UserDTO userDTO = userService.getMemberByUUID(uuid);
@@ -227,14 +322,15 @@ public class AuthController {
         } catch (FirebaseAuthException e){
             log.info("⚠️ AuthController.changeRoleAdmin FirebaseAuthException");
         }
-
         return "redirect:/logout";
     }
     @GetMapping("/updateRole/member")
     public String updateRoleMember(){
 
         log.info("🟠 AuthController.updateRoleMember 요청");
+
         try{
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String uuid = (String) authentication.getPrincipal();
 
@@ -247,10 +343,7 @@ public class AuthController {
         } catch (FirebaseAuthException e){
             log.info("⚠️ AuthController.changeRoleAdmin FirebaseAuthException");
         }
-
         return "redirect:/logout";
     }
-
-
 
 }
