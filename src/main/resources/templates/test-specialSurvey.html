@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Special Survey 통합 테스트</title>
+    <style>
+        section { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+<h2>✅ Special Survey 통합 테스트</h2>
+
+<!-- ① 연령대 기준 문진 조회 -->
+<section>
+    <h3>1. 연령대 문진 조회</h3>
+    <select id="ageGroup">
+        <option value="">-- 선택 --</option>
+        <option value="0~12개월">0~12개월</option>
+        <option value="1~2세">1~2세</option>
+        <option value="3~4세">3~4세</option>
+        <option value="5세">5세</option>
+    </select>
+    <button onclick="loadByAge()">불러오기</button>
+    <div id="ageSurveyContainer"></div>
+</section>
+
+<!-- ② 카테고리 기준 문진 조회 -->
+<section>
+    <h3>2. 카테고리 문진 조회</h3>
+    <select id="category">
+        <option value="">-- 선택 --</option>
+        <option>의사소통/정서/심리</option>
+        <option>운동/인지 발달</option>
+        <option>사회성/인지/창의</option>
+        <option>생활습관</option>
+    </select>
+    <button onclick="loadByCategory()">불러오기</button>
+    <div id="categorySurveyContainer"></div>
+</section>
+
+<!-- ③ 문진 등록 -->
+<section>
+    <h3>3. 신규 문진 등록</h3>
+    <input placeholder="문항" id="newQuestion" style="width:300px">
+    <select id="newAgeGroup">
+        <option value="">연령대 선택</option>
+        <option>0~12개월</option>
+        <option>1~2세</option>
+        <option>3~4세</option>
+        <option>5세</option>
+    </select>
+    <select id="newCategory">
+        <option value="">카테고리 선택</option>
+        <option>의사소통/정서/심리</option>
+        <option>운동/인지 발달</option>
+        <option>사회성/인지/창의</option>
+        <option>생활습관</option>
+    </select>
+    <input id="newWeight" placeholder="가중치" type="number">
+    <br>
+    <input placeholder="답변1" id="a1">
+    <input placeholder="답변2" id="a2">
+    <input placeholder="답변3" id="a3">
+    <input placeholder="답변4" id="a4">
+    <input placeholder="답변5" id="a5">
+    <br>
+    <input placeholder="선택된 답변" id="selected">
+    <input placeholder="계산 점수" id="score" type="number">
+    <button onclick="registerSurvey()">등록</button>
+</section>
+
+<!-- ④ 문진 삭제 -->
+<section>
+    <h3>4. 문진 삭제</h3>
+    <input placeholder="삭제할 ID" id="deleteId">
+    <button onclick="deleteSurvey()">삭제</button>
+</section>
+
+<script>
+    function renderSurveyList(surveys, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        surveys.forEach((s, idx) => {
+            container.innerHTML += `<p><strong>${idx + 1}.</strong> ${s.question}</p><hr>`;
+        });
+    }
+
+    function loadByAge() {
+    const ageGroup = document.getElementById("ageGroup").value;
+    fetch(`/api/special-surveys/by-age/${ageGroup}`)
+        .then(r => r.json())
+        .then(res => renderSurveyList(res, "ageSurveyContainer"));
+}
+
+    function loadByCategory() {
+    const category = document.getElementById("category").value;
+    fetch(`/api/special-surveys?category=${category}`)
+        .then(r => r.json())
+        .then(res => renderSurveyList(res, "categorySurveyContainer"));
+}
+
+
+    function registerSurvey() {
+        const dto = {
+            ageGroup: document.getElementById("newAgeGroup").value,
+            category: document.getElementById("newCategory").value,
+            question: document.getElementById("newQuestion").value,
+            weight: +document.getElementById("newWeight").value,
+            answer1: document.getElementById("a1").value,
+            answer2: document.getElementById("a2").value,
+            answer3: document.getElementById("a3").value,
+            answer4: document.getElementById("a4").value,
+            answer5: document.getElementById("a5").value,
+            selectedAnswer: document.getElementById("selected").value,
+            calculatedScore: +document.getElementById("score").value
+        };
+        fetch("/api/special-surveys", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dto)
+        }).then(() => alert("등록 완료"));
+    }
+
+    function deleteSurvey() {
+        const id = document.getElementById("deleteId").value;
+        fetch(`/api/special-surveys/${id}`, { method: "DELETE" })
+            .then(() => alert("삭제 완료"));
+    }
+</script>
+</body>
+</html>

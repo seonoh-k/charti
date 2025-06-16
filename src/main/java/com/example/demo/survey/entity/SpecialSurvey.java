@@ -32,13 +32,15 @@ public class SpecialSurvey extends BaseEntity implements BaseSurvey {
 
     @Column(name = "survey_date", nullable = false)
     private LocalDate surveyDate;
-
+  
     @Column(name = "age_group", nullable = false)
     private String ageGroup;
 
     @Column(nullable = false)
-    private String category;
+    private String question;
 
+    @Column(nullable = false)
+    private String category;
 
     @Column(nullable = false)
     private String answer1;
@@ -60,4 +62,4 @@ public class SpecialSurvey extends BaseEntity implements BaseSurvey {
 
     @Column(name = "calculated_score", nullable = false)
     private int calculatedScore;
-}
+  

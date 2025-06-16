@@ -32,12 +32,6 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     @Column(nullable = false)
     private String category;
 
-
-//    @ManyToMany(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "survey_set_id", nullable = false)
-//    private List<SurveySet> surveySets;
-
-
     @ManyToMany(mappedBy = "groupSurveys")
     @JsonIgnore
     private List<SurveySet> surveySets = new ArrayList<>();
