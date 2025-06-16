@@ -1,6 +1,7 @@
 package com.example.demo.users.controller;
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.info.AddressInfo;
 import com.example.demo.dto.info.CommonInfo;
 import com.example.demo.dto.request.ExpertJoinRequest;
 import com.example.demo.dto.request.ManagerJoinRequest;
@@ -150,8 +151,10 @@ public class AuthController {
             log.info("[POST] 🎈 MemberJoinRequest 비밀번호 '{}' :  ",memberJoinRequest.getCommonInfo().getPassword());
             log.info("[POST] 🎈 MemberJoinRequest id 토큰 '{}' :  ",memberJoinRequest.getCommonInfo().getSmsIdToken());
 
-
+            // 공통 정보 인포
             CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
+            // 주소정보 인포
+            AddressInfo addressInfo = memberJoinRequest.getAddressInfo();
             FirebaseToken firebaseToken = firebaseService.verifyIdToken(commonInfo.getSmsIdToken());
 
             String uid = firebaseToken.getUid();

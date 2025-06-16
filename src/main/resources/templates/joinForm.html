@@ -52,7 +52,6 @@
                 <input type="text" id="gugun" name="gugun" placeholder="구.군" readonly>
                 <input type="text" id="dong" name="dong" placeholder="동" readonly>
                 <input type="text" id="beonji" name="beonji" placeholder="지번" readonly>
-                <input type="text" id="detailAddress" name="detailAddress" placeholder="상세주소">
 
                 <button type="button" onclick="execDaumPostcode()">우편번호 찾기</button>
             </div>
@@ -241,6 +240,11 @@
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
         const nickname = document.getElementById('nickname').value.trim();
+
+        // const nickname = document.getElementById('nickname').value.trim();
+        // const nickname = document.getElementById('nickname').value.trim();
+        // const nickname = document.getElementById('nickname').value.trim();
+        // const nickname = document.getElementById('nickname').value.trim();
 
         if (!name || !username || !password) {
             alert('모든 필드를 입력해주세요.');
