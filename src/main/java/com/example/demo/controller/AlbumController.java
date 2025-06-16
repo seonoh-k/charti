@@ -28,7 +28,7 @@ public class AlbumController {
     @GetMapping("/albums")
     public String getAlbumList(Model model) {
 
-        Member member = memberService.get(6L);
+        Member member = memberService.get(50L);
 
         List<Album> albumList = member.getAlbums();
         List<String> urlList = new ArrayList<>();
@@ -43,6 +43,19 @@ public class AlbumController {
         model.addAttribute("urlList", urlList);
 
         return "albums";
+    }
+
+    @GetMapping("/album/{id}")
+    public String getAlbum(@PathVariable("id") Long id, Model model) {
+
+        Album album = albumService.get(id);
+        String presignedUrl = urlService.getPresignedUrl(album.getThumbnail(), Duration.ofMinutes(15)).toString();
+
+        model.addAttribute("id", id);
+        model.addAttribute("album", album);
+        model.addAttribute("url", presignedUrl);
+
+        return "album";
     }
 
 }

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charti</title>
+</head>
+<body>
+<div>
+    <img th:src="${url}" th:alt="${album.thumbnail}" style="width: 100px; height: 100px"/>
+    <h3 th:text="${album.title}"></h3>
+</div><hr>
+<form id="photoForm">
+    <input type="file" name="file" id="fileInput" accept="image/*">
+    <button type="submit">사진 업로드</button>
+</form>
+<div id="result"></div>
+<table>
+    <tr id="photoTable"></tr>
+</table>
+</body>
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", () => {
+        const id = [[${id}]];
+        loadPhotos(id);
+
+        document.querySelector("#photoForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.querySelector("#fileInput");
+            const file = fileInput.files[0];
+            const result = document.querySelector("#result");
+
+            if(!file) {
+                alert("업로드할 파일을 선택해주세요");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("id", id);
+            formData.append("file", file);
+
+            const res = await fetch("/api/album/photo/upload", {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (!data.url) {
+                result.innerHTML = `<p class="text-red-600 font-semibold">서버로부터 업로드 URL을 받지 못했습니다.</p>`;
+                return;
+            }
+
+            const uploadUrl = data.url;
+
+            // 생성된 업로드 url을 통해 파일 업로드 요청
+            const uploadRes = await fetch(uploadUrl, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": file.type
+                },
+                body: file
+            });
+
+            if(uploadRes.ok) {
+                result.innerHTML = `<p class="text-green-600 font-semibold">Upload Seccess</p>`;
+                loadPhotos(id);
+            }else {
+                result.innerHTML = `<p class="text-red-600 font-semibold">Upload Fail!</p>`;
+            }
+
+        })
+    })
+
+    async function loadPhotos(albumId) {
+        const photoTable = document.querySelector("#photoTable");
+        photoTable.innerHTML = '';
+        const res = await fetch(`/api/album/${albumId}`);
+        const urlList = await res.json() ?? [];
+
+        for(const url of urlList) {
+            if(!url?.url) continue;
+
+            const td = document.createElement("td");
+            const img = document.createElement("img");
+            img.src = url.url;
+            img.alt = url.filename || "Image";
+            img.loading = "lazy";
+            img.style.width = "100px";
+            img.style.height = "100px";
+            td.appendChild(img);
+            photoTable.appendChild(td);
+        }
+    }
+</script>
+</html>
