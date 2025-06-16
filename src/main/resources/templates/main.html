@@ -37,5 +37,46 @@
     </a>
   </div>
 </div>
+
+
+<script type="module">
+  // Firebase 구성 및 초기화
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+  import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-messaging.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
+    authDomain: "charti-5da7d.firebaseapp.com",
+    projectId: "charti-5da7d",
+    messagingSenderId: "308166362794",
+    appId: "1:308166362794:web:00035f97aca288228972d3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const messaging = getMessaging(app);
+
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then((registration) => {
+      console.log("✅ ServiceWorker 등록 완료:", registration);
+
+      // VAPID 키를 이용해 토큰 요청
+      return getToken(messaging, {
+        vapidKey: "BCOstAjMQL4pjgMa7JNdlE_TX8zgAB2_Ke2ku53BMIZYVJJDpkMmB00wSMsp5K_H8Fog850yst8s662FLlAvcWY",
+        serviceWorkerRegistration: registration
+      });
+    })
+    .then((token) => {
+      console.log("🔥 FCM 웹 토큰:", token);
+      // TODO: 서버로 token 전송
+    })
+    .catch((err) => {
+      console.error("❌ 알림 권한 요청 실패:", err);
+    });
+
+  onMessage(messaging, (payload) => {
+    console.log('📩 Foreground 메시지 수신:', payload);
+  });
+</script>
+
 </body>
 </html>
