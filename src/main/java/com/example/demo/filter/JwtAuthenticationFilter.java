@@ -1,6 +1,7 @@
 package com.example.demo.filter;
 
 import com.example.demo.jwt.JwtUtil;
+import com.example.demo.util.AppURLs;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,6 +16,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -33,26 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // 우리가 생성한 Jwt Token Name
     private static final String TOKEN_NAME = "token";
-    // 토큰이 필요 없는 URI 목록
-    private static final String[] PUBLIC_PATHS = {
-            "/loginForm",
-            "/joinForm",
-            "/oauth2/login",
-            "/join",
-            "/login",
-            "/expertJoinForm",
-            "/managerJoinForm",
-            "/api/check-phone",
-            "/favicon.ico"
-    };
-
-    // 정적 리소스 및 .well-known 경로를 허용할 때 사용하는 접두사
-    private static final String[] PREFIX_WHITELIST = {
-            "/css/",
-            "/js/",
-            "/images/",
-            "/.well-known/"
-    };
 
     private String resolveToken(HttpServletRequest request) {
 
@@ -76,23 +58,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         return null;
+
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getServletPath();
         log.info("🔒 [Filter] JwtAuthenticationFilter.doFilterInternal :  현재 검증 중인 경로 = {}", path);
 
         // login, loginForm 등 인증이 필요 없는 웹사이트는 토큰을 검증 하지 않는다.
-        for (String publicPath : PUBLIC_PATHS) {
-            if (publicPath.equals(path)) {
+        AntPathMatcher matcher = new AntPathMatcher();
+
+        for (String publicPath : AppURLs.PUBLIC_URLS) {
+            if (matcher.match(publicPath, path)) {
+                log.info("🎫 PUBLIC 통과 : {}", path);
                 filterChain.doFilter(request, response);
                 return;
             }
         }
-        for (String prefix : PREFIX_WHITELIST) {
-            if (path.startsWith(prefix)) {
+
+        for (String prefix : AppURLs.PREFIX_WHITELIST) {
+            if (matcher.match(prefix, path)) {
+                log.info("🎫 PREFIX 통과 : {}", path);
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -117,4 +107,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
+
 }

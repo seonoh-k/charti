@@ -23,20 +23,17 @@ import java.util.Map;
 @Slf4j
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
-    private final UserRepository userRepository;
     private final List<OAuth2UserInfoFactory> userInfoFactories;
+    private final UserRepository userRepository;
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 
         log.info("🔑 OAuth2 로그인 요청 성공: {}", userRequest.getClientRegistration().getRegistrationId());
 
         try {
-
             // "google", "naver", "kakao"
             String provider = userRequest.getClientRegistration().getRegistrationId();
             log.info("👤 [CustomOAuth2UserService.loadUser] provider : {}",provider);
-
-
 
             // provider를 하나씩 가져와서 검사 후 해당하는 factory를 생성한다.
             OAuth2UserInfoFactory factory = userInfoFactories.stream()
@@ -48,7 +45,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
             OAuth2User oauth2User = new DefaultOAuth2UserService().loadUser(userRequest);
             Map<String, Object> attributes = oauth2User.getAttributes();
-
             OAuth2UserInfo oAuth2UserInfo = factory.create(attributes);
 
             log.info("🍘 CustomOAuth2UserService.loadUser oAuth2UserInfo.getAttributes() : {}",oAuth2UserInfo.getAttributes());
@@ -56,6 +52,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             log.info("🍘 CustomOAuth2UserService.loadUser oAuth2UserInfo.getEmail() : {}",oAuth2UserInfo.getEmail());
             log.info("🍘 CustomOAuth2UserService.loadUser oAuth2UserInfo.getProviderId() : {}",oAuth2UserInfo.getProviderId());
             log.info("🍘 CustomOAuth2UserService.loadUser oAuth2UserInfo.getProvider() : {}",oAuth2UserInfo.getProvider());
+
             List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
             grantedAuthorities.add(new SimpleGrantedAuthority(Role.ROLE_MEMBER.name()));
 
@@ -66,6 +63,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             e.printStackTrace();
             throw e;
         }
+
     }
 
 }

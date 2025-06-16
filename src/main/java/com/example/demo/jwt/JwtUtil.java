@@ -1,12 +1,14 @@
 package com.example.demo.jwt;
 
+import com.example.demo.exception.JwtTokenFormatInvalidException;
+import com.example.demo.exception.JwtTokenMissingException;
+import com.example.demo.exception.JwtTokenNotFoundException;
 import com.google.firebase.auth.FirebaseToken;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
@@ -43,6 +45,28 @@ public class JwtUtil {
 
     }
 
+    /**
+     * Jwt 토큰의 접두사를 제거한다.
+     * <br/>
+     * Jwt Token의 형식은 "Bearer "로 시작
+     * @param authHeader : "Authorization" 헤더의 값
+     * @return String jwtToken
+     * @throws JwtTokenNotFoundException token이 null인 경우
+     * @throws JwtTokenFormatInvalidException token이 Jwt 형식이 아닌 경우
+     */
+    public String removeBearerPrefix(String authHeader) throws JwtTokenNotFoundException, JwtTokenFormatInvalidException{
+
+        if(authHeader == null){
+            throw new JwtTokenNotFoundException();
+        }
+
+        if(!authHeader.startsWith("Bearer ")){
+            throw new JwtTokenFormatInvalidException();
+        }
+
+        return authHeader.replace("Bearer ", "");
+
+    }
 
 
     /**
@@ -83,6 +107,7 @@ public class JwtUtil {
      * @return String ex)  ROLE_ADMIN,ROLE_USER,ROLE_EXPERT,ROLE_MANAGER
      */
     public String getRole(String token) {
+
         String role = (String) Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
@@ -91,6 +116,7 @@ public class JwtUtil {
                 .get("role");
         log.info("getRole => {}",role);
         return role;
+
     }
 
     /**
@@ -100,6 +126,7 @@ public class JwtUtil {
      * @return : true : 검사결과에 부합
      */
     public boolean validateToken(String token) {
+
         try {
             Jwts.parserBuilder()
                     .setSigningKey(key)
@@ -110,6 +137,7 @@ public class JwtUtil {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+
     }
 
     /**
@@ -119,11 +147,13 @@ public class JwtUtil {
      * @return : JWT 토큰에 있는 payload의 claims를 반환한다.
      */
     public Claims getClaims(String token){
+
         return Jwts.parserBuilder()
                 .setSigningKey(key)        // JWT 서명에 사용한 키 설정
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+
     }
 
     /**
@@ -134,6 +164,7 @@ public class JwtUtil {
      * @return : 유효시간이 1시간인 JWT 토큰 값이 들어있는 쿠키를 반환한다.
      */
     public ResponseCookie createCookie(String jwt){
+
         return ResponseCookie.from(COOKIE_NAME, jwt) // 쿠키 이름과 값 설정
                 .httpOnly(true)                // JavaScript 접근 차단 (XSS 방지용)
                 .secure(true)                  // HTTPS에서만 전송 (개발 중에는 false 가능)
@@ -141,6 +172,7 @@ public class JwtUtil {
                 .maxAge(60 * 60)               // 쿠키 유효 시간 (초 단위, 여기선 1시간)
                 .sameSite("Strict")            // CSRF 보호 강화 (또는 "Lax" 사용 가능)
                 .build();
+
     }
 
     /**
@@ -149,10 +181,12 @@ public class JwtUtil {
      * @return : UsernamePasswordAuthenticationToken 객체를 반환한다.
      */
     public Authentication getAuthentication(String token) {
+
         String username = getUsername(token); // JWT에서 username 추출
         String role = getRole(token);
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
-        grantedAuthorities.add((SimpleGrantedAuthority) new SimpleGrantedAuthority(role));
+        grantedAuthorities.add(new SimpleGrantedAuthority(role));
         return new UsernamePasswordAuthenticationToken(username, null, grantedAuthorities);
+
     }
 }

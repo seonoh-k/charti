@@ -1,9 +1,16 @@
 package com.example.demo.users.service;
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.request.ExpertJoinRequest;
+import com.example.demo.dto.request.ManagerJoinRequest;
+import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.repository.ExpertRepository;
+import com.example.demo.users.repository.ManagerRepository;
+import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.repository.UserRepository;
+import com.example.demo.util.AuthStatus;
 import com.example.demo.util.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -14,6 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.users.exception.UserNotFoundException;
 import java.util.Optional;
 
+/**
+ * 유저에 공통으로 들어가는 정보만 필요한 경우 해당 클래스를 사용하여 데이터베이스에서 데이터를 가져오세요.
+ * 기타 세분화된 정보가 필요한 경우 각 해당 클래스 서비스를 참조하세요.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -21,7 +32,11 @@ public class UserService {
 
 
     private final UserRepository userRepository;
+    private final ManagerRepository managerRepository;
+    private final ExpertRepository expertRepository;
+    private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+
 
     public UserDTO entityToDTO(Users users) {
 
@@ -231,4 +246,9 @@ public class UserService {
             throw new UserNotFoundException("유저가 없어요");
         }
     }
+
+
+
+
+
 }

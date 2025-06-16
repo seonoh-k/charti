@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Log4j2
 public class ManagerController {
 
+
+
     @GetMapping("/manager")
     public String showMangerPage() {
         log.info("[GET] 👨‍💼 request manager Page");

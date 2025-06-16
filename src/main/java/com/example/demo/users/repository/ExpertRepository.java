@@ -1,5 +1,8 @@
 package com.example.demo.users.repository;
 
-public interface ExpertRepository {
-//    extends JpaRepository<Expert, Integer>
+import com.example.demo.users.entity.Expert;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ExpertRepository extends JpaRepository<Expert,Long> {
+
 }

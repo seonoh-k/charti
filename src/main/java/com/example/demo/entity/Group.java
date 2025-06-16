@@ -29,5 +29,6 @@ public class Group extends BaseEntity {
 
     @OneToOne(mappedBy = "group")
     private Manager manager;
+
 }
 

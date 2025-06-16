@@ -62,6 +62,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         // 파이어베이스 이상으로 파이어베이스는 저장되지않고 데이터베이스만 저장된 경우
         //
         try {
+
             boolean existsByEmailInFirebase = firebaseService.existsByByEmail(oAuth2UserInfo.getEmail());
             boolean existsByEmailInDB = userService.existsByEmail(oAuth2UserInfo.getEmail());
             // 존재하면 생성 X
@@ -112,8 +113,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             }
 
         } catch (FirebaseAuthException e) {
+
             log.info("👊 OAuth2LoginSuccessHandler.onAuthenticationSuccess FirebaseAuthException Occured ");
             log.error("Firebase 사용자 처리 중 오류", e);
+
         }
 
     }
