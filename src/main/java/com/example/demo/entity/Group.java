@@ -23,8 +23,11 @@ public class Group extends BaseEntity {
     @JoinColumn(name = "address_id")
     private Address address;
 
+    // 그룹 이름
     private String name;
+    // 그룹 이메일(담당자 이메일은 따로 이미 받음)
     private String email;
+    // 그룹 전화번호
     private String phoneNumber;
 
     @OneToOne(mappedBy = "group")

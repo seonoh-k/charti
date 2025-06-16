@@ -25,6 +25,8 @@ public class AppURLs {
             "/joinExpert",
             "/joinManager",
             "/api/check-phone",
+            "/joinManager/list",
+            "/joinExpert/list",
             "/favicon.ico"
     };
 
@@ -39,7 +41,8 @@ public class AppURLs {
             "/js/**",
             "/images/**",
             "/.well-known/**",
-            "/test/**"
+            "/test/**",
+            "/api/admin/**"
     };
 
     /**
