@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
@@ -78,9 +80,10 @@ public class PresignedUrlService {
                 .build();
 
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(duration) // 유효 기간을 24시간으로 설정
+                .signatureDuration(duration) // 유효 기간 설정
                 .getObjectRequest(objectRequest).build();
 
         return presigner.presignGetObject(presignRequest).url();
     }
+
 }
