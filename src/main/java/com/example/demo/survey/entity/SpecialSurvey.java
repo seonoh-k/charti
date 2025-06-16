@@ -3,11 +3,13 @@ package com.example.demo.survey.entity;
 import com.example.demo.entity.BaseEntity;
 
 import com.example.demo.users.entity.Child;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -15,37 +17,30 @@ import java.util.List;
 @Table(name = "special_survey")
 @Getter
 @Setter
-public class SpecialSurvey extends BaseEntity {
+public class SpecialSurvey extends BaseEntity implements BaseSurvey {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String question;
+
+    @ManyToMany(mappedBy = "specialSurveys")
+    @JsonIgnore
+    private List<SurveySet> surveySets = new ArrayList<>();
+
+    @Column(name = "survey_date", nullable = false)
+    private LocalDate surveyDate;
+  
     @Column(name = "age_group", nullable = false)
     private String ageGroup;
-
-
 
     @Column(nullable = false)
     private String question;
 
     @Column(nullable = false)
     private String category;
-
-    @ManyToMany
-    @JoinTable(
-            name = "special_survey_set", // 중간 테이블 이름
-            joinColumns = @JoinColumn(name = "special_survey_id"), // 현재 엔티티의 FK
-            inverseJoinColumns = @JoinColumn(name = "survey_set_id") // 반대편 FK
-    )
-    private List<SurveySet> surveySets;
-
-    @Column(name = "survey_date", nullable = false)
-    private LocalDate surveyDate;
-
-    @Column(nullable = false)
-    private int weight;
-
 
     @Column(nullable = false)
     private String answer1;
@@ -67,6 +62,4 @@ public class SpecialSurvey extends BaseEntity {
 
     @Column(name = "calculated_score", nullable = false)
     private int calculatedScore;
-
-
-}
+  
