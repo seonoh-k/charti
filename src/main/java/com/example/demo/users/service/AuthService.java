@@ -10,10 +10,7 @@ import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.service.AddressService;
-import com.example.demo.users.entity.Expert;
-import com.example.demo.users.entity.Manager;
-import com.example.demo.users.entity.Role;
-import com.example.demo.users.entity.Users;
+import com.example.demo.users.entity.*;
 import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ExpertRepository;
@@ -202,6 +199,33 @@ public class AuthService {
 
     @Transactional
     public AuthStatus createMemberJoinRequest(MemberJoinRequest memberJoinRequest) {
+
+        // Users 생성 (role = ROLE_MEMBER)
+        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
+
+        boolean isExist = userService.existsByEmail(commonInfo.getUsername());
+        if(isExist){
+            throw new UserAlreadyExistsException();
+        }
+        // users 저장 (isApproved = false)
+
+        Users users = this.commonInfoToEntity(commonInfo);
+        userService.createMember(users);
+            // 주소처리 작업이 필요함
+
+//        // Address 저장
+//        AddressInfo addressInfo = memberJoinRequest.getAddressInfo();
+////        MemberInfo memberInfo = memberJoinRequest.getMemberInfo();
+//        Member member = this.commonInfoToEntity(memberInfo);
+//        // 주소 기입 했으면
+//        if(addressInfo.getZipNum() != null){
+//            Optional<Address> address = addressService.getAddressByAllFields(addressInfo);
+//            if(address.isPresent()) {
+//                expert.setAddress(address.get());
+//            }
+//        }
+//        expert.setUsers(users);
+//        expertRepository.save(expert);
 
         return AuthStatus.MEMBER_JOIN_REQUEST_SUCCESS;
     }

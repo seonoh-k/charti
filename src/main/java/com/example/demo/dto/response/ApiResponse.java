@@ -12,6 +12,7 @@ public class ApiResponse<U> {
     private String code;
     private String message;
     private U data;
+    private String fieldName;   // 유효성검사를 위한필드네임
 
     public <T extends Enum<T> & StatusCode> ApiResponse(StatusCode statusCode) {
         this.name = statusCode.Name();
@@ -23,6 +24,14 @@ public class ApiResponse<U> {
         this.code = statusCode.getCode();
         this.message = statusCode.getMessage();
         this.data = data;
+    }
+
+    public <T extends Enum<T> & StatusCode> ApiResponse(StatusCode statusCode, String fieldName, U data) {
+        this.name    = statusCode.Name();
+        this.code    = statusCode.getCode();
+        this.message = statusCode.getMessage();
+        this.fieldName = fieldName;
+        this.data    = data;
     }
 
     public static <T> ApiResponse<T> error(StatusCode statusCode) {

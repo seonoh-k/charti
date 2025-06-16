@@ -102,6 +102,34 @@ public class UserService {
         }
     }
     /**
+     * 멤버를 생성하고 Enum 타입의 객체를 반환한다.
+     *
+     * <br/>반환값 참고 -> {@link UserStatus}
+     *
+     * @param users : 저장할 UserDTO 객체
+     * @return UserStatus : 상태와 메세지를 담고있다.
+     *
+     */
+    @Transactional
+    public UserStatus createMember(Users users){
+
+        Optional<Users> byUsername = userRepository.findByUsername(users.getUsername());
+        // 아이디가 없을때
+        if(byUsername.isEmpty()){
+            // Join Logic 비밀번호 암호화
+            String rawPassword= users.getPassword();
+            String encodedPassword = passwordEncoder.encode(rawPassword);
+            users.setPassword(encodedPassword);
+
+            userRepository.save(users);
+
+
+            return UserStatus.JOIN_SUCCESS;
+        } else{
+            return UserStatus.JOIN_FAIL;
+        }
+    }
+    /**
      * 소셜로그인 멤버를 생성하고 Enum 타입의 객체를 반환한다.
      *
      * <br/>반환값 참고 -> {@link UserStatus}

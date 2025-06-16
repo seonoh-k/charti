@@ -42,7 +42,7 @@ public class AppURLs {
             "/images/**",
             "/.well-known/**",
             "/test/**",
-            "/api/admin/**"
+            "/join/**"
     };
 
     /**
