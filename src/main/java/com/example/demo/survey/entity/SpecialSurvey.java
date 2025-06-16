@@ -21,11 +21,13 @@ public class SpecialSurvey extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String question;
-
     @Column(name = "age_group", nullable = false)
     private String ageGroup;
+
+
+
+    @Column(nullable = false)
+    private String question;
 
     @Column(nullable = false)
     private String category;
@@ -40,6 +42,9 @@ public class SpecialSurvey extends BaseEntity {
 
     @Column(name = "survey_date", nullable = false)
     private LocalDate surveyDate;
+
+    @Column(nullable = false)
+    private int weight;
 
 
     @Column(nullable = false)
@@ -62,4 +67,6 @@ public class SpecialSurvey extends BaseEntity {
 
     @Column(name = "calculated_score", nullable = false)
     private int calculatedScore;
+
+
 }
