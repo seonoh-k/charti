@@ -5,6 +5,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.messaging.FirebaseMessaging;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,5 +45,17 @@ public class FirebaseConfig {
     @Bean
     public FirebaseAuth firebaseAuth(FirebaseApp firebaseApp){
         return FirebaseAuth.getInstance(firebaseApp);
+    }
+
+    /**
+     * FirebaseMessaging Bean 등록
+     * FirebaseApp이 이미 초기화된 상태이므로, 해당 인스턴스를 기반으로 Messaging 인스턴스를 반환한다.
+     *
+     * @param firebaseApp 초기화된 FirebaseApp 인스턴스
+     * @return FirebaseMessaging 인스턴스
+     */
+    @Bean
+    public FirebaseMessaging firebaseMessaging(FirebaseApp firebaseApp) {
+        return FirebaseMessaging.getInstance(firebaseApp);
     }
 }

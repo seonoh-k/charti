@@ -35,6 +35,16 @@
     제출하기
 </button>
 
+    <!-- FCM 테스트 영역 -->
+    <div class="mt-6">
+        <h2 class="text-lg font-semibold mb-2">🔔 FCM 테스트</h2>
+        <input type="text" id="fcmToken" placeholder="디바이스 토큰 입력"
+               class="border p-2 rounded w-full mb-2">
+        <button onclick="sendFcmTest()" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">
+            FCM 테스트 발송
+        </button>
+    </div>
+
 <script>
     const surveyContainer = document.getElementById("survey-container");
     const ageGroupSelect = document.getElementById("ageGroup");
@@ -128,6 +138,24 @@ function submitSurvey() {
         console.error(error);
         alert("제출 중 오류가 발생했습니다.");
     });
+
+      function sendFcmTest() {
+        const token = document.getElementById("fcmToken").value;
+        if (!token) {
+            alert("디바이스 토큰을 입력해주세요!");
+            return;
+        }
+
+        fetch("/api/fcm/test?token=" + encodeURIComponent(token), {
+            method: "POST"
+        })
+        .then(res => res.text())
+        .then(msg => alert(msg))
+        .catch(err => {
+            console.error(err);
+            alert("FCM 발송 중 오류 발생");
+        });
+    }
 }
 
 </script>

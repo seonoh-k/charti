@@ -9,4 +9,54 @@
   
 <th:block th:replace="~{fragments/footer :: footerFragment}"></th:block>
 
+<!-- FCM 관련 스크립트: 로그인한 사용자에게만 적용 -->
+<th:block sec:authorize="isAuthenticated()">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-messaging.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
+      authDomain: "charti-5da7d.firebaseapp.com",
+      projectId: "charti-5da7d",
+      messagingSenderId: "308166362794",
+      appId: "1:308166362794:web:00035f97aca288228972d3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then((registration) => {
+        return getToken(messaging, {
+          vapidKey: "BCOstAjMQL4pjgMa7JNdlE_TX8zgAB2_Ke2ku53BMIZYVJJDpkMmB00wSMsp5K_H8Fog850yst8s662FLlAvcWY",
+          serviceWorkerRegistration: registration
+        });
+      })
+      .then((token) => {
+        console.log("🔥 FCM 웹 토큰:", token);
+
+        // 서버에 토큰 전송
+        fetch("/api/user/fcm-token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ token: token })
+        }).then(res => {
+          if (!res.ok) throw new Error("토큰 저장 실패");
+          console.log("✅ 서버에 FCM 토큰 저장 완료");
+        });
+      })
+      .catch((err) => {
+        console.error("❌ 알림 권한 요청 실패:", err);
+      });
+
+    // 포그라운드 메시지 수신
+    onMessage(messaging, (payload) => {
+      console.log('📩 Foreground 메시지 수신:', payload);
+    });
+  </script>
+</th:block>
+
 </html>

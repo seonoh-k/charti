@@ -2,6 +2,13 @@ package com.example.demo.util;
 
 public enum GlobalStatus implements StatusCode{
 
+    // ✅ 성공 상태 코드
+    OK("OK", "요청이 정상적으로 처리되었습니다"),
+    CREATED("CR", "요청이 성공적으로 처리되어 리소스가 생성되었습니다"),
+    ACCEPTED("AC", "요청이 접수되었으며 비동기적으로 처리됩니다"),
+    NO_CONTENT("NC", "요청이 성공했으나 반환할 데이터가 없습니다"),
+    SUCCESS_WITH_DATA("SD", "데이터를 정상적으로 반환하였습니다"),
+
     VALIDATION_FAIL("VF", "입력값 검증 실패"),
     TYPE_MISMATCH("TM", "입력 타입 불일치"),
 

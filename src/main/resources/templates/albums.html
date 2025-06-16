@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charti</title>
+</head>
+<body>
+    <table>
+        <tr>
+            <th>thumbnail</th>
+            <th>title</th>
+            <th>created at</th>
+            <th>is Public</th>
+        </tr>
+        <tr th:each="album, idx : ${albumList}">
+            <td>
+                <img th:src="${urlList[idx.index]}" th:alt="${album.thumbnail}" style="width: 100px; height: 100px">
+            </td>
+            <td>
+                <a th:text="${album.title}" th:href="@{/album/{id}(id=${album.id})}"></a>
+            </td>
+            <td th:text="${album.createdAt}"></td>
+            <td th:text="${album.isPublic}? '공개' : '비공개'"></td>
+        </tr>
+    </table>
+</body>
+</html>
