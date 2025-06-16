@@ -14,8 +14,8 @@ import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.FirebaseService;
 import com.example.demo.users.service.UserService;
 import com.example.demo.util.AuthStatus;
+import com.example.demo.util.GlobalStatus;
 import com.example.demo.util.UserStatus;
-import com.google.api.Http;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -346,4 +347,34 @@ public class AuthController {
         return "redirect:/logout";
     }
 
+    @PostMapping("/joinManager/list")
+    public ResponseEntity<ApiResponse> joinManagerList(@RequestBody List<ManagerJoinRequest> managerJoinRequestList){
+        try{
+            managerJoinRequestList.forEach(manager -> log.info(manager.getCommonInfo().getName()) );
+            managerJoinRequestList.forEach(manager -> authService.createManagerJoinRequest(manager) );
+
+        } catch (UserAlreadyExistsException userAlreadyExistsException){
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
+
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse(GlobalStatus.CREATED, "총 " + managerJoinRequestList.size() + "건 처리 완료"));
+    }
+    @PostMapping("/joinExpert/list")
+    public ResponseEntity<ApiResponse> joinExpertList(@RequestBody List<ExpertJoinRequest> expertJoinRequestList){
+        try{
+            expertJoinRequestList.forEach(expert -> log.info(expert.getCommonInfo().getName()));
+            expertJoinRequestList.forEach(expert -> authService.createExpertJoinRequest(expert));
+
+        } catch (UserAlreadyExistsException userAlreadyExistsException){
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
+
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse(GlobalStatus.CREATED, "총 " + expertJoinRequestList.size() + "건 처리 완료"));
+    }
 }

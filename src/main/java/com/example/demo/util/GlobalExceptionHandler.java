@@ -122,10 +122,10 @@ public class GlobalExceptionHandler {
     // https://chromium.googlesource.com/devtools/devtools-frontend/+/main/docs/ecosystem/automatic_workspace_folders.md
     // LocalHost Ip나 Localhost로 url이 시작하는 경우
     // DevTools는 자동으로 /.well-known/appspecific/com.chrome.devtools.json 경로를 요청
-    @ExceptionHandler(NoResourceFoundException.class)
-    public void handleNoResourceFoundException(NoResourceFoundException e) {
-        log.error("NoResourceFoundException: ", e);
-    }
+//    @ExceptionHandler(NoResourceFoundException.class)
+//    public void handleNoResourceFoundException(NoResourceFoundException e) {
+//        log.error("NoResourceFoundException: ", e);
+//    }
 
     // 작성한 예외 타입과 다른 예외가 발생했을 때 동작
     @ExceptionHandler(Exception.class)

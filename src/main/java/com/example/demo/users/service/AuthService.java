@@ -22,10 +22,12 @@ import com.example.demo.users.repository.UserRepository;
 import com.example.demo.util.AuthStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,6 +35,7 @@ import java.util.Optional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserService userService;
@@ -81,7 +84,6 @@ public class AuthService {
         Manager manager = Manager.builder()
                 .isApproved(false)
                 .build();
-
         return manager;
     }
 
