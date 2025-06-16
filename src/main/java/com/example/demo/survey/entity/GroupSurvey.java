@@ -4,18 +4,20 @@ import com.example.demo.entity.BaseEntity;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Member;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "group_survey")
 @Getter
 @Setter
-public class GroupSurvey extends BaseEntity {
+public class GroupSurvey extends BaseEntity implements BaseSurvey {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,20 +29,18 @@ public class GroupSurvey extends BaseEntity {
     @Column(name = "question", nullable = false)
     private String question;
 
+    @Column(nullable = false)
     private String category;
+
 
 //    @ManyToMany(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "survey_set_id", nullable = false)
 //    private List<SurveySet> surveySets;
 
 
-    @ManyToMany
-    @JoinTable(
-            name = "group_survey_set", // 중간 테이블 이름
-            joinColumns = @JoinColumn(name = "group_survey_id"), // 현재 엔티티의 FK
-            inverseJoinColumns = @JoinColumn(name = "survey_set_id") // 반대편 FK
-    )
-    private List<SurveySet> surveySets;
+    @ManyToMany(mappedBy = "groupSurveys")
+    @JsonIgnore
+    private List<SurveySet> surveySets = new ArrayList<>();
 
     @Column(name = "survey_date", nullable = false)
     private LocalDate surveyDate;
