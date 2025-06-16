@@ -4,6 +4,7 @@ import com.example.demo.dto.AddressDTO;
 import com.example.demo.dto.info.AddressInfo;
 import com.example.demo.dto.info.CommonInfo;
 import com.example.demo.dto.info.ExpertInfo;
+import jakarta.validation.Valid;
 import lombok.*;
 
 /**
@@ -35,6 +36,7 @@ import lombok.*;
 @Builder
 public class ExpertJoinRequest {
     // 회원가입에 필요한 공통 속성 모음
+    @Valid  // 유효성 검사를 위한 어노테이션
     private CommonInfo commonInfo;
 
     // 각 사용자의 특성에 따라 필요한 정보

@@ -1,6 +1,8 @@
 package com.example.demo.users.service;
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.info.CommonInfo;
+import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.UserRepository;
@@ -9,7 +11,6 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,22 +49,22 @@ public class FirebaseService {
      *      <li> 계정을 생성하면 uuid를 반환하게 되고 이 값을 저장한 UserDTO를 반환한다.</li>
      *  </ul>
      * </p>
-     * @param userDTO : 유저 정보를 담는 UserDTO
+     * @param memberJoinRequest : 유저 정보를 담는 UserDTO
      * @return UserDTO : UUID가 추가된 UserDTO
      * @throws FirebaseAuthException - 계정을 생성하는 동안 에러가 발생하면 반환
      * @see <a href="https://firebase.google.com/docs/auth/admin/manage-users?hl=ko&_gl=1*1x2s6p8*_up*MQ..*_ga*MTczMzAzNTU3My4xNzQ5NTYyODkw*_ga_CW55HF8NVT*czE3NDk1NjI4ODkkbzEkZzAkdDE3NDk1NjI4ODkkajYwJGwwJGgw#java">Firebase SDK Document</a>
      */
-    public UserDTO createMember(UserDTO userDTO) throws FirebaseAuthException {
-
+    public MemberJoinRequest createMember(MemberJoinRequest memberJoinRequest) throws FirebaseAuthException {
+        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
         UserRecord userRecord = firebaseAuth.createUser(new UserRecord.CreateRequest()
-                .setEmail(userDTO.getUsername())
-                .setPassword(userDTO.getPassword())
-                .setPhoneNumber(userDTO.getPhoneNumber())
-                .setDisplayName(userDTO.getName()));
+                .setEmail(commonInfo.getUsername())
+                .setPassword(commonInfo.getPassword())
+                .setPhoneNumber(commonInfo.getPhoneNumber())
+                .setDisplayName(commonInfo.getName()));
 
-        userDTO.setUuid(userRecord.getUid());
+        commonInfo.setUuid(userRecord.getUid());
 
-        return userDTO;
+        return memberJoinRequest;
     }
     /**
      * 소셜 로그인 유저의 계정을 파이어베이스에 생성한다.
@@ -119,6 +120,36 @@ public class FirebaseService {
         firebaseAuth.setCustomUserClaims(userDTO.getUuid(), claims);
 
         return userDTO;
+    }
+    /**
+     * 파이어베이스 계정의 권한을 Member로 입력한다.
+     * <p>
+     * 파이어베이스는 인가 기능을 제공하지 않아서 커스텀 Claims에 담아서 공유하는 방식으로 인가를 설정한다.
+     *  <ul>
+     *      <li> 데이터베이스에 uuid가 존재하는지 확인한다.</li>
+     *      <li> 데이터베이스에 있는 권한 정보를 가져와서 claim에 담아 저장한다.</li>
+     *  </ul>
+     * </p>
+     *
+     * @param memberJoinRequest : 유저 정보를 담는 dto
+     * @throws FirebaseAuthException
+     * @see <a href="https://firebase.google.com/docs/auth/admin/custom-claims?hl=ko#java">Firebase SDK Document</a>
+     */
+    public void setFirebaseMemberRoleToMember(MemberJoinRequest memberJoinRequest) throws FirebaseAuthException{
+        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();  //이렇게 선언하며 정보 잡을수 있나
+        if(!userRepository.existsByUuid(commonInfo.getUuid())){
+            throw new UserNotFoundException();
+        }
+        Optional<Users> byUuid = userRepository.findByUuid(commonInfo.getUuid());
+
+        String uuid = commonInfo.getUuid();
+        String role = byUuid.get().getRole().name();
+
+        Map<String,Object> claims = new HashMap<>();
+        claims.put("role", role);
+
+        firebaseAuth.setCustomUserClaims(commonInfo.getUuid(), claims);
+
     }
     /**
      * 파이어베이스 토큰을 간접적으로 정지한다.

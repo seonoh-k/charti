@@ -39,7 +39,9 @@ public class AppURLs {
             "/js/**",
             "/images/**",
             "/.well-known/**",
-            "/test/**"
+            "/test/**",
+            "/join/**"
+
     };
 
     /**

@@ -25,7 +25,9 @@ public enum AuthStatus implements StatusCode {
     USER_NOT_REGISTRATION("UNR","회원가입 절차 미진행"),
     USER_DUPLICATE("UD","중복 이메일 회원가입 불가"),
 
-    ADDRESS_INVALID("AI","유효하지 않은 주소");
+    ADDRESS_INVALID("AI","유효하지 않은 주소"),
+
+    VALIDATION_FAILED("VF", "유효성 검사 실패");
 
 
 

@@ -1,8 +1,10 @@
 package com.example.demo.users.controller;
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.info.CommonInfo;
 import com.example.demo.dto.request.ExpertJoinRequest;
 import com.example.demo.dto.request.ManagerJoinRequest;
+import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.exception.JwtTokenFormatInvalidException;
 import com.example.demo.exception.JwtTokenNotFoundException;
@@ -18,6 +20,7 @@ import com.example.demo.util.UserStatus;
 import com.google.api.Http;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +30,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -109,46 +114,81 @@ public class AuthController {
     /**
      * 전화번호를 인증 후 SmsIdToken을 발급 받고 해당 토큰으로 인증을 받아 회원가입을 진행한다.
      *
-     * @param userDTO : 폼 양식으로 받은 DTO 객체
+     * @param memberJoinRequest : 폼 양식으로 받은 DTO 객체
      * @return
      */
-    @PostMapping("/join")
-    public ResponseEntity<ApiResponse> joinMember(@RequestBody UserDTO userDTO) {
-        // 1. 유효성 검사 실패하면 파이어베이스 계정 삭제
+@PostMapping("/join/member")                                            // 기본정보 + 추가정보 + 주소정보
+    public ResponseEntity<ApiResponse> joinMember(@Valid @RequestBody MemberJoinRequest memberJoinRequest, BindingResult bindingResult) {
+        // 1. 유효성 검사 실패하면 파이어베이스 계정 삭제  - 미구현
         try {
+            // 화원가입 유효성 검사
+            if (bindingResult.hasErrors()) {
 
-            FirebaseToken firebaseToken = firebaseService.verifyIdToken(userDTO.getSmsIdToken());
+                log.info("[POST] 🎈 : 유효성 검사 걸림");
+                FieldError fieldError = bindingResult.getFieldError();  // 검증에 실패한 필드의 정보
+                String errorMsg =  fieldError.getDefaultMessage();     //오류메세지  비밀번호는 필수 입력값입니다.
+                String fieldName = fieldError.getField();  // 예: "commonInfo.password"
+                String pureFieldName = fieldName.contains(".")     // .을 기준으로 뒤쪽 값
+                        ? fieldName.substring(fieldName.lastIndexOf('.') + 1)
+                        : fieldName;
+                log.info("[POST] 🎈 error on field '{}': {}", fieldName, errorMsg);
+                log.info("[POST] 🎈 error on field '{}': {}", pureFieldName, errorMsg);
+
+                // 여기에 CUSTOM 메시지를 넣어서 ApiResponse를 만듭니다.
+                ApiResponse<String> errorResponse =
+                        new ApiResponse<>(AuthStatus.VALIDATION_FAILED,pureFieldName,errorMsg);
+                // 400 에러와 errorResponse 담아서 리턴
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(errorResponse);
+            }
+            log.info("[POST] 🎈 MemberJoinRequest '{}' :  ",memberJoinRequest);      // 정보 확인용 로그들
+            log.info("[POST] 🎈 MemberJoinRequest '{}' :  ",memberJoinRequest.getCommonInfo());
+            log.info("[POST] 🎈 MemberJoinRequest 이름: '{}' :  ",memberJoinRequest.getCommonInfo().getName());
+            log.info("[POST] 🎈 MemberJoinRequest 닉네임 :'{}' :  ",memberJoinRequest.getCommonInfo().getNickname());
+            log.info("[POST] 🎈 MemberJoinRequest 아이디 '{}' :  ",memberJoinRequest.getCommonInfo().getUsername());
+            log.info("[POST] 🎈 MemberJoinRequest 비밀번호 '{}' :  ",memberJoinRequest.getCommonInfo().getPassword());
+            log.info("[POST] 🎈 MemberJoinRequest id 토큰 '{}' :  ",memberJoinRequest.getCommonInfo().getSmsIdToken());
+
+
+            CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
+            FirebaseToken firebaseToken = firebaseService.verifyIdToken(commonInfo.getSmsIdToken());
 
             String uid = firebaseToken.getUid();
             firebaseService.deleteFirebaseMember(uid);
             String phoneNumber = (String) firebaseToken.getClaims().get("phone_number");
+            log.info("[POST] 🎈 MemberJoinRequest 전화번호 '{}' :  ",phoneNumber);
 
             // 인증 실패: 잘못된 토큰이거나 SMS 인증이 아님
             if (phoneNumber == null) {
                 // code : "PAF", message : "sms 인증 실패"
+                log.info("[POST] 🎈 설마 여기서 걸렸나? : sms인증토큰이 이상한가  ");
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
                         .body(new ApiResponse(AuthStatus.PHONE_AUTH_FAIL));
             }
 
-            userDTO.setPhoneNumber(phoneNumber);
-            userDTO.setRole(Role.ROLE_MEMBER.name());
+            commonInfo.setPhoneNumber(phoneNumber);
+            commonInfo.setRole(Role.ROLE_MEMBER.name());
+            log.info("[POST] 🎈 MemberJoinRequest 저장된전화번호 '{}' :  ", commonInfo.getPhoneNumber());
+            log.info("[POST] 🎈 MemberJoinRequest 저장된 롤 '{}' :  ", commonInfo.getRole());
 
-            UserDTO savedUserDTO = firebaseService.createMember(userDTO);
+            MemberJoinRequest savedUserDTO = firebaseService.createMember(memberJoinRequest);
 
-            UserStatus userStatus = userService.createMember(savedUserDTO);
+            AuthStatus authStatus = authService.createMemberJoinRequest(savedUserDTO);
 
             firebaseService.setFirebaseMemberRoleToMember(savedUserDTO);
 
-            if (userStatus == UserStatus.JOIN_SUCCESS) {
+            // 일반회원 회원가입 성공 메세지
+            if (authStatus == AuthStatus.MEMBER_JOIN_REQUEST_SUCCESS) {
 
                 return ResponseEntity.status(HttpStatus.OK)
-                        .body(new ApiResponse(userStatus));
+                        .body(new ApiResponse(authStatus));
 
             } else {
 
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(new ApiResponse(userStatus));
+                        .body(new ApiResponse(authStatus));
 
             }
 
@@ -165,7 +205,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/joinExpert")
+    @PostMapping("/join/Expert")
     public ResponseEntity<ApiResponse> joinExpert(@RequestBody ExpertJoinRequest expertJoinRequest){
         try{
             AuthStatus authStatus = authService.createExpertJoinRequest(expertJoinRequest);
@@ -179,7 +219,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse(AuthStatus.EXPERT_JOIN_REQUEST_SUCCESS));
     }
-    @PostMapping("/joinManager")
+    @PostMapping("/join/Manager")
     public ResponseEntity<ApiResponse> joinManager(@RequestBody ManagerJoinRequest managerJoinRequest){
         try{
             AuthStatus authStatus = authService.createManagerJoinRequest(managerJoinRequest);
