@@ -1,5 +1,7 @@
 package com.example.demo.survey.service;
 
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.repository.DailySurveyRepository;
 import jakarta.transaction.Transactional;
@@ -16,11 +18,23 @@ public class DailySurveyService {
 
     private final DailySurveyRepository dailySurveyRepository;
 
-    public List<DailySurvey> getSurveysByAgeGroup(String ageGroup) {
-        return dailySurveyRepository.findByAgeGroupAndDeletedFalse(ageGroup.trim());
+    /** 전체(삭제되지 않은) 문진 */
+    public List<DailySurvey> findAllSurveys() {
+        return dailySurveyRepository.findAllByDeletedFalse();
     }
 
-    public List<DailySurvey> getSurveysByAgeAndCategory(String ageGroup, String category) {
+    /** 연령대 필터만 */
+    public List<DailySurvey> getSurveysByAgeGroup(AgeGroup ageGroup) {
+        return dailySurveyRepository.findByAgeGroupAndDeletedFalse(ageGroup);
+    }
+
+    /** 카테고리 필터만 */
+    public List<DailySurvey> getSurveysByCategory(SurveyCategory category) {
+        return dailySurveyRepository.findAllByCategoryAndDeletedFalse(category);
+    }
+
+
+    public List<DailySurvey> getSurveysByAgeAndCategory(AgeGroup ageGroup, SurveyCategory category) {
         return dailySurveyRepository.findByAgeGroupAndCategoryAndDeletedFalse(ageGroup, category);
     }
 
@@ -42,9 +56,9 @@ public class DailySurveyService {
         return totalScore;
     }
 
-    public Map<String, Double> calculateCategoryRiskScore(List<Integer> answers, List<DailySurvey> dailySurveyList) {
-        Map<String, Double> categoryScores = new HashMap<>();
-        Map<String, Integer> categoryWeights = new HashMap<>();
+    public Map<SurveyCategory, Double> calculateCategoryRiskScore(List<Integer> answers, List<DailySurvey> dailySurveyList) {
+        Map<SurveyCategory, Double> categoryScores = new HashMap<>();
+        Map<SurveyCategory, Integer> categoryWeights = new HashMap<>();
 
         for (int i = 0; i < dailySurveyList.size(); i++) {
             DailySurvey survey = dailySurveyList.get(i);
@@ -106,7 +120,8 @@ public class DailySurveyService {
     }
 
     // (관리자) 모든 카테고리 목록 (필터링용)
-    public List<String> getDistinctCategories() {
+    public List<SurveyCategory> getDistinctCategories() {
         return dailySurveyRepository.findDistinctCategories();
     }
+
 }

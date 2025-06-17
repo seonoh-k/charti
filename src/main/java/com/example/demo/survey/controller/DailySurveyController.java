@@ -1,5 +1,7 @@
 package com.example.demo.survey.controller;
 
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.dto.SurveyRequestDto;
 import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.service.DailySurveyService;
@@ -20,7 +22,7 @@ public class DailySurveyController {
 
     @GetMapping("/{ageGroup}")
     @ResponseBody
-    public List<DailySurvey> getSurveyListByAgeGroup(@PathVariable String ageGroup) {
+    public List<DailySurvey> getSurveyListByAgeGroup(@PathVariable AgeGroup ageGroup) {
         return dailySurveyService.getSurveysByAgeGroup(ageGroup);
     }
 
@@ -46,7 +48,7 @@ public class DailySurveyController {
         }
 
         double riskScore = dailySurveyService.calculateRiskScore(dto.getAnswers(), surveyList);
-        Map<String, Double> categoryScores = dailySurveyService.calculateCategoryRiskScore(dto.getAnswers(), surveyList);
+        Map<SurveyCategory, Double> categoryScores = dailySurveyService.calculateCategoryRiskScore(dto.getAnswers(), surveyList);
 
         Map<String, Object> result = new HashMap<>();
         result.put("totalRiskScore", riskScore);
