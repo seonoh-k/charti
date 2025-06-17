@@ -27,7 +27,9 @@ public class AppURLs {
             "/api/check-phone",
             "/joinManager/list",
             "/joinExpert/list",
-            "/favicon.ico"
+            "/favicon.ico",
+            "/api/address/search"
+
     };
 
     /**

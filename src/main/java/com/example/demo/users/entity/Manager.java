@@ -12,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Manager extends BaseEntity {
+public class Manager{
 
     @Id
     @Column(name = "users_id")

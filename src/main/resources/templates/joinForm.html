@@ -7,10 +7,9 @@
 
     <!-- 유효성 검사 js -->
     <script src="/js/validation.js"></script>
-    <!-- 우편번호 찾기 스크립트 -->
-    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-    <!-- 주소 분할 스크립트  - 시도,구군 ,동, 번지  -->
+    <!-- 주소 조회 js -->
     <script src="/js/postcode.js"></script>
+
 </head>
 <body class="bg-black text-white flex items-center justify-center h-screen">
     <div class="bg-white text-black rounded-2xl shadow-lg p-10 w-full max-w-md">
@@ -45,16 +44,14 @@
                         class="w-full p-2 rounded border border-gray-300" required>
             </div>
 
-            <!-- address 입력란  //상세주소는  테이블에 없긴한데 일단 넣음-->
-            <div>
-                <input type="text" id="zip_num" name="zip_num" placeholder="우편번호" readonly>
-                <input type="text" id="sido" name="sido" placeholder="시도" readonly>
-                <input type="text" id="gugun" name="gugun" placeholder="구.군" readonly>
-                <input type="text" id="dong" name="dong" placeholder="동" readonly>
-                <input type="text" id="beonji" name="beonji" placeholder="지번" readonly>
+            <button type="button" onclick="openAddressModal()"
+            class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+            주소 검색
+            </button>
 
-                <button type="button" onclick="execDaumPostcode()">우편번호 찾기</button>
-            </div>
+            <input type="text" name="zipNum" readonly class="mt-2 border px-4 py-2 rounded w-full" />
+            <input type="text" name="addr1" readonly class="mt-2 border px-4 py-2 rounded w-full" />
+            <input type="hidden" id="addressId" name="addressId" />
 
             <!-- sms 인증 부분-->
             <div id="recaptcha-container"></div>
@@ -117,6 +114,29 @@
             <div id="loading-message" class="text-lg font-semibold text-center">처리 중입니다...</div>
         </div>
     </div>
+
+    <!-- 주소 검색 모달 -->
+    <div id="addressModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xl animate-fade-in">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">주소 검색</h2>
+
+            <div class="flex gap-2 mb-4">
+            <input id="dongInput" type="text" placeholder="동 이름 입력 (최소 2자 이상)"
+                    class="flex-1 border border-gray-300 text-gray-900 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+            <button onclick="searchAddress()"
+                    class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">검색</button>
+            </div>
+
+            <div id="addressResult" class="max-h-60 overflow-y-auto border-t border-gray-200 pt-2 space-y-2">
+            <!-- 검색 결과가 여기 표시됨 -->
+            </div>
+            <div class="flex justify-end mt-4">
+            <button onclick="closeAddressModal()"
+                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">닫기</button>
+            </div>
+        </div>
+    </div>
+
 
 <!-- th:inline="javascript"를 추가하여 Thymeleaf가 @{/join}을 치환 -->
 <script  type="module" th:inline="javascript">
@@ -240,8 +260,8 @@
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
         const nickname = document.getElementById('nickname').value.trim();
-
-        // const nickname = document.getElementById('nickname').value.trim();
+        const addressId = document.getElementById('addressId').value.trim();
+        
         // const nickname = document.getElementById('nickname').value.trim();
         // const nickname = document.getElementById('nickname').value.trim();
         // const nickname = document.getElementById('nickname').value.trim();
@@ -269,14 +289,14 @@
                     smsIdToken
                 }
                 // memberInfo: {
-                // },
-                // addressInfo: {
-                //     zipcode,
-                //     address
                 // }
+                ,
+                addressInfo: {
+                    addressId
+                }
                 })
             });
-
+console.log(addressId)
            // 여기서 응답 body를 JSON으로 파싱 시도
             let data = null;
             try {
@@ -321,8 +341,6 @@
                 const errorMsg = data && data.message ? data.message :
                                 '서버 오류 코드 ' + response.status;
                                 showErrorModal(data.message);
-                alert("회원가입 실패" + data.message);
-                alert('회원가입 실패: ' + errorMsg);
             }
         } catch (err) {
             console.error('Fetch 통신 중 오류 발생:', err);

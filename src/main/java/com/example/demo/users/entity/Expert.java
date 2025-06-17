@@ -11,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Expert extends BaseEntity{
+public class Expert{
 
     @Id
     @Column(name = "users_id")
