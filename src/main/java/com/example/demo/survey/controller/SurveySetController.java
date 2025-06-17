@@ -1,30 +1,30 @@
-//package com.example.demo.survey.controller;
-//
-//import com.example.demo.survey.dto.SurveySetForm;
-//import com.example.demo.survey.dto.SurveySetSearchDto;
-//import com.example.demo.survey.entity.BaseSurvey;
-//import com.example.demo.survey.entity.SurveySet;
-//import com.example.demo.survey.service.SurveySetService;
-//import jakarta.validation.Valid;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.data.domain.Page;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.data.web.PageableDefault;
-//import org.springframework.stereotype.Controller;
-//import org.springframework.ui.Model;
-//import org.springframework.validation.BindingResult;
-//import org.springframework.web.bind.annotation.*;
-//
-//import java.util.List;
-//import java.util.stream.Collectors;
-//
-//@Controller
-//@RequestMapping("/surveySets")
-//@RequiredArgsConstructor
-//public class SurveySetController {
-//    private final SurveySetService service;
-//
-//    // 목록
+package com.example.demo.survey.controller;
+
+import com.example.demo.survey.dto.SurveySetForm;
+import com.example.demo.survey.dto.SurveySetSearchDto;
+import com.example.demo.survey.entity.BaseSurvey;
+import com.example.demo.survey.entity.SurveySet;
+import com.example.demo.survey.service.SurveySetService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Controller
+@RequestMapping("/surveySets")
+@RequiredArgsConstructor
+public class SurveySetController {
+    private final SurveySetService service;
+
+    // 목록
 //    @GetMapping
 //    public String list(@ModelAttribute("search") SurveySetSearchDto dto,
 //                       @PageableDefault(size = 10) Pageable pageable,
@@ -112,4 +112,4 @@
 //
 //        return "redirect:/surveySets";
 //    }
-//}
+}

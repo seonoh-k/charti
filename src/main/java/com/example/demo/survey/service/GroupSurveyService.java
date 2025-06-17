@@ -1,21 +1,21 @@
-//package com.example.demo.survey.service;
-//
-//import com.example.demo.survey.dto.GroupSurveyRequestDto;
-//import com.example.demo.survey.dto.GroupSurveyResponseDto;
-//import com.example.demo.survey.entity.GroupSurvey;
-//import com.example.demo.survey.repository.GroupSurveyRepository;
-//import jakarta.transaction.Transactional;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.stereotype.Service;
-//
-//import java.time.LocalDate;
-//import java.util.*;
-//import java.util.stream.Collectors;
-//
-//@Service
-//@RequiredArgsConstructor
-//public class GroupSurveyService {
-//
+package com.example.demo.survey.service;
+
+import com.example.demo.survey.dto.GroupSurveyRequestDto;
+import com.example.demo.survey.dto.GroupSurveyResponseDto;
+import com.example.demo.survey.entity.GroupSurvey;
+import com.example.demo.survey.repository.GroupSurveyRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class GroupSurveyService {
+
 //    private final GroupSurveyRepository groupSurveyRepository;
 //
 //    public List<GroupSurveyResponseDto> getByAgeGroup(String ageGroup) {
@@ -118,6 +118,6 @@
 //            default -> 0.0;
 //        };
 //    }
-//
-//
-//}
+
+
+}

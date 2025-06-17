@@ -1,21 +1,21 @@
-//package com.example.demo.survey.service;
-//
-//import com.example.demo.survey.dto.SpecialSurveyRequestDto;
-//import com.example.demo.survey.dto.SpecialSurveyResponseDto;
-//import com.example.demo.survey.entity.SpecialSurvey;
-//import com.example.demo.survey.repository.SpecialSurveyRepository;
-//import jakarta.transaction.Transactional;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.stereotype.Service;
-//
-//import java.time.LocalDate;
-//import java.util.*;
-//import java.util.stream.Collectors;
-//
-//@Service
-//@RequiredArgsConstructor
-//public class SpecialSurveyService {
-//
+package com.example.demo.survey.service;
+
+import com.example.demo.survey.dto.SpecialSurveyRequestDto;
+import com.example.demo.survey.dto.SpecialSurveyResponseDto;
+import com.example.demo.survey.entity.SpecialSurvey;
+import com.example.demo.survey.repository.SpecialSurveyRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class SpecialSurveyService {
+
 //    private final SpecialSurveyRepository specialSurveyRepository;
 //
 //    // ✅ 연령대 기준 조회
@@ -117,4 +117,4 @@
 //            default -> 0.0;
 //        };
 //    }
-//}
+}

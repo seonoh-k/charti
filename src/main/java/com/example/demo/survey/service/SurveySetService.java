@@ -1,26 +1,26 @@
-//package com.example.demo.survey.service;
-//
-//import com.example.demo.survey.dto.SurveySetSearchDto;
-//import com.example.demo.survey.dto.SurveySetForm;
-//import com.example.demo.survey.entity.*;
-//import com.example.demo.survey.repository.*;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.data.domain.Page;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.data.jpa.domain.Specification;
-//import org.springframework.stereotype.Service;
-//import org.springframework.transaction.annotation.Transactional;
-//import org.springframework.util.StringUtils;
-//
-//import java.util.List;
-//import java.util.NoSuchElementException;
-//import java.util.Set;
-//import java.util.stream.Collectors;
-//
-//@Service
-//@Transactional
-//@RequiredArgsConstructor
-//public class SurveySetService {
+package com.example.demo.survey.service;
+
+import com.example.demo.survey.dto.SurveySetSearchDto;
+import com.example.demo.survey.dto.SurveySetForm;
+import com.example.demo.survey.entity.*;
+import com.example.demo.survey.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+@RequiredArgsConstructor
+public class SurveySetService {
 //    private final SurveySetRepository     surveySetRepo;
 //    private final GroupSurveyRepository   groupRepo;
 //    private final SpecialSurveyRepository specialRepo;
@@ -109,4 +109,4 @@
 //                .filter(s -> ("all".equals(category) || s.getCategory().equals(category)))
 //                .collect(Collectors.toList());
 //    }
-//}
+}

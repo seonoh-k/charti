@@ -1,22 +1,22 @@
-//package com.example.demo.survey.controller;
-//
-//import com.example.demo.survey.dto.GroupSurveyRequestDto;
-//import com.example.demo.survey.dto.GroupSurveyResponseDto;
-//import com.example.demo.survey.entity.GroupSurvey;
-//import com.example.demo.survey.service.GroupSurveyService;
-//import com.example.demo.util.APIResponse;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.*;
-//
-//import java.util.List;
-//import java.util.Map;
-//
-//@RestController
-//@RequestMapping("/api/group-surveys")
-//@RequiredArgsConstructor
-//public class GroupSurveyController {
-//
+package com.example.demo.survey.controller;
+
+import com.example.demo.survey.dto.GroupSurveyRequestDto;
+import com.example.demo.survey.dto.GroupSurveyResponseDto;
+import com.example.demo.survey.entity.GroupSurvey;
+import com.example.demo.survey.service.GroupSurveyService;
+import com.example.demo.util.APIResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/group-surveys")
+@RequiredArgsConstructor
+public class GroupSurveyController {
+
 //    private final GroupSurveyService groupSurveyService;
 //
 //    // 1. 연령대 기준 조회
@@ -68,6 +68,6 @@
 //    public Map<String, Object> submitSurvey(@RequestBody GroupSurveyRequestDto dto) {
 //        return groupSurveyService.evaluate(dto);
 //    }
-//
-//
-//}
+
+
+}

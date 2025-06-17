@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.UrlResponse;
+import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.entity.Album;
 import com.example.demo.entity.Photo;
 import com.example.demo.service.AlbumService;
@@ -8,8 +9,11 @@ import com.example.demo.service.PhotoService;
 import com.example.demo.service.PresignedUrlService;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.service.MemberService;
+import com.example.demo.util.APIResponse;
+import com.example.demo.util.GlobalStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +21,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -25,7 +33,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -78,16 +85,11 @@ public class StorageAPIController {
 
     // 앨범 생성
     @PostMapping("/api/album-create")
-    public ResponseEntity<UrlResponse> createAlbum(@RequestParam("id") Long id,
+    public ResponseEntity<ApiResponse> createAlbum(@RequestParam("id") Long id,
                                                    @RequestParam("file") MultipartFile file,
                                                    @RequestParam("title") String title) throws IOException {
 
-        String originalFilename = file.getOriginalFilename();
-        String mimetype = file.getContentType();
-        String filename = UUID.randomUUID() + "_" + originalFilename;
-
-        // 썸네일 업로드용 URL 생성 요청
-        URL presignedUrl = urlService.presignedUploadUrl(filename, mimetype);
+        String filename = uploadImage(file);
 
         // 멤버 조회
         Member member = memberService.get(id);
@@ -102,8 +104,7 @@ public class StorageAPIController {
         // 회원 테이블 업데이트 -> 앨범도 같이 저장
         memberService.update(member);
 
-        // 업로드 URL 반환 -> 썸네일 이미지 업로드
-        return ResponseEntity.ok(new UrlResponse(presignedUrl.toString(), filename));
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
     }
 
     // 앨범 내 사진 리스트 조회
@@ -115,7 +116,7 @@ public class StorageAPIController {
 
         for(Photo photo : photoList) {
             String filename = photo.getFileName();
-            String proxyUrl = "/api/proxy/image?filename=" + URLEncoder.encode(filename, StandardCharsets.UTF_8);
+            String proxyUrl = "/api/proxy/image?filename=" + URLEncoder.encode("thumbnail/"+filename, StandardCharsets.UTF_8);
             urlList.add(new UrlResponse(proxyUrl, filename));
         }
 
@@ -127,20 +128,41 @@ public class StorageAPIController {
     }
 
     @PostMapping("/api/album/photo/upload")
-    public ResponseEntity<UrlResponse> uploadPhoto(@RequestParam("id") Long id,
+    public ResponseEntity<ApiResponse> uploadPhoto(@RequestParam("id") Long id,
                                                    @RequestParam("file") MultipartFile file) throws IOException {
 
-        String originalFilename = file.getOriginalFilename();
-        String mimeType = file.getContentType();
-        String filename = UUID.randomUUID() + "_" + originalFilename;
+        String filename = uploadImage(file);
 
         Photo photo = new Photo();
         photo.setFileName(filename);
         photo.setAlbum(albumService.get(id));
         photoService.create(photo);
 
-        URL presignedUrl = urlService.presignedUploadUrl(filename, mimeType);
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
+    }
 
-        return ResponseEntity.ok(new UrlResponse(presignedUrl.toString(), filename));
+    public String uploadImage(MultipartFile file) throws IOException {
+
+        String originalFilename = file.getOriginalFilename();
+        String mimeType = file.getContentType();
+        String filename = UUID.randomUUID() + "_" + originalFilename;
+
+        byte[] bytes = file.getBytes();
+
+        InputStream originalInputStream = new ByteArrayInputStream(bytes);
+//        urlService.imageUpload("original/"+filename, originalInputStream, mimeType);
+
+        ByteArrayOutputStream thumbnailOutputStream = new ByteArrayOutputStream();
+        Thumbnails.of(new ByteArrayInputStream(bytes))
+                .width(400)
+                .outputFormat("jpeg")
+                .outputQuality(0.5)
+                .toOutputStream(thumbnailOutputStream);
+
+        InputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray());
+
+//        urlService.imageUpload("thumbnail/"+filename, thumbnailInputStream, "image/jpeg");
+
+        return filename;
     }
 }
