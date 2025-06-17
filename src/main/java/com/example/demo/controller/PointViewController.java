@@ -11,9 +11,10 @@ public class PointViewController {
 //        return "point";  // templates/point.html
 //    }
 //
-//    @GetMapping("/admin/point")
-//    public String getAdminPointPage() {
-//        return "point-admin";  // templates/point-admin.html
-//    }
+@GetMapping("/admin/point")
+public String getAdminPointPage() {
+    return "admin/point/pointForm";
+}
+
 
 }

@@ -39,6 +39,7 @@ public class UserFcmToken extends BaseEntity {
     private LocalDateTime lastUsedAt;
 
     // 토큰이 비활성화되었는지 여부
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 }

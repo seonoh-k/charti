@@ -1,6 +1,7 @@
 package com.example.demo.survey.entity;
 
 import com.example.demo.entity.BaseEntity;
+import com.example.demo.enums.AgeGroup;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,8 +17,9 @@ public class RecordSurvey extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long surveyId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "age_group", nullable = false)
-    private String ageGroup;
+    private AgeGroup ageGroup;
 
     @Column(nullable = false)
     private String question;
@@ -29,6 +31,4 @@ public class RecordSurvey extends BaseEntity {
         this.setDeleted(true);
         this.setDeletedAt(LocalDateTime.now());
     }
-
-
 }
