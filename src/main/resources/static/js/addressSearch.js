@@ -18,10 +18,10 @@ async function searchAddress() {
         return;
     }
     //  최소 2글자 입력 제한
-     if (dong.length < 2) {
-         alert("최소 두글자 이상 입력해주세요");
-         return;
-     }
+    if (dong.length < 2) {
+        alert("최소 두글자 이상 입력해주세요");
+        return;
+    }
 
     // 서버에 주소 검색 요청
     const res = await fetch(`/api/address/search?dong=${encodeURIComponent(dong)}`);

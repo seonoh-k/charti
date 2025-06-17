@@ -8,11 +8,37 @@
     <!-- 유효성 검사 js -->
     <script src="/js/validation.js"></script>
     <!-- 주소 조회 js -->
-    <script src="/js/postcode.js"></script>
+    <script src="/js/addressSearch.js"></script>
 
 </head>
-<body class="bg-black text-white flex items-center justify-center h-screen">
+<body class="bg-black text-white min-h-screen flex items-center justify-center p-4 overflow-auto"></body>
     <div class="bg-white text-black rounded-2xl shadow-lg p-10 w-full max-w-md">
+
+    <!-- 네비게이션 탭 -->
+    <nav class="flex mb-6 border-b border-gray-200">
+    <a href="joinForm"
+        class="flex-1 text-center py-2 font-medium border-b-2
+                border-blue-600 text-black
+                hover:text-black hover:border-gray-300
+                transition-colors duration-200">
+        일반회원가입
+    </a>
+    <a href="/expertJoinForm"
+        class="flex-1 text-center py-2 font-medium border-b-2
+                border-transparent text-gray-500
+                hover:text-black hover:border-gray-300
+                transition-colors duration-200">
+        전문가회원가입
+    </a>
+    <a href="/managerJoinForm"
+        class="flex-1 text-center py-2 font-medium border-b-2
+                border-transparent text-gray-500
+                hover:text-black hover:border-gray-300
+                transition-colors duration-200">
+        담당자회원가입
+    </a>
+    </nav>
+
         <h2 class="text-2xl font-bold mb-6 text-center">회원가입</h2>
         <!-- id="signupForm" 추가, th:action/@{...}은 제거 -->
         <form id="signupForm" class="space-y-4">
