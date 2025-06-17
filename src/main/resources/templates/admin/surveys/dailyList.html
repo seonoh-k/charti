@@ -1,58 +1,82 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charti</title>
+    <title>관리자 - 데일리 문진 목록</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
-          rel="stylesheet">
-    <style>
-        body { font-family: 'Poppins', sans-serif; }
-    </style>
 </head>
 <th:block layout:fragment="content">
-    <h1>관리자 - 데일리 문진 관리</h1>
+    <h1 class="text-2xl font-semibold mb-4">관리자 - 데일리 문진 목록</h1>
 
-    <form th:action="@{/admin/surveys/list}" method="get" class="flex gap-2">
-        <select name="ageGroup">
-            <option th:each="age: ${ageGroups}"
-                    th:value="${age}"
-                    th:text="${age}"
-                    th:selected="${age == ageGroup}"></option>
-        </select>
-        <select name="category">
-            <option value="" th:selected="${category==''}">전체카테고리</option>
-            <option th:each="cat: ${categories}"
-                    th:value="${cat}"
-                    th:text="${cat}"
-                    th:selected="${cat == category}"></option>
-        </select>
-        <button type="submit">필터</button>
+    <form th:action="@{/admin/surveys}" method="get" class="flex gap-4 items-center mb-6">
+        <label class="flex items-center gap-2">
+            <span>연령대:</span>
+            <select name="ageGroup" class="border p-2 rounded">
+                <option value="ALL"
+                        th:selected="${ageGroup == T(com.example.demo.enums.AgeGroup).ALL}">
+                    전체 연령대
+                </option>
+                <option th:each="age : ${ageGroups}"
+                        th:value="${age.name()}"
+                        th:text="${age.displayName}"
+                        th:selected="${age == ageGroup}">
+                </option>
+            </select>
+        </label>
+
+        <label class="flex items-center gap-2">
+            <span>카테고리:</span>
+            <select name="category" class="border p-2 rounded">
+                <option value="ALL"
+                        th:selected="${category == T(com.example.demo.enums.SurveyCategory).ALL}">
+                    전체 카테고리
+                </option>
+                <option th:each="cat : ${categories}"
+                        th:value="${cat.name()}"
+                        th:text="${cat.displayName}"
+                        th:selected="${cat == category}">
+                </option>
+            </select>
+        </label>
+
+        <button type="submit" class="bg-blue-500 text-white py-1 px-4 rounded">
+            필터
+        </button>
     </form>
 
-    <a th:href="@{/admin/surveys/new}">➕ 문진 추가</a>
+    <a th:href="@{/admin/surveys/new}"
+       class="inline-block mb-4 text-green-600 hover:underline">
+        ➕ 문진 추가
+    </a>
 
-    <table class="mt-4 border">
+    <table class="w-full table-auto border-collapse">
         <thead>
-        <tr>
-            <th>연령대</th><th>카테고리</th><th>질문</th><th>가중치</th><th>수정/삭제</th>
+        <tr class="bg-gray-100">
+            <th class="border p-2">연령대</th>
+            <th class="border p-2">카테고리</th>
+            <th class="border p-2">질문</th>
+            <th class="border p-2">가중치</th>
+            <th class="border p-2">수정/삭제</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:each="s: ${surveys}">
-            <td th:text="${s.ageGroup}"></td>
-            <td th:text="${s.category}"></td>
-            <td th:text="${s.question}"></td>
-            <td th:text="${s.weight}"></td>
-            <td>
-                <a th:href="@{/admin/surveys/{id}/edit(id=${s.id})}">수정</a>
+        <tr th:each="s : ${surveys}" class="hover:bg-gray-50">
+            <td class="border p-2" th:text="${s.ageGroup.displayName}"></td>
+            <td class="border p-2" th:text="${s.category.displayName}"></td>
+            <td class="border p-2" th:text="${s.question}"></td>
+            <td class="border p-2" th:text="${s.weight}"></td>
+            <td class="border p-2">
+                <a th:href="@{/admin/surveys/{id}/edit(id=${s.id})}"
+                   class="text-blue-600 mr-3 hover:underline">수정</a>
                 <form th:action="@{/admin/surveys/{id}/delete(id=${s.id})}"
-                      method="post" style="display:inline"
+                      method="post" class="inline"
                       onsubmit="return confirm('삭제하시겠습니까?');">
-                    <button type="submit">삭제</button>
+                    <button type="submit" class="text-red-600 hover:underline">
+                        삭제
+                    </button>
                 </form>
             </td>
         </tr>

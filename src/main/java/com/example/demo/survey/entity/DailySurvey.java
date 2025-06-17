@@ -1,6 +1,10 @@
 package com.example.demo.survey.entity;
 
 import com.example.demo.entity.BaseEntity;
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.converter.AgeGroupConverter;
+import com.example.demo.enums.SurveyCategory;
+import com.example.demo.converter.SurveyCategoryConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,10 +20,10 @@ public class DailySurvey extends BaseEntity {
     private Long id;
 
     @Column(name = "age_group", nullable = false)
-    private String ageGroup;
+    private AgeGroup ageGroup;
 
     @Column(nullable = false)
-    private String category;
+    private SurveyCategory category;
 
     @Column(nullable = false)
     private String question;

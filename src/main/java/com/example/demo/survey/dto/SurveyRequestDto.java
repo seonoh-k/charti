@@ -1,5 +1,6 @@
 package com.example.demo.survey.dto;
 
+import com.example.demo.enums.AgeGroup;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,6 +10,6 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class SurveyRequestDto {
-    private String ageGroup;
+    private AgeGroup ageGroup;
     private List<Integer> answers;
 }
