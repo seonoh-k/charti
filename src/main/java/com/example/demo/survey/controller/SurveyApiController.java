@@ -1,5 +1,7 @@
 package com.example.demo.survey.controller;
 
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.entity.BaseSurvey;
 import com.example.demo.survey.service.SurveySetService;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +21,8 @@ public class SurveyApiController {
     @GetMapping
     public List<? extends BaseSurvey> getSurveys(
             @RequestParam String type,
-            @RequestParam(defaultValue = "all") String age,
-            @RequestParam(defaultValue = "all") String category
+            @RequestParam(defaultValue = "ALL") AgeGroup age,
+            @RequestParam(defaultValue = "ALL") SurveyCategory category
     ) {
         return "SPECIAL".equals(type)
                 ? service.allSpecial(age, category)

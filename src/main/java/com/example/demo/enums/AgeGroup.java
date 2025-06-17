@@ -1,18 +1,37 @@
 package com.example.demo.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum AgeGroup {
     AGE_0_12("0~12개월"),
     AGE_1_2("1~2세"),
     AGE_3_4("3~4세"),
-    AGE_5("5세");
+    AGE_5("5세"),
+    // 검색용 전체(all)
+    ALL("all"),
 
-    private final String label;
+    // 세트 저장용 통합(various)
+    VARIOUS("various");
 
-    AgeGroup(String label) {
-        this.label = label;
+    private final String displayName;
+
+    AgeGroup(String displayName) {
+        this.displayName = displayName;
     }
 
-    public String getLabel() {
-        return label;
+    @JsonValue
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    @JsonCreator
+    public static AgeGroup fromValue(String value) {
+        for (AgeGroup ag : values()) {
+            if (ag.displayName.equals(value) || ag.name().equalsIgnoreCase(value)) {
+                return ag;
+            }
+        }
+        throw new IllegalArgumentException("Unknown AgeGroup: " + value);
     }
 }
