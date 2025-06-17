@@ -45,25 +45,25 @@
                 body: formData
             });
 
-            const data = await res.json();
+            // const data = await res.json();
+            //
+            // if (!data.url) {
+            //     result.innerHTML = `<p class="text-red-600 font-semibold">서버로부터 업로드 URL을 받지 못했습니다.</p>`;
+            //     return;
+            // }
+            //
+            // const uploadUrl = data.url;
+            //
+            // // 생성된 업로드 url을 통해 파일 업로드 요청
+            // const uploadRes = await fetch(uploadUrl, {
+            //     method: "PUT",
+            //     headers: {
+            //         "Content-Type": file.type
+            //     },
+            //     body: file
+            // });
 
-            if (!data.url) {
-                result.innerHTML = `<p class="text-red-600 font-semibold">서버로부터 업로드 URL을 받지 못했습니다.</p>`;
-                return;
-            }
-
-            const uploadUrl = data.url;
-
-            // 생성된 업로드 url을 통해 파일 업로드 요청
-            const uploadRes = await fetch(uploadUrl, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": file.type
-                },
-                body: file
-            });
-
-            if(uploadRes.ok) {
+            if(res.ok) {
                 result.innerHTML = `<p class="text-green-600 font-semibold">Upload Seccess</p>`;
                 loadPhotos(id);
             }else {
