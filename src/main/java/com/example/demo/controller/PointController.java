@@ -35,7 +35,7 @@ public class PointController {
 
 
 
-    // 조회[마이페이지 등등]
+    // 조회
     @GetMapping("/current")
     public ResponseEntity<Integer> getCurrentPoint(@RequestParam Long memberId) {
         return ResponseEntity.ok(pointService.getCurrentPoint(memberId));

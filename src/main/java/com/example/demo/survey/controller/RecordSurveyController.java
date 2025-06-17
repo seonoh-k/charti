@@ -1,5 +1,6 @@
 package com.example.demo.survey.controller;
 
+import com.example.demo.enums.AgeGroup;
 import com.example.demo.survey.dto.RecordSurveyRequest;
 import com.example.demo.survey.dto.RecordSurveyResponse;
 import com.example.demo.survey.entity.RecordSurvey;
@@ -23,11 +24,12 @@ public class RecordSurveyController {
 
     @GetMapping
     public ResponseEntity<List<RecordSurveyResponse>> getAllForUser(
-            @RequestParam(required = false) String ageGroup) {
+            @RequestParam(required = false) AgeGroup ageGroup) {
         List<RecordSurvey> surveys = recordSurveyService.getByAgeGroup(ageGroup);
         return ResponseEntity.ok(
                 surveys.stream().map(RecordSurveyMapper::toResponse).toList()
         );
     }
+
 
 }

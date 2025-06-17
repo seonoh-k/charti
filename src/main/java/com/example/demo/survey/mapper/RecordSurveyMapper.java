@@ -6,14 +6,16 @@ import com.example.demo.survey.entity.RecordSurvey;
 
 public class RecordSurveyMapper {
 
+    // RecordSurveyRequest → RecordSurvey (Entity 변환)
     public static RecordSurvey toEntity(RecordSurveyRequest request) {
         RecordSurvey entity = new RecordSurvey();
         entity.setAgeGroup(request.getAgeGroup());
         entity.setQuestion(request.getQuestion());
-        entity.setAnswer("");
+        entity.setAnswer(""); // 기본값
         return entity;
     }
 
+    // RecordSurvey → RecordSurveyResponse (DTO 변환)
     public static RecordSurveyResponse toResponse(RecordSurvey entity) {
         return new RecordSurveyResponse(
                 entity.getSurveyId(),

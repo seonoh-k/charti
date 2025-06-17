@@ -19,7 +19,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.users.exception.UserNotFoundException;
+
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 유저에 공통으로 들어가는 정보만 필요한 경우 해당 클래스를 사용하여 데이터베이스에서 데이터를 가져오세요.
@@ -273,6 +276,31 @@ public class UserService {
         } else{
             throw new UserNotFoundException("유저가 없어요");
         }
+    }
+    // [추가됨] 유저 검색용 메서드 - 포인트 지급 등의 기능에서 이름이나 닉네임으로 사용자 검색 시 사용
+    public List<UserDTO> searchUsers(String keyword, String filter) {
+        log.info("🔍 유저 검색 요청: filter={}, keyword={}", filter, keyword);
+        List<Users> users;
+
+        // 필터 조건 분기 처리
+        switch (filter) {
+            case "name":
+                // 이름 기준 검색 (대소문자 구분 없이)
+                users = userRepository.findByNameContainingIgnoreCase(keyword);
+                break;
+            case "nickname":
+                // 닉네임 기준 검색 (대소문자 구분 없이)
+                users = userRepository.findByNicknameContainingIgnoreCase(keyword);
+                break;
+            default:
+                // 잘못된 필터 값일 경우 예외 처리
+                throw new IllegalArgumentException("지원하지 않는 필터입니다: " + filter);
+        }
+
+        // 검색된 Users 리스트를 UserDTO로 변환하여 반환
+        return users.stream()
+                .map(this::entityToDTO)
+                .collect(Collectors.toList());
     }
 
 
