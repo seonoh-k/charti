@@ -8,6 +8,8 @@ import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -27,6 +29,9 @@ public class PresignedUrlService {
 
     // URL 유효 기간 설정 = 24시간
     private static final int EXPIRE_TIME = 60 * 60 * 24;
+
+    // S3 클라이언트
+    private final S3Client s3Client;
 
     // S3 인증 클래스
     private final S3Presigner presigner;
@@ -49,6 +54,20 @@ public class PresignedUrlService {
 
         // 인증된 url을 반환
         return presigner.presignPutObject(presignedRequest).url();
+    }
+
+    // 이미지 파일 리사이징 후 업로드를 위해 새로운 업로드 메소드 작성
+    // 이 업로드 메소드는 기존의 presignedUrl을 발급 받아 프론트에서 실행하던 방식과 달리
+    // 서버에서 업로드를 수행하기 때문에 presignedUrl이 불필요함
+    public void imageUpload(String uploadFilename, InputStream inputStream, String mimeType) throws IOException {
+        PutObjectRequest objectRequest = PutObjectRequest.builder()
+                .bucket(bucketName) // R2 스토리지 버킷 이름
+                .key(uploadFilename) // 업로드할 파일 이름
+                .contentType(mimeType) // 업로드할 파일의 확장자
+                .build();
+
+        // 이미지 파일 업로드
+        s3Client.putObject(objectRequest, RequestBody.fromInputStream(inputStream, inputStream.available()));
     }
 
     // 다운로드 URL 생성
