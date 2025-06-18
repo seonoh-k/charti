@@ -1,7 +1,8 @@
 package com.example.demo.users.controller;
 
 import com.example.demo.dto.ManagerDTO;
-import com.example.demo.dto.request.PagingRequest;
+
+import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.users.service.ManagerService;
 import com.example.demo.util.AuthStatus;
@@ -47,7 +48,7 @@ public class ManagerController {
      * @return
      */
     @GetMapping("/admin/manager-applicants")
-    public String showAdminManagerPendingPage(@ModelAttribute PagingRequest pagingRequest ,Model model) {
+    public String showAdminManagerPendingPage(@ModelAttribute PagingRequest pagingRequest , Model model) {
         log.info("[GET] 👨‍💼 request manager Page");
 
         Pageable pageable = pagingRequest.toPageable();

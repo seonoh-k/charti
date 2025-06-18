@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>기록 문진 이력</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-4xl mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-6">기록 문진 답변 이력</h1>
+
+        <!-- 자녀 선택 -->
+        <div class="mb-6">
+            <label for="childSelect" class="font-semibold mr-2">자녀 선택:</label>
+            <select id="childSelect" class="border p-2 rounded w-64">
+                <option value="" disabled selected>자녀를 선택하세요</option>
+                <option th:each="child : ${children}" th:value="${child.id}" th:text="${child.name}"></option>
+            </select>
+        </div>
+
+        <!-- 자녀 정보 -->
+        <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
+            <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
+            <p><strong>이름:</strong> <span id="infoName"></span></p>
+            <p><strong>성별:</strong> <span id="infoGender"></span></p>
+            <p><strong>나이:</strong> <span id="infoAge"></span></p>
+            <p><strong>키:</strong> <span id="infoHeight"></span></p>
+            <p><strong>체중:</strong> <span id="infoWeight"></span></p>
+        </div>
+
+        <!-- 답변 목록 -->
+        <div id="answerList" class="space-y-4"></div>
+    </div>
+
+    <!-- 수정 모달 -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded shadow-xl w-full max-w-lg">
+            <h2 class="text-xl font-bold mb-4">답변 수정</h2>
+            <textarea id="modalTextarea" class="w-full border p-2 rounded mb-4" rows="5"></textarea>
+            <div class="flex justify-end gap-4">
+                <button id="cancelEdit" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">취소</button>
+                <button id="saveEdit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const childSelect = document.getElementById("childSelect");
+            const answerList = document.getElementById("answerList");
+            const childInfo = document.getElementById("childInfo");
+            const infoName = document.getElementById("infoName");
+            const infoGender = document.getElementById("infoGender");
+            const infoAge = document.getElementById("infoAge");
+            const infoHeight = document.getElementById("infoHeight");
+            const infoWeight = document.getElementById("infoWeight");
+
+            const editModal = document.getElementById("editModal");
+            const modalTextarea = document.getElementById("modalTextarea");
+            const cancelEdit = document.getElementById("cancelEdit");
+            const saveEdit = document.getElementById("saveEdit");
+            let currentEditId = null;
+
+            childSelect.addEventListener("change", function () {
+                const childId = this.value;
+                if (!childId) return;
+
+                fetch(`/api/child/info/${childId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        childInfo.classList.remove("hidden");
+                        infoName.textContent = data.name;
+                        infoGender.textContent = data.gender;
+                        infoAge.textContent = data.age + '세';
+                        infoHeight.textContent = data.height + 'cm';
+                        infoWeight.textContent = data.weight + 'kg';
+                    });
+
+                fetch(`/survey/record/history/${childId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        answerList.innerHTML = "";
+
+                        if (data.length === 0) {
+                            answerList.innerHTML = `<p class="text-gray-500">답변 이력이 없습니다.</p>`;
+                            return;
+                        }
+
+                        const grouped = {};
+                        data.forEach(item => {
+                            if (!item.createdAt) return;
+                            const date = item.createdAt.substring(0, 10);
+                            if (!grouped[date]) grouped[date] = [];
+                            grouped[date].push(item);
+                        });
+
+                        Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+                            const container = document.createElement("div");
+                            container.className = "border rounded mb-4";
+
+                            const header = document.createElement("button");
+                            header.className = "w-full text-left px-4 py-2 bg-blue-100 font-semibold hover:bg-blue-200";
+                            header.textContent = `${date} 문진 답변`;
+
+                            const body = document.createElement("div");
+                            body.className = "hidden p-4 space-y-4 bg-gray-50";
+
+                            grouped[date].forEach((answer, index) => {
+                                const item = document.createElement("div");
+                                item.className = "border p-3 rounded";
+                                item.innerHTML = `
+                                    <div class="flex justify-between items-start">
+                                        <div class="w-full">
+                                            <p class="font-semibold">${index + 1}. ${answer.question}</p>
+                                            <p class="text-sm text-gray-700 whitespace-pre-line" id="answerText_${answer.answerId}">${answer.answer}</p>
+                                        </div>
+                                        <div class="flex flex-col items-end gap-2 ml-4">
+                                            <button onclick="showEditModal(${answer.answerId})" class="text-blue-600 hover:underline text-sm">수정</button>
+                                            <button onclick="deleteAnswer(${answer.answerId})" class="text-red-600 hover:underline text-sm">삭제</button>
+                                        </div>
+                                    </div>
+                                `;
+                                body.appendChild(item);
+                            });
+
+                            header.addEventListener("click", () => body.classList.toggle("hidden"));
+                            container.appendChild(header);
+                            container.appendChild(body);
+                            answerList.appendChild(container);
+                        });
+                    })
+                    .catch(() => {
+                        answerList.innerHTML = `<p class="text-red-500">답변을 불러오는 중 오류가 발생했습니다.</p>`;
+                    });
+            });
+
+            window.deleteAnswer = function (answerId) {
+                if (!confirm("정말 삭제하시겠습니까?")) return;
+                fetch(`/survey/record/answer/${answerId}`, {
+                    method: "DELETE"
+                }).then(res => {
+                    if (res.ok) {
+                        alert("삭제가 완료되었습니다.");
+                        childSelect.dispatchEvent(new Event("change"));
+                    } else {
+                        alert("삭제 중 오류가 발생했습니다.");
+                    }
+                });
+            }
+
+            window.showEditModal = function (answerId) {
+                const text = document.getElementById(`answerText_${answerId}`).textContent;
+                modalTextarea.value = text;
+                currentEditId = answerId;
+                editModal.classList.remove("hidden");
+            }
+
+            cancelEdit.addEventListener("click", () => {
+                editModal.classList.add("hidden");
+                currentEditId = null;
+            });
+
+            saveEdit.addEventListener("click", () => {
+                if (!currentEditId) return;
+                const updatedText = modalTextarea.value;
+                fetch(`/survey/record/answer/${currentEditId}`, {
+                    method: "PUT",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answer: updatedText })
+                }).then(res => {
+                    if (res.ok) {
+                        alert("수정이 완료되었습니다.");
+                        editModal.classList.add("hidden");
+                        childSelect.dispatchEvent(new Event("change"));
+                    } else {
+                        alert("수정 중 오류가 발생했습니다.");
+                    }
+                });
+            });
+        });
+    </script>
+</th:block>

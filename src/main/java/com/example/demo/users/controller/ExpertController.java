@@ -1,7 +1,8 @@
 package com.example.demo.users.controller;
 
 import com.example.demo.dto.ManagerDTO;
-import com.example.demo.dto.request.PagingRequest;
+
+import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.users.service.ExpertService;
 import com.example.demo.util.GlobalStatus;

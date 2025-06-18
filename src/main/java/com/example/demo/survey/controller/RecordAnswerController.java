@@ -1,87 +1,92 @@
 package com.example.demo.survey.controller;
 
-import com.example.demo.survey.dto.RecordAnswerRequest;
+import com.example.demo.dto.UserDTO;
 import com.example.demo.survey.dto.RecordAnswerResponse;
+import com.example.demo.survey.entity.RecordAnswer;
 import com.example.demo.survey.service.RecordAnswerService;
-import com.example.demo.survey.service.RecordSurveyService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
-import com.example.demo.survey.entity.RecordAnswer;
-import com.example.demo.survey.entity.RecordSurvey;
-import com.example.demo.survey.mapper.RecordAnswerMapper;
-import com.example.demo.users.repository.MemberRepository;
+import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.ChildService;
+import com.example.demo.users.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-@RestController
-@RequestMapping("/api/record-answers")
+@Controller
+@RequestMapping("/survey/record")
 @RequiredArgsConstructor
 public class RecordAnswerController {
 
-    private final RecordAnswerService recordAnswerService;
-    private final RecordSurveyService recordSurveyService;
     private final ChildService childService;
-    private final MemberRepository memberRepository;
+    private final RecordAnswerService recordAnswerService;
+    private final AuthService authService;
+    private final UserService userService;
 
-    // 기록 문진 답변 저장
-    @PostMapping
-    public ResponseEntity<RecordAnswerResponse> create(@RequestBody RecordAnswerRequest request,
-                                                       @RequestAttribute("currentMember") Member currentUser) {
-        RecordSurvey survey = recordSurveyService.get(request.getSurveyId());
-        Child child = childService.get(request.getChildId());
+    // 이력 페이지 접근 (HTML)
+    @GetMapping("/history")
+    public String showAnswerHistory(Model model) {
+        try {
+            UserDTO userDTO = authService.getLoginUser();
+            Member loginUser = userService.getMemberEntityById(userDTO.getId());
 
-        RecordAnswer entity = RecordAnswerMapper.toEntity(request, survey, currentUser, child);
-        recordAnswerService.create(entity);
+            List<Child> children = childService.getChildrenByMember(loginUser);
+            model.addAttribute("children", children);
+            return "survey/recordAnswerHistory";
 
-        return ResponseEntity.ok(RecordAnswerMapper.toResponse(entity));
-    }
-
-    // 본인 작성 전체 답변 조회
-    @GetMapping("/me")
-    public ResponseEntity<List<RecordAnswerResponse>> getMyAnswers(@RequestAttribute("currentMember") Member currentUser) {
-        List<RecordAnswer> answers = recordAnswerService.getAnswersByWriter(currentUser);
-        return ResponseEntity.ok(answers.stream().map(RecordAnswerMapper::toResponse).toList());
-    }
-
-    // 본인의 특정 자녀에 대한 답변만 조회
-    @GetMapping("/me/child/{childId}")
-    public ResponseEntity<List<RecordAnswerResponse>> getMyChildAnswers(@RequestAttribute("currentMember") Member currentUser,
-                                                                        @PathVariable Long childId) {
-        Child child = childService.get(childId);
-        List<RecordAnswer> answers = recordAnswerService.getAnswersByWriterAndChild(currentUser, child);
-        return ResponseEntity.ok(answers.stream().map(RecordAnswerMapper::toResponse).toList());
-    }
-
-    // 답변 소프트 삭제
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        recordAnswerService.softDelete(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/batch")
-    public ResponseEntity<?> submitBatch(@RequestBody List<RecordAnswerRequest> requestList) {
-        for (RecordAnswerRequest request : requestList) {
-            if (request.getSurveyId() == null || request.getChildId() == null || request.getAnswer() == null) {
-                return ResponseEntity.badRequest().body("surveyId, childId, answer는 필수입니다.");
-            }
-
-            RecordSurvey survey = recordSurveyService.get(request.getSurveyId());
-            Child child = childService.get(request.getChildId());
-
-            //  현재 로그인 정보가 없으므로 임시 사용자 (id=1L) 사용
-            Member mockMember = memberRepository.findById(1L)
-                    .orElseThrow(() -> new IllegalArgumentException("임시 유저 없음"));
-
-            RecordAnswer entity = RecordAnswerMapper.toEntity(request, survey, mockMember, child);
-            recordAnswerService.create(entity);
+        } catch (Exception e) {
+            return "redirect:/loginForm";
         }
-
-        return ResponseEntity.ok().body("{\"success\": true}");
     }
 
+    // 특정 자녀의 답변 이력
+    @GetMapping("/history/{childId}")
+    @ResponseBody
+    public List<RecordAnswerResponse> getAnswersByChild(@PathVariable Long childId) {
+        try {
+            UserDTO userDTO = authService.getLoginUser();
+            Member loginUser = userService.getMemberEntityById(userDTO.getId());
+            Child child = childService.findById(childId);
+
+            List<RecordAnswer> answers = recordAnswerService.getAnswersByWriterAndChild(loginUser, child);
+
+            return answers.stream()
+                    .map(RecordAnswerResponse::fromEntity)
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @PutMapping("/answer/{id}")
+    @ResponseBody
+    public ResponseEntity<?> updateAnswer(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String newAnswer = body.get("answer");
+        recordAnswerService.updateAnswerText(id, newAnswer);
+        return ResponseEntity.ok().build();
+    }
+
+
+    // 답변 soft delete
+    @DeleteMapping("/answer/{id}")
+    @ResponseBody
+    public String deleteAnswer(@PathVariable Long id) {
+        try {
+            authService.getLoginUser(); // 로그인 확인용 (사용은 안하지만 필수)
+            recordAnswerService.softDelete(id);
+            return "success";
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+    }
 }
