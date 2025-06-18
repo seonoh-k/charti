@@ -35,7 +35,7 @@ public class AlbumController {
 
         for(Album album : albumList) {
             String filename = album.getThumbnail();
-            String presignedUrl = urlService.getPresignedUrl(filename, Duration.ofMinutes(15)).toString();
+            String presignedUrl = "/api/proxy/image?filename=thumbnail/"+filename;
             urlList.add(presignedUrl);
         }
 
@@ -49,11 +49,10 @@ public class AlbumController {
     public String getAlbum(@PathVariable("id") Long id, Model model) {
 
         Album album = albumService.get(id);
-        String presignedUrl = urlService.getPresignedUrl(album.getThumbnail(), Duration.ofMinutes(15)).toString();
 
         model.addAttribute("id", id);
         model.addAttribute("album", album);
-        model.addAttribute("url", presignedUrl);
+        model.addAttribute("url", "/api/proxy/image?filename=thumbnail/"+album.getThumbnail());
 
         return "album";
     }

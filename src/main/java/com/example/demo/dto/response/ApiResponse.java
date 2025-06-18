@@ -62,5 +62,10 @@ public class ApiResponse<U> {
     public static <T> ApiResponse<T> success(StatusCode statusCode, T data) {
         return new ApiResponse<>(statusCode, data);
     }
+    public static <T> ApiResponse<T> success(StatusCode statusCode, String overrideMessage) {
+        ApiResponse<T> apiResponse = new ApiResponse<>(statusCode);
+        apiResponse.message = overrideMessage;
+        return apiResponse;
+    }
 
 }

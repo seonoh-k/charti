@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class AddressInfo {
 
-    private Long id;
+    private Long addressId;
     private String zipNum;
     private String sido;
     private String gugun;

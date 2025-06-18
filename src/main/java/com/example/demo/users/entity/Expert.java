@@ -11,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Expert extends BaseEntity{
+public class Expert{
 
     @Id
     @Column(name = "users_id")
@@ -25,7 +25,7 @@ public class Expert extends BaseEntity{
     private String major;
     // 자격증파일
     private String license;
-
+    // 경력사항
     private String career;
     // 승인여부
     private Boolean isApproved;

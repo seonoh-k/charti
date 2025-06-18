@@ -26,37 +26,50 @@
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
 
+    // 🔔 알림 권한 요청 + 토큰 발급 + 서버 저장
     navigator.serviceWorker.register('/firebase-messaging-sw.js')
       .then((registration) => {
-        return getToken(messaging, {
-          vapidKey: "BCOstAjMQL4pjgMa7JNdlE_TX8zgAB2_Ke2ku53BMIZYVJJDpkMmB00wSMsp5K_H8Fog850yst8s662FLlAvcWY",
-          serviceWorkerRegistration: registration
+        return Notification.requestPermission().then(permission => {
+          if (permission !== "granted") {
+            throw new Error("알림 권한이 거부됨");
+          }
+          console.log("✅ 알림 권한 허용됨");
+
+          return getToken(messaging, {
+            vapidKey: "BCOstAjMQL4pjgMa7JNdlE_TX8zgAB2_Ke2ku53BMIZYVJJDpkMmB00wSMsp5K_H8Fog850yst8s662FLlAvcWY",
+            serviceWorkerRegistration: registration
+          });
         });
       })
       .then((token) => {
         console.log("🔥 FCM 웹 토큰:", token);
 
-        // 서버에 토큰 전송
-        fetch("/api/user/fcm-token", {
+        return fetch("/api/user/fcm-token", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ token: token })
-        }).then(res => {
-          if (!res.ok) throw new Error("토큰 저장 실패");
-          console.log("✅ 서버에 FCM 토큰 저장 완료");
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fcmToken: token })
         });
       })
+      .then(res => {
+        if (!res.ok) throw new Error("토큰 저장 실패");
+        console.log("✅ 서버에 FCM 토큰 저장 완료");
+      })
       .catch((err) => {
-        console.error("❌ 알림 권한 요청 실패:", err);
+        console.error("❌ 알림 설정 실패:", err);
       });
 
-    // 포그라운드 메시지 수신
+    // 📩 포그라운드 수신 처리
     onMessage(messaging, (payload) => {
-      console.log('📩 Foreground 메시지 수신:', payload);
+      console.log("📩 Foreground 메시지 수신:", payload);
+      const { title, body } = payload.notification;
+
+      new Notification(title, {
+        body: body,
+        icon: "/images/logo.png"  // 사이트 로고나 알림용 이미지 경로
+      });
     });
   </script>
+
 </th:block>
 
 </html>

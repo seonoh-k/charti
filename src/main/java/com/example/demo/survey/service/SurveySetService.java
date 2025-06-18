@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class SurveySetService {
+
     private final SurveySetRepository     surveySetRepo;
     private final GroupSurveyRepository   groupRepo;
     private final SpecialSurveyRepository specialRepo;
@@ -128,4 +129,5 @@ public class SurveySetService {
                 .filter(s -> (category == SurveyCategory.ALL || s.getCategory() == category))
                 .collect(Collectors.toList());
     }
+
 }

@@ -7,9 +7,11 @@ import com.example.demo.dto.request.ExpertJoinRequest;
 import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.entity.Address;
 import com.example.demo.exception.JwtTokenFormatInvalidException;
 import com.example.demo.exception.JwtTokenNotFoundException;
 import com.example.demo.jwt.JwtUtil;
+import com.example.demo.repository.AddressRepository;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
@@ -35,8 +37,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 회원가입/로그인/인가(Authorization) 및 인증(Authentication) 처리를 담당
@@ -50,6 +54,7 @@ public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final AuthService authService;
+    private final AddressRepository addressRepository;
 
 
     /**
@@ -102,6 +107,40 @@ public class AuthController {
         }
     }
 
+    /**
+     * 사용자가 입력한 동 이름으로 주소 목록을 검색해 반환한다.
+     *
+     * @param dong 사용자가 입력한 동 이름 (최소 2글자 이상)
+     * @return 동 이름이 포함된 주소들의 리스트 (Map 형태)
+     */
+    @ResponseBody
+    @GetMapping("/api/address/search")      //  address 관련으로 컨트롤러 가를것 같음
+    public List<Map<String, Object>> searchByDong(@RequestParam String dong) {
+        if (dong.length() < 2) {
+            //  빈 리스트 반환, 상황에 따라 에러 응답도 가능
+            return List.of();
+        }
+
+        List<Address> addressList = addressRepository.findSimpleByDong(dong);
+
+        // 헤딩 작업코드는 추후 서비스로 변경 예정
+        return addressList.stream().map(address -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", address.getId());
+            map.put("zipNum", address.getZipNum());
+            map.put("sido", address.getSido());
+            map.put("gugun", address.getGugun());
+            map.put("dong", address.getDong());
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * 입력된 휴대전화 번호의 존재 여부를 확인한다.
+     *
+     * @param req 요청 본문에 포함된 전화번호 (예: {"phoneNumber": "01012345678"})
+     * @return {"exists": true} 또는 {"exists": false}
+     */
     @PostMapping(value ="/api/check-phone")
     @ResponseBody
     public Map<String, Boolean> checkPhone(@RequestBody Map<String, String> req) {
@@ -151,11 +190,11 @@ public class AuthController {
             log.info("[POST] 🎈 MemberJoinRequest 아이디 '{}' :  ",memberJoinRequest.getCommonInfo().getUsername());
             log.info("[POST] 🎈 MemberJoinRequest 비밀번호 '{}' :  ",memberJoinRequest.getCommonInfo().getPassword());
             log.info("[POST] 🎈 MemberJoinRequest id 토큰 '{}' :  ",memberJoinRequest.getCommonInfo().getSmsIdToken());
+            log.info("[POST] 🎈 MemberJoinRequest 주소 아이디 '{}' :  ",memberJoinRequest.getAddressInfo().getAddressId());
 
             // 공통 정보 인포
             CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
-            // 주소정보 인포
-            AddressInfo addressInfo = memberJoinRequest.getAddressInfo();
+
             FirebaseToken firebaseToken = firebaseService.verifyIdToken(commonInfo.getSmsIdToken());
 
             String uid = firebaseToken.getUid();

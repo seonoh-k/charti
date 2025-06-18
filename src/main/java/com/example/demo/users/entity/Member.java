@@ -13,7 +13,7 @@ import java.util.List;
 @Entity
 @Table(name = "member")
 @Getter @Setter
-public class Member extends BaseEntity {
+public class Member{
 
     @Id
     @Column(name = "users_id")

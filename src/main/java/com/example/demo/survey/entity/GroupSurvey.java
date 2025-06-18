@@ -1,9 +1,10 @@
 package com.example.demo.survey.entity;
 
 import com.example.demo.entity.BaseEntity;
-import com.example.demo.users.entity.Child;
-import com.example.demo.users.entity.Manager;
-import com.example.demo.users.entity.Member;
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.converter.AgeGroupConverter;
+import com.example.demo.enums.SurveyCategory;
+import com.example.demo.converter.SurveyCategoryConverter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -24,20 +25,17 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     private Long id;
 
     @Column(name = "age_group", nullable = false)
-    private String ageGroup;
+    private AgeGroup ageGroup;
 
     @Column(name = "question", nullable = false)
     private String question;
 
     @Column(nullable = false)
-    private String category;
+    private SurveyCategory category;
 
     @ManyToMany(mappedBy = "groupSurveys")
     @JsonIgnore
     private List<SurveySet> surveySets = new ArrayList<>();
-
-    @Column(name = "survey_date", nullable = false)
-    private LocalDate surveyDate;
 
     @Column(name = "target_group", nullable = false)
     private String targetGroup;

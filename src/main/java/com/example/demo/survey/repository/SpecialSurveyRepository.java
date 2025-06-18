@@ -10,12 +10,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public interface SpecialSurveyRepository extends JpaRepository<SpecialSurvey, Long> {
-  
+
     //    List<SpecialSurvey> findByChildId(Long childId);
     @Query("""
-        select ss 
-          from SpecialSurvey ss 
-          join ss.surveySets sset 
+        select ss
+          from SpecialSurvey ss
+          join ss.surveySets sset
          where sset.setId = :setId
         """)
     List<SpecialSurvey> findBySurveySetId(@Param("setId") Long setId);
