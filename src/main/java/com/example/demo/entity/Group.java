@@ -24,11 +24,11 @@ public class Group extends BaseEntity {
     private Address address;
 
     // 그룹 이름
-    private String name;
-    // 그룹 이메일(담당자 이메일은 따로 이미 받음)
-    private String email;
-    // 그룹 전화번호
-    private String phoneNumber;
+    private String groupName;
+    // 그룹 대표 이메일(담당자 이메일은 따로 이미 받음)
+    private String groupEmail;
+    // 그룹 전화번호 회사전화기
+    private String groupPhoneNumber;
 
     @OneToOne(mappedBy = "group")
     private Manager manager;
