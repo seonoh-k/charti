@@ -3,15 +3,21 @@ package com.example.demo.users.service;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.info.CommonInfo;
 import com.example.demo.dto.request.MemberJoinRequest;
+import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.UserRepository;
+import com.example.demo.util.AuthStatus;
+import com.example.demo.util.GlobalStatus;
+import com.example.demo.util.StatusCode;
+import com.example.demo.util.UserStatus;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -151,6 +157,67 @@ public class FirebaseService {
         firebaseAuth.setCustomUserClaims(commonInfo.getUuid(), claims);
 
     }
+
+    public StatusCode setFirebaseMemberRoleToExpert(Long id) {
+
+        Optional<Users> byId = userRepository.findById(id);
+        if(byId.isEmpty()){
+            throw new UserNotFoundException();
+        }
+
+        if(!userRepository.existsByUuid(byId.get().getUuid())){
+            throw new UserNotFoundException();
+        }
+        Users users = byId.get();
+        users.setRole(Role.ROLE_EXPERT);
+        users.getExpert().setIsApproved(true);
+
+
+        Users saved = userRepository.save(users);
+
+        try{
+            Map<String,Object> claims = new HashMap<>();
+            claims.put("role", saved.getRole().name());
+
+            firebaseAuth.setCustomUserClaims(saved.getUuid(), claims);
+            firebaseAuth.revokeRefreshTokens(saved.getUuid());
+        } catch (FirebaseAuthException firebaseAuthException){
+            return UserStatus.APPROVE_FAIL;
+        }
+
+
+        return UserStatus.APPROVE_SUCCESS;
+
+    }
+    public StatusCode setFirebaseMemberRoleToManager(Long id) {
+
+        Optional<Users> byId = userRepository.findById(id);
+        if(byId.isEmpty()){
+            throw new UserNotFoundException();
+        }
+
+        if(!userRepository.existsByUuid(byId.get().getUuid())){
+            throw new UserNotFoundException();
+        }
+        Users users = byId.get();
+        users.setRole(Role.ROLE_MANAGER);
+        users.getManager().setIsApproved(true);
+
+        Users saved = userRepository.save(users);
+        try{
+            Map<String,Object> claims = new HashMap<>();
+            claims.put("role", saved.getRole().name());
+
+            firebaseAuth.setCustomUserClaims(saved.getUuid(), claims);
+            firebaseAuth.revokeRefreshTokens(saved.getUuid());
+        } catch (FirebaseAuthException firebaseAuthException){
+            return UserStatus.APPROVE_FAIL;
+        }
+
+        return UserStatus.APPROVE_SUCCESS;
+
+    }
+
     /**
      * 파이어베이스 토큰을 간접적으로 정지한다.
      * <p>

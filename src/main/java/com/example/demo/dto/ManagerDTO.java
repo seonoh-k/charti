@@ -1,6 +1,7 @@
 package com.example.demo.dto;
 
 import com.example.demo.users.entity.Manager;
+import com.example.demo.users.entity.Users;
 import lombok.*;
 
 @Getter
@@ -44,6 +45,18 @@ public class ManagerDTO {
                     .build();
         }
 
+    }
+
+    public static ManagerDTO fromEntity(Users user) {
+        // 추가로 필요한 데이터 작성
+        return ManagerDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getUsername())    // username == email
+                .phoneNumber(user.getPhoneNumber())
+                .groupName(user.getManager().getGroup().getGroupName())
+                .isApproved(user.getManager().getIsApproved())
+                .build();
     }
 
 }

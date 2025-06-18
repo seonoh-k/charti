@@ -29,6 +29,4 @@ public class Manager{
 
     private Boolean isApproved;
 
-    private String organization; // 유치원, 어린이집 
-
 }
