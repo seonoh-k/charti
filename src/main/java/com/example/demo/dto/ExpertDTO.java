@@ -3,6 +3,7 @@ package com.example.demo.dto;
 
 import com.example.demo.users.entity.Expert;
 import com.example.demo.users.entity.Manager;
+import com.example.demo.users.entity.Users;
 import lombok.*;
 
 @Getter
@@ -34,8 +35,20 @@ public class ExpertDTO {
                     .career(expert.getCareer())
                     .isApproved(expert.getIsApproved())
                     .build();
+    }
 
-
+    public static ExpertDTO fromEntity(Users user) {
+        // 추가로 필요한 데이터 작성
+        return ExpertDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getUsername())    // username == email
+                .phoneNumber(user.getPhoneNumber())
+                .license(user.getExpert().getLicense())
+                .major(user.getExpert().getMajor())
+                .career(user.getExpert().getCareer())
+                .isApproved(user.getExpert().getIsApproved())
+                .build();
     }
 
 }

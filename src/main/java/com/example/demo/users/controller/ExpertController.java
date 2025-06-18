@@ -1,11 +1,17 @@
 package com.example.demo.users.controller;
 
+import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.ManagerDTO;
-
 import com.example.demo.dto.paging.PagingRequest;
+import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.users.entity.Expert;
+import com.example.demo.users.entity.Manager;
 import com.example.demo.users.service.ExpertService;
+import com.example.demo.users.service.FirebaseService;
 import com.example.demo.util.GlobalStatus;
+import com.google.firebase.FirebaseException;
+import com.google.firebase.auth.FirebaseAuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Pageable;
@@ -13,10 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,6 +29,7 @@ import java.util.List;
 public class ExpertController {
 
     private final ExpertService expertService;
+    private final FirebaseService firebaseService;
 
     @GetMapping("/expert")
     public String showExpertPage() {
@@ -46,38 +50,33 @@ public class ExpertController {
      * @return
      */
     @GetMapping("/admin/expert-applicants")
-    public String showAdminExpertPendingPage(@ModelAttribute PagingRequest pagingRequest , Model model) {
-        log.info("[GET] 👨‍💼 request manager Page");
+    public String showAdminExpertApplicantsPage(@ModelAttribute PagingRequest pagingRequest, Model model) {
+        Pageable pageable = pagingRequest.toPageable();
+        PagingResultDTO<ExpertDTO, Expert> result = expertService.getPendingExpertListWithPaging(pageable);
+        model.addAttribute("result",result);
+        return "admin/expertApplicants"; // 뷰 파일
+    }
+    @PostMapping("/admin/approve-expert")
+    public String approveExpert(@ModelAttribute PagingRequest pagingRequest,
+                                @RequestParam List<Long> ids ,
+                                Model model) throws FirebaseAuthException{
+
+        ids.forEach(firebaseService::setFirebaseMemberRoleToExpert);
+
+        log.info(pagingRequest.getSort());
 
         Pageable pageable = pagingRequest.toPageable();
-        List<ManagerDTO> pendingManagerList = expertService.getPendingExpertList(pageable);
 
-        // 쿼리 파라미터 그대로 뷰에 전달
-        model.addAttribute("page", pagingRequest.getPage());
-        model.addAttribute("size", pagingRequest.getSize());
-        model.addAttribute("sort", pagingRequest.getSort());
-        model.addAttribute("direction", pagingRequest.getDirection());
+        PagingResultDTO<ExpertDTO, Expert> result = expertService.getPendingExpertListWithPaging(pageable);
+        ids.forEach(log::info);
 
-        model.addAttribute("pendingManagerList",pendingManagerList);
+        model.addAttribute("result",result);
 
-        return "/admin/manager/pendingManagerList";
+
+        return "redirect:/admin/expert-applicants";
     }
 
-    @PostMapping("/api/admin/expert-applicants")
-    public ResponseEntity<ApiResponse> getPendingExpertList(@RequestBody PagingRequest pagingRequest) {
-        Pageable pageable = pagingRequest.toPageable();
 
-        List<ManagerDTO> result = expertService.getPendingExpertList(pageable);
-
-        if(result.isEmpty()){
-            return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                    .body(new ApiResponse(GlobalStatus.SUCCESS_WITH_DATA,result));
-        }
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse(GlobalStatus.SUCCESS_WITH_DATA,result));
-
-    }
 
 
 }

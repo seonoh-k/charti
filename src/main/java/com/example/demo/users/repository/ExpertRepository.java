@@ -1,12 +1,24 @@
 package com.example.demo.users.repository;
 
 import com.example.demo.users.entity.Expert;
+import com.example.demo.users.entity.Manager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 public interface ExpertRepository extends JpaRepository<Expert,Long> {
 
+    @Query("SELECT e FROM Users u JOIN u.expert e WHERE e.isApproved = false")
     Page<Expert> findByIsApprovedFalse(Pageable pageable);
+    // List<Manager> findByIsApprovedFalse();
+
+    @Query("SELECT e FROM Users u JOIN u.expert e WHERE e.isApproved = true")
+    Page<Expert> findByIsApprovedTrue(Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE Users u SET u.role = 'ROLE_EXPERT' WHERE u.id = :id AND u.expert.isApproved = true")
+    int approveExpert(Long id);
 
 }

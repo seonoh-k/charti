@@ -9,7 +9,6 @@ import com.example.demo.service.PhotoService;
 import com.example.demo.service.PresignedUrlService;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.service.MemberService;
-
 import com.example.demo.util.GlobalStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

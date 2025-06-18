@@ -1,12 +1,14 @@
 package com.example.demo.users.service;
 
+import com.example.demo.dto.ExpertDTO;
+import com.example.demo.dto.ManagerDTO;
+import com.example.demo.dto.MemberDTO;
 import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.ExpertJoinRequest;
 import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
-import com.example.demo.users.entity.Member;
-import com.example.demo.users.entity.Role;
-import com.example.demo.users.entity.Users;
+import com.example.demo.users.entity.*;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.MemberRepository;
@@ -16,6 +18,8 @@ import com.example.demo.util.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -278,6 +282,33 @@ public class UserService {
             throw new UserNotFoundException("유저가 없어요");
         }
     }
+
+    // Member
+    public PagingResultDTO<MemberDTO, Users> getMemberListWithPaging(Pageable pageable) {
+        Page<Users> result = userRepository.getAllMember(pageable);
+        return new PagingResultDTO<>(result, MemberDTO::fromEntity);
+    }
+
+    public List<MemberDTO> getMemberList(Pageable pageable){
+
+        Page<Users> allMember = userRepository.getAllMember(pageable);
+        // Entity -> DTO로 변환 DTO 클래스의 Static Method 사용
+        List<MemberDTO> list = allMember.map(MemberDTO::fromEntity).toList();
+        return list;
+    }
+    public List<ExpertDTO>  getExpertList(Pageable pageable){
+        Page<Expert> allExpertUnApproved = userRepository.getAllExpertUnApproved(pageable);
+        // Entity -> DTO의 Static Method 사용해서 변환
+        List<ExpertDTO> list = allExpertUnApproved .map(ExpertDTO::fromEntity).toList();
+        return list;
+    }
+    public List<ManagerDTO>  getManagerList(Pageable pageable){
+        Page<Manager> allManagerUnApproved = userRepository.getAllManagerUnApproved(pageable);
+        // Entity -> DTO의 Static Method 사용해서 변환
+        List<ManagerDTO> list = allManagerUnApproved.map(ManagerDTO::fromEntity).toList();
+        return list;
+    }
+
     // [추가됨] 유저 검색용 메서드 - 포인트 지급 등의 기능에서 이름이나 닉네임으로 사용자 검색 시 사용
     public List<UserDTO> searchUsers(String keyword, String filter) {
         log.info("🔍 유저 검색 요청: filter={}, keyword={}", filter, keyword);
