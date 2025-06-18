@@ -46,16 +46,16 @@ public class FirebaseService {
      * <p>
      *  <ul>
      *      <li> 파이어베이스에서 계정을 생성한다.</li>
-     *      <li> 계정을 생성하면 uuid를 반환하게 되고 이 값을 저장한 UserDTO를 반환한다.</li>
+     *      <li> 계정을 생성하면 uuid를 반환하게 되고 이 값을 저장한 commonInfo를 반환한다.</li>
      *  </ul>
      * </p>
-     * @param memberJoinRequest : 유저 정보를 담는 UserDTO
+     * @param commonInfo : 유저 정보를 담는 UserDTO
      * @return UserDTO : UUID가 추가된 UserDTO
      * @throws FirebaseAuthException - 계정을 생성하는 동안 에러가 발생하면 반환
      * @see <a href="https://firebase.google.com/docs/auth/admin/manage-users?hl=ko&_gl=1*1x2s6p8*_up*MQ..*_ga*MTczMzAzNTU3My4xNzQ5NTYyODkw*_ga_CW55HF8NVT*czE3NDk1NjI4ODkkbzEkZzAkdDE3NDk1NjI4ODkkajYwJGwwJGgw#java">Firebase SDK Document</a>
      */
-    public MemberJoinRequest createMember(MemberJoinRequest memberJoinRequest) throws FirebaseAuthException {
-        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
+    public CommonInfo createMember(CommonInfo commonInfo) throws FirebaseAuthException {
+//        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
         UserRecord userRecord = firebaseAuth.createUser(new UserRecord.CreateRequest()
                 .setEmail(commonInfo.getUsername())
                 .setPassword(commonInfo.getPassword())
@@ -64,7 +64,7 @@ public class FirebaseService {
 
         commonInfo.setUuid(userRecord.getUid());
 
-        return memberJoinRequest;
+        return commonInfo;
     }
     /**
      * 소셜 로그인 유저의 계정을 파이어베이스에 생성한다.
@@ -135,8 +135,8 @@ public class FirebaseService {
      * @throws FirebaseAuthException
      * @see <a href="https://firebase.google.com/docs/auth/admin/custom-claims?hl=ko#java">Firebase SDK Document</a>
      */
-    public void setFirebaseMemberRoleToMember(MemberJoinRequest memberJoinRequest) throws FirebaseAuthException{
-        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();  //이렇게 선언하며 정보 잡을수 있나
+    public void setFirebaseMemberRoleToMember(CommonInfo commonInfo) throws FirebaseAuthException{
+//        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();  //이렇게 선언하며 정보 잡을수 있나
         if(!userRepository.existsByUuid(commonInfo.getUuid())){
             throw new UserNotFoundException();
         }

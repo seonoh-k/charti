@@ -72,9 +72,9 @@ public class AuthService {
 
     private Group groupInfoToEntity(GroupInfo groupInfo){
         Group group = Group.builder()
-                .name(groupInfo.getName())
-                .phoneNumber(groupInfo.getPhoneNumber())
-                .email(groupInfo.getEmail())
+                .groupName(groupInfo.getGroupName())
+                .groupPhoneNumber(groupInfo.getGroupPhoneNumber())
+                .groupEmail(groupInfo.getGroupEmail())
                 .build();
 
         return group;
@@ -107,41 +107,51 @@ public class AuthService {
      *
      *
      * @param expertJoinRequest
+     * @param commonInfo
      * @return
      */
     @Transactional
-    public AuthStatus createExpertJoinRequest(ExpertJoinRequest expertJoinRequest) throws UserAlreadyExistsException{
-
+    public AuthStatus createExpertJoinRequest(ExpertJoinRequest expertJoinRequest,CommonInfo commonInfo) throws UserAlreadyExistsException{
 
         // Users 생성 (role = ROLE_MEMBER)
-        CommonInfo commonInfo = expertJoinRequest.getCommonInfo();
-
+        // 이메일 중복여부
         boolean isExist = userService.existsByEmail(commonInfo.getUsername());
         if(isExist){
             throw new UserAlreadyExistsException();
         }
-        // Expert 저장 (isApproved = false)
-
+        // 유저 생성
         Users users = this.commonInfoToEntity(commonInfo);
-        userRepository.save(users);
+        userService.createMember(users);
 
         // Address 저장
         AddressInfo addressInfo = expertJoinRequest.getAddressInfo();
+        Address address = addressService.getAddressById(addressInfo.getAddressId());
+
+        // Expert 저장 (isApproved = false)
         ExpertInfo expertInfo = expertJoinRequest.getExpertInfo();
-        Expert expert = this.expertInfoToEntity(expertInfo);
-        // 주소 기입 했으면
-        if(addressInfo.getZipNum() != null){
-            Optional<Address> address = addressService.getAddressByAllFields(addressInfo);
-            if(address.isPresent()) {
-                expert.setAddress(address.get());
-            }
-        }
+
+        Expert expert = new Expert();
         expert.setUsers(users);
+        expert.setAddress(address);
+        expert.setMajor(expertInfo.getMajor());
+        expert.setCareer(expertInfo.getCareer());
+
+
+
+
         expertRepository.save(expert);
-
-
         return AuthStatus.EXPERT_JOIN_REQUEST_SUCCESS;
 
+
+//        Expert expert = this.expertInfoToEntity(expertInfo);
+        // 주소 기입 했으면
+        // 당장은 DB 조회 후 id 값을 추출해 저장하기 때문에 필요없는 로직 상황이 바뀌면 쓸수도 있다
+//        if(addressInfo.getZipNum() != null){
+//            Optional<Address> address = addressService.getAddressByAllFields(addressInfo);
+//            if(address.isPresent()) {
+//                expert.setAddress(address.get());
+//            }
+//        }
     }
 
     /**
@@ -153,41 +163,46 @@ public class AuthService {
      *
      * Users.role = ROLE_MEMBER 로 저장
      * @param managerJoinRequest
+     * @param commonInfo
      * @return
      */
     @Transactional
-    public AuthStatus createManagerJoinRequest(ManagerJoinRequest managerJoinRequest) throws UserAlreadyExistsException{
+    public AuthStatus createManagerJoinRequest(ManagerJoinRequest managerJoinRequest,CommonInfo commonInfo) throws UserAlreadyExistsException{
 
         // Users 생성 (role = ROLE_MEMBER)
-        CommonInfo common = managerJoinRequest.getCommonInfo();
 
-        boolean isExist = userService.existsByEmail(common.getUsername());
+        boolean isExist = userService.existsByEmail(commonInfo.getUsername());
         if(isExist){
             throw new UserAlreadyExistsException();
         }
 
-        Users users = this.commonInfoToEntity(common);
-        userRepository.save(users);
+        Users users = this.commonInfoToEntity(commonInfo);
+        userService.createMember(users);
 
         // Address & Group 저장 절차
         AddressInfo addressInfo = managerJoinRequest.getAddressInfo();
         GroupInfo groupInfo = managerJoinRequest.getGroupInfo();
-        Group group = this.groupInfoToEntity(groupInfo);
 
-        // 주소 기입 했으면
-        if(addressInfo.getZipNum() != null){
-            Optional<Address> address = addressService.getAddressByAllFields(addressInfo);
-            if(address.isPresent()){
-                group.setAddress(address.get());
-            }
+
+        Group group;
+        Long groupId = groupInfo.getGroupId();
+
+        if (groupId != null) {
+            group = groupRepository.findById(groupId).orElse(null);
+            log.info("✅ 기존 그룹 ID {} 사용", groupId);
+        } else {
+            group = groupInfoToEntity(groupInfo);
+            groupRepository.save(group);
+            log.info("➕ 새로운 그룹 생성: {}", group.getGroupName());
         }
-        groupRepository.save(group);
 
         ManagerInfo managerInfo = managerJoinRequest.getManagerInfo();
 
         Manager manager = this.managerInfoToEntity(managerInfo);
         manager.setUsers(users);
         manager.setGroup(group);
+
+
 
         managerRepository.save(manager);
         // Users 저장 (role = ROLE_MEMBER)
@@ -200,10 +215,10 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthStatus createMemberJoinRequest(MemberJoinRequest memberJoinRequest) {
+    public AuthStatus createMemberJoinRequest(MemberJoinRequest memberJoinRequest,CommonInfo commonInfo) {
 
         // Users 생성 (role = ROLE_MEMBER)
-        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
+//        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
 
         boolean isExist = userService.existsByEmail(commonInfo.getUsername());
         if(isExist){
@@ -217,7 +232,7 @@ public class AuthService {
 //        // Address 저장
         AddressInfo addressInfo = memberJoinRequest.getAddressInfo();
         //  주소 조회 (addressId 기반)
-        Address address = addressService.getAddressById(addressInfo.getAddressId());
+        Address address = addressService.getAddressById(addressInfo.getAddressId());    // AddressNotFoundException
 
         Member member = new Member();
         member.setUsers(users);

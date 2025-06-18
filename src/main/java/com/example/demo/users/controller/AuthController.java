@@ -8,13 +8,18 @@ import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.entity.Address;
+import com.example.demo.entity.Group;
 import com.example.demo.exception.JwtTokenFormatInvalidException;
 import com.example.demo.exception.JwtTokenNotFoundException;
 import com.example.demo.jwt.JwtUtil;
 import com.example.demo.repository.AddressRepository;
+import com.example.demo.repository.GroupRepository;
+import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
+import com.example.demo.users.repository.ManagerRepository;
+import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.FirebaseService;
 import com.example.demo.users.service.UserService;
@@ -54,8 +59,10 @@ public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final AuthService authService;
-    private final AddressRepository addressRepository;
-
+    private final AddressRepository addressRepository;  // 주소 검색 요청을위해 임시사용
+    private final AddressService addressService;  // 그룹 주소 검색 을 위해 임시사용
+    private final GroupRepository groupRepository;  // 그룹 검색 을 위해 임시사용
+    private final ManagerRepository managerRepository;  // 그룹중복 검사를  위해 임시사용
 
     /**
      * 로그인 Users 테이블에 있는 데이터로 검사를 진행한다.
@@ -216,11 +223,11 @@ public class AuthController {
             log.info("[POST] 🎈 MemberJoinRequest 저장된전화번호 '{}' :  ", commonInfo.getPhoneNumber());
             log.info("[POST] 🎈 MemberJoinRequest 저장된 롤 '{}' :  ", commonInfo.getRole());
 
-            MemberJoinRequest savedUserDTO = firebaseService.createMember(memberJoinRequest);
+            CommonInfo savedUserInfo = firebaseService.createMember(commonInfo);    // FirebaseAuthException
 
-            AuthStatus authStatus = authService.createMemberJoinRequest(savedUserDTO);
+            AuthStatus authStatus = authService.createMemberJoinRequest(memberJoinRequest,savedUserInfo);   // UserAlreadyExistsException
 
-            firebaseService.setFirebaseMemberRoleToMember(savedUserDTO);
+            firebaseService.setFirebaseMemberRoleToMember(savedUserInfo);   // UserNotFoundException
 
             // 일반회원 회원가입 성공 메세지
             if (authStatus == AuthStatus.MEMBER_JOIN_REQUEST_SUCCESS) {
@@ -248,32 +255,233 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/join/Expert")
-    public ResponseEntity<ApiResponse> joinExpert(@RequestBody ExpertJoinRequest expertJoinRequest){
+    @PostMapping("/join/expert")
+    public ResponseEntity<ApiResponse> joinExpert(@Valid @RequestBody ExpertJoinRequest expertJoinRequest, BindingResult bindingResult){
         try{
-            AuthStatus authStatus = authService.createExpertJoinRequest(expertJoinRequest);
+            // 화원가입 유효성 검사
+            if (bindingResult.hasErrors()) {
+
+                log.info("[POST] 🎈 : 유효성 검사 걸림");
+                FieldError fieldError = bindingResult.getFieldError();  // 검증에 실패한 필드의 정보
+                String errorMsg =  fieldError.getDefaultMessage();     //오류메세지  비밀번호는 필수 입력값입니다.
+                String fieldName = fieldError.getField();  // 예: "commonInfo.password"
+                String pureFieldName = fieldName.contains(".")     // .을 기준으로 뒤쪽 값
+                        ? fieldName.substring(fieldName.lastIndexOf('.') + 1)
+                        : fieldName;
+                log.info("[POST] 🎈 error on field '{}': {}", fieldName, errorMsg);
+                log.info("[POST] 🎈 error on field '{}': {}", pureFieldName, errorMsg);
+
+                // 여기에 CUSTOM 메시지를 넣어서 ApiResponse를 만듭니다.
+                ApiResponse<String> errorResponse =
+                        new ApiResponse<>(AuthStatus.VALIDATION_FAILED,pureFieldName,errorMsg);
+                // 400 에러와 errorResponse 담아서 리턴
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(errorResponse);
+            }
+            log.info("[POST] 🎈 expertJoinRequest '{}' :  ",expertJoinRequest);      // 정보 확인용 로그들
+            log.info("[POST] 🎈 expertJoinRequest '{}' :  ",expertJoinRequest.getCommonInfo());
+            log.info("[POST] 🎈 expertJoinRequest 이름: '{}' :  ",expertJoinRequest.getCommonInfo().getName());
+            log.info("[POST] 🎈 expertJoinRequest 닉네임 :'{}' :  ",expertJoinRequest.getCommonInfo().getNickname());
+            log.info("[POST] 🎈 expertJoinRequest 아이디 '{}' :  ",expertJoinRequest.getCommonInfo().getUsername());
+            log.info("[POST] 🎈 expertJoinRequest 비밀번호 '{}' :  ",expertJoinRequest.getCommonInfo().getPassword());
+            log.info("[POST] 🎈 expertJoinRequest id 토큰 '{}' :  ",expertJoinRequest.getCommonInfo().getSmsIdToken());
+            log.info("[POST] 🎈 expertJoinRequest 주소 아이디 '{}' :  ",expertJoinRequest.getAddressInfo().getAddressId());
+            log.info("[POST] 🎈 expertJoinRequest 전문가인포에 주소가? '{}' :  ",expertJoinRequest.getExpertInfo().getAddressId());
+            log.info("[POST] 🎈 expertJoinRequest 전공 '{}' :  ",expertJoinRequest.getExpertInfo().getMajor());
+            log.info("[POST] 🎈 expertJoinRequest 경력사항 '{}' :  ",expertJoinRequest.getExpertInfo().getCareer());
+
+            // 공통 정보 인포
+            CommonInfo commonInfo = expertJoinRequest.getCommonInfo();
+
+            FirebaseToken firebaseToken = firebaseService.verifyIdToken(commonInfo.getSmsIdToken());
+
+            String uid = firebaseToken.getUid();
+            firebaseService.deleteFirebaseMember(uid);
+            String phoneNumber = (String) firebaseToken.getClaims().get("phone_number");
+            log.info("[POST] 🎈 expertJoinRequest 전화번호 '{}' :  ",phoneNumber);
+
+            // 인증 실패: 잘못된 토큰이거나 SMS 인증이 아님
+            if (phoneNumber == null) {
+                // code : "PAF", message : "sms 인증 실패"
+                log.info("[POST] 🎈 설마 여기서 걸렸나? : sms인증토큰이 이상한가  ");
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(AuthStatus.PHONE_AUTH_FAIL));
+            }
+            commonInfo.setPhoneNumber(phoneNumber);
+            commonInfo.setRole(Role.ROLE_MEMBER.name());
+            log.info("[POST] 🎈 expertJoinRequest 저장된전화번호 '{}' :  ", commonInfo.getPhoneNumber());
+            log.info("[POST] 🎈 expertJoinRequest 저장된 롤 '{}' :  ", commonInfo.getRole());
+
+            CommonInfo savedUserDTO = firebaseService.createMember(commonInfo); // FirebaseAuthException
+
+            AuthStatus authStatus = authService.createExpertJoinRequest(expertJoinRequest,savedUserDTO);    // UserAlreadyExistsException
+
+            firebaseService.setFirebaseMemberRoleToMember(savedUserDTO);    // UserNotFoundException
+
+            if (authStatus == AuthStatus.EXPERT_JOIN_REQUEST_SUCCESS) {
+
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(new ApiResponse(authStatus));
+
+            } else {
+
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse(authStatus));
+
+            }
+
+
+        } catch (FirebaseAuthException firebaseAuthException) {
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(AuthStatus.SERVER_ERROR));
+
+
         } catch (UserAlreadyExistsException userAlreadyExistsException){
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
 
         }
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse(AuthStatus.EXPERT_JOIN_REQUEST_SUCCESS));
     }
-    @PostMapping("/join/Manager")
-    public ResponseEntity<ApiResponse> joinManager(@RequestBody ManagerJoinRequest managerJoinRequest){
+
+
+    @GetMapping("/api/address/{id}")
+    public ResponseEntity<Map<String, Object>> getAddressById(@PathVariable Long id) {
+        Address address = addressService.getAddressById(id); // 예외 포함
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", address.getId());
+        map.put("zipNum", address.getZipNum());
+        map.put("sido", address.getSido());
+        map.put("gugun", address.getGugun());
+        map.put("dong", address.getDong());
+        map.put("bunji", address.getBunji());
+        return ResponseEntity.ok(map);
+    }
+    @ResponseBody   // 그룹 찾기 컨트롤러 나중에 다른곳으로 가를것
+    @GetMapping("/api/group/search")
+    public List<Map<String, Object>> searchGroupByName(@RequestParam String name) {
+        // 검색어가 너무 짧으면 빈 리스트 반환
+        if (name.length() < 2) {
+            return List.of();
+        }
+        List<Group> groupList = groupRepository.findByGroupNameContainingIgnoreCase(name);
+        return groupList.stream().map(group -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", group.getId());
+            map.put("name", group.getGroupName());
+            map.put("email", group.getGroupEmail());
+            map.put("phoneNumber", group.getGroupPhoneNumber());
+            map.put("addressId", group.getAddress().getId());
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    @PostMapping("/join/manager")
+    public ResponseEntity<ApiResponse> joinManager(@Valid @RequestBody ManagerJoinRequest managerJoinRequest, BindingResult bindingResult){
         try{
-            AuthStatus authStatus = authService.createManagerJoinRequest(managerJoinRequest);
+            // 화원가입 유효성 검사
+            if (bindingResult.hasErrors()) {
+
+                log.info("[POST] 🎈 : 유효성 검사 걸림");
+                FieldError fieldError = bindingResult.getFieldError();  // 검증에 실패한 필드의 정보
+                String errorMsg =  fieldError.getDefaultMessage();     //오류메세지  비밀번호는 필수 입력값입니다.
+                String fieldName = fieldError.getField();  // 예: "commonInfo.password"
+                String pureFieldName = fieldName.contains(".")     // .을 기준으로 뒤쪽 값
+                        ? fieldName.substring(fieldName.lastIndexOf('.') + 1)
+                        : fieldName;
+                log.info("[POST] 🎈 error on field '{}': {}", fieldName, errorMsg);
+                log.info("[POST] 🎈 error on field '{}': {}", pureFieldName, errorMsg);
+
+                // 여기에 CUSTOM 메시지를 넣어서 ApiResponse를 만듭니다.
+                ApiResponse<String> errorResponse =
+                        new ApiResponse<>(AuthStatus.VALIDATION_FAILED,pureFieldName,errorMsg);
+                // 400 에러와 errorResponse 담아서 리턴
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(errorResponse);
+            }
+            log.info("[POST] 🎈 managerJoinRequest '{}' :  ",managerJoinRequest);      // 정보 확인용 로그들
+            log.info("[POST] 🎈 managerJoinRequest '{}' :  ",managerJoinRequest.getCommonInfo());
+            log.info("[POST] 🎈 managerJoinRequest 이름: '{}' :  ",managerJoinRequest.getCommonInfo().getName());
+            log.info("[POST] 🎈 managerJoinRequest 닉네임 :'{}' :  ",managerJoinRequest.getCommonInfo().getNickname());
+            log.info("[POST] 🎈 managerJoinRequest 아이디 '{}' :  ",managerJoinRequest.getCommonInfo().getUsername());
+            log.info("[POST] 🎈 managerJoinRequest 비밀번호 '{}' :  ",managerJoinRequest.getCommonInfo().getPassword());
+            log.info("[POST] 🎈 managerJoinRequest id 토큰 '{}' :  ",managerJoinRequest.getCommonInfo().getSmsIdToken());
+            log.info("[POST] 🎈 managerJoinRequest 주소 id '{}' :  ",managerJoinRequest.getAddressInfo().getAddressId());
+            log.info("[POST] 🎈 managerJoinRequest 담당자 포지션 '{}' :  ",managerJoinRequest.getManagerInfo().getPosition());
+            log.info("[POST] 🎈 managerJoinRequest 그룹 이메일 '{}' :  ",managerJoinRequest.getGroupInfo().getGroupEmail());
+            log.info("[POST] 🎈 managerJoinRequest 그룹 전화번호 '{}' :  ",managerJoinRequest.getGroupInfo().getGroupPhoneNumber());
+            log.info("[POST] 🎈 managerJoinRequest 그룹 이름 '{}' :  ",managerJoinRequest.getGroupInfo().getGroupName());
+            log.info("[POST] 🎈 managerJoinRequest 그룹 id '{}' :  ",managerJoinRequest.getGroupInfo().getGroupId());
+            log.info("[POST] 🎈 managerJoinRequest 그룹 카테고리 '{}' :  ",managerJoinRequest.getGroupInfo().getCategory());
+
+
+            // 공통 정보 인포
+            CommonInfo commonInfo = managerJoinRequest.getCommonInfo();
+
+            FirebaseToken firebaseToken = firebaseService.verifyIdToken(commonInfo.getSmsIdToken());
+
+            String uid = firebaseToken.getUid();
+            firebaseService.deleteFirebaseMember(uid);
+            String phoneNumber = (String) firebaseToken.getClaims().get("phone_number");
+            log.info("[POST] 🎈 expertJoinRequest 전화번호 '{}' :  ",phoneNumber);
+
+            // 인증 실패: 잘못된 토큰이거나 SMS 인증이 아님
+            if (phoneNumber == null) {
+                // code : "PAF", message : "sms 인증 실패"
+                log.info("[POST] 🎈 설마 여기서 걸렸나? : sms인증토큰이 이상한가  ");
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(AuthStatus.PHONE_AUTH_FAIL));
+            }
+            Long groupId = managerJoinRequest.getGroupInfo().getGroupId();
+            // 🔒 그룹 ID가 있으면 → 해당 그룹에 이미 담당자가 있는지 검사
+            if (groupId != null) {
+                boolean alreadyExists = managerRepository.existsByGroupId(groupId);
+                if (alreadyExists) {
+                    log.warn("❌ 그룹 ID {} 에는 이미 담당자가 등록되어 있습니다.", groupId);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(new ApiResponse(AuthStatus.MANAGER_ALREADY_EXISTS));
+                }
+            }
+            commonInfo.setPhoneNumber(phoneNumber);
+            commonInfo.setRole(Role.ROLE_MEMBER.name());
+            log.info("[POST] 🎈 expertJoinRequest 저장된전화번호 '{}' :  ", commonInfo.getPhoneNumber());
+            log.info("[POST] 🎈 expertJoinRequest 저장된 롤 '{}' :  ", commonInfo.getRole());
+
+            CommonInfo savedUserDTO = firebaseService.createMember(commonInfo); // FirebaseAuthException
+
+            AuthStatus authStatus = authService.createManagerJoinRequest(managerJoinRequest,savedUserDTO);    // UserAlreadyExistsException
+
+            firebaseService.setFirebaseMemberRoleToMember(savedUserDTO);    // UserNotFoundException
+
+            if (authStatus == AuthStatus.MANAGER_JOIN_REQUEST_SUCCESS) {
+
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(new ApiResponse(authStatus));
+
+            } else {
+
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse(authStatus));
+
+            }
+
+        } catch (FirebaseAuthException firebaseAuthException) {
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(AuthStatus.SERVER_ERROR));
+
+
         } catch (UserAlreadyExistsException userAlreadyExistsException){
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
 
         }
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse(AuthStatus.MANAGER_JOIN_REQUEST_SUCCESS));
     }
 
 
@@ -433,7 +641,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse> joinManagerList(@RequestBody List<ManagerJoinRequest> managerJoinRequestList){
         try{
             managerJoinRequestList.forEach(manager -> log.info(manager.getCommonInfo().getName()) );
-            managerJoinRequestList.forEach(manager -> authService.createManagerJoinRequest(manager) );
+//            managerJoinRequestList.forEach(manager -> authService.createManagerJoinRequest(manager) );
 
         } catch (UserAlreadyExistsException userAlreadyExistsException){
 
@@ -448,7 +656,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse> joinExpertList(@RequestBody List<ExpertJoinRequest> expertJoinRequestList){
         try{
             expertJoinRequestList.forEach(expert -> log.info(expert.getCommonInfo().getName()));
-            expertJoinRequestList.forEach(expert -> authService.createExpertJoinRequest(expert));
+//            expertJoinRequestList.forEach(expert -> authService.createExpertJoinRequest(expert));
 
         } catch (UserAlreadyExistsException userAlreadyExistsException){
 

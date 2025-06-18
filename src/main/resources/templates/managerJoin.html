@@ -9,6 +9,8 @@
     <script src="/js/validation.js"></script>
     <!-- 주소 조회 js -->
     <script src="/js/addressSearch.js"></script>
+    <!-- 그룹 조회 js -->
+    <script src="/js/groupSearch.js"></script>
 
 </head>
 <body class="bg-black text-white min-h-screen flex items-center justify-center p-4 overflow-auto">
@@ -70,15 +72,6 @@
                         class="w-full p-2 rounded border border-gray-300" required>
             </div>
 
-            <button type="button" onclick="openAddressModal()"
-            class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
-            주소 검색
-            </button>
-
-            <input type="text" name="zipNum" readonly class="mt-2 border px-4 py-2 rounded w-full" />
-            <input type="text" name="addr1" readonly class="mt-2 border px-4 py-2 rounded w-full" />
-            <input type="hidden" id="addressId" name="addressId" />
-
             <!-- sms 인증 부분-->
             <div id="recaptcha-container"></div>
             <div class="mt-4">
@@ -115,19 +108,64 @@
             </div>
         <!-- ========================== 추가정보 ======================================================================================================= -->
         <p>=======추가 정보===============</p>
-        <!--  담당자랑 연관된 그룹 테이블에 컬럼이름이 name이라 임시로 지정함 -->
-            <div>
-            <label for="group_name" class="block mb-1">그룹이름</label> 
-            <input type="text" name="group_name" id="group_name"
-                class="w-full p-2 rounded border border-gray-300" required>
+        <p>** 정확한 정보를 입력해주세요** <br/>**승인이 거부될 수 있습니다**<p></p>
+<button type="button"
+        onclick="openGroupModal()"
+        class="mt-2 px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition">
+    그룹 찾기
+</button>
+        <!-- ③ groupName 입력란 -->
+        <div>
+            <label for="groupName" class="block mb-1">기관이름</label> 
+            <input type="text" name="groupName" id="groupName"
+                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
         </div>
 
-        <!--  담당자랑 연관된 그룹 테이블에 컬럼이름이 phone이라 임시로 지정함 -->
+        <!-- ③ 그룹 주소 검색  -->
         <div>
-            <label for="group_phone" class="block mb-1">그룹 전화번호</label>
-            <input type="text" name="group_phone" id="group_phone"
-                class="w-full p-2 rounded border border-gray-300" required>
+            <button type="button" onclick="openAddressModal()"
+            class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+            주소 검색
+            </button>
+            <input type="text" id="zipNum" name="zipNum" readonly class="mt-2 border px-4 py-2 bg-gray-100 rounded w-full" />
+            <input type="text" id="addr1" name="addr1" readonly class="mt-2 border px-4 py-2 bg-gray-100 rounded w-full" />
+            <input type="hidden" id="addressId" name="addressId" />
         </div>
+        <!-- ③ category 입력란 -->
+        <div>
+            <label for="category" class="block mb-1">기관 분류</label>
+            <input type="text" name="category" id="category" 
+                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
+        </div>
+
+        <!-- ③ groupPhone 입력란 -->
+        <div>
+            <label for="groupPhone" class="block mb-1">기관 전화번호</label>
+            <input type="text" name="groupPhone" id="groupPhone" readonly
+                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
+        </div>
+
+        <!-- ③ groupEmail 입력란 -->
+        <div>
+            <label for="groupEmail" class="block mb-1">기관 이메일</label>
+            <input type="email" name="groupEmail" id="groupEmail" readonly
+                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
+        </div>
+
+        <!-- ③ position 입력란 -->
+        <div>
+            <label for="position" class="block mb-1">담당 직무</label> 
+            <input type="text" name="position" id="position" 
+                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
+        </div>
+        <!-- 그룹 id // 검색으로 찾으면 값이 있고 못찾으면 null -->
+        <input type="text" id="groupId" name="groupId" />
+
+        
+        <button type="button" onclick="enableGroupManualInput()"
+                class="text-sm text-blue-500 underline mt-2">
+        직접 입력
+        </button>
 
         <div class="mt-6">
             <button type="submit"
@@ -177,6 +215,30 @@
             </div>
         </div>
     </div>
+
+    <!-- 그룹 검색 모달 -->
+    <div id="groupModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden">
+        <div class="bg-white w-full max-w-md text-gray-900 rounded-lg p-6 shadow-lg">
+            <h2 class="text-xl text-gray-900 font-bold mb-4">그룹(기관) 검색</h2>
+
+            <!-- 검색창 -->
+            <div class="flex gap-2 mb-4">
+            <input id="groupSearchInput" type="text" placeholder="기관 이름 입력" class="flex-grow border px-3 py-2 rounded" />
+            <button onclick="searchGroup()" class="bg-blue-500 text-white px-4 py-2 rounded">검색</button>
+            </div>
+
+            <!-- 검색 결과 -->
+            <div id="groupResult" class="max-h-60 overflow-y-auto border rounded p-2 text-gray-900 text-sm space-y-2">
+            <!-- 여기에 결과 리스트가 들어감 -->
+            </div>
+
+            <!-- 닫기 버튼 -->
+            <div class="mt-4 text-right">
+            <button onclick="closeGroupModal()" class="text-sm text-gray-600 hover:underline">닫기</button>
+            </div>
+        </div>
+    </div>
+
 
 
 
@@ -288,7 +350,7 @@
     document.getElementById('send-otp-btn').addEventListener('click', sendSmsOtp);
     document.getElementById('verify-otp-btn').addEventListener('click', verifySmsOtp);
 
-    const joinURL = '/join/member';
+    const joinURL = '/join/manager';
 
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -305,9 +367,12 @@
         const nickname = document.getElementById('nickname').value.trim();
         const addressId = document.getElementById('addressId').value.trim();
         
-        // const nickname = document.getElementById('nickname').value.trim();
-        // const nickname = document.getElementById('nickname').value.trim();
-        // const nickname = document.getElementById('nickname').value.trim();
+        const groupName = document.getElementById('groupName').value.trim();
+        const category = document.getElementById('category').value.trim();
+        const groupPhoneNumber = document.getElementById('groupPhone').value.trim();
+        const groupEmail = document.getElementById('groupEmail').value.trim();
+        const position = document.getElementById('position').value.trim();
+        const groupId = document.getElementById('groupId').value.trim();
 
         if (!name || !username || !password) {
             alert('모든 필드를 입력해주세요.');
@@ -330,10 +395,18 @@
                     password,
                     nickname,
                     smsIdToken
-                }
-                // memberInfo: {
-                // }
-                ,
+                },
+                managerInfo: {
+                    position,
+
+                },
+                groupInfo: {
+                    groupName,
+                    category,
+                    groupPhoneNumber,
+                    groupEmail,
+                    groupId
+                },
                 addressInfo: {
                     addressId
                 }
@@ -389,6 +462,8 @@ console.log(addressId)
             console.error('Fetch 통신 중 오류 발생:', err);
             showErrorModal(data.message);
             alert('통신 오류: ' + err.message);
+        }finally {
+            hideLoadingModal(); // 로딩 모달 닫기 함수
         }
     });
 </script>

@@ -372,6 +372,8 @@ console.log(addressId)
             console.error('Fetch 통신 중 오류 발생:', err);
             showErrorModal(data.message);
             alert('통신 오류: ' + err.message);
+        }finally {
+            hideLoadingModal(); // 로딩 모달 닫기 함수
         }
     });
 </script>

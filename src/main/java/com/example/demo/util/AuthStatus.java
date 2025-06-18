@@ -27,9 +27,11 @@ public enum AuthStatus implements StatusCode {
 
     ADDRESS_INVALID("AI","유효하지 않은 주소"),
 
-    VALIDATION_FAILED("VF", "유효성 검사 실패");
+    VALIDATION_FAILED("VF", "유효성 검사 실패"),
 
+    MANAGER_ALREADY_EXISTS("MAE","해당 그룹 담당자가 이미 존재합니다"),
 
+    GROUP_NOT_FOUND("GNF","그룹을 찾을수 없습니다");
 
     private String code;
     private String message;

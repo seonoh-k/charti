@@ -28,7 +28,8 @@ public class Expert{
     // 경력사항
     private String career;
     // 승인여부
-    private Boolean isApproved;
+    @Column(nullable = false)
+    private Boolean isApproved = false;
 
     @OneToOne()
     @JoinColumn(name = "address_id")
