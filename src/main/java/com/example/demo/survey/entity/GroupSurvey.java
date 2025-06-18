@@ -2,17 +2,16 @@ package com.example.demo.survey.entity;
 
 import com.example.demo.entity.BaseEntity;
 import com.example.demo.enums.AgeGroup;
-import com.example.demo.converter.AgeGroupConverter;
 import com.example.demo.enums.SurveyCategory;
-import com.example.demo.converter.SurveyCategoryConverter;
+import com.example.demo.enums.TargetGroup;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Table(name = "group_survey")
@@ -24,12 +23,14 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Convert(converter = com.example.demo.converter.AgeGroupConverter.class)
     @Column(name = "age_group", nullable = false)
     private AgeGroup ageGroup;
 
     @Column(name = "question", nullable = false)
     private String question;
 
+    @Convert(converter = com.example.demo.converter.SurveyCategoryConverter.class)
     @Column(nullable = false)
     private SurveyCategory category;
 
@@ -37,13 +38,13 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     @JsonIgnore
     private List<SurveySet> surveySets = new ArrayList<>();
 
+    @Convert(converter = com.example.demo.converter.TargetGroupConverter.class)
     @Column(name = "target_group", nullable = false)
-    private String targetGroup;
+    private TargetGroup targetGroup;
 
     @Column(nullable = false)
     private int weight;
 
-    // 선택지 텍스트 저장 (필요 시 프론트에서 사용)
     @Column(nullable = false)
     private String answer1;
 
@@ -59,12 +60,31 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     @Column
     private String answer5;
 
-    // 실제 선택된 답변 (텍스트)
-    // answer 에 들어가는 객관식 답변항목이 달라질 수 있기 때문에 추가
     @Column(name = "selected_answer", nullable = false)
     private String selectedAnswer;
 
-    // 계산된 점수
     @Column(name = "calculated_score", nullable = false)
     private int calculatedScore;
+
+
+
+    @Override
+    public AgeGroup getAgeGroup() {
+        return ageGroup;
+    }
+
+    @Override
+    public SurveyCategory getCategory() {
+        return category;
+    }
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public Optional<TargetGroup> getTargetGroup() {
+        return Optional.of(targetGroup);
+    }
 }
