@@ -1,92 +1,108 @@
 package com.example.demo.survey.controller;
 
 import com.example.demo.enums.AgeGroup;
-import com.example.demo.enums.SurveyCategory;
-import com.example.demo.survey.dto.RecordSurveyRequest;
-import com.example.demo.survey.dto.RecordSurveyResponse;
 import com.example.demo.survey.entity.RecordSurvey;
-import com.example.demo.survey.mapper.RecordSurveyMapper;
 import com.example.demo.survey.service.RecordSurveyService;
+import com.example.demo.dto.PagingDTO;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-@RestController
-@RequestMapping("/api/admin/record-surveys")
+import java.util.stream.Collectors;
+
+@Controller
+@RequestMapping("/admin/surveys/record")
 @RequiredArgsConstructor
 public class RecordSurveyAdminController {
 
     private final RecordSurveyService recordSurveyService;
+    private final List<AgeGroup> ageGroups = Arrays.stream(AgeGroup.values())
+            .filter(ag -> ag != AgeGroup.ALL && ag != AgeGroup.VARIOUS)
+            .collect(Collectors.toList());
 
-    @GetMapping
-    public ResponseEntity<?> getPagedSurveys(
-            @RequestParam(required = false) AgeGroup ageGroup,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction
-    ) {
-        Page<RecordSurvey> surveyPage = recordSurveyService.getPagedSurveys(ageGroup, page, size, sortBy, direction);
+    // 1. 기록문진 리스트 (연령대 + 페이징 필터링)
+    @GetMapping({"", "/list"})
+    public String list(@RequestParam(defaultValue = "ALL") AgeGroup ageGroup,
+                       @ModelAttribute PagingDTO<RecordSurvey> pagingDto,
+                       Model model) {
 
-        List<RecordSurveyResponse> content = surveyPage.getContent()
-                .stream()
-                .map(RecordSurveyMapper::toResponse)
-                .toList();
+        Pageable pageable = pagingDto.toPageable();
+        Page<RecordSurvey> page = (ageGroup == AgeGroup.ALL)
+                ? recordSurveyService.findAll(pageable)
+                : recordSurveyService.findByAgeGroup(ageGroup, pageable);
 
-        return ResponseEntity.ok(Map.of(
-                "content", content,
-                "totalPages", surveyPage.getTotalPages(),
-                "currentPage", surveyPage.getNumber()
-        ));
+        pagingDto.setData(page.getContent());
+
+        model.addAttribute("pagingDto", pagingDto);
+        model.addAttribute("selectedAgeGroup", ageGroup.name());
+        model.addAttribute("ageGroups", ageGroups);
+        model.addAttribute("totalPages", page.getTotalPages());
+        model.addAttribute("currentPage", page.getNumber() + 1);
+        return "admin/surveys/recordList";
     }
 
+
+    // 2. 문진 등록 폼
+    @GetMapping("/new")
+    public String createForm(Model model) {
+        model.addAttribute("survey", new RecordSurvey());
+        model.addAttribute("ageGroups", ageGroups);
+        return "admin/surveys/recordForm";
+    }
+
+    // 2. 문진 저장 처리
     @PostMapping
-    public ResponseEntity<RecordSurveyResponse> createSurvey(@RequestBody RecordSurveyRequest request) {
-        RecordSurvey survey = RecordSurveyMapper.toEntity(request);
-        recordSurveyService.create(survey);
-        return ResponseEntity.ok(RecordSurveyMapper.toResponse(survey));
+    public String create(@Valid @ModelAttribute RecordSurvey survey,
+                         BindingResult bindingResult,
+                         Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("ageGroups", ageGroups);
+            return "admin/surveys/recordForm";
+        }
+        recordSurveyService.save(survey);
+        return "redirect:/admin/surveys/record";
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSurvey(@PathVariable Long id) {
-        recordSurveyService.softDelete(id);
-        return ResponseEntity.noContent().build();
+    // 3. 문진 수정 폼
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model) {
+        RecordSurvey survey = recordSurveyService.findById(id);
+        model.addAttribute("survey", survey);
+        model.addAttribute("ageGroups", ageGroups);
+        return "admin/surveys/recordForm";
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<RecordSurveyResponse> updateSurvey(
-            @PathVariable Long id,
-            @RequestBody RecordSurveyRequest request
-    ) {
-        RecordSurvey survey = recordSurveyService.get(id);
-        survey.setAgeGroup(request.getAgeGroup());
-        survey.setQuestion(request.getQuestion());
-        recordSurveyService.update(survey);
+    // 3. 문진 수정 처리
+    @PostMapping("/{id}")
+    public String update(@PathVariable Long id,
+                         @Valid @ModelAttribute RecordSurvey formData,
+                         BindingResult bindingResult,
+                         Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("ageGroups", ageGroups);
+            return "admin/surveys/recordForm";
+        }
 
-        return ResponseEntity.ok(RecordSurveyMapper.toResponse(survey));
+        RecordSurvey survey = recordSurveyService.findById(id);
+        survey.setAgeGroup(formData.getAgeGroup());
+        survey.setQuestion(formData.getQuestion());
+        survey.setAnswer(formData.getAnswer());
+        recordSurveyService.save(survey);
+
+        return "redirect:/admin/surveys/record";
     }
 
-    @GetMapping("/age-groups")
-    public ResponseEntity<?> getAgeGroups() {
-        return ResponseEntity.ok(
-                Arrays.stream(AgeGroup.values())
-                        .filter(ag -> ag != AgeGroup.ALL && ag != AgeGroup.VARIOUS)
-                        .map(ag -> Map.of("name", ag.name(), "label", ag.getDisplayName()))
-                        .toList()
-        );
-    }
-
-    @GetMapping("/categories")
-    public ResponseEntity<List<Map<String, String>>> getCategories() {
-        List<Map<String, String>> result = Arrays.stream(SurveyCategory.values())
-                .filter(cat -> !cat.equals(SurveyCategory.ALL) && !cat.equals(SurveyCategory.VARIOUS))
-                .map(cat -> Map.of("name", cat.name(), "label", cat.getDisplayName()))
-                .toList();
-
-        return ResponseEntity.ok(result);
+    // 3. 문진 삭제 처리 (Soft Delete)
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id) {
+        recordSurveyService.delete(id);
+        return "redirect:/admin/surveys/record";
     }
 }

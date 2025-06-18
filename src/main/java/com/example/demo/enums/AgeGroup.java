@@ -27,11 +27,14 @@ public enum AgeGroup {
 
     @JsonCreator
     public static AgeGroup fromValue(String value) {
+        if (value == null) throw new IllegalArgumentException("value is null");
+        String normalized = value.trim(); // ← 공백 제거
         for (AgeGroup ag : values()) {
-            if (ag.displayName.equals(value) || ag.name().equalsIgnoreCase(value)) {
+            if (ag.displayName.equals(normalized) || ag.name().equalsIgnoreCase(normalized)) {
                 return ag;
             }
         }
         throw new IllegalArgumentException("Unknown AgeGroup: " + value);
     }
+
 }

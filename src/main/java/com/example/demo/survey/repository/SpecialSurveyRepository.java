@@ -1,5 +1,7 @@
 package com.example.demo.survey.repository;
 
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.entity.GroupSurvey;
 import com.example.demo.survey.entity.SpecialSurvey;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +21,11 @@ public interface SpecialSurveyRepository extends JpaRepository<SpecialSurvey, Lo
          where sset.setId = :setId
         """)
     List<SpecialSurvey> findBySurveySetId(@Param("setId") Long setId);
+
+    List<SpecialSurvey> findByAgeGroupAndDeletedFalse(AgeGroup ag);
+    List<SpecialSurvey> findByCategoryAndDeletedFalse(SurveyCategory sc);
+
+
+
+
 }

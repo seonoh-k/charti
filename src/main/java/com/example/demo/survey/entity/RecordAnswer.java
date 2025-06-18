@@ -4,6 +4,7 @@ import com.example.demo.entity.BaseEntity;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -32,6 +33,7 @@ public class RecordAnswer extends BaseEntity {
     private String question;
 
     @Column(nullable = false)
+    @NotBlank(message = "답변을 입력해주세요.")
     private String answer;
 
     private Boolean answered = true;

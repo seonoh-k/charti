@@ -335,8 +335,30 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    // Users → UserDTO → Member 로 안전하게 변환되므로 타입 충돌 없이 Member 엔티티 기반 기능(예: 문진, 자녀 조회 등)에 활용
+    public Member getMemberEntityById(Long id) {
+        return memberRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("해당 ID의 멤버가 없습니다."));
+    }
 
+    public Users findByUsername(String username) {
+        Optional<Users> user = userRepository.findByUsername(username);
+        if(user.isPresent()){
+            return user.get();
+        } else{
+            throw new UserNotFoundException("유저가 없어요");
+        }
+    }
 
+    // 1) username(email) 으로 Users 엔티티 조회
+    public Users findByUsernameEntity(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("유저가 없어요: " + username));
+    }
 
-
+    // 2) uuid 로 Users 엔티티 조회 (이미 DTO용 getMemberByUUID 가 있지만, 엔티티가 필요하면)
+    public Users findByUuidEntity(String uuid) {
+        return userRepository.findByUuid(uuid)
+                .orElseThrow(() -> new UserNotFoundException("유저가 없어요 (uuid): " + uuid));
+    }
 }

@@ -18,14 +18,14 @@ import java.util.List;
 public class SurveyApiController {
     private final SurveySetService service;
 
-//    @GetMapping
-//    public List<? extends BaseSurvey> getSurveys(
-//            @RequestParam String type,
-//            @RequestParam(defaultValue = "ALL") AgeGroup age,
-//            @RequestParam(defaultValue = "ALL") SurveyCategory category
-//    ) {
-//        return "SPECIAL".equals(type)
-//                ? service.allSpecial(age, category)
-//                : service.allGroup(age, category);
-//    }
+    @GetMapping
+    public List<? extends BaseSurvey> getSurveys(
+            @RequestParam String type,
+            @RequestParam(defaultValue = "ALL") AgeGroup age,
+            @RequestParam(defaultValue = "ALL") SurveyCategory category
+    ) {
+        return "SPECIAL".equals(type)
+                ? service.allSpecial(age, category)
+                : service.allGroup(age, category);
+    }
 }

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>응답 조회</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<th:block layout:fragment="content">
+    <h1 class="text-2xl font-bold mb-4">문진 응답 조회</h1>
+
+    <!-- 필터 -->
+    <div class="flex space-x-4 mb-4">
+        <!-- 자녀 -->
+        <div>
+            <label class="block mb-1">자녀 선택</label>
+            <select id="childSelect" class="border p-2 rounded">
+                <option value="">전체</option>
+                <option th:each="c : ${children}"
+                        th:value="${c.id}"
+                        th:text="${c.name + ' ('+c.nickname+')'}">
+                </option>
+            </select>
+        </div>
+        <!-- 카테고리 -->
+        <div>
+            <label class="block mb-1">카테고리</label>
+            <select id="categorySelect" class="border p-2 rounded">
+                <option value="">전체</option>
+                <option th:each="cat : ${categories}"
+                        th:value="${cat.name()}"
+                        th:text="${cat.displayName}">
+                </option>
+            </select>
+        </div>
+        <!-- 연령대 -->
+        <div>
+            <label class="block mb-1">연령대</label>
+            <select id="ageGroupSelect" class="border p-2 rounded">
+                <option value="">전체</option>
+                <option th:each="ag : ${ageGroups}"
+                        th:value="${ag.name()}"
+                        th:text="${ag.displayName}">
+                </option>
+            </select>
+        </div>
+        <button onclick="loadAnswers(0)"
+                class="self-end bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+            조회
+        </button>
+    </div>
+
+    <!-- 결과 -->
+    <div id="answersContainer" class="space-y-4"></div>
+    <!-- 페이지네이션 -->
+    <div id="pagination" class="flex space-x-2 mt-4"></div>
+
+    <script>
+        function loadAnswers(page = 0) {
+          const childId  = document.getElementById('childSelect').value;
+          const category = document.getElementById('categorySelect').value;
+          const ageGroup = document.getElementById('ageGroupSelect').value;
+
+          const params = new URLSearchParams();
+          if (childId)  params.append('childId',  childId);
+          if (category) params.append('category', category);
+          if (ageGroup) params.append('ageGroup', ageGroup);
+          params.append('page', page);
+
+          fetch('/api/answers?' + params.toString())
+            .then(res => res.json())
+            .then(data => renderAnswers(data))
+            .catch(() => alert('응답 데이터를 불러오는 데 실패했습니다.'));
+        }
+
+        function renderAnswers(data) {
+          const { content, currentPage, totalPages } = data;
+          const container = document.getElementById('answersContainer');
+          container.innerHTML = '';
+          if (content.length === 0) {
+            container.innerHTML = '<p class="text-gray-500">조회된 응답이 없습니다.</p>';
+          } else {
+            content.forEach(a => {
+              const div = document.createElement('div');
+              div.className = 'border p-4 rounded shadow-sm';
+              div.innerHTML = `
+                <p><strong>자녀:</strong> ${a.childName}</p>
+                <p><strong>카테고리:</strong> ${a.category},
+                   <strong>연령대:</strong> ${a.ageGroup}</p>
+                <p><strong>질문:</strong> ${a.question}</p>
+                <p><strong>답변:</strong> ${a.answer} (가중치 ${a.weight})</p>
+                <p class="text-sm text-gray-500">
+                  제출일: ${new Date(a.createdAt).toLocaleString()}
+                </p>
+              `;
+              container.appendChild(div);
+            });
+          }
+          renderPagination(currentPage, totalPages);
+        }
+
+        function renderPagination(currentPage, totalPages) {
+          const pagDiv = document.getElementById('pagination');
+          pagDiv.innerHTML = '';
+
+          // 이전
+          if (currentPage > 0) {
+            const prev = document.createElement('button');
+            prev.textContent = '◀ 이전';
+            prev.onclick = () => loadAnswers(currentPage - 1);
+            pagDiv.appendChild(prev);
+          }
+
+          // 페이지 번호
+          for (let i = 0; i < totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i + 1;
+            if (i === currentPage) {
+              btn.disabled = true;
+              btn.className = 'font-bold';
+            } else {
+              btn.onclick = () => loadAnswers(i);
+            }
+            pagDiv.appendChild(btn);
+          }
+
+          // 다음
+          if (currentPage < totalPages - 1) {
+            const next = document.createElement('button');
+            next.textContent = '다음 ▶';
+            next.onclick = () => loadAnswers(currentPage + 1);
+            pagDiv.appendChild(next);
+          }
+        }
+
+        // 초기 호출
+        document.addEventListener('DOMContentLoaded', () => loadAnswers(0));
+    </script>
+</th:block>
+</html>
