@@ -1,97 +1,282 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charti</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>데일리 문진</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
-<body>
-<div>
-    <img th:src="${url}" th:alt="${album.thumbnail}" style="width: 100px; height: 100px"/>
-    <h3 th:text="${album.title}"></h3>
-</div><hr>
-<form id="photoForm">
-    <input type="file" name="file" id="fileInput" accept="image/*">
-    <button type="submit">사진 업로드</button>
-</form>
-<div id="result"></div>
-<table>
-    <tr id="photoTable"></tr>
-</table>
-</body>
-<script th:inline="javascript">
-    document.addEventListener("DOMContentLoaded", () => {
-        const id = [[${id}]];
-        loadPhotos(id);
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6 space-y-6">
+        <div class="relative p-4 mb-6">
 
-        document.querySelector("#photoForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
+            <label class="absolute top-0 right-0 m-3 inline-flex items-center cursor-pointer space-x-4">
+                <span th:text="${album.isPublic} ? '공개' : '비공개'" id="isPublic" class="text-md text-gray-400"></span>
+                <input type="checkbox" id="publicToggle" value="" class="sr-only peer" th:checked="${album.isPublic}">
+                <div class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700
+                    peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
+                    peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
+                    after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
+                    after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600
+                    dark:peer-checked:bg-blue-600"></div>
+            </label>
+
+            <div class="flex items-center gap-4">
+                <img th:src="${url}" th:alt="${album.thumbnail}"
+                     class="max-w-[400px] max-h-[400px] w-auto h-auto object-contain rounded-lg shadow" />
+                <h3 th:text="${album.title}" class="text-2xl font-semibold text-gray-800">예시 타이틀</h3>
+                <span th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}"
+                    class="text-gray-400"></span>
+            </div>
+
+            <div class="absolute bottom-0 right-0 flex items-center gap-2 p-2">
+                <div id="result" class="text-center text-sm mt-2"></div>
+                <form id="photoForm" class="flex justify-end">
+                    <label class="cursor-pointer inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow">
+                        <input type="file" id="fileInput" name="file" accept="image/*" class="hidden">
+                        사진 업로드
+                    </label>
+                </form>
+            </div>
+        </div>
+
+        <hr class="my-4 border-gray-300">
+
+        <div class="mt-6">
+            <div id="photoGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div th:each="photo, idx : ${photoList}" class="w-full aspect-square overflow-hidden rounded-lg shadow bg-white">
+                    <img th:src="@{/api/proxy/image(filename='thumbnail/' + ${photo.filename})}"
+                         th:alt="${photo.filename}" loading="lazy"
+                         th:attr="data-isPublic=${photo.isPublic}, data-createdAt=${photo.createdAt}, data-idx=${idx}"
+                         class="modal-trigger w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                </div>
+            </div>
+        </div>
+
+        <!-- 원본 이미지 파일을 보기위한 모달창 -->
+        <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+            <div class="relative max-w-4xl max-h-[10vh] flex items-center">
+                <label class="absolute top-1 right-5 m-3 inline-flex items-center cursor-pointer space-x-4">
+                    <span id="modalPublicStatus" class="text-md text-gray-400"></span>
+                    <input type="checkbox" id="modalToggle" value="" class="sr-only peer">
+                    <div class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700
+                    peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
+                    peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
+                    after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
+                    after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600
+                    dark:peer-checked:bg-blue-600"></div>
+                </label>
+                <button id="modalClose" class="absolute top-1 right-3 text-gray-600 text-2xl font-bold hover:text-gray-300">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="relative max-w-4xl max-h-[90vh] flex items-center">
+                <button id="modalPrev" class="p-2 mr-2 hover:bg-gray-500 rounded-lg text-white text-4xl">
+                    <i class="fa-solid fa-angle-left"></i>
+                </button>
+
+                <div class="relative max-w-full max-h-[90vh]">
+                    <img id="modalImage" src="" alt="" class="max-w-full max-h-[90vh] rounded" />
+                </div>
+
+                <button id="modalNext" class="p-2 ml-2 hover:bg-gray-500 rounded-lg text-white text-4xl">
+                    <i class="fa-solid fa-angle-right"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+    <script th:inline="javascript">
+
+        // 모달 변수
+        const modal = document.querySelector("#modal");
+        const modalImage = document.querySelector("#modalImage");
+        const modalPublicStatus = document.querySelector("#modalPublicStatus");
+        const modalToggle = document.querySelector("#modalToggle");
+
+        // 모달창에서 이전/다음 이미지 출력을 위한 변수
+        let currentIndex = 0;
+        let photos = [];
+
+        const proxyUrl = "/api/proxy/image?filename=";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const id = [[${id}]];
 
             const fileInput = document.querySelector("#fileInput");
-            const file = fileInput.files[0];
             const result = document.querySelector("#result");
 
-            if(!file) {
-                alert("업로드할 파일을 선택해주세요");
-                return;
-            }
+            fileInput.addEventListener("change", async () => {
+            
+                const file = fileInput.files[0];
 
-            const formData = new FormData();
-            formData.append("id", id);
-            formData.append("file", file);
+                if(!file) {
+                    alert("업로드할 파일을 선택해주세요");
+                    return;
+                }
 
-            const res = await fetch("/api/album/photo/upload", {
-                method: 'POST',
-                body: formData
-            });
+                const formData = new FormData();
+                formData.append("id", id);
+                formData.append("file", file);
 
-            // const data = await res.json();
-            //
-            // if (!data.url) {
-            //     result.innerHTML = `<p class="text-red-600 font-semibold">서버로부터 업로드 URL을 받지 못했습니다.</p>`;
-            //     return;
-            // }
-            //
-            // const uploadUrl = data.url;
-            //
-            // // 생성된 업로드 url을 통해 파일 업로드 요청
-            // const uploadRes = await fetch(uploadUrl, {
-            //     method: "PUT",
-            //     headers: {
-            //         "Content-Type": file.type
-            //     },
-            //     body: file
-            // });
+                const res = await fetch("/api/album/photo/upload", {
+                    method: 'POST',
+                    body: formData
+                });
 
-            if(res.ok) {
-                result.innerHTML = `<p class="text-green-600 font-semibold">Upload Seccess</p>`;
-                loadPhotos(id);
-            }else {
-                result.innerHTML = `<p class="text-red-600 font-semibold">Upload Fail!</p>`;
-            }
+                if(res.ok) {
+                    loadPhotos(id);
+                }else {
+                    result.innerHTML = `<p class="text-red-600 font-semibold">Upload Fail!</p>`;
+                }
 
+            })
+
+            document.querySelector("#publicToggle").addEventListener("change", async (e) => {
+                const isChecked = e.target.checked;
+
+                const formData = new FormData();
+                formData.append("id", id);
+                formData.append("isPublic", isChecked);
+
+                const res = await fetch("/api/album/visibility", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if(res.ok) {
+                    document.querySelector("#isPublic").textContent = isChecked ? "공개" : "비공개";
+                }else {
+                    e.target.checked = !isChecked;
+                    alert("공개 설정 변경에 실패했습니다.");
+                }
+            })
+
+            modalToggle.addEventListener("change", async (e) => {
+                const isChecked = e.target.checked;
+                const filename = photo.id;
+
+                const formData = new FormData();
+                formData.append("id", id);
+                formData.append("isPublic", isChecked);
+
+                const res = await fetch("/api/album/visibility", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if(res.ok) {
+                    document.querySelector("#isPublic").textContent = isChecked ? "공개" : "비공개";
+                }else {
+                    e.target.checked = !isChecked;
+                    alert("공개 설정 변경에 실패했습니다.");
+                }
+            })
+
+            document.querySelectorAll(".modal-trigger").forEach((img, index) => {
+                const filename = img.alt;
+                const isPublic = img.dataset.ispublic === 'true';
+                const createdAt = img.dataset.createdat;
+
+                photos.push({filename, isPublic, createdAt});
+
+                img.addEventListener("click", () => {
+                    currentIndex = index;
+                    openModal();
+                })
+            })
         })
-    })
 
-    async function loadPhotos(albumId) {
-        const photoTable = document.querySelector("#photoTable");
-        photoTable.innerHTML = '';
-        const res = await fetch(`/api/album/${albumId}`);
-        const urlList = await res.json() ?? [];
+        async function loadPhotos(albumId) {
+            const photoGrid = document.querySelector("#photoGrid");
+            photoGrid.innerHTML = '';
+            photos = [];
 
-        for(const url of urlList) {
-            if(!url?.url) continue;
+            const res = await fetch(`/api/album/${albumId}`);
+            const data = await res.json();
 
-            const td = document.createElement("td");
-            const img = document.createElement("img");
-            img.src = url.url;
-            img.alt = url.filename || "Image";
-            img.loading = "lazy";
-            img.style.width = "100px";
-            img.style.height = "100px";
-            td.appendChild(img);
-            photoTable.appendChild(td);
+            data.forEach((photo, idx) => {
+                const wrapper = document.createElement("div");
+                wrapper.className = "w-full aspect-square overflow-hidden rounded-lg shadow bg-white";
+
+                const img = document.createElement("img");
+                img.src = `${proxyUrl}+thumbnail/${encodeURIComponent(photo.filename)}`;
+                img.alt = photo.filename;
+                img.dataset.ispublic = photo.isPublic;
+                img.dataset.createdat = photo.createdAt;
+                img.dataset.photoId = photo.id;
+                img.className = "modal-trigger w-full h-full object-cover transition-transform duration-300 hover:scale-105";
+
+                wrapper.appendChild(img);
+                photoGrid.appendChild(wrapper);
+
+                // 모달용 배열에 추가
+                photos.push({
+                    filename: photo.filename,
+                    isPublic: photo.isPublic,
+                    createdAt: photo.createdAt
+                });
+
+                img.addEventListener("click", () => {
+                    currentIndex = photos.length;
+                    openModal();
+                });
+            });
         }
-    }
-</script>
+
+        function openModal() {
+            modalImage.src = proxyUrl + "original/" + encodeURIComponent(photos[currentIndex].filename);
+            modalImage.alt = photos[currentIndex].filename;
+            modalPublicStatus.textContent = photos[currentIndex].isPublic ? '공개' : '비공개';
+            modalToggle.checked = photos[currentIndex].isPublic;
+            modal.classList.remove("hidden");
+        }    
+    
+
+        function closeModal() {
+            modal.classList.add("hidden");
+            modalImage.src = "";
+        }
+
+        function showNext() {
+            if (photos.length === 0) return;
+            currentIndex = (currentIndex + 1) % photos.length;
+            modalImage.src = proxyUrl + "original/" + encodeURIComponent(photos[currentIndex].filename);
+        }
+
+        function showPrev() {
+            if (photos.length === 0) return;
+            currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+            modalImage.src = proxyUrl + "original/" + encodeURIComponent(photos[currentIndex].filename);
+        }
+
+        document.querySelector("#modalClose").addEventListener("click", closeModal);
+        document.querySelector("#modalPrev").addEventListener("click", showPrev);
+        document.querySelector("#modalNext").addEventListener("click", showNext);
+
+        // 모달 배경 클릭 시 닫기
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // 키보드 화살표로 이미지 넘기기
+        document.addEventListener("keydown", (e) => {
+            if (modal.classList.contains("hidden")) return;
+
+            if (e.key === "ArrowRight") {
+                showNext();
+            } else if (e.key === "ArrowLeft") {
+                showPrev();
+            } else if (e.key === "Escape") {
+                closeModal();
+            }
+        });
+    </script>
+</th:block>
 </html>

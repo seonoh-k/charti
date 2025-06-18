@@ -72,9 +72,9 @@ public class AuthService {
 
     private Group groupInfoToEntity(GroupInfo groupInfo){
         Group group = Group.builder()
-                .name(groupInfo.getName())
-                .phoneNumber(groupInfo.getPhoneNumber())
-                .email(groupInfo.getEmail())
+                .groupName(groupInfo.getName())
+                .groupPhoneNumber(groupInfo.getPhoneNumber())
+                .groupEmail(groupInfo.getEmail())
                 .build();
 
         return group;

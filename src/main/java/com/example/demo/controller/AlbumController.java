@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.PhotoDTO;
 import com.example.demo.entity.Album;
+import com.example.demo.entity.Photo;
 import com.example.demo.service.AlbumService;
 import com.example.demo.service.PresignedUrlService;
 import com.example.demo.users.entity.Member;
@@ -49,10 +51,17 @@ public class AlbumController {
     public String getAlbum(@PathVariable("id") Long id, Model model) {
 
         Album album = albumService.get(id);
+        List<PhotoDTO> photoList = new ArrayList<>();
+
+        for(Photo photo : album.getPhotos()) {
+            PhotoDTO photoDTO = new PhotoDTO(photo);
+            photoList.add(photoDTO);
+        }
 
         model.addAttribute("id", id);
         model.addAttribute("album", album);
         model.addAttribute("url", "/api/proxy/image?filename=thumbnail/"+album.getThumbnail());
+        model.addAttribute("photoList", photoList);
 
         return "album";
     }
