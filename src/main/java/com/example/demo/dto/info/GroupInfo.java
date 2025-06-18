@@ -5,9 +5,10 @@ import lombok.Data;
 @Data
 public class GroupInfo {
 
+    private Long groupId;
     private String category;
-    private String email;
-    private String name;
-    private String phoneNumber;
+    private String groupEmail;
+    private String groupName;
+    private String groupPhoneNumber;
 
 }

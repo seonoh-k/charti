@@ -18,5 +18,6 @@ public interface ManagerRepository extends JpaRepository<Manager, Long> {
     Page<Manager> findByIsApprovedTrue(Pageable pageable);
 
 
-
+    boolean existsByGroupId(Long groupId);
+  
 }

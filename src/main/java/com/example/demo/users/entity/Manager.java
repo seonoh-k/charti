@@ -27,6 +27,7 @@ public class Manager{
     @JoinColumn(name = "group_id")
     private Group group;
 
-    private Boolean isApproved;
+    @Column(nullable = false)
+    private Boolean isApproved = false;
 
 }

@@ -116,6 +116,7 @@
             </div>
         <!-- ========================== 추가정보 ======================================================================================================= -->
         <p>=======추가 정보===============</p>
+        <p>** 정확한 정보를 입력해주세요** <br/>**승인이 거부될 수 있습니다**<p>
 
         <div>
             <label for="major" class="block mb-1">전공</label> 
@@ -200,6 +201,7 @@
     import { showLoadingModal } from "/js/loadingModal.js"; // ✅  모달 동작 함수
     import { showErrorModal } from "/js/loadingModal.js"; // ✅  에러 모달 동작 함수
      import { showSuccessModal } from "/js/loadingModal.js"; // ✅  성공 모달 동작 함수
+     import { hideLoadingModal } from "/js/loadingModal.js"; // ✅   모달 닫는 함수
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
@@ -294,7 +296,7 @@
     document.getElementById('send-otp-btn').addEventListener('click', sendSmsOtp);
     document.getElementById('verify-otp-btn').addEventListener('click', verifySmsOtp);
 
-    const joinURL = '/join/member';
+    const joinURL = '/join/expert';
 
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -311,8 +313,8 @@
         const nickname = document.getElementById('nickname').value.trim();
         const addressId = document.getElementById('addressId').value.trim();
         
-        // const nickname = document.getElementById('nickname').value.trim();
-        // const nickname = document.getElementById('nickname').value.trim();
+        const major = document.getElementById('major').value.trim();
+        const career = document.getElementById('career').value.trim();
         // const nickname = document.getElementById('nickname').value.trim();
 
         if (!name || !username || !password) {
@@ -320,31 +322,49 @@
             return;
         }
 
+
+
         try {
             // // 🔵 먼저 로딩 모달 표시
             showLoadingModal("회원가입 진행중...");      
 
-            const response = await fetch(joinURL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': "application/json"
-                },
-                body: JSON.stringify({
-                commonInfo: {
-                    name,
-                    username,
-                    password,
-                    nickname,
-                    smsIdToken
-                }
-                // memberInfo: {
-                // }
-                ,
-                addressInfo: {
-                    addressId
-                }
-                })
-            });
+            const fileInput = document.querySelector('input[name="license"]');
+            const file = fileInput.files[0];  // 사용자가 선택한 자격증 파일
+
+            const expertJoinRequest = {
+            commonInfo: {
+                name,
+                username,
+                password,
+                nickname,
+                smsIdToken
+            },
+            addressInfo: {
+                addressId
+            },
+            expertInfo: {
+                major,
+                career
+            }
+        };
+        const formData = new FormData();
+
+        formData.append("data", new Blob(
+            [JSON.stringify(expertJoinRequest)],
+            { type: "application/json" }
+        ));
+
+        if (file) {
+            formData.append("file", file);
+        }
+
+        const response = await fetch(joinURLv, {
+            method: "POST",
+            body: formData
+        });
+
+
+
 console.log(addressId)
            // 여기서 응답 body를 JSON으로 파싱 시도
             let data = null;
@@ -356,20 +376,12 @@ console.log(addressId)
             }
 
             if (response.ok) {
-              // 서버에서 반환한 메시지를 보여 줍니다.
-                // const msg = data && data.message ? data.message : '가입 완료';
-                // alert('회원가입 성공: ' + msg);
-
-                // window.location.href = /*[[@{/loginForm}]]*/ '/loginForm';
-                // 🔵 로딩 메시지를 완료 메시지로 변경
                 showSuccessModal("회원가입 완료!", () => {
                     window.location.href = "/loginForm";
                 });
                 return;
 
             }    else if (data.code === "VF") {     // 🔴 유효성 검사 실패
-                // alert("회원가입 실패 : " + data.message);
-
                 const fieldName = data.fieldName;
                 console.log(data);
                 console.log(fieldName);
@@ -395,6 +407,8 @@ console.log(addressId)
             console.error('Fetch 통신 중 오류 발생:', err);
             showErrorModal(data.message);
             alert('통신 오류: ' + err.message);
+        } finally {
+            hideLoadingModal(); // 로딩 모달 닫기 함수
         }
     });
 </script>

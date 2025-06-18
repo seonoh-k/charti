@@ -55,3 +55,27 @@ function selectAddress(address) {
     form.addressId.value = address.id; // hidden 필드에 addressId 저장
     closeAddressModal(); // 모달 닫기
 }
+
+// 주소ID 로 주소상세 조회
+async function fetchAddressInfo(addressId) {
+    try {
+        const res = await fetch(`/api/address/${addressId}`); // 주소 상세 조회 API 호출
+        if (!res.ok) throw new Error("주소 조회 실패");
+
+        const address = await res.json();
+
+        // 주소 전체 출력 필드에 값 세팅
+        const zipNum = `${address.zipNum}`;
+        const addr1 = `${address.sido} ${address.gugun} ${address.dong} ${address.bunji}`;
+        document.getElementById('addr1').value = addr1;
+        document.getElementById('zipNum').value = zipNum;    
+
+        // 상세주소도 포함하고 싶다면 같이 채워도 됨
+        // document.getElementById('addressDetail').value = address.addressDetail ?? '';
+
+    } catch (err) {
+        console.error(err);
+        alert("주소 정보를 불러오는 데 실패했습니다.");
+    }
+}
+
