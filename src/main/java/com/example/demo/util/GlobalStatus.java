@@ -28,7 +28,8 @@ public enum GlobalStatus implements StatusCode{
     S3_FILE_NOT_FOUND("SFNF", "스토리지 파일 미발견"),
 
     UNKNOWN_ERROR("NE", "알 수 없는 오류"),
-    STATIC_RESOURCE_NOT_FOUND("SRNF","정적 리소스 탐색 실패");
+    STATIC_RESOURCE_NOT_FOUND("SRNF","정적 리소스 탐색 실패"),
+    FIREBASE_ERROR("FE","인증 서버 오류");
 
 
     private String code;

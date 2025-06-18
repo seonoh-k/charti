@@ -10,7 +10,9 @@ public enum UserStatus implements StatusCode {
     UPDATE_SUCCESS("US","수정 성공"),
     UPDATE_FAIL("UF","수정 실패"),
     DELETE_SUCCESS("DS","삭제 성공"),
-    DELETE_FAIL("DF","삭제 실패");
+    DELETE_FAIL("DF","삭제 실패"),
+    APPROVE_SUCCESS("AS","승인 성공"),
+    APPROVE_FAIL("AF","승인 실패");
 
     private String code;
     private String message;
