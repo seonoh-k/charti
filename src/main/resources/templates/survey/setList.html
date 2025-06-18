@@ -13,40 +13,55 @@
     <h1 class="text-2xl font-bold mb-4">문진 세트</h1>
 
     <!-- 필터 & 검색 -->
-    <form th:action="@{/surveySets}"
-          th:object="${search}"
-          method="get"
+    <form th:action="@{/surveySets}" th:object="${search}" method="get"
           class="flex flex-wrap gap-4 mb-6">
-        <input type="text"
-               th:field="*{keyword}"
+        <input type="text" th:field="*{keyword}"
                placeholder="제목 검색"
                class="border rounded px-2 py-1"/>
 
+        <!-- 연령대 필터 -->
         <select th:field="*{ageGroup}" class="border rounded px-2 py-1">
-            <option value="all">전체 연령</option>
-            <option value="0~12개월">0~12개월</option>
-            <option value="1~2세">1~2세</option>
-            <option value="3~4세">3~4세</option>
-            <option value="5세">5세</option>
-            <option value="various">통합</option>
+            <!-- ALL: 전체 연령대 -->
+            <option th:value="${T(com.example.demo.enums.AgeGroup).ALL.name()}"
+                    th:text="'전체 연령대'">
+            </option>
+            <!-- VARIOUS: 통합 -->
+            <option th:value="${T(com.example.demo.enums.AgeGroup).VARIOUS.name()}"
+                    th:text="'통합'">
+            </option>
+            <!-- 실제 연령 옵션 -->
+            <option th:each="age : ${ageOptions}"
+                    th:value="${age.name()}"
+                    th:text="${age.displayName}">
+            </option>
         </select>
 
+        <!-- 카테고리 필터 -->
         <select th:field="*{category}" class="border rounded px-2 py-1">
-            <option value="all">전체 카테고리</option>
-            <option value="의사소통/정서/심리">의사소통/정서/심리</option>
-            <option value="운동/인지 발달">운동/인지 발달</option>
-            <option value="사회성/인지/창의">사회성/인지/창의</option>
-            <option value="생활습관">생활습관</option>
-            <option value="various">통합</option>
+            <!-- ALL: 전체 카테고리 -->
+            <option th:value="${T(com.example.demo.enums.SurveyCategory).ALL.name()}"
+                    th:text="'전체 카테고리'">
+            </option>
+            <!-- VARIOUS: 통합 -->
+            <option th:value="${T(com.example.demo.enums.SurveyCategory).VARIOUS.name()}"
+                    th:text="'통합'">
+            </option>
+            <!-- 실제 카테고리 옵션 -->
+            <option th:each="cat : ${categoryOptions}"
+                    th:value="${cat.name()}"
+                    th:text="${cat.displayName}">
+            </option>
         </select>
 
+        <!-- 타입 필터 (변경 없음) -->
         <select th:field="*{type}" class="border rounded px-2 py-1">
             <option value="all">전체 종류</option>
             <option value="GROUP">그룹문진</option>
             <option value="SPECIAL">특별문진</option>
         </select>
 
-        <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">검색</button>
+        <button type="submit"
+                class="bg-blue-600 text-white px-4 py-1 rounded">검색</button>
         <a th:href="@{/surveySets/create(type=${search.type=='all'?'GROUP':search.type})}"
            class="bg-green-600 text-white px-4 py-1 rounded">그룹문진 세트 생성</a>
         <a th:href="@{/surveySets/create(type=${search.type=='all'?'SPECIAL':search.type})}"
@@ -73,33 +88,52 @@
                    class="text-blue-600 hover:underline"
                    th:text="${set.setTitle}">제목</a>
             </td>
+            <!-- enum.displayName 사용 + VARIOUS는 '통합'으로 -->
             <td class="px-2 py-1 border"
-                th:text="${set.ageGroup=='various' ? '통합' : set.ageGroup}">연령대</td>
+                th:text="${set.ageGroup == T(com.example.demo.enums.AgeGroup).VARIOUS
+                    ? '통합'
+                    : set.ageGroup.displayName}">
+            </td>
             <td class="px-2 py-1 border"
-                th:text="${set.category=='various' ? '통합' : set.category}">카테고리</td>
+                th:text="${set.category == T(com.example.demo.enums.SurveyCategory).VARIOUS
+                    ? '통합'
+                    : set.category.displayName}">
+            </td>
             <td class="px-2 py-1 border"
-                th:text="${set.type=='GROUP'? '그룹문진':'특별문진'}">종류</td>
+                th:text="${set.type=='GROUP'? '그룹문진':'특별문진'}">
+            </td>
             <td class="px-2 py-1 border"
-                th:text="${#temporals.format(set.createdAt,'yyyy.MM.dd')}">날짜</td>
+                th:text="${#temporals.format(set.createdAt,'yyyy.MM.dd')}">
+            </td>
         </tr>
         </tbody>
     </table>
 
-    <!-- 페이징 -->
+    <!-- 페이징 (변경 없음) -->
     <div class="mt-4 flex justify-center space-x-2">
         <a th:if="${page.hasPrevious()}"
-           th:href="@{/surveySets(page=${page.number-1},keyword=${search.keyword},ageGroup=${search.ageGroup},category=${search.category},type=${search.type})}"
+           th:href="@{/surveySets(page=${page.number-1},
+                              keyword=${search.keyword},
+                              ageGroup=${search.ageGroup},
+                              category=${search.category},
+                              type=${search.type})}"
            class="px-2 py-1 border rounded">Prev</a>
-
         <span th:each="i : ${#numbers.sequence(0, page.totalPages-1)}">
-      <a th:href="@{/surveySets(page=${i},keyword=${search.keyword},ageGroup=${search.ageGroup},category=${search.category},type=${search.type})}"
+      <a th:href="@{/surveySets(page=${i},
+                                keyword=${search.keyword},
+                                ageGroup=${search.ageGroup},
+                                category=${search.category},
+                                type=${search.type})}"
          th:text="${i+1}"
          th:classappend="${i==page.number}? 'font-bold underline' : ''"
          class="px-2 py-1 border rounded">1</a>
     </span>
-
         <a th:if="${page.hasNext()}"
-           th:href="@{/surveySets(page=${page.number+1},keyword=${search.keyword},ageGroup=${search.ageGroup},category=${search.category},type=${search.type})}"
+           th:href="@{/surveySets(page=${page.number+1},
+                              keyword=${search.keyword},
+                              ageGroup=${search.ageGroup},
+                              category=${search.category},
+                              type=${search.type})}"
            class="px-2 py-1 border rounded">Next</a>
     </div>
 </th:block>

@@ -1,5 +1,7 @@
 package com.example.demo.survey.controller;
 
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.dto.SurveySetForm;
 import com.example.demo.survey.dto.SurveySetSearchDto;
 import com.example.demo.survey.entity.BaseSurvey;
@@ -15,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,13 +27,28 @@ import java.util.stream.Collectors;
 public class SurveySetController {
     private final SurveySetService service;
 
-    // 목록
+    // ① 실제 선택 가능한 연령대만 (ALL, VARIOUS 제외)
+    private final List<AgeGroup> ageOptions = Arrays.stream(AgeGroup.values())
+            .filter(ag -> ag != AgeGroup.ALL && ag != AgeGroup.VARIOUS)
+            .collect(Collectors.toList());
+
+    // ② 실제 선택 가능한 카테고리만
+    private final List<SurveyCategory> categoryOptions = Arrays.stream(SurveyCategory.values())
+            .filter(sc -> sc != SurveyCategory.ALL && sc != SurveyCategory.VARIOUS)
+            .collect(Collectors.toList());
+
     @GetMapping
-    public String list(@ModelAttribute("search") SurveySetSearchDto dto,
-                       @PageableDefault(size = 10) Pageable pageable,
-                       Model model) {
-        Page<SurveySet> page = service.list(dto, pageable);
+    public String list(
+            @ModelAttribute("search") SurveySetSearchDto search,
+            @PageableDefault(size = 10) Pageable pageable,
+            Model model
+    ) {
+        Page<SurveySet> page = service.list(search, pageable);
+
         model.addAttribute("page", page);
+        // 뷰에 넘겨줄 필터용 옵션
+        model.addAttribute("ageOptions", ageOptions);
+        model.addAttribute("categoryOptions", categoryOptions);
         return "survey/setList";
     }
 
@@ -54,8 +72,8 @@ public class SurveySetController {
         model.addAttribute("form", form);
         model.addAttribute("surveys",
                 "SPECIAL".equals(type)
-                        ? service.allSpecial("all", "all")
-                        : service.allGroup("all", "all")
+                        ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
+                        : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
         );
         return "survey/setForm";
     }
@@ -79,8 +97,8 @@ public class SurveySetController {
         model.addAttribute("form", form);
         model.addAttribute("surveys",
                 "SPECIAL".equals(set.getType())
-                        ? service.allSpecial("all", "all")
-                        : service.allGroup("all", "all")
+                        ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
+                        : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
         );
         return "survey/setForm";
     }
@@ -92,8 +110,8 @@ public class SurveySetController {
         if (br.hasErrors()) {
             model.addAttribute("surveys",
                     "SPECIAL".equals(form.getType())
-                            ? service.allSpecial("all", "all")
-                            : service.allGroup("all", "all")
+                            ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
+                            : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
             );
             return "survey/setForm";
         }
@@ -104,8 +122,8 @@ public class SurveySetController {
             br.reject(null, e.getMessage());
             model.addAttribute("surveys",
                     "SPECIAL".equals(form.getType())
-                            ? service.allSpecial("all", "all")
-                            : service.allGroup("all", "all")
+                            ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
+                            : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
             );
             return "survey/setForm";
         }

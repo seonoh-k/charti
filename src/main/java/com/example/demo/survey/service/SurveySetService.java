@@ -1,5 +1,7 @@
 package com.example.demo.survey.service;
 
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.dto.SurveySetSearchDto;
 import com.example.demo.survey.dto.SurveySetForm;
 import com.example.demo.survey.entity.*;
@@ -32,11 +34,15 @@ public class SurveySetService {
         if (StringUtils.hasText(dto.getKeyword())) {
             spec = spec.and((r, q, cb) -> cb.like(r.get("setTitle"), "%" + dto.getKeyword() + "%"));
         }
-        if (!"all".equals(dto.getAgeGroup())) {
-            spec = spec.and((r, q, cb) -> cb.equal(r.get("ageGroup"), dto.getAgeGroup()));
+        if (dto.getAgeGroup() != AgeGroup.ALL) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("ageGroup"), dto.getAgeGroup())
+            );
         }
-        if (!"all".equals(dto.getCategory())) {
-            spec = spec.and((r, q, cb) -> cb.equal(r.get("category"), dto.getCategory()));
+        if (dto.getCategory() != SurveyCategory.ALL) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("category"), dto.getCategory())
+            );
         }
         if (!"all".equals(dto.getType())) {
             spec = spec.and((r, q, cb) -> cb.equal(r.get("type"), dto.getType()));
@@ -68,13 +74,26 @@ public class SurveySetService {
                 : specialRepo.findAllById(form.getSurveyIds());
 
         // 2) 연령대/카테고리 계산
-        Set<String> ages      = surveys.stream().map(BaseSurvey::getAgeGroup).collect(Collectors.toSet());
-        Set<String> categories= surveys.stream().map(BaseSurvey::getCategory).collect(Collectors.toSet());
-        String ag = ages.size()==1? ages.iterator().next(): "various";
-        String ca = categories.size()==1? categories.iterator().next(): "various";
+        Set<AgeGroup> ages = surveys.stream()
+                .map(BaseSurvey::getAgeGroup)
+                .collect(Collectors.toSet());
+        Set<SurveyCategory> categories = surveys.stream()
+                .map(BaseSurvey::getCategory)
+                .collect(Collectors.toSet());
 
-        if ("various".equals(ag) && "various".equals(ca)) {
-            throw new IllegalArgumentException("문진 세트는 카테고리 또는 연령대를 같게 선택해주세요.");
+        // 단일 연령/카테고리면 해당 값, 멀티플이면 VARIOUS
+        AgeGroup ag = (ages.size() == 1)
+                ? ages.iterator().next()
+                : AgeGroup.VARIOUS;
+        SurveyCategory ca = (categories.size() == 1)
+                ? categories.iterator().next()
+                : SurveyCategory.VARIOUS;
+
+        // “둘 다 VARIOUS”인 경우는 불가
+        if (ag == AgeGroup.VARIOUS && ca == SurveyCategory.VARIOUS) {
+            throw new IllegalArgumentException(
+                    "문진 세트는 연령대 또는 카테고리가 같아야 합니다."
+            );
         }
 
         // 3) 엔티티 준비
@@ -96,17 +115,17 @@ public class SurveySetService {
     }
 
     /** 폼용 전체 설문 조회 (필터 적용 가능) */
-    public List<GroupSurvey> allGroup(String age, String category) {
+    public List<GroupSurvey> allGroup(AgeGroup age, SurveyCategory category) {
         return groupRepo.findAll().stream()
-                .filter(s -> ("all".equals(age) || s.getAgeGroup().equals(age)))
-                .filter(s -> ("all".equals(category) || s.getCategory().equals(category)))
+                .filter(s -> (age == AgeGroup.ALL || s.getAgeGroup() == age))
+                .filter(s -> (category == SurveyCategory.ALL || s.getCategory() == category))
                 .collect(Collectors.toList());
     }
 
-    public List<SpecialSurvey> allSpecial(String age, String category) {
+    public List<SpecialSurvey> allSpecial(AgeGroup age, SurveyCategory category) {
         return specialRepo.findAll().stream()
-                .filter(s -> ("all".equals(age) || s.getAgeGroup().equals(age)))
-                .filter(s -> ("all".equals(category) || s.getCategory().equals(category)))
+                .filter(s -> (age == AgeGroup.ALL || s.getAgeGroup() == age))
+                .filter(s -> (category == SurveyCategory.ALL || s.getCategory() == category))
                 .collect(Collectors.toList());
     }
 }
