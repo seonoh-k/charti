@@ -286,6 +286,7 @@ public class UserService {
     // Member
     public PagingResultDTO<MemberDTO, Users> getMemberListWithPaging(Pageable pageable) {
         Page<Users> result = userRepository.getAllMember(pageable);
+        result.forEach(users -> log.info("ID:" + users.getId()));
         return new PagingResultDTO<>(result, MemberDTO::fromEntity);
     }
 
@@ -360,5 +361,14 @@ public class UserService {
     public Users findByUuidEntity(String uuid) {
         return userRepository.findByUuid(uuid)
                 .orElseThrow(() -> new UserNotFoundException("유저가 없어요 (uuid): " + uuid));
+    }
+
+    public MemberDTO findById(Long id) throws UserNotFoundException{
+        Optional<Users> byId = userRepository.findById(id);
+        if (byId.isEmpty()){
+            throw new UserNotFoundException();
+        }
+        MemberDTO memberDTO = MemberDTO.fromEntity(byId.get());
+        return memberDTO;
     }
 }

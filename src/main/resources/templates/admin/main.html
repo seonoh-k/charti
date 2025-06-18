@@ -2,6 +2,8 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>전문가 승인</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -9,7 +11,7 @@
 <div class="container mx-auto px-6 py-10">
     <h1 class="text-2xl font-bold mb-4">관리자 Main Page</h1>
     <h2>전문가</h2>
-    <table class="w-full table-auto border" id="expert-table">
+    <table class="w-full table-auto border text-center" id="expert-table">
         <thead>
             <tr>
                 <th class="border px-4 py-2">id</th>
@@ -35,14 +37,14 @@
     </table>
 
     <h2>담당자</h2>
-    <table class="w-full table-auto border" id="manager-table">
+    <table class="w-full table-auto border text-center" id="manager-table">
         <thead>
             <tr>
                 <th class="border px-4 py-2">id</th>
                 <th class="border px-4 py-2">이름</th>
                 <th class="border px-4 py-2">이메일</th>
-                <th class="border px-4 py-2">소속</th>
                 <th class="border px-4 py-2">전화번호</th>
+                <th class="border px-4 py-2">소속</th>
             </tr>
         </thead>
         <tbody>
@@ -50,13 +52,13 @@
                 <td class="border px-4 py-2" th:text="${manager.id}">홍길동</td>
                 <td class="border px-4 py-2" th:text="${manager.name}">홍길동</td>
                 <td class="border px-4 py-2" th:text="${manager.email}">hong@test.com</td>
-                <td class="border px-4 py-2" th:text="${manager.groupName}">OO대학교</td>
                 <td class="border px-4 py-2" th:text="${manager.phoneNumber}"></td>
+                <td class="border px-4 py-2" th:text="${manager.groupName}">OO대학교</td>
             </tr>
         </tbody>
     </table>
     <h2>일반 사용자</h2>
-    <table class="w-full table-auto border" id="member-table">
+    <table class="w-full table-auto border text-center" id="member-table">
         <thead>
         <tr>
             <th class="border px-4 py-2">id</th>

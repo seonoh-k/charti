@@ -2,6 +2,8 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>전문가 승인</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -17,10 +19,10 @@
         <input type="hidden" name="sort" th:value="${'createAt'}" />
         <input type="hidden" name="direction" th:value="${'desc'}" /> -->
     
-        <table class="w-full table-auto border">
+        <table class="w-full table-auto border text-center">
             <thead>
             <tr>
-                <th class="border px-4 py-2">
+                <th class="border px-4 py-2 ">
                     <input type="checkbox" id="select-all" onclick="toggleCheckboxes(this)">
                 </th>
                 <th class="border px-4 py-2">id</th>
@@ -29,7 +31,7 @@
                 <th class="border px-4 py-2">전화번호</th>
                 <th class="border px-4 py-2">면허</th>
                 <th class="border px-4 py-2">전공</th>
-                <th class="border px-4 py-2">커리어</th>
+                <th class="border px-4 py-2">경력</th>
             </tr>
             </thead>
             <tbody>

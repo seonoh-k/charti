@@ -2,6 +2,8 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>담당자 승인</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -10,7 +12,7 @@
     <h1 class="text-2xl font-bold mb-4">담당자 가입 요청 목록</h1>
 
     <form th:action="@{/admin/approve-manager}" method="post">
-      <table class="w-full table-auto border" id="manager-table">
+      <table class="w-full table-auto border text-center" id="manager-table">
           <thead>
           <tr>
               <th class="border px-4 py-2">
@@ -19,8 +21,8 @@
               <th class="border px-4 py-2">id</th>
               <th class="border px-4 py-2">이름</th>
               <th class="border px-4 py-2">이메일</th>
-              <th class="border px-4 py-2">소속</th>
               <th class="border px-4 py-2">전화번호</th>
+              <th class="border px-4 py-2">소속</th>
           </tr>
           </thead>
           <tbody id="table-body">
@@ -31,8 +33,8 @@
               <td class="border px-4 py-2" th:text="${dto.id}">홍길동</td>
               <td class="border px-4 py-2" th:text="${dto.name}">홍길동</td>
               <td class="border px-4 py-2" th:text="${dto.email}">hong@test.com</td>
-              <td class="border px-4 py-2" th:text="${dto.groupName}">OO대학교</td>
               <td class="border px-4 py-2" th:text="${dto.phoneNumber}"></td>
+              <td class="border px-4 py-2" th:text="${dto.groupName}">OO대학교</td>
           </tr>
           </tbody>
       </table>
