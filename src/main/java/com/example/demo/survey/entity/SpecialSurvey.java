@@ -3,9 +3,10 @@ package com.example.demo.survey.entity;
 import com.example.demo.entity.BaseEntity;
 
 import com.example.demo.enums.AgeGroup;
-import com.example.demo.converter.AgeGroupConverter;
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.converter.SurveyCategoryConverter;
+import com.example.demo.converter.AgeGroupConverter;
+import com.example.demo.enums.TargetGroup;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,24 +21,32 @@ import java.util.List;
 @Table(name = "special_survey")
 @Getter
 @Setter
-public class SpecialSurvey extends BaseEntity implements BaseSurvey {
+public class SpecialSurvey extends BaseEntity implements BaseSurvey{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "age_group", nullable = false)
+    private AgeGroup ageGroup;
+
+
     @Column(nullable = false)
     private String question;
+
+    @Convert(converter = com.example.demo.converter.SurveyCategoryConverter.class)
+    @Column(nullable = false)
+    private SurveyCategory category;
 
     @ManyToMany(mappedBy = "specialSurveys")
     @JsonIgnore
     private List<SurveySet> surveySets = new ArrayList<>();
 
-    @Column(name = "age_group", nullable = false)
-    private AgeGroup ageGroup;
 
     @Column(nullable = false)
-    private SurveyCategory category;
+    private int weight;
+
 
     @Column(nullable = false)
     private String answer1;
@@ -58,6 +67,25 @@ public class SpecialSurvey extends BaseEntity implements BaseSurvey {
     private String selectedAnswer;
 
     @Column(name = "calculated_score", nullable = false)
-    private Integer calculatedScore;
+    private int calculatedScore;
+
+
+    @Override
+    public AgeGroup getAgeGroup() {
+        return ageGroup;
+    }
+
+    @Override
+    public SurveyCategory getCategory() {
+        return category;
+    }
+
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+
 
 }

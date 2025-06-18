@@ -24,4 +24,9 @@ public interface ChildRepository extends JpaRepository<Child, Long> {
 
     // 특정 부모의 자녀 중 위험군만 조회 (예시)
     List<Child> findByParentAndRiskGroupTrue(Member parent);
+
+    // Member → Child 관계에서, 현재 로그인한 유저의 Member.id 로 조회
+    // child.parent.users.id = ? 인 자녀들을 모두 가져옴
+    List<Child> findByParentUsersId(Long usersId);
+
 }

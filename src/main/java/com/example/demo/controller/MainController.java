@@ -15,11 +15,6 @@ public class MainController {
         return "index";
     }
 
-    @GetMapping("/dailySurvey")
-    public String getDailySurveyPage() {
-        return "dailySurvey";
-    }
-
     @GetMapping("/dailySurvey/result")
     public String getSurveyResultPage() {
         return "dailySurveyResult";

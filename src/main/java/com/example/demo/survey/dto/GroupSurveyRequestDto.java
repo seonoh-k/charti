@@ -11,4 +11,5 @@ public class GroupSurveyRequestDto {
     private String ageGroup;
     private String targetGroup;
     private List<Integer> answers;
+    private Long surveySetId;
 }

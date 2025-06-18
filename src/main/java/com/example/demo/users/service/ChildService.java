@@ -34,6 +34,10 @@ public class ChildService extends BaseService<Child, ChildRepository> {
                 .orElseThrow(() -> new IllegalArgumentException("해당 자녀를 찾을 수 없습니다. ID=" + id));
     }
 
+    public List<Child> findByUsersId(Long usersId) {
+        return repository.findByParentUsersId(usersId);
+    }
+
     public Child get(Long childId) {
 
         return null;}

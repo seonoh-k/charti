@@ -11,5 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 public class SurveyRequestDto {
     private AgeGroup ageGroup;
+    private Long childId;
     private List<Integer> answers;
 }

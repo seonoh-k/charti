@@ -4,7 +4,6 @@ import com.example.demo.survey.entity.GroupSurvey;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,10 +12,9 @@ import java.util.stream.Collectors;
 public class GroupSurveyResponseDto {
     private Long id;
     private String question;
-    private String category;
-    private String ageGroup;
-    private LocalDate surveyDate;
-    private String targetGroup;
+    private String category;      // ENUM -> String
+    private String ageGroup;      // ENUM -> String
+    private String targetGroup;   // ENUM -> String (nullable)
     private int weight;
     private String answer1, answer2, answer3, answer4, answer5;
     private String selectedAnswer;
@@ -27,9 +25,11 @@ public class GroupSurveyResponseDto {
         return GroupSurveyResponseDto.builder()
                 .id(entity.getId())
                 .question(entity.getQuestion())
-//                .category(entity.getCategory())
-//                .ageGroup(entity.getAgeGroup())
-                .targetGroup(entity.getTargetGroup())
+                .category(entity.getCategory().getDisplayName())           // enum -> String
+                .ageGroup(entity.getAgeGroup().getDisplayName())           // enum -> String
+                .targetGroup(entity.getTargetGroup()                       // Optional 처리
+                        .map(tg -> tg.getDisplayName())
+                        .orElse(null))
                 .weight(entity.getWeight())
                 .answer1(entity.getAnswer1())
                 .answer2(entity.getAnswer2())
@@ -38,9 +38,11 @@ public class GroupSurveyResponseDto {
                 .answer5(entity.getAnswer5())
                 .selectedAnswer(entity.getSelectedAnswer())
                 .calculatedScore(entity.getCalculatedScore())
-                .surveySetTitles(entity.getSurveySets().stream()
-                        .map(set -> set.getSetTitle())
-                        .collect(Collectors.toList()))
+                .surveySetTitles(
+                        entity.getSurveySets().stream()
+                                .map(set -> set.getSetTitle())
+                                .collect(Collectors.toList())
+                )
                 .build();
     }
 }
