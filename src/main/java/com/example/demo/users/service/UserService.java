@@ -4,6 +4,7 @@ import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.request.ExpertJoinRequest;
 import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
+import com.example.demo.users.entity.Member;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.repository.ExpertRepository;
@@ -303,6 +304,11 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    // Users → UserDTO → Member 로 안전하게 변환되므로 타입 충돌 없이 Member 엔티티 기반 기능(예: 문진, 자녀 조회 등)에 활용
+    public Member getMemberEntityById(Long id) {
+        return memberRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("해당 ID의 멤버가 없습니다."));
+    }
 
 
 

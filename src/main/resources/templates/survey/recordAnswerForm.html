@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>기록 문진</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-4xl mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-6">기록 문진</h1>
+
+        <div class="mb-4 p-4 border rounded bg-gray-50">
+            <p><strong>회원:</strong> <span th:text="${member.name}"></span> (<span th:text="${member.email}"></span>)</p>
+        </div>
+
+        <form method="get" th:action="@{/survey/record}" class="mb-6 flex gap-4 items-center">
+            <label for="childId" class="font-semibold">자녀 선택:</label>
+            <select name="childId" id="childId" class="border p-2 rounded w-64">
+                <option value="" disabled selected th:if="${#lists.isEmpty(children)}">등록된 자녀가 없습니다</option>
+                <option th:each="child : ${children}"
+                        th:value="${child.id}"
+                        th:text="${child.name}"
+                        th:selected="${selectedChild != null and selectedChild.id == child.id}">
+                </option>
+            </select>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">선택</button>
+            <a href="/mypage/children" class="text-sm text-blue-600 hover:underline">+ 자녀 추가하기</a>
+        </form>
+
+        <div th:if="${selectedChild != null}" class="mb-6 p-4 border rounded bg-gray-50">
+            <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
+            <p><strong>이름:</strong> <span th:text="${selectedChild.name}"></span></p>
+            <p><strong>성별:</strong> <span th:text="${selectedChild.gender}"></span></p>
+            <p><strong>나이:</strong> <span th:text="${selectedChild.age} + '세'"></span></p>
+            <p><strong>키:</strong> <span th:text="${selectedChild.height} + 'cm'"></span></p>
+            <p><strong>체중:</strong> <span th:text="${selectedChild.weight} + 'kg'"></span></p>
+        </div>
+
+        <form th:if="${selectedChild != null and surveys != null}" method="post" th:action="@{/survey/record/submit}">
+            <input type="hidden" name="childId" th:value="${selectedChild.id}" />
+
+            <div id="surveyArea">
+                <div th:each="survey, i : ${surveys}" class="mb-6">
+                    <label th:for="${'answer_' + i.index}" class="block font-semibold mb-1"
+                           th:text="${i.index + 1 + '. ' + survey.question}"></label>
+                    <textarea th:id="${'answer_' + i.index}"
+                              th:name="${'answers[' + i.index + '].text'}"
+                              class="w-full border p-2 rounded" rows="3"
+                              placeholder="답변을 입력하세요..."></textarea>
+                    <input type="hidden" th:name="${'answers[' + i.index + '].questionId'}" th:value="${survey.surveyId}" />
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-8">
+                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+                    문진 제출
+                </button>
+            </div>
+        </form>
+
+    </div>
+</th:block>
+</html>

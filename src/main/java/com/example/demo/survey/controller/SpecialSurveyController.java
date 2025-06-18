@@ -4,7 +4,7 @@ import com.example.demo.survey.dto.SpecialSurveyRequestDto;
 import com.example.demo.survey.dto.SpecialSurveyResponseDto;
 import com.example.demo.survey.entity.SpecialSurvey;
 import com.example.demo.survey.service.SpecialSurveyService;
-import com.example.demo.util.APIResponse;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
