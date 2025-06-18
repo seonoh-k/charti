@@ -12,46 +12,52 @@
     <h1 class="text-2xl font-bold mb-4"
         th:text="${form.id==null?'새 문진 세트 생성':'문진 세트 수정'}">제목</h1>
 
-    <form th:action="@{/surveySets/save}"
-          th:object="${form}"
-          method="post"
-          class="space-y-4">
+    <form th:action="@{/surveySets/save}" th:object="${form}" method="post" class="space-y-4">
         <input type="hidden" th:field="*{id}"/>
         <input type="hidden" th:field="*{type}"/>
 
-        <!-- 세트명 -->
+        <!-- 세트명, 에러처리 등 (변경 없음) -->
         <div>
             <label class="block mb-1">세트명</label>
-            <input th:field="*{setTitle}"
-                   class="w-full border rounded px-2 py-1"/>
+            <input th:field="*{setTitle}" class="w-full border rounded px-2 py-1"/>
             <p th:if="${#fields.hasErrors('setTitle')}"
                th:errors="*{setTitle}"
                class="text-red-600 text-sm"></p>
         </div>
 
-        <!-- 필터 -->
+        <!-- 필터: ALL + 실제 옵션(ageOptions, categoryOptions) -->
         <div class="flex gap-4 mb-4">
+            <!-- 연령대 필터 -->
             <select id="ageFilter" class="border px-2 py-1 rounded">
-                <option value="all">전체 연령</option>
-                <option value="0~12개월">0~12개월</option>
-                <option value="1~2세">1~2세</option>
-                <option value="3~4세">3~4세</option>
-                <option value="5세">5세</option>
+                <!-- ALL(전체 연령대) -->
+                <option value="ALL">전체 연령대</option>
+                <!-- 실제 enum 값들만 반복 -->
+                <option th:each="age : ${T(com.example.demo.enums.AgeGroup).values()}"
+                        th:if="${age != T(com.example.demo.enums.AgeGroup).ALL
+                    and age != T(com.example.demo.enums.AgeGroup).VARIOUS}"
+                        th:value="${age.name()}"
+                        th:text="${age.displayName}">
+                </option>
             </select>
 
+            <!-- 카테고리 필터 -->
             <select id="categoryFilter" class="border px-2 py-1 rounded">
-                <option value="all">전체 카테고리</option>
-                <option value="의사소통/정서/심리">의사소통/정서/심리</option>
-                <option value="운동/인지 발달">운동/인지 발달</option>
-                <option value="사회성/인지/창의">사회성/인지/창의</option>
-                <option value="생활습관">생활습관</option>
+                <!-- ALL(전체 카테고리) -->
+                <option value="ALL">전체 카테고리</option>
+                <!-- 실제 enum 값들만 반복 -->
+                <option th:each="cat : ${T(com.example.demo.enums.SurveyCategory).values()}"
+                        th:if="${cat != T(com.example.demo.enums.SurveyCategory).ALL
+                    and cat != T(com.example.demo.enums.SurveyCategory).VARIOUS}"
+                        th:value="${cat.name()}"
+                        th:text="${cat.displayName}">
+                </option>
             </select>
         </div>
 
-        <!-- Survey 체크박스 리스트 -->
+        <!-- Survey 체크박스 리스트 (JS로 비동기 로드) -->
         <div id="surveyContainer"
              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-auto border rounded p-2">
-            <!-- 최초 서버 렌더링용 (수정폼에서 이전 체크 상태 확인) -->
+            <!-- initial rendering (변경 없음) -->
             <div th:each="s : ${surveys}" class="flex items-center">
                 <input type="checkbox"
                        th:field="*{surveyIds}"
@@ -59,24 +65,20 @@
                        class="mr-2"/>
                 <span th:text="${s.question}"></span>
                 <span class="text-xs text-gray-500"
-                      th:text="${'[' + s.ageGroup + ' | ' + s.category + ']'}"></span>
+                      th:text="${'[' + s.ageGroup.displayName + ' | ' + s.category.displayName + ']'}"></span>
             </div>
         </div>
 
-        <!-- 글로벌 에러 출력 -->
+        <!-- 글로벌 에러, 버튼 등 (변경 없음) -->
         <div th:if="${#fields.hasGlobalErrors()}" class="text-red-600">
             <ul>
                 <li th:each="err : ${#fields.globalErrors()}"
                     th:text="${err}">글로벌 에러</li>
             </ul>
         </div>
-
-        <!-- 버튼 -->
         <div class="flex gap-2">
-            <button type="submit"
-                    class="bg-blue-600 text-white px-4 py-1 rounded">저장</button>
-            <a th:href="@{/surveySets}"
-               class="bg-gray-500 text-white px-2 py-1 rounded">취소</a>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">저장</button>
+            <a th:href="@{/surveySets}" class="bg-gray-500 text-white px-2 py-1 rounded">취소</a>
         </div>
     </form>
 
@@ -96,40 +98,42 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
         document.addEventListener('DOMContentLoaded', function () {
-            const surveyContainer = document.getElementById('surveyContainer');
+          const surveyContainer = document.getElementById('surveyContainer');
 
-            function loadSurveys() {
-                const age      = document.getElementById('ageFilter').value;
-                const category = document.getElementById('categoryFilter').value;
+          function loadSurveys() {
+            const age      = document.getElementById('ageFilter').value;
+            const category = document.getElementById('categoryFilter').value;
 
-                fetch(`/api/surveys?type=${type}&age=${age}&category=${category}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        surveyContainer.innerHTML = '';
-                        data.forEach(s => {
-                            const isChecked = selectedIds.includes(s.id) ? 'checked' : '';
-                            const div = document.createElement('div');
-                            div.className = 'flex items-center';
-                            div.innerHTML = `
-                                <input type="checkbox" name="surveyIds"
-                                       value="${s.id}" class="mr-2" ${isChecked}/>
-                                <span>${s.question}
-                                  <span class="text-xs text-gray-500">
-                                    [${s.ageGroup} | ${s.category}]
-                                  </span>
-                                </span>
-                            `;
-                            surveyContainer.appendChild(div);
-                        });
-                    });
-            }
+            // ★ URL을 문자열로 묶어서 fetch 호출
+            fetch(`/api/surveys?type=${type}&age=${age}&category=${category}`)
+              .then(res => res.json())
+              .then(data => {
+                surveyContainer.innerHTML = '';
+                data.forEach(s => {
+                  const isChecked = selectedIds.includes(s.id) ? 'checked' : '';
+                  const div = document.createElement('div');
+                  div.className = 'flex items-center';
+                  // ★ innerHTML 도 백틱 템플릿 리터럴로
+                  div.innerHTML = `
+                    <input type="checkbox" name="surveyIds"
+                           value="${s.id}" class="mr-2" ${isChecked}/>
+                    <span>${s.question}
+                      <span class="text-xs text-gray-500">
+                        [${s.ageGroup} | ${s.category}]
+                      </span>
+                    </span>
+                  `;
+                  surveyContainer.appendChild(div);
+                });
+              })
+              .catch(err => {
+                console.error('문진 로드 오류', err);
+              });
+          }
 
-            document.getElementById('ageFilter')
-                    .addEventListener('change', loadSurveys);
-            document.getElementById('categoryFilter')
-                    .addEventListener('change', loadSurveys);
-
-            loadSurveys();
+          document.getElementById('ageFilter').addEventListener('change', loadSurveys);
+          document.getElementById('categoryFilter').addEventListener('change', loadSurveys);
+          loadSurveys();
         });
         /*]]>*/
     </script>
