@@ -1,19 +1,27 @@
 package com.example.demo.users.service;
 
+import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.ManagerDTO;
+import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.users.entity.Expert;
 import com.example.demo.users.entity.Manager;
+import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ExpertRepository;
+import com.example.demo.util.StatusCode;
+import com.example.demo.util.UserStatus;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -22,49 +30,54 @@ public class ExpertService {
 
     private final ExpertRepository expertRepository;
 
+    public PagingResultDTO<ExpertDTO, Expert> getPendingExpertListWithPaging(Pageable pageable) {
 
-    /**
-     * 현재 신청 상태인 담당자들 조회
-     *
-     * 1. Pageable 객체 생성
-     * 2. page(현재 페이지), size(몇개씩 보여주는지)
-     * @param page
-     * @param size
-     * @param sort
-     */
-    public void getPendingExpertList(Integer page , Integer size, Sort sort){
-
-        Page<Expert> expertPage = expertRepository.findByIsApprovedFalse(PageRequest.of(page, size).withSort(sort));
+        Page<Expert> result = expertRepository.findByIsApprovedFalse(pageable);
+        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
     }
-    /**
-     * 현재 신청 상태인 담당자들 조회(정렬 방식 없으면 최신순)
-     * 1. Pageable 객체 생성
-     * 2. page(현재 페이지), size(몇개씩 보여주는지)
-     * 3. Sort.by(Sort.Order.desc(엔티티 클래스의 필드명))
-     * @param page
-     * @param size
-     */
-    public List<ManagerDTO> getPendingExpertList(Pageable pageable){
+    // 미승인 상태 전문가 리스트 -> 리스트 반환
+    public List<ExpertDTO> getExpertList(Pageable pageable) {
+        Page<Expert> result = expertRepository.findByIsApprovedFalse(pageable);
+        List<ExpertDTO> list = result.map(ExpertDTO::fromEntity).toList();
+        return list;
+    }
+    // 승인 상태 전문가 리스트 -> 페이지 DTO
+    public PagingResultDTO<ExpertDTO, Expert> getApprovedExpertListWithPaging(Pageable pageable) {
+        Page<Expert> result = expertRepository.findByIsApprovedTrue(pageable);
+        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
+    }
 
-        Page<Expert> expertPage = expertRepository.findByIsApprovedFalse(pageable);
+    // 승인 하기
+    @Transactional
+    public StatusCode approveExpert(Long id) throws UserNotFoundException{
+        int i = 0;
+        Optional<Expert> byId = expertRepository.findById(id);
 
-        int size = expertPage.getSize();
-        int number = expertPage.getNumber();
-        int totalPages = expertPage.getTotalPages();
-        long totalElements = expertPage.getTotalElements();
-        int numberOfElements = expertPage.getNumberOfElements();
-        log.info("size : " + size);
-        log.info("number : " + number);
-        log.info("totalPages : " + totalPages);
-        log.info("totalElements : " + totalElements);
-        log.info("numberOfElements : " + numberOfElements);
+        if(byId.isPresent()){
+            i = expertRepository.approveExpert(id);
+        } else{
+            throw new UserNotFoundException();
+        }
 
-        // managerPage.forEach((manager) -> log.info("Test Manager : " + manager));
+        if(i >= 1){
+            return UserStatus.APPROVE_SUCCESS;
+        } else {
+            return UserStatus.APPROVE_FAIL;
+        }
 
-        // List<ManagerDTO> list = expertPage.map((expert) -> ExpertDTO.fromEntity(expert)).toList();
+    }
+    // 여러명 한꺼번에 승인하기
+    @Transactional
+    public void approveExpertsByIds(List<Long> ids) throws UserNotFoundException{
+        for (Long id : ids) {
+            Optional<Expert> byId = expertRepository.findById(id);
+            if(byId.isPresent()){
+                int i = expertRepository.approveExpert(id);
+            } else{
+                throw new UserNotFoundException();
+            }
 
-        // return list;
-        return new ArrayList<>();
+        }
     }
 
 }

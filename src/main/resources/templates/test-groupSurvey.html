@@ -12,72 +12,28 @@
 
 
 <section>
-    <h3>1. 연령대 문진 조회</h3>
-    <select id="ageGroup">
-        <option value="">-- 선택 --</option>
+    <h3>1. 신규 문진 등록</h3>
+    <input placeholder="문항" id="newQuestion" style="width:300px">
+    <select id="newAgeGroup">
+        <option value="">연령대 선택</option>
         <option value="0~12개월">0~12개월</option>
         <option value="1~2세">1~2세</option>
         <option value="3~4세">3~4세</option>
         <option value="5세">5세</option>
     </select>
-    <button onclick="loadByAge()">불러오기</button>
-    <div id="ageSurveyContainer"></div>
-</section>
-
-
-<section>
-    <h3>2. 대상 그룹 문진 조회</h3>
-    <select id="targetGroup">
-        <option value="">-- 선택 --</option>
-        <option value="유치원A">유치원A</option>
-        <option value="유치원B">유치원B</option>
-        <option value="어린이집C">어린이집C</option>
-        <option value="유치원D">유치원D</option>
-        <option value="유치원E">유치원E</option>
-    </select>
-    <button onclick="loadByTargetGroup()">불러오기</button>
-    <div id="targetSurveyContainer"></div>
-</section>
-
-
-<section>
-    <h3>3. 카테고리 문진 조회</h3>
-    <select id="category">
-        <option value="">-- 선택 --</option>
-        <option>의사소통/정서/심리</option>
-        <option>운동/인지 발달</option>
-        <option>사회성/인지/창의</option>
-        <option>생활습관</option>
-    </select>
-    <button onclick="loadByCategory()">불러오기</button>
-    <div id="categorySurveyContainer"></div>
-</section>
-
-
-<section>
-    <h3>4. 신규 문진 등록</h3>
-    <input placeholder="문항" id="newQuestion" style="width:300px">
-    <select id="newAgeGroup">
-        <option value="">연령대 선택</option>
-        <option>0~12개월</option>
-        <option>1~2세</option>
-        <option>3~4세</option>
-        <option>5세</option>
-    </select>
     <select id="newCategory">
         <option value="">카테고리 선택</option>
-        <option>의사소통/정서/심리</option>
-        <option>운동/인지 발달</option>
-        <option>사회성/인지/창의</option>
-        <option>생활습관</option>
+        <option value="의사소통/정서/심리">의사소통/정서/심리</option>
+        <option value="운동/인지 발달">운동/인지 발달</option>
+        <option value="사회성/인지/창의">사회성/인지/창의</option>
+        <option value="생활습관">생활습관</option>
     </select>
     <select id="newTargetGroup">
         <option value="">대상 그룹</option>
-        <option>유치원A</option>
-        <option>유치원B</option>
-        <option>어린이집C</option>
-        <option>유치원D</option>
-        <option>유치원E</option>
+        <option value="유치원">유치원</option>
+        <option value="어린이집">어린이집</option>
+        <option value="보육원">보육원</option>
+        <option value="all">전체</option>
     </select>
     <input id="newWeight" placeholder="가중치" type="number">
     <br>
@@ -89,9 +45,49 @@
     <br>
     <input placeholder="선택된 답변" id="selected">
     <input placeholder="계산 점수" id="score" type="number">
+    <br>
+    <input placeholder="세트 ID (연결할 survey_set_id)" id="surveySetId">
     <button onclick="registerSurvey()">등록</button>
 </section>
 
+<section>
+    <h3>2. 연령대 문진 조회</h3>
+    <select id="ageGroup">
+        <option value="">-- 선택 --</option>
+        <option value="0~12개월">0~12개월</option>
+        <option value="1~2세">1~2세</option>
+        <option value="3~4세">3~4세</option>
+        <option value="5세">5세</option>
+    </select>
+    <button onclick="loadByAge()">불러오기</button>
+    <div id="ageSurveyContainer"></div>
+</section>
+
+<section>
+    <h3>3. 대상 그룹 문진 조회</h3>
+    <select id="targetGroup">
+        <option value="">-- 선택 --</option>
+        <option value="유치원">유치원</option>
+        <option value="어린이집">어린이집</option>
+        <option value="보육원">보육원</option>
+        <option value="all">전체</option>
+    </select>
+    <button onclick="loadByTargetGroup()">불러오기</button>
+    <div id="targetSurveyContainer"></div>
+</section>
+
+<section>
+    <h3>4. 카테고리 문진 조회</h3>
+    <select id="category">
+        <option value="">-- 선택 --</option>
+        <option value="의사소통/정서/심리">의사소통/정서/심리</option>
+        <option value="운동/인지 발달">운동/인지 발달</option>
+        <option value="사회성/인지/창의">사회성/인지/창의</option>
+        <option value="생활습관">생활습관</option>
+    </select>
+    <button onclick="loadByCategory()">불러오기</button>
+    <div id="categorySurveyContainer"></div>
+</section>
 
 <section>
     <h3>5. 문진 삭제</h3>
@@ -100,67 +96,70 @@
 </section>
 
 <script>
-    let ageGroupSurveys = [];
-
-    function renderSurveyList(surveys, containerId) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = "";
-      surveys.forEach((s, idx) => {
-        container.innerHTML += `<p><strong>${idx + 1}.</strong> ${s.question}</p><hr>`;
-      });
-    }
-
-function loadByAge() {
-  const ageGroup = document.getElementById("ageGroup").value;
-  fetch(`/api/group-surveys/by-age/${ageGroup}`)
-    .then(r => r.json())
-    .then(data => {
-      ageGroupSurveys = data;
-      renderSurveyList(data, "ageSurveyContainer");
+    document.getElementById("setTitle").addEventListener("change", function() {
+        const customInput = document.getElementById("customTitle");
+        customInput.style.display = this.value === "custom" ? "inline" : "none";
     });
-}
-
-function loadByTargetGroup() {
-  const targetGroup = document.getElementById("targetGroup").value;
-  fetch(`/api/group-surveys/by-target/${targetGroup}`)
-    .then(r => r.json())
-    .then(data => renderSurveyList(data, "targetSurveyContainer"));  //
-}
-
-function loadByCategory() {
-  const category = document.getElementById("category").value;
-  fetch(`/api/group-surveys?category=${category}`)
-    .then(r => r.json())
-    .then(data => renderSurveyList(data, "categorySurveyContainer")); //
-}
 
 
     function registerSurvey() {
-      const dto = {
-        ageGroup: document.getElementById("newAgeGroup").value,
-        category: document.getElementById("newCategory").value,
-        question: document.getElementById("newQuestion").value,
-        targetGroup: document.getElementById("newTargetGroup").value,
-        weight: +document.getElementById("newWeight").value,
-        answer1: document.getElementById("a1").value,
-        answer2: document.getElementById("a2").value,
-        answer3: document.getElementById("a3").value,
-        answer4: document.getElementById("a4").value,
-        answer5: document.getElementById("a5").value,
-        selectedAnswer: document.getElementById("selected").value,
-        calculatedScore: +document.getElementById("score").value
-      };
-      fetch("/api/group-surveys", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dto)
-      }).then(() => alert("등록 완료"));
+        const dto = {
+            ageGroup: document.getElementById("newAgeGroup").value,
+            category: document.getElementById("newCategory").value,
+            question: document.getElementById("newQuestion").value,
+            targetGroup: document.getElementById("newTargetGroup").value,
+            weight: +document.getElementById("newWeight").value,
+            answer1: document.getElementById("a1").value,
+            answer2: document.getElementById("a2").value,
+            answer3: document.getElementById("a3").value,
+            answer4: document.getElementById("a4").value,
+            answer5: document.getElementById("a5").value,
+            selectedAnswer: document.getElementById("selected").value,
+            calculatedScore: +document.getElementById("score").value
+        };
+
+        const surveySetId = +document.getElementById("surveySetId").value;
+
+        fetch(`/api/group-surveys?surveySetId=${surveySetId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dto)
+        }).then(() => alert("문진 등록 및 세트 연동 완료"));
+    }
+
+    function renderSurveyList(surveys, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        surveys.forEach((s, idx) => {
+            container.innerHTML += `<p><strong>${idx + 1}.</strong> ${s.question}</p><hr>`;
+        });
+    }
+
+    function loadByAge() {
+        const ageGroup = document.getElementById("ageGroup").value;
+        fetch(`/api/group-surveys/by-age/${ageGroup}`)
+            .then(r => r.json())
+            .then(data => renderSurveyList(data, "ageSurveyContainer"));
+    }
+
+    function loadByTargetGroup() {
+        const targetGroup = document.getElementById("targetGroup").value;
+        fetch(`/api/group-surveys/by-target/${targetGroup}`)
+            .then(r => r.json())
+            .then(data => renderSurveyList(data, "targetSurveyContainer"));
+    }
+
+    function loadByCategory() {
+        const category = document.getElementById("category").value;
+        fetch(`/api/group-surveys?category=${category}`)
+            .then(r => r.json())
+            .then(data => renderSurveyList(data, "categorySurveyContainer"));
     }
 
     function deleteSurvey() {
-      const id = document.getElementById("deleteId").value;
-      fetch(`/api/group-surveys/${id}`, { method: "DELETE" })
-        .then(() => alert("삭제 완료"));
+        const id = document.getElementById("deleteId").value;
+        fetch(`/api/group-surveys/${id}`, { method: "DELETE" })
+            .then(() => alert("삭제 완료"));
     }
 </script>
 </body>

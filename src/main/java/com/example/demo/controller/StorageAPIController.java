@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.PhotoDTO;
 import com.example.demo.dto.UrlResponse;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.entity.Album;
@@ -9,7 +10,6 @@ import com.example.demo.service.PhotoService;
 import com.example.demo.service.PresignedUrlService;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.service.MemberService;
-import com.example.demo.util.APIResponse;
 import com.example.demo.util.GlobalStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,6 +31,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -71,7 +70,7 @@ public class StorageAPIController {
     @GetMapping("/api/proxy/image")
     public ResponseEntity<byte[]> getProxyImage(@RequestParam("filename") String filename) throws IOException {
 
-        URL presignedUrl = urlService.presignedDownloadUrl(filename);
+        URL presignedUrl = urlService.getPresignedUrl(filename, Duration.ofMinutes(30));
 
         InputStream inputStream = presignedUrl.openStream();
         byte[] imageBytes = inputStream.readAllBytes();
@@ -109,22 +108,16 @@ public class StorageAPIController {
 
     // 앨범 내 사진 리스트 조회
     @GetMapping("/api/album/{id}")
-    public ResponseEntity<List<UrlResponse>> getAlbumDetail(@PathVariable("id") Long id) {
+    public ResponseEntity<List<PhotoDTO>> getAlbumDetail(@PathVariable("id") Long id) {
         Album album = albumService.get(id);
-        List<Photo> photoList = album.getPhotos();
-        List<UrlResponse> urlList = new ArrayList<>();
+        List<PhotoDTO> photoList = new ArrayList<>();
 
-        for(Photo photo : photoList) {
-            String filename = photo.getFileName();
-            String proxyUrl = "/api/proxy/image?filename=" + URLEncoder.encode("thumbnail/"+filename, StandardCharsets.UTF_8);
-            urlList.add(new UrlResponse(proxyUrl, filename));
+        for(Photo photo : album.getPhotos()) {
+            PhotoDTO photoDTO = new PhotoDTO(photo);
+            photoList.add(photoDTO);
         }
 
-        if(urlList.isEmpty()) {
-            return ResponseEntity.ok(new ArrayList<>());
-        }else {
-            return ResponseEntity.ok(urlList);
-        }
+        return ResponseEntity.ok(photoList);
     }
 
     @PostMapping("/api/album/photo/upload")
@@ -150,7 +143,7 @@ public class StorageAPIController {
         byte[] bytes = file.getBytes();
 
         InputStream originalInputStream = new ByteArrayInputStream(bytes);
-//        urlService.imageUpload("original/"+filename, originalInputStream, mimeType);
+        urlService.imageUpload("original/"+filename, originalInputStream, mimeType);
 
         ByteArrayOutputStream thumbnailOutputStream = new ByteArrayOutputStream();
         Thumbnails.of(new ByteArrayInputStream(bytes))
@@ -161,8 +154,18 @@ public class StorageAPIController {
 
         InputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailOutputStream.toByteArray());
 
-//        urlService.imageUpload("thumbnail/"+filename, thumbnailInputStream, "image/jpeg");
+        urlService.imageUpload("thumbnail/"+filename, thumbnailInputStream, "image/jpeg");
 
         return filename;
+    }
+
+    @PostMapping("/api/album/visibility")
+    public ResponseEntity<ApiResponse> updateAlbumVisibility(@RequestParam("id") Long id,
+                                                             @RequestParam("isPublic") boolean isPublic) {
+        Album album = albumService.get(id);
+        album.setIsPublic(isPublic);
+        albumService.update(album);
+
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
     }
 }

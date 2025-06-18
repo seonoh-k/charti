@@ -1,6 +1,6 @@
 package com.example.demo.dto;
 
-
+import com.example.demo.users.entity.Member;
 import lombok.*;
 
 @Getter
@@ -21,6 +21,5 @@ public class UserDTO {
     private String providerId;
     private String smsIdToken; // sms 인증
     private String phoneNumber;
-
 
 }

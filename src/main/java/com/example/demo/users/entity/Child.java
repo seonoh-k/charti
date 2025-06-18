@@ -6,7 +6,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.temporal.ChronoUnit;
 
 @Entity
@@ -62,6 +64,16 @@ public class Child {
             return AgeGroup.AGE_5;          // 5세 이상
         }
     }
+    /**
+     * 생년월일을 기준으로 만 나이를 계산하여 반환합니다.
+     * Thymeleaf에서 ${child.age}로 편리하게 사용하기 위함입니다.
+     */
+    public int getAge() {
+        if (this.birthday == null) return 0;
+        LocalDate today = LocalDate.now();
+        return Period.between(this.birthday.toLocalDate(), today).getYears();
+    }
+
 
 
 }

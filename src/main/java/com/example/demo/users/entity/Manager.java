@@ -30,6 +30,4 @@ public class Manager{
     @Column(nullable = false)
     private Boolean isApproved = false;
 
-    private String organization; // 유치원, 어린이집 
-
 }

@@ -2,10 +2,13 @@ package com.example.demo.users.service;
 
 import com.example.demo.service.BaseService;
 import com.example.demo.users.entity.Child;
+import com.example.demo.users.entity.Member;
 import com.example.demo.users.repository.ChildRepository;
 import groovy.util.logging.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -31,7 +34,17 @@ public class ChildService extends BaseService<Child, ChildRepository> {
                 .orElseThrow(() -> new IllegalArgumentException("해당 자녀를 찾을 수 없습니다. ID=" + id));
     }
 
+    public List<Child> findByUsersId(Long usersId) {
+        return repository.findByParentUsersId(usersId);
+    }
+
     public Child get(Long childId) {
 
         return null;}
+
+    // 자녀 목록 조회
+    public List<Child> getChildrenByMember(Member member) {
+        return repository.findByParent(member);
+    }
+
 }

@@ -4,7 +4,6 @@ import com.example.demo.survey.entity.SpecialSurvey;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,9 +12,8 @@ import java.util.stream.Collectors;
 public class SpecialSurveyResponseDto {
     private Long id;
     private String question;
-    private String category;
-    private String ageGroup;
-    private LocalDate surveyDate;
+    private String category;      // ENUM → String
+    private String ageGroup;      // ENUM → String
     private int weight;
     private String answer1, answer2, answer3, answer4, answer5;
     private String selectedAnswer;
@@ -26,8 +24,9 @@ public class SpecialSurveyResponseDto {
         return SpecialSurveyResponseDto.builder()
                 .id(entity.getId())
                 .question(entity.getQuestion())
-//                .category(entity.getCategory())
-//                .ageGroup(entity.getAgeGroup())
+                .category(entity.getCategory().getDisplayName())       // ENUM → String
+                .ageGroup(entity.getAgeGroup().getDisplayName())       // ENUM → String
+                .weight(entity.getWeight())
                 .answer1(entity.getAnswer1())
                 .answer2(entity.getAnswer2())
                 .answer3(entity.getAnswer3())

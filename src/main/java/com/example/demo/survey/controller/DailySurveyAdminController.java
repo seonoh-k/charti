@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping("/admin/surveys")
+@RequestMapping("/admin/surveys/daily")
 @RequiredArgsConstructor
-public class SurveyAdminController {
+public class DailySurveyAdminController {
 
     private final DailySurveyService dailySurveyService;
     private final List<AgeGroup> ageGroups = Arrays.stream(AgeGroup.values())
