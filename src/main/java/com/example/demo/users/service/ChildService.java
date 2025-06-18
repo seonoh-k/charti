@@ -7,6 +7,8 @@ import groovy.util.logging.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @Slf4j
 public class ChildService extends BaseService<Child, ChildRepository> {
@@ -29,6 +31,10 @@ public class ChildService extends BaseService<Child, ChildRepository> {
     public Child findById(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 자녀를 찾을 수 없습니다. ID=" + id));
+    }
+
+    public List<Child> findByUsersId(Long usersId) {
+        return repository.findByParentUsersId(usersId);
     }
 
     public Child get(Long childId) {

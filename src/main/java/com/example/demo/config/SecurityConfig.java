@@ -32,8 +32,8 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-
                         // 인증 필요 없는 URL (loginForm, join, 정적 자원 등)
+                        .requestMatchers("/.well-known/**", "/firebase-messaging-sw.js").permitAll()
                         .requestMatchers(AppURLs.getCombineURL(AppURLs.PUBLIC_URLS, AppURLs.PREFIX_WHITELIST)).permitAll()
                         .requestMatchers(AppURLs.getCombineURL(AppURLs.MEMBER_URLS, AppURLs.MEMBER_URLS_PREFIX)).hasRole("MEMBER")
                         .requestMatchers(AppURLs.getCombineURL(AppURLs.MANAGER_URLS, AppURLs.MANAGER_URLS_PREFIX)).hasRole("MANAGER")

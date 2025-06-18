@@ -12,7 +12,16 @@
 
     <h1 class="text-2xl font-bold mb-4">데일리 문진</h1>
 
-    <!-- 연령대 선택 (일반 HTML select 로 변경) -->
+    <label for="childSelect" class="block mb-2 font-semibold">자녀 선택:</label>
+    <select id="childSelect" name="childId" class="border p-2 rounded mb-4">
+        <option value="">-- 자녀를 선택하세요 --</option>
+        <option th:each="c : ${children}"
+                th:value="${c.id}"
+                th:text="${c.name + ' (' + c.nickname + ')'}">
+        </option>
+    </select>
+
+    <!-- 연령대 선택 -->
     <label for="ageGroup" class="block mb-2 font-semibold">연령대 선택:</label>
     <select id="ageGroup" name="ageGroup" class="border p-2 rounded mb-4">
         <option value="">-- 연령대를 선택하세요 --</option>
@@ -85,11 +94,15 @@
             return;
           }
 
+          const childId = document.getElementById("childSelect").value;
+          if (!childId) { alert("자녀를 선택해주세요!"); return; }
+
           fetch("/api/surveys/submit", {
             method: "POST",
             headers: { "Content-Type": "application/json; charset=UTF-8" },
             body: JSON.stringify({
-              ageGroup: ageGroupSelect.value,  // e.g. "AGE_0_12"
+              ageGroup: ageGroupSelect.value,
+              childId:  Number(childId),
               answers: answers
             })
           })

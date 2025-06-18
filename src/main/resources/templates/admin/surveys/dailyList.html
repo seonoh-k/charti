@@ -11,7 +11,7 @@
 <th:block layout:fragment="content">
     <h1 class="text-2xl font-semibold mb-4">관리자 - 데일리 문진 목록</h1>
 
-    <form th:action="@{/admin/surveys}" method="get" class="flex gap-4 items-center mb-6">
+    <form th:action="@{/admin/surveys/daily}" method="get" class="flex gap-4 items-center mb-6">
         <label class="flex items-center gap-2">
             <span>연령대:</span>
             <select name="ageGroup" class="border p-2 rounded">
@@ -47,7 +47,7 @@
         </button>
     </form>
 
-    <a th:href="@{/admin/surveys/new}"
+    <a th:href="@{/admin/surveys/daily/new}"
        class="inline-block mb-4 text-green-600 hover:underline">
         ➕ 문진 추가
     </a>
@@ -69,9 +69,9 @@
             <td class="border p-2" th:text="${s.question}"></td>
             <td class="border p-2" th:text="${s.weight}"></td>
             <td class="border p-2">
-                <a th:href="@{/admin/surveys/{id}/edit(id=${s.id})}"
+                <a th:href="@{/admin/surveys/daily/{id}/edit(id=${s.id})}"
                    class="text-blue-600 mr-3 hover:underline">수정</a>
-                <form th:action="@{/admin/surveys/{id}/delete(id=${s.id})}"
+                <form th:action="@{/admin/surveys/daily/{id}/delete(id=${s.id})}"
                       method="post" class="inline"
                       onsubmit="return confirm('삭제하시겠습니까?');">
                     <button type="submit" class="text-red-600 hover:underline">
