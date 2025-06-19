@@ -292,6 +292,7 @@ public class UserService {
     // Member
     public PagingResultDTO<MemberDTO, Users> getMemberListWithPaging(Pageable pageable) {
         Page<Users> result = userRepository.getAllMember(pageable);
+        result.forEach(users -> log.info("ID:" + users.getId()));
         return new PagingResultDTO<>(result, MemberDTO::fromEntity);
     }
 
@@ -302,18 +303,84 @@ public class UserService {
         List<MemberDTO> list = allMember.map(MemberDTO::fromEntity).toList();
         return list;
     }
-    public List<ExpertDTO>  getExpertList(Pageable pageable){
-        Page<Expert> allExpertUnApproved = userRepository.getAllExpertUnApproved(pageable);
+    public List<ExpertDTO>  getUnApprovedExpertList(Pageable pageable){
+        Page<Users> allExpertUnApproved = userRepository.getAllExpertUnApproved(pageable);
         // Entity -> DTO의 Static Method 사용해서 변환
         List<ExpertDTO> list = allExpertUnApproved .map(ExpertDTO::fromEntity).toList();
         return list;
     }
-    public List<ManagerDTO>  getManagerList(Pageable pageable){
-        Page<Manager> allManagerUnApproved = userRepository.getAllManagerUnApproved(pageable);
+    public List<ManagerDTO>  getUnApprovedManagerList(Pageable pageable){
+        Page<Users> allManagerUnApproved = userRepository.getAllManagerUnApproved(pageable);
         // Entity -> DTO의 Static Method 사용해서 변환
         List<ManagerDTO> list = allManagerUnApproved.map(ManagerDTO::fromEntity).toList();
         return list;
     }
+    public PagingResultDTO<ManagerDTO, Users>  getApprovedManagerListWithPaging(Pageable pageable){
+        Page<Users> result = userRepository.getAllManagerApproved(pageable);
+        // Entity -> DTO의 Static Method 사용해서 변환
+
+        return new PagingResultDTO<>(result, ManagerDTO::fromEntity);
+    }
+    public PagingResultDTO<ExpertDTO, Users>  getApprovedExpertListWithPaging(Pageable pageable){
+        Page<Users> result = userRepository.getAllExpertApproved(pageable);
+        // Entity -> DTO의 Static Method 사용해서 변환
+        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
+    }
+    public UserStatus updateMember(UserDTO userDTO){
+        Long id = userDTO.getId();
+        Optional<Users> byId = userRepository.findById(id);
+        if (byId.isPresent()){
+            Users users = byId.get();
+
+            // JPA는 영속 상태 엔티티의 필드가 변경되면 자동으로 update 쿼리 발생
+            // 엔티티를 가져와서 Set 하면 DirtyChecking사용한 update
+            // 그렇다면 Member를 변경하려면 어떻게 해야할까?
+            // Member에서 관리자가 변경 가능한 항목은 ?
+            // 어떤 항목이 비즈니스 관점에서 변경 가능 해야 하고 변경 불가 한가?
+            // 관리자 일반 회원들 확인 하는 목록에서는 어떤 정보를 확인할 수 있어야 하는지?
+            // 이름,닉네임, 아이디(이메일), 전화번호,가입일,가족,포인트, 소셜로그인 사용 여부
+            return UserStatus.UPDATE_SUCCESS;
+        } else{
+            throw new UserNotFoundException();
+        }
+    }
+    public UserStatus updateExpert(ExpertDTO expertDTO){
+        Long id = expertDTO.getId();
+        Optional<Users> byId = userRepository.findById(id);
+        if (byId.isPresent()){
+            Users users = byId.get();
+
+            // JPA는 영속 상태 엔티티의 필드가 변경되면 자동으로 update 쿼리 발생
+            // 엔티티를 가져와서 Set 하면 DirtyChecking사용한 update
+            // 그렇다면 Member를 변경하려면 어떻게 해야할까?
+            // Member에서 관리자가 변경 가능한 항목은 ?
+            // 어떤 항목이 비즈니스 관점에서 변경 가능 해야 하고 변경 불가 한가?
+            // 관리자 일반 회원들 확인 하는 목록에서는 어떤 정보를 확인할 수 있어야 하는지?
+            // 이름,닉네임, 아이디(이메일), 전화번호,가입일,가족,포인트, 소셜로그인 사용 여부
+            return UserStatus.UPDATE_SUCCESS;
+        } else{
+            throw new UserNotFoundException();
+        }
+    }
+    public UserStatus updateManager(ManagerDTO managerDTO){
+        Long id = managerDTO.getId();
+        Optional<Users> byId = userRepository.findById(id);
+        if (byId.isPresent()){
+            Users users = byId.get();
+
+            // JPA는 영속 상태 엔티티의 필드가 변경되면 자동으로 update 쿼리 발생
+            // 엔티티를 가져와서 Set 하면 DirtyChecking사용한 update
+            // 그렇다면 Member를 변경하려면 어떻게 해야할까?
+            // Member에서 관리자가 변경 가능한 항목은 ?
+            // 어떤 항목이 비즈니스 관점에서 변경 가능 해야 하고 변경 불가 한가?
+            // 관리자 일반 회원들 확인 하는 목록에서는 어떤 정보를 확인할 수 있어야 하는지?
+            // 이름,닉네임, 아이디(이메일), 전화번호,가입일,가족,포인트, 소셜로그인 사용 여부
+            return UserStatus.UPDATE_SUCCESS;
+        } else{
+            throw new UserNotFoundException();
+        }
+    }
+
 
     // [추가됨] 유저 검색용 메서드 - 포인트 지급 등의 기능에서 이름이나 닉네임으로 사용자 검색 시 사용
     public List<UserDTO> searchUsers(String keyword, String filter) {
@@ -368,6 +435,29 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("유저가 없어요 (uuid): " + uuid));
     }
 
+    public MemberDTO findMemberById(Long id) throws UserNotFoundException{
+        Optional<Users> byId = userRepository.findById(id);
+        if (byId.isEmpty()){
+            throw new UserNotFoundException();
+        }
+        MemberDTO memberDTO = MemberDTO.fromEntity(byId.get());
+        return memberDTO;
+    }
+    public ExpertDTO findExpertById(Long id) throws UserNotFoundException{
+        Optional<Users> byId = userRepository.findById(id);
+        if (byId.isEmpty()){
+            throw new UserNotFoundException();
+        }
+        ExpertDTO expertDTO = ExpertDTO.fromEntity(byId.get());
+        return expertDTO;
+    }
+    public ManagerDTO findManagerById(Long id) throws UserNotFoundException{
+        Optional<Users> byId = userRepository.findById(id);
+        if (byId.isEmpty()){
+            throw new UserNotFoundException();
+        }
+        ManagerDTO managerDTO = ManagerDTO.fromEntity(byId.get());
+        return managerDTO;
 
     /**
      * UUID로 유저를 가져온다.

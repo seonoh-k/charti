@@ -6,6 +6,8 @@ import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Users;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Builder
@@ -15,11 +17,13 @@ public class ExpertDTO {
     // users_id (Manager 엔티티에서 참조)
     private Long id;
     private String name;
+    private String nickname;
     private String email;
-    private String phoneNumber; // 담당자 전화번호
-    private String license; // 그룹 이름
-    private String major; // 그룹 아이디
-    private String career; // 그룹 이메일
+    private String phoneNumber;
+    private String license;
+    private String major;
+    private String career;
+    private LocalDateTime createdAt;
     private Boolean isApproved;
 
     // 엔티티 → DTO 변환 메서드
@@ -28,12 +32,14 @@ public class ExpertDTO {
             return ExpertDTO.builder()
                     .id(expert.getUsers().getId())                 // FK가 Users면, .getId()로 접근
                     .name(expert.getUsers().getName())
+                    .nickname(expert.getUsers().getNickname())
                     .email(expert.getUsers().getUsername())    // username == email
                     .phoneNumber(expert.getUsers().getPhoneNumber())
                     .license(expert.getLicense())
                     .major(expert.getMajor())
                     .career(expert.getCareer())
                     .isApproved(expert.getIsApproved())
+                    .createdAt(expert.getUsers().getCreatedAt())
                     .build();
     }
 
@@ -42,12 +48,14 @@ public class ExpertDTO {
         return ExpertDTO.builder()
                 .id(user.getId())
                 .name(user.getName())
+                .nickname(user.getNickname())
                 .email(user.getUsername())    // username == email
                 .phoneNumber(user.getPhoneNumber())
                 .license(user.getExpert().getLicense())
                 .major(user.getExpert().getMajor())
                 .career(user.getExpert().getCareer())
                 .isApproved(user.getExpert().getIsApproved())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Fontawesome 연결 Embed Code Start-->
+    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
+    <!-- Fontawesome 연결 Embed Code End-->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>관리자 페이지</title>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- 헤더 (햄버거 버튼) -->
+    <div th:replace="fragments/adminFragments :: hamburger"></div>
+
+    <div class="flex flex-1">
+        <div th:replace="fragments/adminFragments :: sideBar"></div>
+        <!-- 메인 콘텐츠 -->
+        <main class="flex-1 p-6 bg-gray-100">
+            <h1 class="text-2xl font-bold mb-4">회원 정보 수정</h1>
+            <form th:action="@{/admin/member/update}" th:object="${memberDTO}" method="post" class="space-y-4 bg-white p-6 rounded shadow-md" id="memberForm">
+        
+                <input type="hidden" th:field="*{id}" id="id"/>
+                <div>
+                    <label class="block mb-1 text-sm font-medium">이름</label>
+                    <input type="text" th:field="*{name}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                </div>
+                <div>
+                    <label class="block mb-1 text-sm font-medium">닉네임</label>
+                    <input type="text" th:field="*{nickname}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                </div>
+        
+                <div>
+                    <label class="block mb-1 text-sm font-medium">이메일</label>
+                    <input type="email" th:field="*{email}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                </div>
+        
+                <div>
+                    <label class="block mb-1 text-sm font-medium">전화번호</label>
+                    <input type="text" th:field="*{phoneNumber}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                </div>
+        
+                <div>
+                    <label class="block mb-1 text-sm font-medium">가입 경로 (provider)</label>
+                    <input type="text" th:field="*{provider}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                </div>
+        
+                <div>
+                    <label class="block mb-1 text-sm font-medium">총 포인트</label>
+                    <input type="text" th:field="*{totalPoint}" class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 cursor-not-allowed" disabled />
+                </div>
+                <div>
+                    <label class="block mb-1 text-sm font-medium">가입 일자</label>
+                    <input type="text"
+                        th:value="${#temporals.format(memberDTO.createdAt, 'yyyy년MM월dd일 HH시mm분')}"
+                        class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 cursor-not-allowed" readonly disabled />
+                </div>
+                
+        
+                <div class="pt-4 flex flex-row justify-end">
+                    <button type="button" onclick="showModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                        수정하기
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+
+
+
+
+<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-6 rounded shadow-lg text-center w-80">
+        <p class="text-lg mb-4">정말 수정하시겠습니까?</p>
+        <div class="flex justify-center gap-4">
+            <button onclick="confirmUpdate()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">확인</button>
+            <button onclick="hideModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">취소</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+function showModal() {
+    document.getElementById("confirmModal").classList.remove("hidden");
+}
+function hideModal() {
+    document.getElementById("confirmModal").classList.add("hidden");
+}
+function confirmUpdate() {
+    hideModal();
+    updateMember();
+}
+
+
+async function updateMember(){
+    const form = document.getElementById("memberForm");
+    const formData = new FormData(form);
+    const data = {};
+
+    formData.forEach((value,key) => {
+        data[key] = value;
+        console.log("Key : "+key+"Value : "+value)
+    });
+    
+    const res = await fetch(`/admin/member/${data.id}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (result.code === 'OK') {
+        showToast(result.message, 'success',3000);
+        setTimeout(() => {
+        window.location.href = `/admin/member/${data.id}`;
+        }, 1500);
+    } else {
+        showToast('error', result.message || '수정 중 오류 발생',3000);
+    }
+}
+
+function showToast(message, type = 'success', duration = 3000) {
+    
+    const container = document.getElementById("toast-container");
+
+    const colors = {
+        success: {
+            bg: "bg-green-500",
+            icon: "✅"
+        },
+        error: {
+            bg: "bg-red-500",
+            icon: "❌"
+        }
+    };
+    console.log(type);
+    const toast = document.createElement("div");
+    toast.className = `flex items-center text-white px-4 py-2 rounded shadow-lg ${colors[type].bg} animate-slide-in-right`;
+    toast.innerHTML = 
+    `<span class="mr-2">${colors[type].icon}</span>
+    <span>${message}</span>`;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.remove("animate-slide-in-right");
+        toast.classList.add("animate-fade-out");
+
+        setTimeout(() => container.removeChild(toast), 5000);
+        
+    }, duration);
+}
+</script>
+
+
+<div id="toast-container" class="fixed inset-x-0 top-0 z-50 space-y-3 text-center"></div>
+<script th:src="@{/js/admin/adminSideBar.js}"></script>
+</body>
+</html>

@@ -1,82 +1,98 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>담당자 승인</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Fontawesome 연결 Embed Code Start-->
+  <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
+  <!-- Fontawesome 연결 Embed Code End-->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>담당자 승인</title>
 </head>
-<body class="bg-gray-50 text-gray-900">
-<div class="container mx-auto px-6 py-10">
-    <h1 class="text-2xl font-bold mb-4">담당자 가입 요청 목록</h1>
+<body class="h-screen flex flex-col">
 
-    <form th:action="@{/admin/approve-manager}" method="post">
-      <table class="w-full table-auto border" id="manager-table">
-          <thead>
-          <tr>
-              <th class="border px-4 py-2">
-                <input type="checkbox" id="select-all" onclick="toggleCheckboxes(this)">
-              </th>
-              <th class="border px-4 py-2">id</th>
-              <th class="border px-4 py-2">이름</th>
-              <th class="border px-4 py-2">이메일</th>
-              <th class="border px-4 py-2">소속</th>
-              <th class="border px-4 py-2">전화번호</th>
-          </tr>
-          </thead>
-          <tbody id="table-body">
-          <tr th:each="dto : ${result.dtoList}">
-              <td class="border px-4 py-2">
-                <input type="checkbox" class="ids ${dto.id}" name="ids" th:value="${dto.id}" />
-              </td>
-              <td class="border px-4 py-2" th:text="${dto.id}">홍길동</td>
-              <td class="border px-4 py-2" th:text="${dto.name}">홍길동</td>
-              <td class="border px-4 py-2" th:text="${dto.email}">hong@test.com</td>
-              <td class="border px-4 py-2" th:text="${dto.groupName}">OO대학교</td>
-              <td class="border px-4 py-2" th:text="${dto.phoneNumber}"></td>
-          </tr>
-          </tbody>
-      </table>
-       <!-- 일괄 승인 버튼 -->
-       <div class="mt-4 flex justify-end">
-        <button type="submit"
-                class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
-            선택 승인
-        </button>
-    </div>
-    </form>
+  <!-- 헤더 (햄버거 버튼) -->
+  <div th:replace="fragments/adminFragments :: hamburger"></div>
 
-    <!-- 페이징 -->
-    <div class="mt-4 flex justify-center gap-2" id="pagination">
+  <div class="flex flex-1">
+    
+    <div th:replace="fragments/adminFragments :: sideBar"></div>
+    
+    <main class="flex-1 p-6 bg-gray-100">
 
-      <!-- ◀ 이전 페이지 이동 -->
-      <a th:href="${result.startPage - 1 > 0} ? @{/admin/manager-applicants(page=${result.startPage - 1}, size=10, sort='createdAt', direction='desc')} : '#'"
-        th:classappend="${result.startPage - 1 <= 0} ? 'pointer-events-none opacity-50' : ''"
-        class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
-        ◀
-      </a>
+      <h1 class="text-2xl font-bold mb-4">담당자 가입 요청 목록</h1>
 
-      <!-- 페이지 번호 목록 -->
-      <a th:each="p : ${result.pageList}"
-        th:text="${p}"
-        th:href="@{/admin/manager-applicants(page=${p}, size=10, sort='createdAt', direction='desc')}"
-        th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
-        class="px-3 py-1 rounded hover:bg-blue-500">
-      </a>
+      <form th:action="@{/admin/approve-manager}" method="post">
+        <table class="w-full table-auto border text-center" id="manager-table">
+            <thead>
+              <tr>
+                  <th class="border px-4 py-2">
+                    <input type="checkbox" id="select-all" onclick="toggleCheckboxes(this)">
+                  </th>
+                  <th class="border px-4 py-2">id</th>
+                  <th class="border px-4 py-2">이름</th>
+                  <th class="border px-4 py-2">이메일</th>
+                  <th class="border px-4 py-2">전화번호</th>
+                  <th class="border px-4 py-2">소속</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <tr th:each="dto : ${result.dtoList}">
+                  <td class="border px-4 py-2">
+                    <input type="checkbox" class="ids" name="ids" th:value="${dto.id}" />
+                  </td>
+                  <td class="border px-4 py-2" th:text="${dto.id}">홍길동</td>
+                  <td class="border px-4 py-2" th:text="${dto.name}">홍길동</td>
+                  <td class="border px-4 py-2" th:text="${dto.email}">hong@test.com</td>
+                  <td class="border px-4 py-2" th:text="${dto.phoneNumber}"></td>
+                  <td class="border px-4 py-2" th:text="${dto.groupName}">OO대학교</td>
+              </tr>
+            </tbody>
+        </table>
+        <!-- 일괄 승인 버튼 -->
+        <div class="mt-4 flex justify-end">
+          <button type="submit"
+                  class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+              선택 승인
+          </button>
+        </div>
+      </form>
 
-      <!-- ▶ 다음 페이지 이동 -->
-      <a th:href="${result.endPage + 1 < result.totalPages} ? @{/admin/manager-applicants(page=${result.endPage + 1}, size=10, sort='createdAt', direction='desc')} : '#'"
-        th:classappend="${result.endPage + 1 >= result.totalPages} ? 'pointer-events-none opacity-50' : ''"
-        class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
-        ▶
-      </a>
+      <!-- 페이징 -->
+      <div class="mt-4 flex justify-center gap-2" id="pagination">
 
-    </div>
-</div>
+        <!-- ◀ 이전 페이지 이동 -->
+        <a th:href="${result.startPage - 1 > 0} ? @{/admin/manager-applicants(page=${result.startPage - 1}, size=10, sort='createdAt', direction='desc')} : '#'"
+          th:classappend="${result.startPage - 1 <= 0} ? 'pointer-events-none opacity-50' : ''"
+          class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
+          ◀
+        </a>
+
+        <!-- 페이지 번호 목록 -->
+        <a th:each="p : ${result.pageList}"
+          th:text="${p}"
+          th:href="@{/admin/manager-applicants(page=${p}, size=10, sort='createdAt', direction='desc')}"
+          th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
+          class="px-3 py-1 rounded hover:bg-blue-500">
+        </a>
+
+        <!-- ▶ 다음 페이지 이동 -->
+        <a th:href="${result.endPage + 1 < result.totalPages} ? @{/admin/manager-applicants(page=${result.endPage + 1}, size=10, sort='createdAt', direction='desc')} : '#'"
+          th:classappend="${result.endPage + 1 >= result.totalPages} ? 'pointer-events-none opacity-50' : ''"
+          class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
+          ▶
+        </a>
+
+      </div>
+    </main>
+  </div>
 
 <script>
   function toggleCheckboxes(master) {
       document.querySelectorAll('input[name="ids"]').forEach(cb => cb.checked = master.checked);
   }
 </script>
+<script th:src="@{/js/admin/adminSideBar.js}"></script>
 </body>
 </html>
