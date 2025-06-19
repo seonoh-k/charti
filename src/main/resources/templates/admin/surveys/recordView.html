@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>기록 문진 이력</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* 로딩 메시지 스타일 (선택 사항) */
+        .loading-message, .no-data-message, .error-message {
+            text-align: center;
+            padding: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        .error-message {
+            color: #ef4444; /* red-500 */
+        }
+        /* details 태그의 기본 화살표 숨기기 */
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details > summary {
+            list-style: none; /* Firefox 등에서 기본 마커 숨기기 */
+        }
+        /* 커스텀 화살표 아이콘을 위한 스타일 (선택 사항) */
+        .summary-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%; /* 아이콘과 텍스트 간격 조절을 위해 추가 */
+        }
+        .summary-content i {
+            margin-left: 10px; /* 아이콘과 텍스트 사이 간격 */
+        }
+    </style>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-6">🗂 기록 문진 이력 조회 (관리자)</h1>
+
+        <div class="mb-6">
+            <label for="searchInput" class="font-semibold">보호자 이름 또는 닉네임:</label>
+            <input type="text" id="searchInput" class="border rounded p-2 ml-2" />
+            <button onclick="searchParent()" class="ml-2 bg-blue-600 text-white px-4 py-1 rounded">검색</button>
+        </div>
+
+        <div id="resultBox" class="mb-6 hidden">
+            <label for="parentSelect" class="font-semibold">검색 결과:</label>
+            <select id="parentSelect" class="border rounded p-2 ml-2"></select>
+            <button onclick="goToHistory()" class="ml-2 bg-green-600 text-white px-4 py-1 rounded">이력 보기</button>
+        </div>
+
+        <div th:if="${member != null}">
+            <h2 class="text-xl font-bold mb-4" th:text="'👤 보호자: ' + ${member.name} + ' (' + ${member.id} + ')'">보호자 정보</h2>
+
+            <div th:each="childSummary : ${childrenSummaries}">
+                <div class="mb-8">
+                    <details class="border rounded" th:data-child-id="${childSummary.childId}">
+                        <summary class="text-lg font-semibold bg-gray-100 px-4 py-2 cursor-pointer">
+                            <div class="summary-content">
+                                <span th:text="|👶 자녀: ${childSummary.childName} (${childSummary.childAge}세), [총 ${childSummary.totalRecordDatesCount}건]|"></span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </summary>
+
+                        <div class="p-4" th:id="${'child-dates-content-' + childSummary.childId}">
+                        </div>
+
+                        <div class="flex justify-center gap-2 px-4 mt-2" th:id="${'pagination-container-' + childSummary.childId}">
+                        </div>
+
+                    </details>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const parentSelect = document.getElementById('parentSelect');
+            if (parentSelect && parentSelect.options.length === 0) {
+                document.getElementById('resultBox').classList.add('hidden');
+            }
+
+            // --- 자녀 목록 details 토글 이벤트 리스너 등록 ---
+            document.querySelectorAll('details[data-child-id]').forEach(detailsElement => {
+                detailsElement.addEventListener('toggle', async (event) => {
+                    const childId = detailsElement.dataset.childId;
+                    const datesContainer = document.getElementById(`child-dates-content-${childId}`);
+                    const icon = detailsElement.querySelector('.summary-content i');
+
+                    if (detailsElement.open) { // details가 열릴 때
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+
+                        // 이미 로드된 적이 없다면 로드 시작
+                        // loadedChildDates Set은 페이지네이션 상태를 추적하지 않고, 해당 자녀의 날짜 목록이 한 번이라도 로드되었는지 여부만 확인합니다.
+                        // 페이지네이션 때문에 DOM이 교체되면, 이전에 로드된 답변 캐시를 초기화해야 합니다.
+                        if (!loadedChildDates.has(childId)) {
+                            datesContainer.innerHTML = '<p class="loading-message">날짜 목록을 로딩 중...</p>';
+                            await loadChildDates(childId, 0); // 0-based 페이지 번호로 첫 페이지 로드
+                        }
+                    } else { // details가 닫힐 때
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                        // 닫을 때는 내용을 비우지 않습니다.
+                    }
+                });
+            });
+
+            // --- 날짜 목록 details 토글 이벤트 리스너는 동적으로 추가되므로 document에 위임 처리 ---
+            document.addEventListener('toggle', async (event) => {
+                const detailsElement = event.target.closest('details[data-record-date]');
+                if (!detailsElement) return; // 해당 이벤트가 날짜 details가 아니면 무시
+
+                const childId = detailsElement.dataset.childId;
+                const recordDate = detailsElement.dataset.recordDate;
+                const answersContainer = document.getElementById(`answers-${childId}-${recordDate}`);
+                const icon = detailsElement.querySelector('.summary-content i');
+
+                const uniqueKey = `${childId}-${recordDate}`;
+
+                if (detailsElement.open) { // details가 열릴 때
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+
+                    // 이미 로드된 적이 없다면 로드 시작
+                    if (!loadedDateAnswers.has(uniqueKey)) {
+                        answersContainer.innerHTML = '<p class="loading-message">답변을 로딩 중...</p>';
+                        await loadDateAnswers(childId, recordDate, answersContainer);
+                    }
+                } else { // details가 닫힐 때
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                    // 닫을 때는 내용을 비우지 않습니다.
+                }
+            }, true); // `true`를 사용하여 캡처링 단계에서 이벤트를 감지 (동적으로 추가된 요소에도 동작하도록)
+
+        });
+
+        async function searchParent() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) {
+                alert("검색어를 입력하세요.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/user/search?type=name&value=${encodeURIComponent(keyword)}`);
+                if (!res.ok) {
+                    throw new Error(`사용자 검색 실패: ${res.status} ${res.statusText}`);
+                }
+
+                const results = await res.json();
+                const select = document.getElementById('parentSelect');
+                select.innerHTML = '';
+
+                if (results.length === 0) {
+                    alert('검색 결과 없음');
+                    document.getElementById('resultBox').classList.add('hidden');
+                    return;
+                }
+
+                results.forEach(user => {
+                    const opt = document.createElement('option');
+                    opt.value = user.id;
+                    opt.textContent = `${user.name} (${user.username})`;
+                    select.appendChild(opt);
+                });
+
+                document.getElementById('resultBox').classList.remove('hidden');
+            } catch (error) {
+                console.error("보호자 검색 중 오류 발생:", error);
+                alert("보호자 검색 중 오류가 발생했습니다. 콘솔을 확인해주세요.");
+            }
+        }
+
+        function goToHistory() {
+            const id = document.getElementById('parentSelect').value;
+            if (id) {
+                window.location.href = `/admin/surveys/record/history?memberId=${id}`;
+            } else {
+                alert("이력을 볼 보호자를 선택해주세요.");
+            }
+        }
+
+        // --- 자녀 날짜 목록 관련 스크립트 ---
+        // 이 Set은 해당 자녀의 날짜 목록 자체(페이지 전체)가 로드되었는지 여부만 추적합니다.
+        // 페이지네이션으로 DOM이 변경되면 해당 자녀의 날짜-답변 캐시를 초기화해야 합니다.
+        const loadedChildDates = new Set();
+        // 날짜별 답변 로딩 여부를 추적하는 Set. childId-dateStr 포맷으로 키를 저장합니다.
+        const loadedDateAnswers = new Set(); // 여기에 새롭게 정의하여 전역적으로 접근 가능하도록 합니다.
+
+        async function loadChildDates(childId, pageNum = 0) {
+            const datesContainer = document.getElementById(`child-dates-content-${childId}`);
+            const paginationContainer = document.getElementById(`pagination-container-${childId}`);
+
+            // 페이지네이션 클릭 시 로딩 메시지 다시 표시
+            if (pageNum === 0) {
+                 datesContainer.innerHTML = '<p class="loading-message">날짜 목록을 로딩 중...</p>';
+            }
+            paginationContainer.innerHTML = ''; // 페이지네이션 버튼도 로딩 중에는 비움
+
+            try {
+                const url = `/admin/surveys/record/api/child/${childId}/dates?page=${pageNum}&size=5&sort=createdAt&direction=desc`;
+                const res = await fetch(url);
+
+                if (!res.ok) {
+                    throw new Error(`날짜 목록 로드 실패: ${res.status} ${res.statusText}`);
+                }
+
+                const pageData = await res.json();
+                const dates = pageData.content;
+                const totalPages = pageData.totalPages;
+                const currentPage = pageData.number;
+
+                // ⭐ 중요 수정: 날짜 목록을 새로 로드할 때 해당 자녀의 이전에 캐시된 모든 답변 정보를 초기화합니다. ⭐
+                // 이렇게 해야 1페이지 -> 2페이지 -> 1페이지 이동 시 6/19일자 데이터가 다시 로드되지 않는 문제를 해결할 수 있습니다.
+                // 특정 자녀 ID에 해당하는 답변 캐시만 제거하도록 수정 (더 효율적).
+                for (const key of loadedDateAnswers) {
+                    if (key.startsWith(`${childId}-`)) {
+                        loadedDateAnswers.delete(key);
+                    }
+                }
+                // 또는 더 간단하게, 해당 자녀의 답변 캐시를 모두 지웁니다 (모든 자녀의 캐시를 지우는 것은 아님)
+                // 현재 Set이 모든 자녀의 모든 날짜 캐시를 한꺼번에 관리하므로, 아래와 같이 특정 childId에 해당하는 것만 지웁니다.
+                // (Set에 filter 같은 메서드가 없으므로 수동으로 순회하여 삭제)
+
+                datesContainer.innerHTML = ''; // 로딩 메시지 제거 후 실제 내용 채움
+
+                if (dates.length === 0) {
+                    datesContainer.innerHTML = '<p class="no-data-message">기록된 문진 이력이 없습니다.</p>';
+                } else {
+                    dates.forEach(dateSummary => {
+                        const dateStr = dateSummary.recordDate; // ISO-MM-DD 형식으로 가정
+
+                        const detailsHtml = `
+                            <details class="mb-2 p-2 bg-gray-50 rounded"
+                                     data-child-id="${childId}"
+                                     data-record-date="${dateStr}">
+                                <summary class="cursor-pointer">
+                                    <div class="summary-content">
+                                        <span>📅 ${dateStr}</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </summary>
+                                <ul class="mt-2 list-disc pl-5" id="answers-${childId}-${dateStr}">
+                                    </ul>
+                            </details>
+                        `;
+                        datesContainer.insertAdjacentHTML('beforeend', detailsHtml); // 안전하게 HTML 추가
+                    });
+                }
+
+                // 페이지네이션 버튼 생성
+                paginationContainer.innerHTML = '';
+                if (totalPages > 1) {
+                    if (currentPage > 0) {
+                        const prevButton = document.createElement('button');
+                        prevButton.textContent = '이전';
+                        prevButton.className = 'page-btn px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300 mr-1';
+                        prevButton.onclick = () => loadChildDates(childId, currentPage - 1);
+                        paginationContainer.appendChild(prevButton);
+                    }
+
+                    for (let i = 0; i < totalPages; i++) {
+                        const button = document.createElement('button');
+                        button.textContent = i + 1;
+                        button.className = `page-btn px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300 mx-0.5 ${i === currentPage ? 'bg-blue-500 text-white' : ''}`;
+                        button.onclick = () => loadChildDates(childId, i);
+                        paginationContainer.appendChild(button);
+                    }
+
+                    if (currentPage < totalPages - 1) {
+                        const nextButton = document.createElement('button');
+                        nextButton.textContent = '다음';
+                        nextButton.className = 'page-btn px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300 ml-1';
+                        nextButton.onclick = () => loadChildDates(childId, currentPage + 1);
+                        paginationContainer.appendChild(nextButton);
+                    }
+                }
+                loadedChildDates.add(childId); // 자녀의 날짜 목록이 성공적으로 로드 완료
+
+            } catch (error) {
+                console.error("Error loading child dates:", error);
+                datesContainer.innerHTML = `<p class="error-message">날짜 목록을 로드하는 데 실패했습니다: ${error.message}</p>`;
+                paginationContainer.innerHTML = ''; // 에러 시 페이지네이션 버튼 비움
+            }
+        }
+
+        // --- 특정 날짜의 답변 목록 관련 스크립트 ---
+        // loadedDateAnswers는 이미 전역적으로 선언되어 있으므로 재선언하지 않습니다.
+
+        async function loadDateAnswers(childId, dateStr, answersContainer) {
+            try {
+                const url = `/admin/surveys/record/api/child/${childId}/date/${dateStr}/answers`;
+                const res = await fetch(url);
+                if (!res.ok) {
+                    throw new Error(`답변 상세 로드 실패: ${res.status} ${res.statusText}`);
+                }
+
+                const answers = await res.json();
+                answersContainer.innerHTML = ''; // 로딩 메시지 제거 후 실제 내용 채움
+
+                if (answers.length === 0) {
+                    answersContainer.innerHTML = '<p class="no-data-message">이 날짜에 기록된 답변이 없습니다.</p>';
+                } else {
+                    answers.forEach(qa => {
+                        answersContainer.innerHTML += `
+                            <li>
+                                <span class="font-semibold">${qa.question}</span><br />
+                                <span class="text-gray-700">→ ${qa.answer}</span>
+                            </li>
+                        `;
+                    });
+                }
+                loadedDateAnswers.add(`${childId}-${dateStr}`); // 성공적으로 로드 완료
+
+            } catch (error) {
+                console.error("Error loading answers for date:", error);
+                answersContainer.innerHTML = `<p class="error-message">답변을 로드하는 데 실패했습니다: ${error.message}</p>`;
+            }
+        }
+    </script>
+</th:block>
+</html>

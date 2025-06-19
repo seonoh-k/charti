@@ -1,6 +1,8 @@
 package com.example.demo.dto;
 
 import com.example.demo.users.entity.Member;
+import com.example.demo.users.entity.Role;
+import com.example.demo.users.entity.Users;
 import lombok.*;
 
 @Getter
