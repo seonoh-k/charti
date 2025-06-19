@@ -8,7 +8,7 @@
     <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
     <!-- Fontawesome 연결 Embed Code End-->
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>관리자 페이지</title>
+    <title>전문가 정보 수정 페이지</title>
 </head>
 <body class="h-screen flex flex-col">
 
@@ -19,8 +19,8 @@
         <div th:replace="fragments/adminFragments :: sideBar"></div>
         <!-- 메인 콘텐츠 -->
         <main class="flex-1 p-6 bg-gray-100">
-            <h1 class="text-2xl font-bold mb-4">회원 정보 수정</h1>
-            <form th:action="@{/admin/member/update}" th:object="${memberDTO}" method="post" class="space-y-4 bg-white p-6 rounded shadow-md" id="memberForm">
+            <h1 class="text-2xl font-bold mb-4">전문가 정보 수정</h1>
+            <form th:action="@{/admin/expert/update}" th:object="${expertDTO}" method="post" class="space-y-4 bg-white p-6 rounded shadow-md" id="memberForm">
         
                 <input type="hidden" th:field="*{id}" id="id"/>
                 <div>
@@ -43,22 +43,21 @@
                 </div>
         
                 <div>
-                    <label class="block mb-1 text-sm font-medium">가입 경로 (provider)</label>
-                    <input type="text" th:field="*{provider}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                    <label class="block mb-1 text-sm font-medium">전공</label>
+                    <input type="text" th:field="*{major}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                </div>
+                <div>
+                    <label class="block mb-1 text-sm font-medium">경력</label>
+                    <input type="text" th:field="*{career}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
                 </div>
         
-                <div>
-                    <label class="block mb-1 text-sm font-medium">총 포인트</label>
-                    <input type="text" th:field="*{totalPoint}" class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 cursor-not-allowed" disabled />
-                </div>
                 <div>
                     <label class="block mb-1 text-sm font-medium">가입 일자</label>
                     <input type="text"
-                        th:value="${#temporals.format(memberDTO.createdAt, 'yyyy년MM월dd일 HH시mm분')}"
+                        th:value="${#temporals.format(expertDTO.createdAt, 'yyyy년MM월dd일 HH시mm분')}"
                         class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 cursor-not-allowed" readonly disabled />
                 </div>
                 
-        
                 <div class="pt-4 flex flex-row justify-end">
                     <button type="button" onclick="showModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                         수정하기

@@ -19,29 +19,29 @@
         <div th:replace="fragments/adminFragments :: sideBar"></div>
         <div class="container mx-auto px-6 py-10">
             <h2>일반 사용자</h2>
-            <table class="w-full table-auto border text-center" id="member-table">
+            <table class="w-full table-auto border text-center" id="expert-table">
                 <thead>
                 <tr>
                     <th class="border px-4 py-2">id</th>
                     <th class="border px-4 py-2">이름</th>
                     <th class="border px-4 py-2">이메일</th>
                     <th class="border px-4 py-2">전화번호</th>
-                    <th class="border px-4 py-2">포인트</th>
+                    <th class="border px-4 py-2">전공</th>
                 </tr>
                 </thead>
                 <tbody id="table-body">
-                <tr th:each="member : ${result.dtoList}">
-                    <td class="border px-4 py-2" th:text="${member.id}">홍길동</td>
-                    <td class="border px-4 py-2" ><a th:href="@{/admin/member/{id}(id=${member.id})}" th:text="${member.name}" class="hover:underline"></a></td>
-                    <td class="border px-4 py-2" th:text="${member.email}">hong@test.com</td>
-                    <td class="border px-4 py-2" th:text="${member.phoneNumber}"></td>
-                    <td class="border px-4 py-2" ><a th:href="@{/admin/point(id=${member.id})}" class="hover:underline" th:text="${member.totalPoint == null ? 0 : member.totalPoint}"></a></td>
+                <tr th:each="expert : ${result.dtoList}">
+                    <td class="border px-4 py-2" th:text="${expert.id}">홍길동</td>
+                    <td class="border px-4 py-2" ><a th:href="@{/admin/expert/{id}(id=${expert.id})}" th:text="${expert.name}" class="hover:underline"></a></td>
+                    <td class="border px-4 py-2" th:text="${expert.email}">hong@test.com</td>
+                    <td class="border px-4 py-2" th:text="${expert.phoneNumber}"></td>
+                    <td class="border px-4 py-2" th:text="${expert.major}"></td>
                 </tr>
                 </tbody>
             </table>
             <div class="mt-4 flex justify-center gap-2" id="pagination">
                 <!-- ◀ 이전 페이지 이동 -->
-                <a th:href="${result.startPage - 1 > 0} ? @{/admin/member/all(page=${result.startPage - 1}, size=10, sort='createdAt', direction='desc')} : '#'"
+                <a th:href="${result.startPage - 1 > 0} ? @{/admin/expert/all(page=${result.startPage - 1}, size=10, sort='createdAt', direction='desc')} : '#'"
                    th:classappend="${result.startPage - 1 <= 0} ? 'pointer-events-none opacity-50' : ''"
                    class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
                     ◀

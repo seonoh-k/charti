@@ -5,6 +5,7 @@ import com.example.demo.repository.AddressRepository;
 import com.example.demo.service.BaseService;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.repository.MemberRepository;
+import com.example.demo.util.UserStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,14 @@ import java.util.List;
 @Slf4j
 public class MemberService extends BaseService<Member, MemberRepository> {
 
+
+    public Member dtoToEntity(MemberDTO memberDTO){
+        Member member = Member.builder()
+                .id(memberDTO.getId())
+                .totalPoint(memberDTO.getTotalPoint())
+                .build();
+        return member;
+    }
 
     public MemberService(MemberRepository memberRepository) {
         super(memberRepository);
@@ -31,6 +40,7 @@ public class MemberService extends BaseService<Member, MemberRepository> {
 //
 //        return list;
 //    }
+
 
 
 

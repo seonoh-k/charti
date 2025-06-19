@@ -53,7 +53,7 @@ public interface UserRepository extends JpaRepository<Users,Long> {
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_EXPERT " +
             " AND u.deleted = false" +
             " AND e.isApproved = false")
-    Page<Expert> getAllExpertUnApproved(Pageable pageable);
+    Page<Users> getAllExpertUnApproved(Pageable pageable);
 
     // 전문가 삭제 X 승인 O
     @Query("SELECT u FROM Users u " +
@@ -61,7 +61,7 @@ public interface UserRepository extends JpaRepository<Users,Long> {
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_EXPERT " +
             " AND u.deleted = false" +
             " AND e.isApproved = true")
-    Page<Expert> getAllExpertApproved(Pageable pageable);
+    Page<Users> getAllExpertApproved(Pageable pageable);
 
     // 전문가 삭제 O 승인 X
     @Query("SELECT u FROM Users u " +
@@ -69,7 +69,7 @@ public interface UserRepository extends JpaRepository<Users,Long> {
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_EXPERT " +
             " AND u.deleted = true" +
             " AND e.isApproved = false")
-    Page<Expert> getAllExpertDeletedAndUnApproved(Pageable pageable);
+    Page<Users> getAllExpertDeletedAndUnApproved(Pageable pageable);
 
     // 전문가 삭제 O 승인 O
     @Query("SELECT u FROM Users u " +
@@ -77,38 +77,40 @@ public interface UserRepository extends JpaRepository<Users,Long> {
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_EXPERT " +
             " AND u.deleted = true" +
             " AND e.isApproved = true")
-    Page<Expert> getAllExpertDeletedAndApproved(Pageable pageable);
+    Page<Users> getAllExpertDeletedAndApproved(Pageable pageable);
 
     // Manager
     // Manager 조회 (삭제 X) 승인과 관계 없이
     @Query("SELECT u FROM Users u JOIN u.manager e WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER AND u.deleted = false")
-    Page<Expert> getAllManager(Pageable pageable);
+    Page<Users> getAllManager(Pageable pageable);
     // Manager 조회 (삭제 O) 승인과 관계 없이
     @Query("SELECT u FROM Users u JOIN u.manager e WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER AND u.deleted = true")
-    Page<Expert> getAllManagerDeleted(Pageable pageable);
+    Page<Users> getAllManagerDeleted(Pageable pageable);
 
     // Manager 조회 (삭제 X 승인 X)
+    // Group은 안가져옴
     @Query("SELECT u FROM Users u " +
             " JOIN u.manager e " +
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER " +
             " AND u.deleted = false" +
             " AND e.isApproved = false")
-    Page<Manager> getAllManagerUnApproved(Pageable pageable);
+    Page<Users> getAllManagerUnApproved(Pageable pageable);
 
     // Manager 조회 (삭제 X 승인 O)
     @Query("SELECT u FROM Users u " +
-            " JOIN u.manager e " +
+            " JOIN u.manager m " +
+            " JOIN m.group " +
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER " +
             " AND u.deleted = false" +
-            " AND e.isApproved = true")
-    Page<Manager> getAllManagerApproved(Pageable pageable);
+            " AND m.isApproved = true")
+    Page<Users> getAllManagerApproved(Pageable pageable);
     // Manager 조회 (삭제 O 승인 X)
     @Query("SELECT u FROM Users u " +
             " JOIN u.manager e " +
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER " +
             " AND u.deleted = true" +
             " AND e.isApproved = false")
-    Page<Manager> getAllManagerDeletedAndUnApproved(Pageable pageable);
+    Page<Users> getAllManagerDeletedAndUnApproved(Pageable pageable);
 
     // Manager 조회 (삭제 O 승인 O)
     @Query("SELECT u FROM Users u " +
@@ -116,7 +118,7 @@ public interface UserRepository extends JpaRepository<Users,Long> {
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER " +
             " AND u.deleted = true" +
             " AND e.isApproved = true")
-    Page<Manager> getAllManagerDeletedAndApproved(Pageable pageable);
+    Page<Users> getAllManagerDeletedAndApproved(Pageable pageable);
 
 
 }

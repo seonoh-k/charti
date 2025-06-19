@@ -5,6 +5,8 @@ import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,6 +24,7 @@ public class UserDTO {
     private String provider;
     private String providerId;
     private String smsIdToken; // sms 인증
+    private LocalDateTime createdAt;
     private String phoneNumber;
 
         /**

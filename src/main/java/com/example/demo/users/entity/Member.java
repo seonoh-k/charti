@@ -13,6 +13,9 @@ import java.util.List;
 @Entity
 @Table(name = "member")
 @Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Member{
 
     @Id
