@@ -333,11 +333,6 @@ console.log(addressId)
             }
 
             if (response.ok) {
-              // 서버에서 반환한 메시지를 보여 줍니다.
-                // const msg = data && data.message ? data.message : '가입 완료';
-                // alert('회원가입 성공: ' + msg);
-
-                // window.location.href = /*[[@{/loginForm}]]*/ '/loginForm';
                 // 🔵 로딩 메시지를 완료 메시지로 변경
                 showSuccessModal("회원가입 완료!", () => {
                     window.location.href = "/loginForm";
@@ -345,7 +340,6 @@ console.log(addressId)
                 return;
 
             }    else if (data.code === "VF") {     // 🔴 유효성 검사 실패
-                // alert("회원가입 실패 : " + data.message);
 
                 const fieldName = data.fieldName;
                 console.log(data);

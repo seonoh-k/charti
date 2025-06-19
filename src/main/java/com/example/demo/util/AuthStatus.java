@@ -31,7 +31,13 @@ public enum AuthStatus implements StatusCode {
 
     MANAGER_ALREADY_EXISTS("MAE","해당 그룹 담당자가 이미 존재합니다"),
 
-    GROUP_NOT_FOUND("GNF","그룹을 찾을수 없습니다");
+    GROUP_NOT_FOUND("GNF","그룹을 찾을수 없습니다"),
+
+    USER_DELETED_SUCCESS("UDS","탈퇴 처리 완료"),
+
+    PASSWORD_CHANGE_SUCCESS("PCS","비밀번호 수정 완료"),
+
+    USER_DELETED("UD","탈퇴한 사용자입니다.");
 
     private String code;
     private String message;

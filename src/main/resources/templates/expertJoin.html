@@ -133,9 +133,9 @@
         <!-- 파일 업로드 필드 -->
         <div>
             <label>자격증 파일:
-                <input type="file" name="license" accept=".pdf,.jpg,.png" required>
+                <input type="file" name="license" accept=".jpg,.png" required>
             </label><br>
-        </div>      
+        </div>
 
         <div class="mt-6">
             <button type="submit"
@@ -331,37 +331,41 @@
             const fileInput = document.querySelector('input[name="license"]');
             const file = fileInput.files[0];  // 사용자가 선택한 자격증 파일
 
-            const expertJoinRequest = {
-            commonInfo: {
-                name,
-                username,
-                password,
-                nickname,
-                smsIdToken
-            },
-            addressInfo: {
-                addressId
-            },
-            expertInfo: {
-                major,
-                career
-            }
-        };
-        const formData = new FormData();
-
-        formData.append("data", new Blob(
-            [JSON.stringify(expertJoinRequest)],
-            { type: "application/json" }
-        ));
-
-        if (file) {
+            // FormData로 파일만 전송 → 업로드 API 호출
+            const formData = new FormData();
             formData.append("file", file);
-        }
 
-        const response = await fetch(joinURLv, {
-            method: "POST",
-            body: formData
-        });
+            const uploadRes = await fetch("/api/expert/join/license", {
+                method: "POST",
+                body: formData
+            });
+            const result = await uploadRes.json();
+            const license = "license/" + result.data;  // 예: license/abcd1234.png
+
+
+            const response = await fetch(joinURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': "application/json"
+                },
+                body: JSON.stringify({
+                    commonInfo: {
+                        name,
+                        username,
+                        password,
+                        nickname,
+                        smsIdToken
+                    },
+                    addressInfo: {
+                        addressId
+                    },
+                    expertInfo: {
+                        major,
+                        career,
+                        license
+                    }
+                })
+            });
 
 
 
