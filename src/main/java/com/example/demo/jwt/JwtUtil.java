@@ -87,12 +87,12 @@ public class JwtUtil {
     }
 
     /**
-     * JWT 토큰에서 사용자 정보를 추출하여 이메일을 반환한다.
+     * JWT 토큰에서 사용자 정보를 추출하여 uuid를 반환한다.
      *
      * @param token : 어플리케이션 서버에서 발급한 JWT 토큰을 의미한다.
-     * @return : username == email 이메일을 반환한다.
+     * @return : 파이어베이스 uid 를 반환한다.
      */
-    public String getUsername(String token) {
+    public String getUuid(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
@@ -182,11 +182,11 @@ public class JwtUtil {
      */
     public Authentication getAuthentication(String token) {
 
-        String username = getUsername(token); // JWT에서 username 추출
+        String uuid = getUuid(token); // JWT에서 username 추출
         String role = getRole(token);
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
         grantedAuthorities.add(new SimpleGrantedAuthority(role));
-        return new UsernamePasswordAuthenticationToken(username, null, grantedAuthorities);
+        return new UsernamePasswordAuthenticationToken(uuid, null, grantedAuthorities);
 
     }
 }

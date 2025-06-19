@@ -133,6 +133,42 @@ public class StorageAPIController {
 
         return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
     }
+    // 전문가 회원 자격증파일 업로드
+    @PostMapping("/api/expert/join/license")
+    public ResponseEntity<ApiResponse> uploadLicense(@RequestParam("file") MultipartFile file) throws IOException {
+        // 1. 파일 이름과 MIME 타입 가져오기
+        String originalFilename = file.getOriginalFilename();
+        String mimeType = file.getContentType();
+        List<String> allowedMimeTypes = List.of(
+                "application/pdf",
+                "image/jpeg",
+                "image/png"
+        );
+        if (!allowedMimeTypes.contains(mimeType)) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(GlobalStatus. TYPE_MISMATCH, "지원되지 않는 파일 형식입니다."));
+        }
+        String extension = originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase();
+
+        if (!List.of("pdf", "jpg", "jpeg", "png").contains(extension)) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(GlobalStatus.TYPE_MISMATCH, "허용되지 않는 확장자입니다."));
+        }
+        // 2. UUID_파일명 생성
+        String filename = UUID.randomUUID() + "_" + originalFilename;
+        // 3. byte[] → InputStream 변환
+        byte[] bytes = file.getBytes();
+        InputStream licenseInputStream = new ByteArrayInputStream(bytes);
+        // 4. Cloudflare R2 업로드
+        urlService.imageUpload("license/" + filename, licenseInputStream, mimeType);
+        // 5. 결과 반환 (파일명만 클라이언트로 보냄)
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK, filename));
+    }
+
+
+
 
     public String uploadImage(MultipartFile file) throws IOException {
 

@@ -8,6 +8,7 @@ import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.ExpertJoinRequest;
 import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
+import com.example.demo.dto.request.UserUpdateRequest;
 import com.example.demo.users.entity.*;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.ManagerRepository;
@@ -15,6 +16,9 @@ import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.UserStatus;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
@@ -258,13 +262,15 @@ public class UserService {
      * @return UserDTO: Member Entity객체를 변환하여 UserDTO객체로 반환한다.
      * @throws UserNotFoundException 해당하는 유저가 없는 경우 발생
      */
-    public UserDTO getMemberByEmail(String email){
-        Optional<Users> byUsername = userRepository.findByUsername(email);
-        if (byUsername.isPresent()){
-            return this.entityToDTO(byUsername.get());
-        } else{
-            throw new UserNotFoundException("유저가 없어요");
+    public UserDTO getMemberByEmail(String email) {
+        Users user = userRepository.findByUsername(email)
+                .orElseThrow(() -> new UserNotFoundException("유저가 없어요"));
+
+        if (user.isDeleted()) {
+            throw new IllegalStateException("탈퇴한 사용자입니다.");
         }
+
+        return this.entityToDTO(user);
     }
 
     /**
@@ -361,4 +367,85 @@ public class UserService {
         return userRepository.findByUuid(uuid)
                 .orElseThrow(() -> new UserNotFoundException("유저가 없어요 (uuid): " + uuid));
     }
+
+
+    /**
+     * UUID로 유저를 가져온다.
+     *
+     * @param request : 사용자가 입력한 수정 데이터
+     * @param uid : 접속중인 사용자 uid
+     * @throws FirebaseAuthException 파이어베이스  예외
+     */
+    @Transactional
+    public void updateUser(UserUpdateRequest request, String uid) throws FirebaseAuthException {
+        // 1. Firebase 업데이트
+        UserRecord.UpdateRequest firebaseReq = new UserRecord.UpdateRequest(uid)
+                .setDisplayName(request.getName())
+                .setPhoneNumber(request.getPhoneNumber());
+
+        FirebaseAuth.getInstance().updateUser(firebaseReq);
+
+        // 2. DB 업데이트
+        Users user = userRepository.findByUuid(uid).orElseThrow();
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+
+//        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+    /**
+     * UUID로 유저를 가져온다.
+     *
+     * @param currentPassword : 사용자가 입력한 현재 패스워드
+     * @param newPassword : 사용자가 입력한 새 패스워드
+     * @param confirmPassword : 사용자가 입력한 확인용 패스워드
+     * @param uid : 접속중인 사용자 uid
+     * @throws FirebaseAuthException 파이어베이스  예외
+     */
+    @Transactional
+    public void changePassword(String uid, String currentPassword, String newPassword, String confirmPassword) throws FirebaseAuthException {
+        Users user = userRepository.findByUuid(uid)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
+
+        // 현재 비밀번호 확인
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 기존 비밀번호와 새 비밀번호가 동일한지 확인
+        else if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new IllegalArgumentException("기존 비밀번호와 동일한 비밀번호로는 변경할 수 없습니다.");
+        }
+
+        // 새 비밀번호 확인
+       else if (!newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException("새 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 🔥 Firebase 비밀번호 변경
+        UserRecord.UpdateRequest request = new UserRecord.UpdateRequest(user.getUuid())
+                .setPassword(newPassword);
+        FirebaseAuth.getInstance().updateUser(request);
+
+
+        // 비밀번호 암호화 후 저장
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+
+    @Transactional
+    public void softDeleteUser(String uid) {
+        Users user = userRepository.findByUuid(uid)
+                .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다"));
+
+        // Soft delete 처리
+        user.markAsDeleted();
+        userRepository.save(user);
+
+        // ❗ Firebase 계정은 삭제하지 않고 유지 (선택적)
+    }
+
+
 }

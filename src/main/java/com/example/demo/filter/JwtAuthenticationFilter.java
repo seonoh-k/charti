@@ -1,6 +1,8 @@
 package com.example.demo.filter;
 
 import com.example.demo.jwt.JwtUtil;
+import com.example.demo.users.entity.Users;
+import com.example.demo.users.repository.UserRepository;
 import com.example.demo.util.AppURLs;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -15,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -32,6 +35,7 @@ import java.util.Map;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
     // 우리가 생성한 Jwt Token Name
     private static final String TOKEN_NAME = "token";
@@ -97,6 +101,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
 
             Authentication auth = jwtUtil.getAuthentication(token);
+
+            // 🔹 사용자 UID 추출 (토큰 구조에 따라 email도 가능)
+            String uuid = jwtUtil.getUuid(token);
+log.info("========================❌ ❌ ❌ ❌ ❌ ❌ 토큰에서 추출한 username  {}: ",uuid);
+            // 🔹 DB에서 사용자 조회
+            Users user = userRepository.findByUuid(uuid)
+                    .orElseThrow(() -> new UsernameNotFoundException("사용자 없음"));
+
+            // 🔒 삭제된 사용자 차단
+            if (user.isDeleted()) {
+                log.warn("❌ 탈퇴한 사용자 접근 차단: {}", uuid);
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "탈퇴한 사용자입니다.");
+                return;
+            }
 
             // 토큰에서 가져온 권한을 기반으로 ContextHolder에 저장한다.
             SecurityContextHolder.getContext().setAuthentication(auth);

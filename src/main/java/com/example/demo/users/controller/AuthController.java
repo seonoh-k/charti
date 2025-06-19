@@ -20,6 +20,7 @@ import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.MemberRepository;
+import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.FirebaseService;
 import com.example.demo.users.service.UserService;
@@ -63,6 +64,7 @@ public class AuthController {
     private final AddressService addressService;  // 그룹 주소 검색 을 위해 임시사용
     private final GroupRepository groupRepository;  // 그룹 검색 을 위해 임시사용
     private final ManagerRepository managerRepository;  // 그룹중복 검사를  위해 임시사용
+    private final UserRepository userRepository;  // 그룹중복 검사를  위해 임시사용
 
     /**
      * 로그인 Users 테이블에 있는 데이터로 검사를 진행한다.
@@ -87,7 +89,12 @@ public class AuthController {
                     .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                     .body(new ApiResponse(AuthStatus.AUTHENTICATION_SUCCESS));
 
-        } catch (JwtTokenNotFoundException jwtTokenNotFoundException){
+        } catch (IllegalStateException e) {
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiResponse(AuthStatus.USER_DELETED));
+
+        }catch (JwtTokenNotFoundException jwtTokenNotFoundException){
 
             jwtTokenNotFoundException.printStackTrace();
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -290,6 +297,7 @@ public class AuthController {
             log.info("[POST] 🎈 expertJoinRequest 전문가인포에 주소가? '{}' :  ",expertJoinRequest.getExpertInfo().getAddressId());
             log.info("[POST] 🎈 expertJoinRequest 전공 '{}' :  ",expertJoinRequest.getExpertInfo().getMajor());
             log.info("[POST] 🎈 expertJoinRequest 경력사항 '{}' :  ",expertJoinRequest.getExpertInfo().getCareer());
+            log.info("[POST] 🎈 expertJoinRequest 자격증파일 이름 '{}' :  ",expertJoinRequest.getExpertInfo().getLicense());
 
             // 공통 정보 인포
             CommonInfo commonInfo = expertJoinRequest.getCommonInfo();

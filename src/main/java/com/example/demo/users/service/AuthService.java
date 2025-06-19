@@ -135,9 +135,7 @@ public class AuthService {
         expert.setAddress(address);
         expert.setMajor(expertInfo.getMajor());
         expert.setCareer(expertInfo.getCareer());
-
-
-
+        expert.setLicense(expertInfo.getLicense());
 
         expertRepository.save(expert);
         return AuthStatus.EXPERT_JOIN_REQUEST_SUCCESS;
