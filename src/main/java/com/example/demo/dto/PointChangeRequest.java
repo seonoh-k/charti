@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.enums.PointType;
 import jakarta.validation.constraints.*;
 
 import lombok.Getter;
@@ -18,4 +19,6 @@ public class PointChangeRequest {
 
     @NotBlank(message = "포인트 변경 사유를 입력하세요.")
     private String description;
+
+    private PointType pointType; // enum 기반으로 추가
 }
