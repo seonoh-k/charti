@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -74,7 +75,7 @@ public class PresignedUrlService {
     public URL presignedDownloadUrl(String filename) {
 
         // 업로드 할때 붙여준 UUID 잘라내기
-        int index = filename.lastIndexOf("_");
+        int index = filename.indexOf("_");
         String originalFilename = filename.substring(index + 1);
 
         GetObjectRequest objectRequest = GetObjectRequest.builder()
@@ -103,6 +104,16 @@ public class PresignedUrlService {
                 .getObjectRequest(objectRequest).build();
 
         return presigner.presignGetObject(presignRequest).url();
+    }
+
+    // 스토리지에서 파일 삭제
+    public void deleteFile(String filename) {
+        DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(filename)
+                .build();
+
+        s3Client.deleteObject(deleteRequest);
     }
 
 }

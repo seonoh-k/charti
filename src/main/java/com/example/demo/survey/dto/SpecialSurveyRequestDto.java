@@ -8,6 +8,8 @@ import java.util.List;
 @Getter
 @Setter
 public class SpecialSurveyRequestDto {
-    private String ageGroup;
-    private List<Integer> answers;
+    private Long childId;       // 추가: 자녀 ID
+    private String ageGroup;    // 연령대
+    private String category; // 대상 그룹
+    private List<Integer> answers; // 문항별 응답 값(1~5)
 }

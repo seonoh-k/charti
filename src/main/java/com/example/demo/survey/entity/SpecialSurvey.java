@@ -31,11 +31,9 @@ public class SpecialSurvey extends BaseEntity implements BaseSurvey{
     @Column(name = "age_group", nullable = false)
     private AgeGroup ageGroup;
 
-
     @Column(nullable = false)
     private String question;
 
-    @Convert(converter = com.example.demo.converter.SurveyCategoryConverter.class)
     @Column(nullable = false)
     private SurveyCategory category;
 
@@ -43,10 +41,8 @@ public class SpecialSurvey extends BaseEntity implements BaseSurvey{
     @JsonIgnore
     private List<SurveySet> surveySets = new ArrayList<>();
 
-
     @Column(nullable = false)
     private int weight;
-
 
     @Column(nullable = false)
     private String answer1;

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
@@ -20,4 +21,7 @@ public class DailyAnswerDto {
     private String         answer;
     private Integer         weight;
     private LocalDateTime  createdAt;
+
+    private List<String> possibleAnswers;  // survey.answer1~answer5
+    private Integer        selectedValue;    // 1~5 중 현재 답변
 }

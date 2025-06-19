@@ -1,7 +1,6 @@
     <form id="album-form">
         <input type="text" name="title" id="title" placeholder="제목 입력">
         <input type="file" name="file" id="fileInput" accept="image/*">
-        <input type="hidden" name="id" id="id" value="50">
         <button type="submit" id="formBtn">앨범 썸네일 업로드</button>
     </form>
     <div id="result"></div>
@@ -14,7 +13,6 @@
         const file = fileInput.files[0];
         const result = document.querySelector("#result");
 
-        const id = document.querySelector("#id").value;
         const title = document.querySelector("#title").value;
 
         if(!file) {
@@ -23,7 +21,6 @@
         }
 
         const formData = new FormData();
-        formData.append("id", id);
         formData.append("title", title);
         formData.append("file", file);
 

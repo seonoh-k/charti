@@ -29,7 +29,8 @@ public class AppURLs {
             "/joinExpert/list",
             "/favicon.ico",
             "/api/address/search",
-            "/api/group/search"
+            "/api/group/search",
+            "/api/expert/join/license",
 
 
     };
