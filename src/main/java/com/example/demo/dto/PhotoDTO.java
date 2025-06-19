@@ -1,6 +1,7 @@
 package com.example.demo.dto;
 
 import com.example.demo.entity.Photo;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.time.format.DateTimeFormatter;
@@ -9,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 public class PhotoDTO {
     private Long id;
     private String filename;
+    @JsonProperty("isPublic")
     private boolean isPublic;
     private String createdAt;
 

@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.PhotoDTO;
 import com.example.demo.dto.UrlResponse;
+import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.entity.Album;
 import com.example.demo.entity.Photo;
@@ -9,6 +10,7 @@ import com.example.demo.service.AlbumService;
 import com.example.demo.service.PhotoService;
 import com.example.demo.service.PresignedUrlService;
 import com.example.demo.users.entity.Member;
+import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.MemberService;
 import com.example.demo.util.GlobalStatus;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ import java.util.UUID;
 @Slf4j
 public class StorageAPIController {
 
+    private final AuthService authService;
     private final PresignedUrlService urlService;
     private final AlbumService albumService;
     private final PhotoService photoService;
@@ -59,8 +62,8 @@ public class StorageAPIController {
         return ResponseEntity.ok(new UrlResponse(presignedUrl.toString(), filename));
     }
 
-    @GetMapping("/api/file/download/{filename}")
-    public ResponseEntity<UrlResponse> downloadFile(@PathVariable("filename") String filename) throws IOException {
+    @GetMapping("/api/file/download")
+    public ResponseEntity<UrlResponse> downloadFile(@RequestParam("filename") String filename) throws IOException {
 
         URL presignedUrl = urlService.presignedDownloadUrl(filename);
 
@@ -84,14 +87,14 @@ public class StorageAPIController {
 
     // 앨범 생성
     @PostMapping("/api/album-create")
-    public ResponseEntity<ApiResponse> createAlbum(@RequestParam("id") Long id,
-                                                   @RequestParam("file") MultipartFile file,
+    public ResponseEntity<ApiResponse> createAlbum(@RequestParam("file") MultipartFile file,
                                                    @RequestParam("title") String title) throws IOException {
 
         String filename = uploadImage(file);
 
+        UserDTO userDTO = authService.getLoginUser();
         // 멤버 조회
-        Member member = memberService.get(id);
+        Member member = memberService.get(userDTO.getId());
         // 앨범 생성
         Album album = new Album();
         album.setMember(member);
@@ -109,12 +112,15 @@ public class StorageAPIController {
     // 앨범 내 사진 리스트 조회
     @GetMapping("/api/album/{id}")
     public ResponseEntity<List<PhotoDTO>> getAlbumDetail(@PathVariable("id") Long id) {
+        UserDTO userDTO = authService.getLoginUser();
         Album album = albumService.get(id);
         List<PhotoDTO> photoList = new ArrayList<>();
 
+
         for(Photo photo : album.getPhotos()) {
-            PhotoDTO photoDTO = new PhotoDTO(photo);
-            photoList.add(photoDTO);
+            if(album.getMember().getId().equals(userDTO.getId()) || photo.getIsPublic()){
+                photoList.add(new PhotoDTO(photo));
+            }
         }
 
         return ResponseEntity.ok(photoList);
@@ -165,6 +171,46 @@ public class StorageAPIController {
         Album album = albumService.get(id);
         album.setIsPublic(isPublic);
         albumService.update(album);
+
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
+    }
+
+    @PostMapping("/api/photo/visibility")
+    public ResponseEntity<ApiResponse> updatePhotoVisibility(@RequestParam("id") Long id,
+                                                             @RequestParam("isPublic") boolean isPublic) {
+        Photo photo = photoService.get(id);
+        photo.setIsPublic(isPublic);
+        photoService.update(photo);
+
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
+    }
+
+    @GetMapping("/api/album/delete")
+    public ResponseEntity<ApiResponse> deleteAlbum(@RequestParam("id") Long id) {
+        Album album = albumService.get(id);
+        List<Photo> photos = album.getPhotos();
+
+        for(Photo photo : photos) {
+            urlService.deleteFile("original/" + photo.getFileName());
+            urlService.deleteFile("thumbnail/" + photo.getFileName());
+        }
+
+        urlService.deleteFile("original/" + album.getThumbnail());
+        urlService.deleteFile("thumbnail/" + album.getThumbnail());
+
+        albumService.delete(id);
+
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
+    }
+
+    @GetMapping("/api/photo/delete")
+    public ResponseEntity<ApiResponse> deletePhoto(@RequestParam("id") Long id) {
+        Photo photo = photoService.get(id);
+
+        urlService.deleteFile("original/" + photo.getFileName());
+        urlService.deleteFile("thumbnail/" + photo.getFileName());
+
+        photoService.delete(id);
 
         return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
     }

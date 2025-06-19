@@ -11,19 +11,24 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
 <th:block layout:fragment="content">
-    <div class="max-w-5xl mx-auto p-6 space-y-6">
+    <div class="max-w-5xl mx-auto p-6" :class="{ 'space-y-6': !modalIsOpen }">
         <div class="relative p-4 mb-6">
 
-            <label class="absolute top-0 right-0 m-3 inline-flex items-center cursor-pointer space-x-4">
-                <span th:text="${album.isPublic} ? '공개' : '비공개'" id="isPublic" class="text-md text-gray-400"></span>
-                <input type="checkbox" id="publicToggle" value="" class="sr-only peer" th:checked="${album.isPublic}">
-                <div class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700
-                    peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
-                    peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
-                    after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
-                    after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600
-                    dark:peer-checked:bg-blue-600"></div>
-            </label>
+            <div th:if="${isOwner}" class="absolute top-0 right-0 m-3 inline-flex items-center space-x-4">
+                <label class="inline-flex items-center cursor-pointer space-x-4">
+                    <span th:text="${album.isPublic} ? '공개' : '비공개'" id="isPublic" class="text-md text-gray-400"></span>
+                    <input type="checkbox" id="publicToggle" value="" class="sr-only peer" th:checked="${album.isPublic}">
+                    <div class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700
+                        peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
+                        peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
+                        after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
+                        after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600
+                        dark:peer-checked:bg-blue-600"></div>
+                </label>
+                <button id="albumDeleteBtn" class="text-gray-500 text-2xl hover:text-gray-300">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
 
             <div class="flex items-center gap-4">
                 <img th:src="${url}" th:alt="${album.thumbnail}"
@@ -33,7 +38,7 @@
                     class="text-gray-400"></span>
             </div>
 
-            <div class="absolute bottom-0 right-0 flex items-center gap-2 p-2">
+            <div th:if="${isOwner}" class="absolute bottom-0 right-0 flex items-center gap-2 p-2">
                 <div id="result" class="text-center text-sm mt-2"></div>
                 <form id="photoForm" class="flex justify-end">
                     <label class="cursor-pointer inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow">
@@ -51,31 +56,37 @@
                 <div th:each="photo, idx : ${photoList}" class="w-full aspect-square overflow-hidden rounded-lg shadow bg-white">
                     <img th:src="@{/api/proxy/image(filename='thumbnail/' + ${photo.filename})}"
                          th:alt="${photo.filename}" loading="lazy"
-                         th:attr="data-isPublic=${photo.isPublic}, data-createdAt=${photo.createdAt}, data-idx=${idx}"
+                         th:attr="data-photoId=${photo.id}, data-isPublic=${photo.isPublic}, data-createdAt=${photo.createdAt}, data-idx=${idx}"
                          class="modal-trigger w-full h-full object-cover transition-transform duration-300 hover:scale-105">
                 </div>
             </div>
         </div>
 
         <!-- 원본 이미지 파일을 보기위한 모달창 -->
-        <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
-            <div class="relative max-w-4xl max-h-[10vh] flex items-center">
-                <label class="absolute top-1 right-5 m-3 inline-flex items-center cursor-pointer space-x-4">
-                    <span id="modalPublicStatus" class="text-md text-gray-400"></span>
-                    <input type="checkbox" id="modalToggle" value="" class="sr-only peer">
-                    <div class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700
-                    peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
-                    peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
-                    after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
-                    after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600
-                    dark:peer-checked:bg-blue-600"></div>
-                </label>
-                <button id="modalClose" class="absolute top-1 right-3 text-gray-600 text-2xl font-bold hover:text-gray-300">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
+        <div id="modal" class="fixed inset-0 pt-5 bg-black bg-opacity-70 flex justify-center items-center hidden z-50">
             <div class="relative max-w-4xl max-h-[90vh] flex items-center">
-                <button id="modalPrev" class="p-2 mr-2 hover:bg-gray-500 rounded-lg text-white text-4xl">
+                <div class="absolute -top-10 right-11 z-50 p-1 rounded-lg flex items-center gap-4">
+                    <label th:if="${isOwner}" class="inline-flex items-center cursor-pointer space-x-4">
+                        <span id="modalPublicStatus" class="text-sm text-gray-200"></span>
+                        <input type="checkbox" id="modalToggle" value="" class="sr-only peer">
+                        <div class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700
+                        peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
+                        peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
+                        after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
+                        after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600
+                        dark:peer-checked:bg-blue-600"></div>
+                    </label>
+                    <button id="photoDownloadBtn" class="text-gray-200 text-lg hover:text-gray-500">
+                        <i class="fa-solid fa-file-arrow-down"></i>
+                    </button>
+                    <button th:if="${isOwner}" id="photoDeleteBtn" class="text-gray-200 text-lg hover:text-gray-500">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <button id="modalClose" class="text-gray-200 text-2xl hover:text-gray-500">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <button id="modalPrev" class="p-2 mr-2 hover:bg-gray-500 rounded-lg text-white text-4xl hover:text-gray-700">
                     <i class="fa-solid fa-angle-left"></i>
                 </button>
 
@@ -83,7 +94,7 @@
                     <img id="modalImage" src="" alt="" class="max-w-full max-h-[90vh] rounded" />
                 </div>
 
-                <button id="modalNext" class="p-2 ml-2 hover:bg-gray-500 rounded-lg text-white text-4xl">
+                <button id="modalNext" class="p-2 ml-2 hover:bg-gray-500 rounded-lg text-white text-4xl hover:text-gray-700">
                     <i class="fa-solid fa-angle-right"></i>
                 </button>
             </div>
@@ -91,6 +102,8 @@
 
     </div>
     <script th:inline="javascript">
+
+        const isOwner = [[${isOwner}]];
 
         // 모달 변수
         const modal = document.querySelector("#modal");
@@ -105,89 +118,136 @@
         const proxyUrl = "/api/proxy/image?filename=";
 
         document.addEventListener("DOMContentLoaded", () => {
-            const id = [[${id}]];
+            const id = [[${album.id}]];
 
             const fileInput = document.querySelector("#fileInput");
             const result = document.querySelector("#result");
 
-            fileInput.addEventListener("change", async () => {
-            
-                const file = fileInput.files[0];
+            if(isOwner) {
+                fileInput.addEventListener("change", async () => {
 
-                if(!file) {
-                    alert("업로드할 파일을 선택해주세요");
-                    return;
-                }
+                    const file = fileInput.files[0];
 
-                const formData = new FormData();
-                formData.append("id", id);
-                formData.append("file", file);
+                    if (!file) {
+                        alert("업로드할 파일을 선택해주세요");
+                        return;
+                    }
 
-                const res = await fetch("/api/album/photo/upload", {
-                    method: 'POST',
-                    body: formData
+                    const formData = new FormData();
+                    formData.append("id", id);
+                    formData.append("file", file);
+
+                    const res = await fetch("/api/album/photo/upload", {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (res.ok) {
+                        loadPhotos(id);
+                    } else {
+                        result.innerHTML = `<p class="text-red-600 font-semibold">Upload Fail!</p>`;
+                    }
+
+                })
+
+                document.querySelector("#publicToggle").addEventListener("change", async (e) => {
+                    const isChecked = e.target.checked;
+
+                    const formData = new FormData();
+                    formData.append("id", id);
+                    formData.append("isPublic", isChecked);
+
+                    const res = await fetch("/api/album/visibility", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (res.ok) {
+                        document.querySelector("#isPublic").textContent = isChecked ? "공개" : "비공개";
+                    } else {
+                        e.target.checked = !isChecked;
+                        alert("공개 설정 변경에 실패했습니다.");
+                    }
+                })
+
+                modalToggle.addEventListener("change", async (e) => {
+                    const isChecked = e.target.checked;
+                    const photoId = modalImage.dataset.photoid;
+
+                    const formData = new FormData();
+                    formData.append("id", photoId);
+                    formData.append("isPublic", isChecked);
+
+                    const res = await fetch("/api/photo/visibility", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (res.ok) {
+                        modalPublicStatus.textContent = isChecked ? "공개" : "비공개";
+                    } else {
+                        e.target.checked = !isChecked;
+                        alert("공개 설정 변경에 실패했습니다.");
+                    }
+
+                })
+
+                document.querySelector("#albumDeleteBtn").addEventListener("click", async () => {
+
+                    const res = await fetch(`/api/album/delete?id=${id}`);
+
+                    if(res.ok) {
+                        window.location.href = "/albums";
+                    }
                 });
 
-                if(res.ok) {
-                    loadPhotos(id);
-                }else {
-                    result.innerHTML = `<p class="text-red-600 font-semibold">Upload Fail!</p>`;
-                }
+                document.querySelector("#photoDeleteBtn").addEventListener("click", async () => {
 
-            })
+                    const photoId = modalImage.dataset.photoid;
+                    const res = await fetch(`/api/photo/delete?id=${photoId}`);
 
-            document.querySelector("#publicToggle").addEventListener("change", async (e) => {
-                const isChecked = e.target.checked;
-
-                const formData = new FormData();
-                formData.append("id", id);
-                formData.append("isPublic", isChecked);
-
-                const res = await fetch("/api/album/visibility", {
-                    method: "POST",
-                    body: formData
-                });
-
-                if(res.ok) {
-                    document.querySelector("#isPublic").textContent = isChecked ? "공개" : "비공개";
-                }else {
-                    e.target.checked = !isChecked;
-                    alert("공개 설정 변경에 실패했습니다.");
-                }
-            })
-
-            modalToggle.addEventListener("change", async (e) => {
-                const isChecked = e.target.checked;
-                const filename = photo.id;
-
-                const formData = new FormData();
-                formData.append("id", id);
-                formData.append("isPublic", isChecked);
-
-                const res = await fetch("/api/album/visibility", {
-                    method: "POST",
-                    body: formData
-                });
-
-                if(res.ok) {
-                    document.querySelector("#isPublic").textContent = isChecked ? "공개" : "비공개";
-                }else {
-                    e.target.checked = !isChecked;
-                    alert("공개 설정 변경에 실패했습니다.");
-                }
-            })
-
+                    if(res.ok) {
+                        closeModal();
+                        loadPhotos(id);
+                    }
+                })
+            }
             document.querySelectorAll(".modal-trigger").forEach((img, index) => {
+                const photoId = img.dataset.photoid;
                 const filename = img.alt;
-                const isPublic = img.dataset.ispublic === 'true';
+                const isPublic = img.dataset.ispublic;
                 const createdAt = img.dataset.createdat;
 
-                photos.push({filename, isPublic, createdAt});
+                photos.push({photoId, filename, isPublic, createdAt});
 
                 img.addEventListener("click", () => {
                     currentIndex = index;
                     openModal();
                 })
+            })
+
+            document.querySelector("#photoDownloadBtn").addEventListener("click", async () => {
+
+                const filename = modalImage.alt;
+                const res = await fetch(`/api/file/download?filename=original/${encodeURIComponent(filename)}`);
+                if(!res.ok) {
+                    alert("server error");
+                    return;
+                }
+
+                const data = await res.json();
+                const downloadUrl = data.url;
+                if(!downloadUrl) {
+                    alert("Not Found URL");
+                    return;
+                }
+
+                const a = document.createElement("a");
+                a.href = downloadUrl;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
             })
         })
 
@@ -204,11 +264,11 @@
                 wrapper.className = "w-full aspect-square overflow-hidden rounded-lg shadow bg-white";
 
                 const img = document.createElement("img");
-                img.src = `${proxyUrl}+thumbnail/${encodeURIComponent(photo.filename)}`;
+                img.src = `${proxyUrl}thumbnail/${encodeURIComponent(photo.filename)}`;
                 img.alt = photo.filename;
                 img.dataset.ispublic = photo.isPublic;
                 img.dataset.createdat = photo.createdAt;
-                img.dataset.photoId = photo.id;
+                img.dataset.photoid = photo.id;
                 img.className = "modal-trigger w-full h-full object-cover transition-transform duration-300 hover:scale-105";
 
                 wrapper.appendChild(img);
@@ -216,23 +276,34 @@
 
                 // 모달용 배열에 추가
                 photos.push({
+                    photoId: photo.id,
                     filename: photo.filename,
                     isPublic: photo.isPublic,
                     createdAt: photo.createdAt
                 });
 
                 img.addEventListener("click", () => {
-                    currentIndex = photos.length;
+                    currentIndex = idx;
                     openModal();
                 });
             });
         }
 
         function openModal() {
-            modalImage.src = proxyUrl + "original/" + encodeURIComponent(photos[currentIndex].filename);
-            modalImage.alt = photos[currentIndex].filename;
-            modalPublicStatus.textContent = photos[currentIndex].isPublic ? '공개' : '비공개';
-            modalToggle.checked = photos[currentIndex].isPublic;
+            const currentPhoto = photos[currentIndex];
+
+            if(!currentPhoto) {
+                alert("존재하지 않는 사진입니다")
+                return;
+            }
+
+            modalImage.src = proxyUrl + "original/" + encodeURIComponent(currentPhoto.filename);
+            modalImage.alt = currentPhoto.filename;
+            modalImage.dataset.photoid = currentPhoto.photoId;
+            if(isOwner) {
+                modalToggle.checked = currentPhoto.isPublic;
+                modalPublicStatus.textContent = modalToggle.checked ? '공개' : '비공개';
+            }
             modal.classList.remove("hidden");
         }    
     
@@ -245,13 +316,41 @@
         function showNext() {
             if (photos.length === 0) return;
             currentIndex = (currentIndex + 1) % photos.length;
-            modalImage.src = proxyUrl + "original/" + encodeURIComponent(photos[currentIndex].filename);
+
+            const currentPhoto = photos[currentIndex];
+
+            if(!currentPhoto) {
+                alert("존재하지 않는 사진입니다")
+                return;
+            }
+
+            modalImage.src = proxyUrl + "original/" + encodeURIComponent(currentPhoto.filename);
+            modalImage.alt = currentPhoto.filename;
+            modalImage.dataset.photoid = currentPhoto.photoId;
+            if(isOwner) {
+                modalToggle.checked = currentPhoto.isPublic;
+                modalPublicStatus.textContent = modalToggle.checked ? '공개' : '비공개';
+            }
         }
 
         function showPrev() {
             if (photos.length === 0) return;
             currentIndex = (currentIndex - 1 + photos.length) % photos.length;
-            modalImage.src = proxyUrl + "original/" + encodeURIComponent(photos[currentIndex].filename);
+
+            const currentPhoto = photos[currentIndex];
+
+            if(!currentPhoto) {
+                alert("존재하지 않는 사진입니다")
+                return;
+            }
+
+            modalImage.src = proxyUrl + "original/" + encodeURIComponent(currentPhoto.filename);
+            modalImage.alt = currentPhoto.filename;
+            modalImage.dataset.photoid = currentPhoto.photoId;
+            if(isOwner) {
+                modalToggle.checked = currentPhoto.isPublic;
+                modalPublicStatus.textContent = modalToggle.checked ? '공개' : '비공개';
+            }
         }
 
         document.querySelector("#modalClose").addEventListener("click", closeModal);
