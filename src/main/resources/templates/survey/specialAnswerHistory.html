@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>특별 문진 이력</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-4xl mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-6">특별 문진 이력</h1>
+
+        <!-- 자녀 선택 -->
+        <div class="mb-4">
+            <label class="font-semibold">자녀:</label>
+            <select id="childSelect" class="border p-2 rounded w-64">
+                <option value="" disabled selected>자녀를 선택하세요</option>
+                <option th:each="c : ${children}"
+                        th:value="${c.id}"
+                        th:text="${c.name + ' (' + c.nickname + ')'}"/>
+            </select>
+        </div>
+
+        <!-- 이력 리스트 -->
+        <div id="answerList" class="space-y-4"></div>
+    </div>
+
+    <!-- 수정 모달 (Daily와 동일) -->
+    <div id="editModal"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded shadow-xl w-full max-w-lg">
+            <h2 class="text-xl font-bold mb-4">답변 수정</h2>
+            <div id="modalOptions" class="space-y-2 mb-4"></div>
+            <div class="flex justify-end gap-4">
+                <button id="cancelEdit"
+                        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">취소</button>
+                <button id="saveEdit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let historyData = [];
+        let currentId   = null;
+
+        document.getElementById('childSelect').addEventListener('change', () => {
+          const childId = +document.getElementById('childSelect').value;
+          const list    = document.getElementById('answerList');
+          if (!childId) { list.innerHTML = ''; return; }
+
+          fetch(`/specialAnswer/api/history/${childId}`)
+            .then(r => r.json())
+            .then(data => {
+              historyData = data;
+              list.innerHTML = data.length
+                ? renderHistory(data)
+                : `<p class="text-gray-500">답변 이력이 없습니다.</p>`;
+            });
+        });
+
+        function renderHistory(data) {
+          const byDate = data.reduce((acc,a) => {
+            const d = a.createdAt.substring(0,10);
+            (acc[d] = acc[d]||[]).push(a);
+            return acc;
+          }, {});
+          let html = '';
+          Object.keys(byDate)
+            .sort((a,b)=>new Date(b)-new Date(a))
+            .forEach(date => {
+              html += `<div class="border rounded mb-4">
+                         <button class="w-full text-left px-4 py-2 bg-blue-100 font-semibold">
+                           ${date} 문진 답변
+                         </button>
+                         <div class="hidden p-4 space-y-4 bg-gray-50">`;
+              byDate[date].forEach((ans,i) => {
+                html += `<div class="flex justify-between border p-3 rounded">
+                           <div>
+                             <p class="font-semibold">
+                               ${i+1}. [${ans.category}] ${ans.question}
+                             </p>
+                             <p class="text-sm text-gray-700" id="answerText_${ans.id}">
+                               ${ans.answer}
+                             </p>
+                             <p class="text-xs text-gray-500">가중치: ${ans.weight}</p>
+                           </div>
+                           <div class="flex flex-col gap-2 justify-center">
+                             <button onclick="openEdit(${ans.id})"
+                                     class="text-blue-600 hover:underline text-sm">수정</button>
+                             <button onclick="deleteAns(${ans.id})"
+                                     class="text-red-600 hover:underline text-sm">삭제</button>
+                           </div>
+                         </div>`;
+              });
+              html += `  </div>
+                       </div>`;
+            });
+          return html;
+        }
+
+        function deleteAns(id) {
+          if (!confirm('정말 삭제하시겠습니까?')) return;
+          fetch(`/specialAnswer/api/answer/${id}`, { method:'DELETE' })
+            .then(r=> r.ok && document.getElementById('childSelect').dispatchEvent(new Event('change')));
+        }
+
+        function openEdit(id) {
+          currentId = id;
+          const dto = historyData.find(a=>a.id===id);
+          const opts = document.getElementById('modalOptions');
+          opts.innerHTML = '';
+          dto.possibleAnswers.forEach((txt,i) => {
+            const v = i+1;
+            opts.insertAdjacentHTML('beforeend', `
+              <label class="flex items-center gap-2">
+                <input type="radio" name="editAnswer" value="${v}"
+                  ${dto.selectedValue === v ? 'checked' : ''}/>
+                ${txt}
+              </label>`);
+          });
+          document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        document.getElementById('cancelEdit').onclick = () =>
+          document.getElementById('editModal').classList.add('hidden');
+
+        document.getElementById('saveEdit').onclick = () => {
+          const sel = +document.querySelector('input[name="editAnswer"]:checked')?.value;
+          if (!sel) return alert('답변을 선택해주세요');
+          fetch(`/specialAnswer/api/answer/${currentId}`, {
+            method:'PUT',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ answerValue: sel })
+          })
+          .then(r=>{
+            if (r.ok) {
+              alert('수정되었습니다.');
+              document.getElementById('editModal').classList.add('hidden');
+              document.getElementById('childSelect').dispatchEvent(new Event('change'));
+            }
+          });
+        };
+    </script>
+</th:block>
+</html>

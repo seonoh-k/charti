@@ -1,8 +1,11 @@
 package com.example.demo.survey.controller;
 
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.dto.SpecialSurveyRequestDto;
 import com.example.demo.survey.dto.SpecialSurveyResponseDto;
 import com.example.demo.survey.entity.SpecialSurvey;
+import com.example.demo.survey.service.SpecialAnswerService;
 import com.example.demo.survey.service.SpecialSurveyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +20,15 @@ import java.util.Map;
 public class SpecialSurveyController {
 
     private final SpecialSurveyService specialSurveyService;
+    private final SpecialAnswerService specialAnswerService;
 
     // 1. 연령대 기준 조회
     @GetMapping("/by-age/{ageGroup}")
-    public List<SpecialSurveyResponseDto> getByAgeGroup(@PathVariable String ageGroup) {
+    public List<SpecialSurveyResponseDto> getSurveysByAgeGroup(@PathVariable String ageGroup) {
         return specialSurveyService.getByAgeGroup(ageGroup);
     }
 
-    // 2. 카테고리 기준 조회
+    // 3. 문항 카테고리별 조회
     @GetMapping
     public List<SpecialSurveyResponseDto> getSurveysByCategory(@RequestParam(required = false) String category) {
         if (category == null || category.isBlank()) {
@@ -33,14 +37,14 @@ public class SpecialSurveyController {
         return specialSurveyService.getBySurveyCategory(category);
     }
 
-    // 3. 설문 등록
+    // 4. 신규 문항 생성 (surveySetId 파라미터로 받음)
     @PostMapping
     public String createSurvey(@RequestBody SpecialSurvey dto, @RequestParam Long surveySetId) {
         specialSurveyService.create(dto, surveySetId);
         return "생성 완료";
     }
 
-    // 4. 설문 수정
+    // 5. 기존 문항 수정
     @PutMapping("/{id}")
     public String updateSurvey(@PathVariable Long id, @RequestBody SpecialSurvey dto) {
         dto.setId(id);
@@ -48,16 +52,26 @@ public class SpecialSurveyController {
         return "수정 완료";
     }
 
-    // 5. 설문 삭제
+    // 6. 문항 삭제
     @DeleteMapping("/{id}")
     public String deleteSurvey(@PathVariable Long id) {
         specialSurveyService.delete(id);
         return "삭제 완료";
     }
 
-    // 6. 문항 답변 제출
+    // 7. 문항 답변 제출
     @PostMapping("/submit")
-    public Map<String, Object> submitSurvey(@RequestBody SpecialSurveyRequestDto dto) {
-        return specialSurveyService.evaluate(dto);
+    public ResponseEntity<Map<String,Object>> submitAndSave(
+            @RequestBody SpecialSurveyRequestDto dto) {
+        // 저장
+        specialAnswerService.saveAnswers(
+                dto.getChildId(),
+                AgeGroup.fromValue(dto.getAgeGroup()),
+                SurveyCategory.fromValue(dto.getCategory()),
+                dto.getAnswers()
+        );
+        // 평가
+        Map<String,Object> result = specialSurveyService.evaluate(dto);
+        return ResponseEntity.ok(result);
     }
 }

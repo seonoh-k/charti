@@ -91,18 +91,41 @@ public class GroupSurveyService {
     }
 
     @Transactional
-    public Map<String, Object> evaluate(GroupSurveyRequestDto dto) {
+    public Map<String,Object> evaluate(GroupSurveyRequestDto dto) {
         AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
-        List<GroupSurvey> surveys = groupSurveyRepository.findByAgeGroupAndDeletedFalse(ag);
+        String tgt = dto.getTargetGroup();
+        boolean allTargets = (tgt == null || tgt.isBlank() || "all".equalsIgnoreCase(tgt));
+        TargetGroup tg = allTargets
+                ? null
+                : TargetGroup.fromValue(tgt);
 
+        // 1) DB에서는 오직 연령대만으로 꺼냄
+        List<GroupSurvey> surveys = groupSurveyRepository
+                .findByAgeGroupAndDeletedFalse(ag);
+
+        // 2) 대상 그룹이 all이 아니면, 자바에서 enum 동등비교 필터
+        if (!allTargets) {
+            surveys = surveys.stream()
+                    .filter(gs ->
+                            gs.getTargetGroup()
+                                    .filter(enumTg -> enumTg == tg)
+                                    .isPresent()
+                    )
+                    .toList();
+        }
+
+        // 3) 개수 검증
         if (surveys.size() != dto.getAnswers().size()) {
-            throw new IllegalArgumentException("답변 수가 문진 수와 다릅니다.");
+            throw new IllegalArgumentException(
+                    "답변 수가 문진 수와 다릅니다. 서버측 설문 "
+                            + surveys.size() + "개, 클라이언트측 응답 "
+                            + dto.getAnswers().size() + "개"
+            );
         }
 
         double totalScore = 0;
         Map<SurveyCategory, Double> categoryScores = new HashMap<>();
         Map<SurveyCategory, Integer> categoryWeights = new HashMap<>();
-
         for (int i = 0; i < surveys.size(); i++) {
             GroupSurvey survey = surveys.get(i);
             int answer = dto.getAnswers().get(i);
@@ -110,22 +133,17 @@ public class GroupSurveyService {
             double score = survey.getWeight() * multiplier;
             totalScore += score;
 
-            SurveyCategory category = survey.getCategory();
-            categoryScores.put(category, categoryScores.getOrDefault(category, 0.0) + score);
-            categoryWeights.put(category, categoryWeights.getOrDefault(category, 0) + survey.getWeight());
+            SurveyCategory cat = survey.getCategory();
+            categoryScores.merge(cat, score, Double::sum);
+            categoryWeights.merge(cat, survey.getWeight(), Integer::sum);
         }
+        categoryScores.replaceAll((cat, scr) -> (scr / categoryWeights.get(cat)) * 100);
 
-        categoryScores.replaceAll((category, score) ->
-                (score / categoryWeights.get(category)) * 100);
-
-        Map<String, Object> result = new HashMap<>();
+        Map<String,Object> result = new HashMap<>();
         result.put("totalRiskScore", totalScore);
-
-        Map<String, Double> convertedCategoryScores = new HashMap<>();
-        categoryScores.forEach((category, score) ->
-                convertedCategoryScores.put(category.getDisplayName(), score));
-
-        result.put("categoryScores", convertedCategoryScores);
+        Map<String,Double> outCat = new HashMap<>();
+        categoryScores.forEach((cat, scr) -> outCat.put(cat.getDisplayName(), scr));
+        result.put("categoryScores", outCat);
 
         return result;
     }

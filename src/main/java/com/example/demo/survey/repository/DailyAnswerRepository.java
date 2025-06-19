@@ -34,4 +34,6 @@ public interface DailyAnswerRepository extends JpaRepository<DailyAnswer, Long> 
             Pageable pageable
     );
 
+    List<DailyAnswer> findByChildIdOrderByCreatedAtDesc(Long childId);
+
 }

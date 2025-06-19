@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>그룹 문진 결과</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-4xl mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-6">문진 결과</h1>
+
+        <div id="resultContainer" class="space-y-4">
+            <!-- JS가 여기에 카테고리별 점수, 통합 점수를 뿌려줍니다 -->
+        </div>
+
+        <div class="mt-8">
+            <button onclick="location.href='/groupSurvey'"
+                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                다시 문진하기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 1) URL에서 data 파라미터 뽑아오기
+        const params = new URLSearchParams(window.location.search);
+        const dataParam = params.get("data");
+        let result;
+        try {
+          // encodeURIComponent 로 넘겼으니 decode 한 뒤 JSON.parse
+          result = JSON.parse(decodeURIComponent(dataParam));
+        } catch (e) {
+          console.error("결과 파싱 실패", e);
+          document.getElementById("resultContainer")
+                  .innerHTML = `<p class="text-red-500">결과를 불러오는 데 실패했습니다.</p>`;
+          throw e;
+        }
+
+        const { categoryScores, totalRiskScore } = result;
+        const container = document.getElementById("resultContainer");
+
+        // 2) 카테고리별 점수
+        for (const [cat, score] of Object.entries(categoryScores)) {
+          const div = document.createElement("div");
+          div.className = "p-4 border rounded bg-gray-50";
+          div.innerHTML = `
+            <p class="font-semibold">${cat} 위험도: ${score.toFixed(2)}%</p>
+          `;
+          container.appendChild(div);
+        }
+
+        // 3) 통합 위험도 (문진 항목 수에 따라 나눌 수도 있고, 그대로 보여도 좋습니다)
+        const overallDiv = document.createElement("div");
+        overallDiv.className = "mt-4 p-4 border rounded bg-blue-50";
+        overallDiv.innerHTML = `
+          <p class="font-bold text-lg">통합 위험도: ${totalRiskScore.toFixed(2)}</p>
+        `;
+        container.appendChild(overallDiv);
+    </script>
+</th:block>
+</html>
