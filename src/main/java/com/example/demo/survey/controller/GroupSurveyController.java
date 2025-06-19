@@ -1,10 +1,14 @@
 package com.example.demo.survey.controller;
 
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.survey.dto.GroupSurveyRequestDto;
 import com.example.demo.survey.dto.GroupSurveyResponseDto;
 import com.example.demo.survey.entity.GroupSurvey;
+import com.example.demo.survey.service.GroupAnswerService;
 import com.example.demo.survey.service.GroupSurveyService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +20,7 @@ import java.util.Map;
 public class GroupSurveyController {
 
     private final GroupSurveyService groupSurveyService;
+    private final GroupAnswerService groupAnswerService;
 
     // 1. 연령대 기준 조회
     @GetMapping("/by-age/{ageGroup}")
@@ -62,7 +67,17 @@ public class GroupSurveyController {
 
     // 7. 문항 답변 제출
     @PostMapping("/submit")
-    public Map<String, Object> submitSurvey(@RequestBody GroupSurveyRequestDto dto) {
-        return groupSurveyService.evaluate(dto);
+    public ResponseEntity<Map<String,Object>> submitAndSave(
+            @RequestBody GroupSurveyRequestDto dto) {
+        // 저장
+        groupAnswerService.saveAnswers(
+                dto.getChildId(),
+                AgeGroup.fromValue(dto.getAgeGroup()),
+                TargetGroup.fromValue(dto.getTargetGroup()),
+                dto.getAnswers()
+        );
+        // 평가
+        Map<String,Object> result = groupSurveyService.evaluate(dto);
+        return ResponseEntity.ok(result);
     }
 }

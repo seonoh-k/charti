@@ -23,14 +23,12 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Convert(converter = com.example.demo.converter.AgeGroupConverter.class)
     @Column(name = "age_group", nullable = false)
     private AgeGroup ageGroup;
 
     @Column(name = "question", nullable = false)
     private String question;
 
-    @Convert(converter = com.example.demo.converter.SurveyCategoryConverter.class)
     @Column(nullable = false)
     private SurveyCategory category;
 
@@ -38,7 +36,6 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     @JsonIgnore
     private List<SurveySet> surveySets = new ArrayList<>();
 
-    @Convert(converter = com.example.demo.converter.TargetGroupConverter.class)
     @Column(name = "target_group", nullable = false)
     private TargetGroup targetGroup;
 
@@ -65,7 +62,6 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
 
     @Column(name = "calculated_score", nullable = false)
     private int calculatedScore;
-
 
 
     @Override
