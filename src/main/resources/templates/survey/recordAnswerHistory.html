@@ -6,13 +6,24 @@
     <meta charset="UTF-8">
     <title>기록 문진 이력</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 선택 사항: 비활성화된 버튼에 대한 기본 스타일 추가 */
+        .pagination-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* 현재 활성화된 페이지 번호 스타일 */
+        .page-number.active {
+            font-weight: bold;
+            color: #2563EB; /* blue-700 */
+        }
+    </style>
 </head>
 
 <th:block layout:fragment="content">
     <div class="max-w-4xl mx-auto p-6">
         <h1 class="text-2xl font-bold mb-6">기록 문진 답변 이력</h1>
 
-        <!-- 자녀 선택 -->
         <div class="mb-6">
             <label for="childSelect" class="font-semibold mr-2">자녀 선택:</label>
             <select id="childSelect" class="border p-2 rounded w-64">
@@ -21,7 +32,6 @@
             </select>
         </div>
 
-        <!-- 자녀 정보 -->
         <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
             <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
             <p><strong>이름:</strong> <span id="infoName"></span></p>
@@ -31,23 +41,18 @@
             <p><strong>체중:</strong> <span id="infoWeight"></span></p>
         </div>
 
-        <!-- 답변 목록 -->
-        <div id="answerList" class="space-y-4"></div>
-    </div>
+        <div id="answerList" class="space-y-4">
+        </div>
 
-    <!-- 수정 모달 -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded shadow-xl w-full max-w-lg">
-            <h2 class="text-xl font-bold mb-4">답변 수정</h2>
-            <textarea id="modalTextarea" class="w-full border p-2 rounded mb-4" rows="5"></textarea>
-            <div class="flex justify-end gap-4">
-                <button id="cancelEdit" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">취소</button>
-                <button id="saveEdit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">저장</button>
+        <div id="paginationControls" class="flex justify-center items-center space-x-2 mt-8 hidden">
+            <button id="prevPage" class="pagination-button px-4 py-2 border rounded bg-gray-200 hover:bg-gray-300">이전</button>
+            <div id="pageNumbers" class="flex space-x-1">
             </div>
+            <button id="nextPage" class="pagination-button px-4 py-2 border rounded bg-gray-200 hover:bg-gray-300">다음</button>
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
         document.addEventListener("DOMContentLoaded", function () {
             const childSelect = document.getElementById("childSelect");
             const answerList = document.getElementById("answerList");
@@ -58,128 +63,186 @@
             const infoHeight = document.getElementById("infoHeight");
             const infoWeight = document.getElementById("infoWeight");
 
-            const editModal = document.getElementById("editModal");
-            const modalTextarea = document.getElementById("modalTextarea");
-            const cancelEdit = document.getElementById("cancelEdit");
-            const saveEdit = document.getElementById("saveEdit");
-            let currentEditId = null;
+            const paginationControls = document.getElementById("paginationControls");
+            const prevPageBtn = document.getElementById("prevPage");
+            const nextPageBtn = document.getElementById("nextPage");
+            const pageNumbersDiv = document.getElementById("pageNumbers");
 
+            let currentPage = 0; // 0-indexed 페이지 번호
+            const pageSize = 5; // 한 페이지에 표시할 답변 개수 (백엔드와 일치해야 함)
+            let totalPages = 0; // 총 페이지 수
+
+            // --- 도우미 함수 ---
+
+            // 자녀 정보를 화면에 표시하는 함수
+            function displayChildInfo(data) {
+                childInfo.classList.remove("hidden");
+                infoName.textContent = data.name;
+                infoGender.textContent = data.gender;
+                infoAge.textContent = data.age + '세';
+                infoHeight.textContent = data.height + 'cm';
+                infoWeight.textContent = data.weight + 'kg';
+            }
+
+            // 답변 목록을 화면에 렌더링하는 함수
+            function renderAnswers(answers) {
+                answerList.innerHTML = ""; // 기존 목록 초기화
+
+                if (answers.length === 0) {
+                    answerList.innerHTML = `<p class="text-gray-500">선택한 자녀의 답변 이력이 없습니다.</p>`;
+                    return;
+                }
+
+                // 현재 페이지의 답변들을 날짜별로 그룹화
+                const grouped = {};
+                answers.forEach(item => {
+                    if (!item.createdAt) return;
+                    const date = item.createdAt.substring(0, 10); // YYYY-MM-DD 형식
+                    if (!grouped[date]) grouped[date] = [];
+                    grouped[date].push(item);
+                });
+
+                // 날짜를 최신순으로 정렬 후 표시
+                Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+                    const container = document.createElement("div");
+                    container.className = "border rounded mb-4";
+
+                    const header = document.createElement("button");
+                    header.className = "w-full text-left px-4 py-2 bg-blue-100 font-semibold hover:bg-blue-200";
+                    header.textContent = `${date} 문진 답변`;
+
+                    const body = document.createElement("div");
+                    body.className = "hidden p-4 space-y-4 bg-gray-50"; // 초기에는 숨김
+
+                    grouped[date].forEach((answer, index) => {
+                        const item = document.createElement("div");
+                        item.className = "border p-3 rounded";
+                        item.innerHTML = `
+                            <div class="w-full">
+                                <p class="font-semibold">${index + 1}. ${answer.question}</p>
+                                <p class="text-sm text-gray-700 whitespace-pre-line">${answer.answer}</p>
+                            </div>
+                        `;
+                        body.appendChild(item);
+                    });
+
+                    // 헤더 클릭 시 답변 내용 토글
+                    header.addEventListener("click", () => body.classList.toggle("hidden"));
+                    container.appendChild(header);
+                    container.appendChild(body);
+                    answerList.appendChild(container);
+                });
+            }
+
+            // 페이지네이션 컨트롤을 업데이트하는 함수
+            function updatePaginationControls(totalPagesFromResponse, currentPageNumber) {
+                totalPages = totalPagesFromResponse; // 총 페이지 수 업데이트
+                pageNumbersDiv.innerHTML = ''; // 기존 페이지 번호 초기화
+                paginationControls.classList.remove("hidden"); // 페이지네이션 컨트롤 표시
+
+                // '이전' / '다음' 버튼 활성화/비활성화
+                prevPageBtn.disabled = currentPageNumber === 0;
+                nextPageBtn.disabled = currentPageNumber === totalPages - 1;
+
+                // 페이지 번호 렌더링
+                for (let i = 0; i < totalPages; i++) {
+                    const pageSpan = document.createElement('span');
+                    pageSpan.textContent = i + 1; // 1-indexed로 표시
+                    pageSpan.className = `page-number cursor-pointer px-3 py-1 border rounded ${i === currentPageNumber ? 'active bg-blue-100' : 'hover:bg-gray-100'}`;
+                    pageSpan.dataset.page = i; // 0-indexed 페이지 번호 저장
+                    pageSpan.addEventListener('click', (e) => {
+                        const childId = childSelect.value;
+                        loadAnswers(childId, parseInt(e.target.dataset.page));
+                    });
+                    pageNumbersDiv.appendChild(pageSpan);
+                }
+            }
+
+            // 답변 목록과 페이지네이션 컨트롤을 초기화 (숨김)하는 함수
+            function clearAnswerListAndPagination() {
+                answerList.innerHTML = `<p class="text-gray-500">자녀를 선택하여 답변 이력을 확인해주세요.</p>`;
+                paginationControls.classList.add("hidden");
+                childInfo.classList.add("hidden");
+            }
+
+            // --- 메인 로드 함수 (답변 이력을 불러오는 핵심 함수) ---
+            function loadAnswers(childId, page = 0) { // 기본값으로 0페이지 설정
+                currentPage = page; // 현재 페이지 업데이트
+
+                // 문진 답변 이력 불러오기 (페이징 적용)
+                fetch(`/survey/record/history/${childId}?page=${page}&size=${pageSize}&sort=createdAt,desc`)
+                    .then(response => {
+                        if (!response.ok) {
+                            if (response.status === 404) {
+                                throw new Error('데이터를 찾을 수 없습니다.');
+                            }
+                            throw new Error('네트워크 응답이 올바르지 않습니다.');
+                        }
+                        return response.json();
+                    })
+                    .then(apiResponse => { // ApiResponse (JSON)를 받음
+                        const pagingResponse = apiResponse.data; // 실제 PagingResponse 객체
+                        const answers = pagingResponse.content; // 현재 페이지의 답변 목록
+
+                        renderAnswers(answers); // 답변 렌더링
+                        updatePaginationControls(pagingResponse.totalPages, pagingResponse.number); // 페이지네이션 컨트롤 업데이트
+                    })
+                    .catch(error => {
+                        console.error("답변 이력을 불러오는 중 오류 발생:", error);
+                        answerList.innerHTML = `<p class="text-red-500">답변 이력을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
+                        paginationControls.classList.add("hidden"); // 오류 시 페이지네이션 숨김
+                    });
+            }
+
+            // --- 이벤트 리스너 ---
             childSelect.addEventListener("change", function () {
                 const childId = this.value;
-                if (!childId) return;
+                if (!childId) {
+                    clearAnswerListAndPagination(); // '자녀를 선택하세요' 선택 시 초기화
+                    return;
+                }
 
+                // 자녀 정보 불러오기
                 fetch(`/api/child/info/${childId}`)
                     .then(res => res.json())
-                    .then(data => {
-                        childInfo.classList.remove("hidden");
-                        infoName.textContent = data.name;
-                        infoGender.textContent = data.gender;
-                        infoAge.textContent = data.age + '세';
-                        infoHeight.textContent = data.height + 'cm';
-                        infoWeight.textContent = data.weight + 'kg';
+                    .then(displayChildInfo) // displayChildInfo 함수 사용
+                    .catch(error => {
+                        console.error("자녀 정보를 불러오는 중 오류 발생:", error);
+                        alert("자녀 정보를 불러오는 중 오류가 발생했습니다.");
+                        childInfo.classList.add("hidden");
                     });
 
-                fetch(`/survey/record/history/${childId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        answerList.innerHTML = "";
-
-                        if (data.length === 0) {
-                            answerList.innerHTML = `<p class="text-gray-500">답변 이력이 없습니다.</p>`;
-                            return;
-                        }
-
-                        const grouped = {};
-                        data.forEach(item => {
-                            if (!item.createdAt) return;
-                            const date = item.createdAt.substring(0, 10);
-                            if (!grouped[date]) grouped[date] = [];
-                            grouped[date].push(item);
-                        });
-
-                        Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
-                            const container = document.createElement("div");
-                            container.className = "border rounded mb-4";
-
-                            const header = document.createElement("button");
-                            header.className = "w-full text-left px-4 py-2 bg-blue-100 font-semibold hover:bg-blue-200";
-                            header.textContent = `${date} 문진 답변`;
-
-                            const body = document.createElement("div");
-                            body.className = "hidden p-4 space-y-4 bg-gray-50";
-
-                            grouped[date].forEach((answer, index) => {
-                                const item = document.createElement("div");
-                                item.className = "border p-3 rounded";
-                                item.innerHTML = `
-                                    <div class="flex justify-between items-start">
-                                        <div class="w-full">
-                                            <p class="font-semibold">${index + 1}. ${answer.question}</p>
-                                            <p class="text-sm text-gray-700 whitespace-pre-line" id="answerText_${answer.answerId}">${answer.answer}</p>
-                                        </div>
-                                        <div class="flex flex-col items-end gap-2 ml-4">
-                                            <button onclick="showEditModal(${answer.answerId})" class="text-blue-600 hover:underline text-sm">수정</button>
-                                            <button onclick="deleteAnswer(${answer.answerId})" class="text-red-600 hover:underline text-sm">삭제</button>
-                                        </div>
-                                    </div>
-                                `;
-                                body.appendChild(item);
-                            });
-
-                            header.addEventListener("click", () => body.classList.toggle("hidden"));
-                            container.appendChild(header);
-                            container.appendChild(body);
-                            answerList.appendChild(container);
-                        });
-                    })
-                    .catch(() => {
-                        answerList.innerHTML = `<p class="text-red-500">답변을 불러오는 중 오류가 발생했습니다.</p>`;
-                    });
+                // 새로운 자녀 선택 시 항상 첫 페이지(0페이지)부터 로드
+                loadAnswers(childId, 0);
             });
 
-            window.deleteAnswer = function (answerId) {
-                if (!confirm("정말 삭제하시겠습니까?")) return;
-                fetch(`/survey/record/answer/${answerId}`, {
-                    method: "DELETE"
-                }).then(res => {
-                    if (res.ok) {
-                        alert("삭제가 완료되었습니다.");
-                        childSelect.dispatchEvent(new Event("change"));
-                    } else {
-                        alert("삭제 중 오류가 발생했습니다.");
-                    }
-                });
+            // '이전' 버튼 클릭 시
+            prevPageBtn.addEventListener('click', () => {
+                const childId = childSelect.value;
+                if (childId && currentPage > 0) {
+                    loadAnswers(childId, currentPage - 1);
+                }
+            });
+
+            // '다음' 버튼 클릭 시
+            nextPageBtn.addEventListener('click', () => {
+                const childId = childSelect.value;
+                if (childId && currentPage < totalPages - 1) { // 현재 페이지가 총 페이지 수보다 작을 때만 다음 페이지로 이동
+                    loadAnswers(childId, currentPage + 1);
+                }
+            });
+
+
+            // 페이지 로드 시 자녀가 한 명이라도 있으면 자동으로 첫 번째 자녀를 선택하도록 트리거
+            // (Thymeleaf 모델에 children이 없을 경우를 대비하여 options.length > 1로 체크: '자녀를 선택하세요' 옵션 포함)
+            if (childSelect.options.length > 1) {
+                childSelect.selectedIndex = 1; // '자녀를 선택하세요' (index 0) 다음인 첫 번째 자녀를 선택
+                childSelect.dispatchEvent(new Event("change")); // change 이벤트 강제 발생
+            } else {
+                // 자녀가 없거나 선택 옵션만 있는 경우, 답변 목록 및 페이지네이션 숨김
+                clearAnswerListAndPagination();
             }
-
-            window.showEditModal = function (answerId) {
-                const text = document.getElementById(`answerText_${answerId}`).textContent;
-                modalTextarea.value = text;
-                currentEditId = answerId;
-                editModal.classList.remove("hidden");
-            }
-
-            cancelEdit.addEventListener("click", () => {
-                editModal.classList.add("hidden");
-                currentEditId = null;
-            });
-
-            saveEdit.addEventListener("click", () => {
-                if (!currentEditId) return;
-                const updatedText = modalTextarea.value;
-                fetch(`/survey/record/answer/${currentEditId}`, {
-                    method: "PUT",
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ answer: updatedText })
-                }).then(res => {
-                    if (res.ok) {
-                        alert("수정이 완료되었습니다.");
-                        editModal.classList.add("hidden");
-                        childSelect.dispatchEvent(new Event("change"));
-                    } else {
-                        alert("수정 중 오류가 발생했습니다.");
-                    }
-                });
-            });
         });
     </script>
 </th:block>
+</html>
