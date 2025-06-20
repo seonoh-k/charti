@@ -27,11 +27,10 @@ public class SpecialSurvey extends BaseEntity implements BaseSurvey{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "age_group", nullable = false)
     private AgeGroup ageGroup;
 
-    @Column(nullable = false)
+    @Column(name = "question", nullable = false)
     private String question;
 
     @Column(nullable = false)

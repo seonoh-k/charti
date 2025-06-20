@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>특별 문진</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-4xl mx-auto p-6">
@@ -14,37 +16,36 @@
         <!-- 1) 자녀 선택 -->
         <div class="mb-4">
             <label class="block mb-1 font-semibold">자녀 선택</label>
-               <select id="childSelect" class="border p-2 rounded w-64">
-                   <option value="">-- 자녀를 선택하세요 --</option>
-                   <option th:each="c : ${children}"
-                             th:value="${c.id}"
-                             th:text="${c.name + ' (' + c.nickname + ')'}">
-                   </option>
-               </select>
+            <select id="childSelect" class="border p-2 rounded w-64">
+                <option value="">-- 자녀를 선택하세요 --</option>
+                <option th:each="c : ${children}"
+                        th:value="${c.id}"
+                        th:text="${c.name + ' (' + c.nickname + ')'}"/>
+            </select>
         </div>
 
         <!-- 2) 연령대 선택 -->
         <div class="mb-4">
             <label class="block mb-1 font-semibold">연령대</label>
-               <select id="ageSelect" class="border p-2 rounded w-64">
-                   <option value="">-- 연령대를 선택하세요 --</option>
-                   <option th:each="ag : ${ageGroups}"
-                             th:value="${ag.name()}"
-                             th:text="${ag.displayName}">
-                   </option>
-               </select>
+            <select id="ageSelect" class="border p-2 rounded w-64">
+                <option value="">-- 연령대를 선택하세요 --</option>
+                <option th:each="ag : ${ageGroups}"
+                        th:value="${ag.getDisplayName()}"
+                        th:text="${ag.getDisplayName()}"/>
+            </select>
         </div>
 
-        <!-- 3) 카테고리 선택 -->
+        <!-- 3) 카테고리 선택 (ALL, VARIOUS 제외) -->
         <div class="mb-4">
             <label class="block mb-1 font-semibold">카테고리</label>
-               <select id="categorySelect" class="border p-2 rounded w-64">
-                   <option value="">-- 카테고리를 선택하세요 --</option>
-                   <option th:each="cat : ${categories}"
-                             th:value="${cat.name()}"
-                             th:text="${cat.displayName}">
-                   </option>
-               </select>
+            <select id="categorySelect" class="border p-2 rounded w-64">
+                <option value="">-- 카테고리를 선택하세요 --</option>
+                <option th:each="cat : ${categories}"
+                        th:if="${cat != T(com.example.demo.enums.SurveyCategory).ALL
+                               and cat != T(com.example.demo.enums.SurveyCategory).VARIOUS}"
+                        th:value="${cat.getDisplayName()}"
+                        th:text="${cat.getDisplayName()}"/>
+            </select>
         </div>
 
         <!-- 4) 문진 출력 영역 -->
@@ -58,80 +59,90 @@
     </div>
 
     <script>
-        const childSelect   = document.getElementById('childSelect');
-        const ageSelect     = document.getElementById('ageSelect');
-        const catSelect     = document.getElementById('categorySelect');
-        const container     = document.getElementById('surveyContainer');
-        const submitBtn     = document.getElementById('submitBtn');
+        const childSelect = document.getElementById('childSelect');
+        const ageSelect   = document.getElementById('ageSelect');
+        const catSelect   = document.getElementById('categorySelect');
+        const container   = document.getElementById('surveyContainer');
+        const submitBtn   = document.getElementById('submitBtn');
         let surveys = [];
 
         function loadSurveys() {
-          const age = ageSelect.value;
-          if (!age) { container.innerHTML = ''; return; }
+            const age = ageSelect.value;
+            if (!age) {
+                container.innerHTML = '';
+                return;
+            }
 
-          fetch(`/api/special-surveys/by-age/${encodeURIComponent(age)}`)
-            .then(r => r.ok ? r.json() : Promise.reject())
-            .then(data => {
-              // 카테고리 필터링
-              const cat = catSelect.value;
-              surveys = cat
-                ? data.filter(s => s.category === document.querySelector('#categorySelect option:checked').text)
-                : data;
-              renderSurveys();
-            })
-            .catch(() => alert('문진 데이터를 불러오는 중 오류 발생'));
+            fetch(`/api/special-surveys/by-age/${encodeURIComponent(age)}`)
+                .then(r => r.ok ? r.json() : Promise.reject())
+                .then(data => {
+                    console.log('▶︎ fetched surveys:', data);
+
+                    const cat = catSelect.value;
+                    surveys = cat
+                        ? data.filter(s => s.category === cat)
+                        : data;
+
+                    renderSurveys();
+                })
+                .catch(e => {
+                    console.error(e);
+                    alert('문진 데이터를 불러오는 중 오류 발생');
+                });
         }
 
         ageSelect.addEventListener('change', loadSurveys);
-        catSelect .addEventListener('change', loadSurveys);
+        catSelect.addEventListener('change', loadSurveys);
 
         function renderSurveys() {
-          container.innerHTML = '';
-          surveys.forEach((s,i) => {
-            const div = document.createElement('div');
-            div.className = 'border p-4 rounded';
-            div.innerHTML = `
-              <p class="font-semibold mb-2">Q${i+1}. ${s.question}
-                <span class="text-sm text-gray-500">(${s.category})</span>
-              </p>
-              ${[1,2,3,4,5].map(v =>
-                `<label class="block">
-                   <input type="radio" name="q${s.id}" value="${v}"> ${s['answer'+v]}
-                 </label>`
-              ).join('')}
-            `;
-            container.appendChild(div);
-          });
+            container.innerHTML = '';
+            surveys.forEach((s, i) => {
+                const div = document.createElement('div');
+                div.className = 'border p-4 rounded';
+                div.innerHTML = `
+                    <p class="font-semibold mb-2">
+                        Q${i+1}. ${s.question}
+                        <span class="text-sm text-gray-500">(${s.category})</span>
+                    </p>
+                    ${[1,2,3,4,5].map(v =>
+                        `<label class="block">
+                            <input type="radio" name="q${s.id}" value="${v}">
+                            ${s['answer'+v]}
+                         </label>`
+                    ).join('')}
+                `;
+                container.appendChild(div);
+            });
         }
 
         submitBtn.addEventListener('click', () => {
-          const answers = [];
-          if (!childSelect.value) return alert('자녀를 선택해주세요');
-          if (!ageSelect.value)   return alert('연령대를 선택해주세요');
-          if (!catSelect.value)   return alert('카테고리를 선택해주세요');
+            const answers = [];
+            if (!childSelect.value) return alert('자녀를 선택해주세요');
+            if (!ageSelect.value)   return alert('연령대를 선택해주세요');
+            if (!catSelect.value)   return alert('카테고리를 선택해주세요');
 
-          for (let s of surveys) {
-            const sel = document.querySelector(`input[name="q${s.id}"]:checked`);
-            if (!sel) return alert('모든 문진에 답변해주세요');
-            answers.push(+sel.value);
-          }
+            for (let s of surveys) {
+                const sel = document.querySelector(`input[name="q${s.id}"]:checked`);
+                if (!sel) return alert('모든 문진에 답변해주세요');
+                answers.push(+sel.value);
+            }
 
-          fetch('/api/special-surveys/submit', {
-            method: 'POST',
-            headers: { 'Content-Type':'application/json' },
-            body: JSON.stringify({
-              childId:   Number(childSelect.value),
-              ageGroup:  ageSelect.value,
-              category:  catSelect.value,
-              answers:   answers
+            fetch('/api/special-surveys/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    childId:  Number(childSelect.value),
+                    ageGroup: ageSelect.value,   // displayName
+                    category: catSelect.value,
+                    answers:  answers
+                })
             })
-          })
-          .then(r => r.ok ? r.json() : Promise.reject())
-          .then(res => {
-            const payload = encodeURIComponent(JSON.stringify(res));
-            window.location.href = `/specialSurvey/result?data=${payload}`;
-          })
-          .catch(() => alert('제출 중 오류 발생'));
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(res => {
+                const payload = encodeURIComponent(JSON.stringify(res));
+                window.location.href = `/specialSurvey/result?data=${payload}`;
+            })
+            .catch(() => alert('제출 중 오류 발생'));
         });
     </script>
 </th:block>

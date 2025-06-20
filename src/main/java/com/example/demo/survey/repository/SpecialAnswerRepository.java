@@ -5,5 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface SpecialAnswerRepository extends JpaRepository<SpecialAnswer, Long> {
-    List<SpecialAnswer> findByChildIdOrderByCreatedAtDesc(Long childId);
+    // 삭제되지 않은 답변만 조회
+    List<SpecialAnswer> findByChildIdAndDeletedFalseOrderByCreatedAtDesc(Long childId);
 }
