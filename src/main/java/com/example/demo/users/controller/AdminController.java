@@ -63,29 +63,115 @@ public class AdminController {
     }
 
     @GetMapping("/admin/member/all")
-    public String showAdminMemberListPage(@ModelAttribute PagingRequest pagingRequest, Model model){
-        Pageable pageable = pagingRequest.toPageable();
-        PagingResultDTO<MemberDTO, Users> result = userService.getMemberListWithPaging(pageable);
+    public String showAdminMemberListPage(@ModelAttribute PagingRequest pagingRequest,
+                                          @RequestParam(required = false) String type,
+                                          @RequestParam(required = false) String keyword,
+                                          Model model){
 
+        Pageable pageable = pagingRequest.toPageable();
+
+        PagingResultDTO<MemberDTO, Users> result = (type != null && keyword != null && !keyword.isBlank())
+                        ? userService.getMemberListWithPaging(type, keyword, pageable)
+                        : userService.getMemberListWithPaging(pageable);
+
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
         model.addAttribute("result",result);
+
         return "admin/member/memberList"; // 뷰 파일
     }
     @GetMapping("/admin/expert/all")
-    public String showAdminExpertListPage(@ModelAttribute PagingRequest pagingRequest, Model model){
-        Pageable pageable = pagingRequest.toPageable();
-        PagingResultDTO<ExpertDTO, Users> result = userService.getApprovedExpertListWithPaging(pageable);
+    public String showAdminExpertListPage(@ModelAttribute PagingRequest pagingRequest,
+                                          @RequestParam(required = false) String type,
+                                          @RequestParam(required = false) String keyword,
+                                          Model model){
 
+        Pageable pageable = pagingRequest.toPageable();
+
+        PagingResultDTO<ExpertDTO, Users> result =
+                (type != null && keyword != null && !keyword.isBlank())
+                        ? userService.getPendingExpertListWithPaging(type, keyword, pageable)
+                        : userService.getPendingExpertListWithPaging(pageable);
+
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
         model.addAttribute("result",result);
+
         return "admin/expert/expertList"; // 뷰 파일
     }
     @GetMapping("/admin/manager/all")
-    public String showAdminManagerListPage(@ModelAttribute PagingRequest pagingRequest, Model model){
-        Pageable pageable = pagingRequest.toPageable();
-        PagingResultDTO<ManagerDTO, Users> result = userService.getApprovedManagerListWithPaging(pageable);
+    public String showAdminManagerListPage(@ModelAttribute PagingRequest pagingRequest,
+                                           @RequestParam(required = false) String type,
+                                           @RequestParam(required = false) String keyword,
+                                           Model model){
 
-        model.addAttribute("result",result);
+        Pageable pageable = pagingRequest.toPageable();
+
+        PagingResultDTO<ManagerDTO, Users> result =
+                (type != null && keyword != null && !keyword.isBlank())
+                        ? userService.getPendingManagerListWithPaging(type, keyword, pageable)
+                        : userService.getPendingManagerListWithPaging(pageable);
+
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("result", result);
+
         return "admin/manager/managerList"; // 뷰 파일
     }
+
+    @GetMapping("/admin/member/all/search")
+    public ResponseEntity<ApiResponse> searchAdminMemberListPage(@ModelAttribute PagingRequest pagingRequest,
+                                                                 @RequestParam(required = false) String type,
+                                                                 @RequestParam(required = false) String keyword,
+                                                                 Model model){
+        Pageable pageable = pagingRequest.toPageable();
+
+        PagingResultDTO<MemberDTO, Users> result = userService.getMemberListWithPaging(type, keyword, pageable);
+
+
+        if (result.getTotalElements() <= 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
+    }
+
+    @GetMapping("/admin/expert/all/search")
+    public ResponseEntity<ApiResponse> searchAdminExpertListPage(@ModelAttribute PagingRequest pagingRequest,
+                                                                 @RequestParam(required = false) String type,
+                                                                 @RequestParam(required = false) String keyword,
+                                                                 Model model){
+
+        Pageable pageable = pagingRequest.toPageable();
+
+        PagingResultDTO<ExpertDTO, Users> result = userService.getPendingExpertListWithPaging(type,keyword,pageable);
+
+        if (result.getTotalElements() <= 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
+    }
+
+    @GetMapping("/admin/manager/all/search")
+    public ResponseEntity<ApiResponse> searchAdminManagerListPage(@ModelAttribute PagingRequest pagingRequest,
+                                             @RequestParam(required = false) String type,
+                                             @RequestParam(required = false) String keyword,
+                                             Model model){
+
+        Pageable pageable = pagingRequest.toPageable();
+        PagingResultDTO<ManagerDTO, Users> result = userService.getPendingManagerListWithPaging(type, keyword, pageable);
+
+        if (result.getTotalElements() <= 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
+    }
+
     @GetMapping("/admin/member/{id:[0-9]+}")
     public String showAdminMemberUpdatePage(@ModelAttribute PagingRequest pagingRequest,
                                             @PathVariable Long id,

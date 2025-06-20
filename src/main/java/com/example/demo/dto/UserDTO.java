@@ -19,6 +19,7 @@ public class UserDTO {
     private String uuid;
     private String name;
     private String username;
+    private String nickname;
     private String password;
     private String role;
     private String provider;
@@ -41,6 +42,7 @@ public class UserDTO {
                 .id(this.id)
                 .uuid(this.uuid)
                 .name(this.name)
+                .nickname(this.nickname)
                 .username(this.username)
                 .password(this.password)
                 .role(Role.valueOf(this.role))

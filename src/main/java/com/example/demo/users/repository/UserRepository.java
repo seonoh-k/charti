@@ -40,17 +40,17 @@ public interface UserRepository extends JpaRepository<Users,Long> {
     @Query("SELECT u FROM Users u JOIN u.member m WHERE u.role = com.example.demo.users.entity.Role.ROLE_MEMBER AND u.deleted = true")
     Page<Users> getAllMemberDeleted(Role role,Pageable pageable);
 
-    // 전문가 조회 (삭제 X) 승인 여부와 관계 없이
+    // 전문가 조회 (삭제 X)
     @Query("SELECT u FROM Users u JOIN u.expert e WHERE u.role = com.example.demo.users.entity.Role.ROLE_EXPERT AND u.deleted = false")
     Page<Expert> getAllExpert(Pageable pageable);
-    // 전문가 조회 (삭제 O) 승인 여부와 관계 없이
+    // 전문가 조회 (삭제 O)
     @Query("SELECT u FROM Users u JOIN u.expert e WHERE u.role = com.example.demo.users.entity.Role.ROLE_EXPERT AND u.deleted = true")
     Page<Expert> getAllExpertDeleted(Pageable pageable);
 
     // 전문가 삭제 X 승인 X
     @Query("SELECT u FROM Users u " +
             " JOIN u.expert e " +
-            " WHERE u.role = com.example.demo.users.entity.Role.ROLE_EXPERT " +
+            " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MEMBER " +
             " AND u.deleted = false" +
             " AND e.isApproved = false")
     Page<Users> getAllExpertUnApproved(Pageable pageable);
@@ -66,7 +66,7 @@ public interface UserRepository extends JpaRepository<Users,Long> {
     // 전문가 삭제 O 승인 X
     @Query("SELECT u FROM Users u " +
             " JOIN u.expert e " +
-            " WHERE u.role = com.example.demo.users.entity.Role.ROLE_EXPERT " +
+            " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MEMBER " +
             " AND u.deleted = true" +
             " AND e.isApproved = false")
     Page<Users> getAllExpertDeletedAndUnApproved(Pageable pageable);
@@ -80,20 +80,20 @@ public interface UserRepository extends JpaRepository<Users,Long> {
     Page<Users> getAllExpertDeletedAndApproved(Pageable pageable);
 
     // Manager
-    // Manager 조회 (삭제 X) 승인과 관계 없이
+    // Manager 조회 (삭제 X) 승인된
     @Query("SELECT u FROM Users u JOIN u.manager e WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER AND u.deleted = false")
     Page<Users> getAllManager(Pageable pageable);
-    // Manager 조회 (삭제 O) 승인과 관계 없이
+    // Manager 조회 (삭제 O) 승인된
     @Query("SELECT u FROM Users u JOIN u.manager e WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER AND u.deleted = true")
     Page<Users> getAllManagerDeleted(Pageable pageable);
 
     // Manager 조회 (삭제 X 승인 X)
-    // Group은 안가져옴
     @Query("SELECT u FROM Users u " +
-            " JOIN u.manager e " +
-            " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER " +
+            " JOIN u.manager m " +
+            " JOIN m.group g" +
+            " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MEMBER " +
             " AND u.deleted = false" +
-            " AND e.isApproved = false")
+            " AND m.isApproved = false")
     Page<Users> getAllManagerUnApproved(Pageable pageable);
 
     // Manager 조회 (삭제 X 승인 O)
@@ -106,19 +106,61 @@ public interface UserRepository extends JpaRepository<Users,Long> {
     Page<Users> getAllManagerApproved(Pageable pageable);
     // Manager 조회 (삭제 O 승인 X)
     @Query("SELECT u FROM Users u " +
-            " JOIN u.manager e " +
+            " JOIN u.manager m " +
+            " JOIN m.group g" +
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER " +
             " AND u.deleted = true" +
-            " AND e.isApproved = false")
+            " AND m.isApproved = false")
     Page<Users> getAllManagerDeletedAndUnApproved(Pageable pageable);
 
     // Manager 조회 (삭제 O 승인 O)
     @Query("SELECT u FROM Users u " +
-            " JOIN u.manager e " +
+            " JOIN u.manager m " +
+            " JOIN m.group g" +
             " WHERE u.role = com.example.demo.users.entity.Role.ROLE_MANAGER " +
             " AND u.deleted = true" +
-            " AND e.isApproved = true")
+            " AND m.isApproved = true")
     Page<Users> getAllManagerDeletedAndApproved(Pageable pageable);
 
+    @Query("SELECT u FROM Users u " +
+            "  JOIN u.member m " +
+            "  WHERE u.role = com.example.demo.users.entity.Role.ROLE_MEMBER " +
+            "  AND u.deleted = false " +
+            "  AND ( " +
+            "    (:type = 'name' AND LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
+            "    (:type = 'email' AND LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
+            "    (:type = 'phoneNumber' AND LOWER(u.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
+            "    (:type = 'nickname' AND LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%') ) ) " +
+            "  )")
+    Page<Users> getAllMember(@Param("type") String type,@Param("keyword") String keyword , Pageable pageable);
+
+    //  검색에 사용 미승인 상태면 ROLE ==> ROLE_MEMBER
+    @Query("SELECT u FROM Users u " +
+            "  JOIN u.expert e " +
+            "  WHERE u.role = com.example.demo.users.entity.Role.ROLE_MEMBER " +
+            "  AND u.deleted = false " +
+            "  AND e.isApproved = false " +
+            "  AND ( " +
+            "    (:type = 'name' AND LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
+            "    (:type = 'email' AND LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
+            "    (:type = 'phoneNumber' AND LOWER(u.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
+            "    (:type = 'major' AND LOWER(e.major) LIKE LOWER(CONCAT('%', :keyword, '%') ) ) " +
+            "  )")
+    Page<Users> searchExpertUnApprovedWithKeyword(@Param("type") String type, @Param("keyword") String keyword, Pageable pageable);
+
+    //  검색에 사용 미승인 상태면 ROLE ==> ROLE_MEMBER
+    @Query("SELECT u FROM Users u " +
+            "  JOIN u.manager m " +
+            "  JOIN m.group g " +
+            "  WHERE u.role = com.example.demo.users.entity.Role.ROLE_MEMBER " +
+            "  AND u.deleted = false " +
+            "  AND m.isApproved = false " +
+            "  AND ( " +
+            "    (:type = 'name' AND LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
+            "    (:type = 'email' AND LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
+            "    (:type = 'phoneNumber' AND LOWER(u.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR " +
+            "    (:type = 'groupName' AND LOWER(g.groupName) LIKE LOWER(CONCAT('%', :keyword, '%') ) ) " +
+            "  )")
+    Page<Users> searchManagerUnApprovedWithKeyword(@Param("type") String type, @Param("keyword") String keyword, Pageable pageable);
 
 }
