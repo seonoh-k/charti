@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>아이디 찾기</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/js/sms-auth.js" type="module"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-6 text-center">아이디(이메일) 찾기</h2>
+
+    <!-- ① 사용자 실제 이름(name) 입력란 -->
+    <div>
+        <label for="name" class="block mb-1">이름</label>
+        <input type="text" name="name" id="name"
+                class="w-full p-2 rounded border border-gray-300" required>
+    </div>
+
+    <!-- 전화번호 입력 -->
+    <div class="mb-4">
+    <label class="block mb-1 font-medium">전화번호</label>
+    <div class="flex space-x-2">
+        <select id="phone1" class="border p-2 rounded w-20">
+        <option value="010">010</option>
+        <option value="011">011</option>
+        <option value="016">016</option>
+        <option value="017">017</option>
+        </select>
+        <input id="phone2" type="text" maxlength="4" class="border p-2 rounded w-20" placeholder="1234" />
+        <input id="phone3" type="text" maxlength="4" class="border p-2 rounded w-20" placeholder="5678" />
+        <button type="button" id="send-otp-btn"
+                class="px-3 bg-blue-600 text-white rounded">
+        인증
+        </button>
+    </div>
+    </div>
+
+    <!-- 인증번호 입력 -->
+    <div class="mb-4">
+    <label class="block mb-1 font-medium">인증번호</label>
+    <input id="otp" type="text" class="border p-2 rounded w-full" placeholder="6자리" disabled />
+    <button type="button" id="verify-otp-btn"
+            class="mt-2 px-3 py-1 bg-green-600 text-white rounded"
+            disabled>
+        인증 확인
+    </button>
+    </div>
+
+    <!-- 인증된 전화번호로 아이디 찾기 -->
+    <div class="mt-6">
+    <button onclick="findUsername()"
+            class="w-full bg-black text-white py-2 rounded hover:bg-gray-800">
+        아이디 찾기
+    </button>
+    </div>
+
+    <!-- 결과 -->
+    <div id="result" class="mt-4 text-center text-green-700 font-semibold"></div>
+
+    <div id="recaptcha-container"></div>
+</div>
+
+<script type="module">
+    import { getVerifiedSmsToken } from '/js/smsAuth.js';
+
+    async function findUsername() {
+    const token = getVerifiedSmsToken();
+    if (!token) {
+        alert("먼저 전화번호 인증을 완료해주세요.");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/find-username', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+        document.getElementById('result').textContent = `회원님의 아이디는: ${data.username}`;
+        } else {
+        alert(data.message || '사용자 정보를 찾을 수 없습니다.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert("요청 처리 중 오류가 발생했습니다.");
+    }
+    }
+
+    window.findUsername = findUsername;
+</script>
+</body>
+</html>

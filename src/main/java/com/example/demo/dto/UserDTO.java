@@ -28,6 +28,8 @@ public class UserDTO {
     private LocalDateTime createdAt;
     private String phoneNumber;
 
+    private AddressDTO address;
+
         /**
      * [✅ toEntity 메서드 추가 이유]
      * - AuthService에서 getLoginUser()를 통해 로그인한 사용자 정보를 UserDTO로 가져오는데,

@@ -1,15 +1,20 @@
 package com.example.demo.users.controller;
 
+import com.example.demo.dto.AddressDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.request.PasswordChangeRequest;
 import com.example.demo.dto.request.UserUpdateRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.UserInfoResponse;
+import com.example.demo.service.AddressService;
+import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.repository.UserRepository;
+import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.UserService;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
+import com.example.demo.util.UserStatus;
 import com.google.firebase.auth.FirebaseAuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,37 +33,23 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
-
-
-    @GetMapping("/me")
-    public ResponseEntity<UserInfoResponse> getMyInfo(Authentication authentication) {
-        String uid = authentication.getPrincipal().toString();
-        log.info("========================❌ ❌ ❌ ❌ ❌ ❌ 토큰에서 추출한 uid  {}: ",uid);
-        Users user = userRepository.findByUuid(uid)
-                .orElseThrow(() -> new RuntimeException("사용자 없음"));
-
-        UserInfoResponse dto = new UserInfoResponse(
-                user.getName(),
-                user.getUsername(),
-                user.getNickname(),
-                user.getPhoneNumber()
-        );
-
-        return ResponseEntity.ok(dto);
-    }
-
 
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest request,
                                         Authentication authentication) {
-        String uid = authentication.getPrincipal().toString(); // 현재 UID
+        String uid = authentication.getPrincipal().toString();
         try {
+
             userService.updateUser(request, uid);
+            return ResponseEntity.ok(new ApiResponse(UserStatus.UPDATE_SUCCESS));
+
         } catch (FirebaseAuthException e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(GlobalStatus.FIREBASE_ERROR, "Firebase 업데이트 실패"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(GlobalStatus.AUTHENTICATION_FAIL, e.getMessage()));
         }
-        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/update/password")
