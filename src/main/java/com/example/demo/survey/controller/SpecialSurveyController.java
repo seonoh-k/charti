@@ -25,7 +25,16 @@ public class SpecialSurveyController {
     // 1. 연령대 기준 조회
     @GetMapping("/by-age/{ageGroup}")
     public List<SpecialSurveyResponseDto> getSurveysByAgeGroup(@PathVariable String ageGroup) {
-        return specialSurveyService.getByAgeGroup(ageGroup);
+        AgeGroup ag;
+        try {
+            // 먼저 enum.name() 으로 매핑 시도
+            ag = AgeGroup.valueOf(ageGroup);
+        } catch (IllegalArgumentException e) {
+            // 실패하면 displayName 기준 매핑
+            ag = AgeGroup.fromValue(ageGroup);
+        }
+
+        return specialSurveyService.getByAgeGroup(ag.getDisplayName());
     }
 
     // 3. 문항 카테고리별 조회

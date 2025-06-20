@@ -61,7 +61,7 @@ public class SpecialAnswerService {
     }
 
     public List<SpecialAnswer> findByChild(Long childId) {
-        return answerRepo.findByChildIdOrderByCreatedAtDesc(childId);
+        return answerRepo.findByChildIdAndDeletedFalseOrderByCreatedAtDesc(childId);
     }
 
     // 수정

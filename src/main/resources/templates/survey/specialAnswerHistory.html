@@ -1,114 +1,167 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
-    <title>특별 문진 이력</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>특별 문진 응답 이력</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-4xl mx-auto p-6">
         <h1 class="text-2xl font-bold mb-6">특별 문진 이력</h1>
 
-        <!-- 자녀 선택 -->
+        <!-- 1) 자녀 선택 -->
         <div class="mb-4">
-            <label class="font-semibold">자녀:</label>
+            <label for="childSelect" class="font-semibold mr-2">자녀 선택:</label>
             <select id="childSelect" class="border p-2 rounded w-64">
                 <option value="" disabled selected>자녀를 선택하세요</option>
                 <option th:each="c : ${children}"
                         th:value="${c.id}"
-                        th:text="${c.name + ' (' + c.nickname + ')'}"/>
+                        th:text="${c.name + ' (' + c.nickname + ')'}">
+                </option>
             </select>
         </div>
 
-        <!-- 이력 리스트 -->
+        <!-- 2) 자녀 정보 (Daily에서 복사) -->
+        <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
+            <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
+            <p><strong>이름:</strong> <span id="infoName"></span></p>
+            <p><strong>성별:</strong> <span id="infoGender"></span></p>
+            <p><strong>나이:</strong> <span id="infoAge"></span></p>
+            <p><strong>키:</strong> <span id="infoHeight"></span></p>
+            <p><strong>체중:</strong> <span id="infoWeight"></span></p>
+        </div>
+
+        <!-- 3) 이력 리스트 -->
         <div id="answerList" class="space-y-4"></div>
     </div>
 
-    <!-- 수정 모달 (Daily와 동일) -->
-    <div id="editModal"
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <!-- 4) 수정 모달 (Daily와 동일) -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded shadow-xl w-full max-w-lg">
             <h2 class="text-xl font-bold mb-4">답변 수정</h2>
             <div id="modalOptions" class="space-y-2 mb-4"></div>
             <div class="flex justify-end gap-4">
-                <button id="cancelEdit"
-                        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">취소</button>
-                <button id="saveEdit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">저장</button>
+                <button id="cancelEdit" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">취소</button>
+                <button id="saveEdit"   class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">저장</button>
             </div>
         </div>
     </div>
 
     <script>
+        // --- 자녀 정보용 요소 ---
+        const childSelect = document.getElementById('childSelect');
+        const childInfo   = document.getElementById('childInfo');
+        const infoName    = document.getElementById('infoName');
+        const infoGender  = document.getElementById('infoGender');
+        const infoAge     = document.getElementById('infoAge');
+        const infoHeight  = document.getElementById('infoHeight');
+        const infoWeight  = document.getElementById('infoWeight');
+        const answerList  = document.getElementById('answerList');
+
         let historyData = [];
         let currentId   = null;
 
-        document.getElementById('childSelect').addEventListener('change', () => {
-          const childId = +document.getElementById('childSelect').value;
-          const list    = document.getElementById('answerList');
-          if (!childId) { list.innerHTML = ''; return; }
+        childSelect.addEventListener('change', () => {
+          const childId = childSelect.value;
+          // 자녀 미선택 시
+          if (!childId) {
+            childInfo.classList.add('hidden');
+            answerList.innerHTML = '';
+            return;
+          }
 
+          // (A) 자녀 정보 조회
+          fetch(`/api/child/info/${childId}`)
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(data => {
+              childInfo.classList.remove('hidden');
+              infoName   .textContent = data.name;
+              infoGender .textContent = data.gender;
+              infoAge    .textContent = data.age + '세';
+              infoHeight .textContent = data.height;
+              infoWeight .textContent = data.weight;
+            })
+            .catch(() => {
+              /* 필요 시 에러 처리 */
+            });
+
+          // (B) 기존 이력 조회 로직
           fetch(`/specialAnswer/api/history/${childId}`)
             .then(r => r.json())
             .then(data => {
               historyData = data;
-              list.innerHTML = data.length
-                ? renderHistory(data)
-                : `<p class="text-gray-500">답변 이력이 없습니다.</p>`;
+              answerList.innerHTML = '';
+              if (data.length === 0) {
+                answerList.innerHTML = `<p class="text-gray-500">답변 이력이 없습니다.</p>`;
+                return;
+              }
+              // 날짜별 그룹핑
+              const byDate = {};
+              data.forEach(a => {
+                const d = a.createdAt.substring(0,10);
+                (byDate[d] = byDate[d]||[]).push(a);
+              });
+              // 렌더링
+              Object.keys(byDate)
+                .sort((a,b) => new Date(b) - new Date(a))
+                .forEach(date => {
+                  const section = document.createElement('div');
+                  section.className = 'border rounded mb-4';
+
+                  const header = document.createElement('button');
+                  header.type = 'button';
+                  header.className = 'w-full text-left px-4 py-2 bg-blue-100 font-semibold';
+                  header.textContent = `${date} 문진 답변`;
+
+                  const body = document.createElement('div');
+                  body.className = 'hidden p-4 space-y-4 bg-gray-50';
+
+                  byDate[date].forEach((ans,i) => {
+                    const card = document.createElement('div');
+                    card.className = 'border p-3 rounded flex justify-between';
+                    card.innerHTML = `
+                      <div>
+                        <p class="font-semibold">
+                          ${i+1}. [${ans.ageGroup} | ${ans.category}] ${ans.question}
+                        </p>
+                        <p class="text-sm text-gray-700" id="answerText_${ans.id}">
+                          ${ans.answer}
+                        </p>
+                        <p class="text-xs text-gray-500">가중치: ${ans.weight}</p>
+                      </div>
+                      <div class="flex flex-col gap-2 justify-center">
+                        <button onclick="openEdit(${ans.id})"
+                                class="text-blue-600 hover:underline text-sm">수정</button>
+                        <button onclick="deleteAns(${ans.id})"
+                                class="text-red-600 hover:underline text-sm">삭제</button>
+                      </div>
+                    `;
+                    body.appendChild(card);
+                  });
+
+                  header.addEventListener('click', () => body.classList.toggle('hidden'));
+                  section.append(header, body);
+                  answerList.append(section);
+                });
             });
         });
 
-        function renderHistory(data) {
-          const byDate = data.reduce((acc,a) => {
-            const d = a.createdAt.substring(0,10);
-            (acc[d] = acc[d]||[]).push(a);
-            return acc;
-          }, {});
-          let html = '';
-          Object.keys(byDate)
-            .sort((a,b)=>new Date(b)-new Date(a))
-            .forEach(date => {
-              html += `<div class="border rounded mb-4">
-                         <button class="w-full text-left px-4 py-2 bg-blue-100 font-semibold">
-                           ${date} 문진 답변
-                         </button>
-                         <div class="hidden p-4 space-y-4 bg-gray-50">`;
-              byDate[date].forEach((ans,i) => {
-                html += `<div class="flex justify-between border p-3 rounded">
-                           <div>
-                             <p class="font-semibold">
-                               ${i+1}. [${ans.category}] ${ans.question}
-                             </p>
-                             <p class="text-sm text-gray-700" id="answerText_${ans.id}">
-                               ${ans.answer}
-                             </p>
-                             <p class="text-xs text-gray-500">가중치: ${ans.weight}</p>
-                           </div>
-                           <div class="flex flex-col gap-2 justify-center">
-                             <button onclick="openEdit(${ans.id})"
-                                     class="text-blue-600 hover:underline text-sm">수정</button>
-                             <button onclick="deleteAns(${ans.id})"
-                                     class="text-red-600 hover:underline text-sm">삭제</button>
-                           </div>
-                         </div>`;
-              });
-              html += `  </div>
-                       </div>`;
-            });
-          return html;
-        }
-
         function deleteAns(id) {
           if (!confirm('정말 삭제하시겠습니까?')) return;
-          fetch(`/specialAnswer/api/answer/${id}`, { method:'DELETE' })
-            .then(r=> r.ok && document.getElementById('childSelect').dispatchEvent(new Event('change')));
+          fetch(`/specialAnswer/api/answer/${id}`, { method: 'DELETE' })
+            .then(r => {
+              if (r.ok) childSelect.dispatchEvent(new Event('change'));
+              else alert('삭제 중 오류 발생');
+            });
         }
 
         function openEdit(id) {
           currentId = id;
-          const dto = historyData.find(a=>a.id===id);
+          const dto = historyData.find(a => a.id === id);
           const opts = document.getElementById('modalOptions');
           opts.innerHTML = '';
           dto.possibleAnswers.forEach((txt,i) => {
@@ -116,9 +169,10 @@
             opts.insertAdjacentHTML('beforeend', `
               <label class="flex items-center gap-2">
                 <input type="radio" name="editAnswer" value="${v}"
-                  ${dto.selectedValue === v ? 'checked' : ''}/>
+                  ${dto.selectedValue===v ? 'checked' : ''}/>
                 ${txt}
-              </label>`);
+              </label>
+            `);
           });
           document.getElementById('editModal').classList.remove('hidden');
         }
@@ -130,15 +184,15 @@
           const sel = +document.querySelector('input[name="editAnswer"]:checked')?.value;
           if (!sel) return alert('답변을 선택해주세요');
           fetch(`/specialAnswer/api/answer/${currentId}`, {
-            method:'PUT',
-            headers:{ 'Content-Type':'application/json' },
-            body: JSON.stringify({ answerValue: sel })
+            method: 'PUT',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({answerValue: sel})
           })
-          .then(r=>{
+          .then(r => {
             if (r.ok) {
               alert('수정되었습니다.');
               document.getElementById('editModal').classList.add('hidden');
-              document.getElementById('childSelect').dispatchEvent(new Event('change'));
+              childSelect.dispatchEvent(new Event('change'));
             }
           });
         };
