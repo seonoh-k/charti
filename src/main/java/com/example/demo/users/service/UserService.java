@@ -295,6 +295,10 @@ public class UserService {
         result.forEach(users -> log.info("ID:" + users.getId()));
         return new PagingResultDTO<>(result, MemberDTO::fromEntity);
     }
+    public PagingResultDTO<MemberDTO, Users> getMemberListWithPaging(String type, String keyword, Pageable pageable) {
+        Page<Users> result = userRepository.getAllMember(type,keyword,pageable);
+        return new PagingResultDTO<>(result, MemberDTO::fromEntity);
+    }
 
     public List<MemberDTO> getMemberList(Pageable pageable){
 
@@ -408,6 +412,29 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    // 미승인된 전문가 검색
+    public PagingResultDTO<ExpertDTO, Users> getPendingExpertListWithPaging(String type,String keyword,Pageable pageable) {
+        Page<Users> result = userRepository.searchExpertUnApprovedWithKeyword(type,keyword,pageable);
+        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
+    }
+
+    public PagingResultDTO<ExpertDTO, Users> getPendingExpertListWithPaging(Pageable pageable) {
+
+        Page<Users> result = userRepository.getAllExpertUnApproved(pageable);
+        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
+    }
+    // 미승인된 담당자 검색 에 사용
+    public PagingResultDTO<ManagerDTO, Users> getPendingManagerListWithPaging(String type,String keyword,Pageable pageable) {
+        Page<Users> result = userRepository.searchManagerUnApprovedWithKeyword(type,keyword,pageable);
+        return new PagingResultDTO<>(result, ManagerDTO::fromEntity);
+    }
+    // 미승인된 담당자 검색 에 사용
+    public PagingResultDTO<ManagerDTO, Users> getPendingManagerListWithPaging(Pageable pageable) {
+
+        Page<Users> result = userRepository.getAllManagerUnApproved(pageable);
+        return new PagingResultDTO<>(result, ManagerDTO::fromEntity);
+    }
+
     // Users → UserDTO → Member 로 안전하게 변환되므로 타입 충돌 없이 Member 엔티티 기반 기능(예: 문진, 자녀 조회 등)에 활용
     public Member getMemberEntityById(Long id) {
         return memberRepository.findById(id)
@@ -459,7 +486,7 @@ public class UserService {
         ManagerDTO managerDTO = ManagerDTO.fromEntity(byId.get());
         return managerDTO;
     }
-
+  
     /**
      * UUID로 유저를 가져온다.
      *
