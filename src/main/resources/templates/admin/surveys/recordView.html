@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* 로딩 메시지 스타일 (선택 사항) */
+        /* 로딩 메시지 스타일 */
         .loading-message, .no-data-message, .error-message {
             text-align: center;
             padding: 10px;
@@ -25,7 +25,7 @@
         details > summary {
             list-style: none; /* Firefox 등에서 기본 마커 숨기기 */
         }
-        /* 커스텀 화살표 아이콘을 위한 스타일 (선택 사항) */
+        /* 커스텀 화살표 아이콘을 위한 스타일 */
         .summary-content {
             display: flex;
             justify-content: space-between;
@@ -35,6 +35,28 @@
         .summary-content i {
             margin-left: 10px; /* 아이콘과 텍스트 사이 간격 */
         }
+
+        /* 모달 오버레이 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: white; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 600px;
+            max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-20px); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); opacity: 1; }
+        /* 토스트 알림 */
+        .toast-message {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background-color: #333; color: white; padding: 10px 20px; border-radius: 5px;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1001; font-size: 0.9rem;
+        }
+        .toast-message.show { opacity: 1; visibility: visible; }
     </style>
 </head>
 
@@ -43,7 +65,7 @@
         <h1 class="text-2xl font-bold mb-6">🗂 기록 문진 이력 조회 (관리자)</h1>
 
         <div class="mb-6">
-            <label for="searchInput" class="font-semibold">보호자 이름 또는 닉네임:</label>
+            <label for="searchInput" class="font-semibold">보호자 이름 :</label>
             <input type="text" id="searchInput" class="border rounded p-2 ml-2" />
             <button onclick="searchParent()" class="ml-2 bg-blue-600 text-white px-4 py-1 rounded">검색</button>
         </div>
@@ -55,8 +77,10 @@
         </div>
 
         <div th:if="${member != null}">
-            <h2 class="text-xl font-bold mb-4" th:text="'👤 보호자: ' + ${member.name} + ' (' + ${member.id} + ')'">보호자 정보</h2>
-
+            <h2 class="text-xl font-bold mb-4" th:text="'👤 보호자: ' + ${member.name} + ' (' + ${member.email} + ')'">보호자 정보</h2>
+            <div th:if="${hasNoChildren}" class="text-lg text-gray-600 mb-8 p-4 border rounded bg-yellow-50">
+                <span th:text="${member.name}"></span>님은 등록된 자녀가 없습니다.
+            </div>
             <div th:each="childSummary : ${childrenSummaries}">
                 <div class="mb-8">
                     <details class="border rounded" th:data-child-id="${childSummary.childId}">
@@ -79,6 +103,24 @@
         </div>
     </div>
 
+    <div id="editModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">문진 답변 수정</h2>
+            <form id="editSurveyForm">
+                <input type="hidden" id="editChildId" name="childId">
+                <input type="hidden" id="editRecordDate" name="recordDate">
+                <div id="editAnswerArea">
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="cancelEditButton" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">취소</button>
+                    <button type="submit" id="saveEditButton" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toastMessage" class="toast-message"></div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const parentSelect = document.getElementById('parentSelect');
@@ -93,21 +135,30 @@
                     const datesContainer = document.getElementById(`child-dates-content-${childId}`);
                     const icon = detailsElement.querySelector('.summary-content i');
 
+                    // childId가 유효한 숫자가 아니면 함수 실행 중단 (방어적 코드)
+                    const childIdNumber = Number(childId);
+                    if (isNaN(childIdNumber) || childIdNumber === null) { // null 체크는 Number()에서 NaN이 되면 필요 없음
+                        console.error('Invalid childId for loading dates:', childId);
+                        datesContainer.innerHTML = '<p class="error-message">자녀 정보를 불러올 수 없습니다. 다시 시도해주세요.</p>';
+                        icon.classList.remove('fa-chevron-up'); // 아이콘 원상 복구
+                        icon.classList.add('fa-chevron-down');
+                        event.preventDefault(); // details 토글 막기 (선택 사항)
+                        return;
+                    }
+
+
                     if (detailsElement.open) { // details가 열릴 때
                         icon.classList.remove('fa-chevron-down');
                         icon.classList.add('fa-chevron-up');
 
-                        // 이미 로드된 적이 없다면 로드 시작
-                        // loadedChildDates Set은 페이지네이션 상태를 추적하지 않고, 해당 자녀의 날짜 목록이 한 번이라도 로드되었는지 여부만 확인합니다.
-                        // 페이지네이션 때문에 DOM이 교체되면, 이전에 로드된 답변 캐시를 초기화해야 합니다.
+                        // `childIdNumber`가 아닌 원본 문자열 `childId`를 사용하여 Set에 저장
                         if (!loadedChildDates.has(childId)) {
-                            datesContainer.innerHTML = '<p class="loading-message">날짜 목록을 로딩 중...</p>';
+                            datesContainer.innerHTML = '';
                             await loadChildDates(childId, 0); // 0-based 페이지 번호로 첫 페이지 로드
                         }
                     } else { // details가 닫힐 때
                         icon.classList.remove('fa-chevron-up');
                         icon.classList.add('fa-chevron-down');
-                        // 닫을 때는 내용을 비우지 않습니다.
                     }
                 });
             });
@@ -136,10 +187,146 @@
                 } else { // details가 닫힐 때
                     icon.classList.remove('fa-chevron-up');
                     icon.classList.add('fa-chevron-down');
-                    // 닫을 때는 내용을 비우지 않습니다.
                 }
             }, true); // `true`를 사용하여 캡처링 단계에서 이벤트를 감지 (동적으로 추가된 요소에도 동작하도록)
 
+            // --- 수정/삭제 버튼 클릭 이벤트 위임 처리 ---
+            document.addEventListener('click', async (event) => {
+                // 수정 버튼 클릭
+                if (event.target.classList.contains('edit-record-btn')) {
+                    const childId = event.target.dataset.childId;
+                    const recordDate = event.target.dataset.recordDate;
+
+                    // 모달 열기 전에도 유효성 검사
+                    const childIdNum = Number(childId);
+                    if (isNaN(childIdNum) || childIdNum === null) {
+                        showToast('수정할 자녀 ID가 유효하지 않습니다.', 'error');
+                        console.error('Edit button click: Invalid childId:', childId);
+                        return;
+                    }
+                    await openEditModal(childId, recordDate);
+                }
+                // 삭제 버튼 클릭
+                else if (event.target.classList.contains('delete-record-btn')) {
+                    const childId = event.target.dataset.childId;
+                    const recordDate = event.target.dataset.recordDate;
+
+                    // 삭제 전에도 유효성 검사
+                    const childIdNum = Number(childId);
+                    if (isNaN(childIdNum) || childIdNum === null) {
+                        showToast('삭제할 자녀 ID가 유효하지 않습니다.', 'error');
+                        console.error('Delete button click: Invalid childId:', childId);
+                        return;
+                    }
+                    await deleteRecord(childId, recordDate);
+                }
+            });
+
+            // --- 수정 모달 취소 버튼 이벤트 ---
+            cancelEditButton.addEventListener('click', () => {
+                editModal.classList.remove('active');
+                editModal.classList.add('hidden'); // 모달 숨기기
+            });
+
+            // --- 수정 모달 폼 제출 이벤트 ---
+            editSurveyForm.addEventListener('submit', async (event) => {
+                event.preventDefault(); // 폼 기본 제출 방지
+
+                // childIdRaw는 URL 경로에 사용할 원본 문자열, childId는 DTO에 보낼 숫자
+                const childIdRaw = editChildIdInput.value;
+                const childId = Number(childIdRaw); // Number() 변환
+
+                // childId가 유효하지 않으면 여기서 즉시 중단
+                if (isNaN(childId) || childId === null) { // null 체크는 isNaN으로 충분함
+                    showToast('자녀 ID가 유효하지 않습니다.', 'error');
+                    console.error('Submit Error: Invalid childId from input:', childIdRaw);
+                    return;
+                }
+
+                const recordDate = editRecordDateInput.value; // recordDate는 문자열로 유지
+
+                const textareas = editAnswerArea.querySelectorAll('textarea[name^="answers["]');
+                let allAnswered = true;
+                const updatedAnswers = [];
+
+                for (const textarea of textareas) {
+                    const questionIdRaw = textarea.dataset.questionId;
+                    console.log("변환 전 질문 ID (raw):", questionIdRaw); // << 이 로그로 "undefined" 문자열 확인
+                    const questionId = Number(questionIdRaw); // Number() 변환
+                    console.log("변환 후 질문 ID (number):", questionId); // << 이 로그로 NaN 확인
+
+                    // questionId가 유효하지 않으면 여기서 즉시 중단
+                    if (isNaN(questionId) || questionId === null) { // null 체크는 isNaN으로 충분함
+                        showToast('질문 ID가 유효하지 않습니다.', 'error');
+                        console.error('Submit Error: Invalid questionId from dataset:', questionIdRaw);
+                        allAnswered = false; // 모든 질문에 답변했는지 검사 전에 유효성 실패 처리
+                        break; // 루프 중단
+                    }
+
+                    if (textarea.value.trim() === '') {
+                        allAnswered = false;
+                        textarea.focus();
+                        break;
+                    }
+
+                    updatedAnswers.push({
+                        questionId: questionId, // 숫자로 변환된 questionId 사용
+                        answer: textarea.value.trim(), // DTO 필드명에 맞게 'answer'로 변경됨
+                        childId: childId, // 숫자로 변환된 childId 사용
+                        // recordDate는 DTO에 포함되지 않는다는 가정하에 제거
+                        // 만약 DTO에 `private String recordDate;` 필드가 있다면 아래 주석 해제
+                        // recordDate: recordDate
+                    });
+                }
+
+                if (!allAnswered) { // 질문 ID 유효성 검사 실패 시 여기로 넘어옴
+                    return;
+                }
+
+                // 최종 전송될 데이터 확인 (Network 탭 Payload와 비교)
+                console.log("최종 제출 데이터 (updatedAnswers):", updatedAnswers);
+
+                try {
+                    // Fetch 요청 URL에 childId와 recordDate는 여전히 문자열로 사용해도 무방합니다.
+                    // 왜냐하면 백엔드 @PathVariable에서 Long과 LocalDate로 자동 변환하기 때문입니다.
+                    const response = await fetch(`/admin/surveys/record/api/child/${childIdRaw}/date/${recordDate}/answers`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updatedAnswers)
+                    });
+
+                    if (response.ok) {
+                        showToast('문진 답변이 성공적으로 수정되었습니다!', 'success');
+                        editModal.classList.remove('active');
+                        editModal.classList.add('hidden');
+                        // 수정 후 해당 날짜의 답변 내용을 다시 로드하여 UI 업데이트
+                        const answersContainer = document.getElementById(`answers-${childIdRaw}-${recordDate}`); // childIdRaw 사용
+                        if (answersContainer) {
+                            answersContainer.innerHTML = '<p class="loading-message">수정된 답변 로딩 중...</p>';
+                            // 캐시된 데이터 삭제 후 다시 로드
+                            loadedDateAnswers.delete(`${childIdRaw}-${recordDate}`); // childIdRaw 사용
+                            await loadDateAnswers(childIdRaw, recordDate, answersContainer); // childIdRaw 사용
+                        }
+                    } else {
+                        const errorData = await response.json();
+                        const errorMessage = errorData.message || '문진 답변 수정에 실패했습니다.';
+                        showToast(errorMessage, 'error');
+                    }
+                } catch (error) {
+                    console.error('문진 답변 수정 중 오류 발생:', error);
+                    showToast('문진 답변 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'error');
+                }
+            });
+
+            // ESC 키로 모달 닫기
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && editModal.classList.contains('active')) {
+                    editModal.classList.remove('active');
+                    editModal.classList.add('hidden');
+                }
+            });
         });
 
         async function searchParent() {
@@ -189,21 +376,26 @@
         }
 
         // --- 자녀 날짜 목록 관련 스크립트 ---
-        // 이 Set은 해당 자녀의 날짜 목록 자체(페이지 전체)가 로드되었는지 여부만 추적합니다.
-        // 페이지네이션으로 DOM이 변경되면 해당 자녀의 날짜-답변 캐시를 초기화해야 합니다.
         const loadedChildDates = new Set();
-        // 날짜별 답변 로딩 여부를 추적하는 Set. childId-dateStr 포맷으로 키를 저장합니다.
-        const loadedDateAnswers = new Set(); // 여기에 새롭게 정의하여 전역적으로 접근 가능하도록 합니다.
+        const loadedDateAnswers = new Set(); // 날짜별 답변 로딩 여부를 추적하는 Set
 
         async function loadChildDates(childId, pageNum = 0) {
             const datesContainer = document.getElementById(`child-dates-content-${childId}`);
             const paginationContainer = document.getElementById(`pagination-container-${childId}`);
 
-            // 페이지네이션 클릭 시 로딩 메시지 다시 표시
+            // childId가 유효한 숫자인지 한 번 더 확인 (방어적 코드)
+            const childIdNum = Number(childId);
+            if (isNaN(childIdNum) || childIdNum === null) {
+                console.error('loadChildDates: Invalid childId received:', childId);
+                datesContainer.innerHTML = `<p class="error-message">자녀 ID가 올바르지 않아 날짜 목록을 로드할 수 없습니다.</p>`;
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
             if (pageNum === 0) {
                  datesContainer.innerHTML = '<p class="loading-message">날짜 목록을 로딩 중...</p>';
             }
-            paginationContainer.innerHTML = ''; // 페이지네이션 버튼도 로딩 중에는 비움
+            paginationContainer.innerHTML = '';
 
             try {
                 const url = `/admin/surveys/record/api/child/${childId}/dates?page=${pageNum}&size=5&sort=createdAt&direction=desc`;
@@ -218,25 +410,20 @@
                 const totalPages = pageData.totalPages;
                 const currentPage = pageData.number;
 
-                // ⭐ 중요 수정: 날짜 목록을 새로 로드할 때 해당 자녀의 이전에 캐시된 모든 답변 정보를 초기화합니다. ⭐
-                // 이렇게 해야 1페이지 -> 2페이지 -> 1페이지 이동 시 6/19일자 데이터가 다시 로드되지 않는 문제를 해결할 수 있습니다.
-                // 특정 자녀 ID에 해당하는 답변 캐시만 제거하도록 수정 (더 효율적).
+                // 날짜 목록을 새로 로드할 때 해당 자녀의 이전에 캐시된 모든 답변 정보를 초기화합니다.
                 for (const key of loadedDateAnswers) {
                     if (key.startsWith(`${childId}-`)) {
                         loadedDateAnswers.delete(key);
                     }
                 }
-                // 또는 더 간단하게, 해당 자녀의 답변 캐시를 모두 지웁니다 (모든 자녀의 캐시를 지우는 것은 아님)
-                // 현재 Set이 모든 자녀의 모든 날짜 캐시를 한꺼번에 관리하므로, 아래와 같이 특정 childId에 해당하는 것만 지웁니다.
-                // (Set에 filter 같은 메서드가 없으므로 수동으로 순회하여 삭제)
 
-                datesContainer.innerHTML = ''; // 로딩 메시지 제거 후 실제 내용 채움
+                datesContainer.innerHTML = '';
 
                 if (dates.length === 0) {
                     datesContainer.innerHTML = '<p class="no-data-message">기록된 문진 이력이 없습니다.</p>';
                 } else {
                     dates.forEach(dateSummary => {
-                        const dateStr = dateSummary.recordDate; // ISO-MM-DD 형식으로 가정
+                        const dateStr = dateSummary.recordDate;
 
                         const detailsHtml = `
                             <details class="mb-2 p-2 bg-gray-50 rounded"
@@ -245,14 +432,22 @@
                                 <summary class="cursor-pointer">
                                     <div class="summary-content">
                                         <span>📅 ${dateStr}</span>
-                                        <i class="fas fa-chevron-down"></i>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="bg-yellow-500 text-white px-3 py-1 text-sm rounded hover:bg-yellow-600 edit-record-btn"
+                                                    data-child-id="${childId}"
+                                                    data-record-date="${dateStr}">수정</button>
+                                            <button class="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600 delete-record-btn"
+                                                    data-child-id="${childId}"
+                                                    data-record-date="${dateStr}">삭제</button>
+                                            <i class="fas fa-chevron-down"></i>
+                                        </div>
                                     </div>
                                 </summary>
                                 <ul class="mt-2 list-disc pl-5" id="answers-${childId}-${dateStr}">
                                     </ul>
                             </details>
                         `;
-                        datesContainer.insertAdjacentHTML('beforeend', detailsHtml); // 안전하게 HTML 추가
+                        datesContainer.insertAdjacentHTML('beforeend', detailsHtml);
                     });
                 }
 
@@ -283,18 +478,16 @@
                         paginationContainer.appendChild(nextButton);
                     }
                 }
-                loadedChildDates.add(childId); // 자녀의 날짜 목록이 성공적으로 로드 완료
+                loadedChildDates.add(childId);
 
             } catch (error) {
                 console.error("Error loading child dates:", error);
                 datesContainer.innerHTML = `<p class="error-message">날짜 목록을 로드하는 데 실패했습니다: ${error.message}</p>`;
-                paginationContainer.innerHTML = ''; // 에러 시 페이지네이션 버튼 비움
+                paginationContainer.innerHTML = '';
             }
         }
 
         // --- 특정 날짜의 답변 목록 관련 스크립트 ---
-        // loadedDateAnswers는 이미 전역적으로 선언되어 있으므로 재선언하지 않습니다.
-
         async function loadDateAnswers(childId, dateStr, answersContainer) {
             try {
                 const url = `/admin/surveys/record/api/child/${childId}/date/${dateStr}/answers`;
@@ -304,7 +497,7 @@
                 }
 
                 const answers = await res.json();
-                answersContainer.innerHTML = ''; // 로딩 메시지 제거 후 실제 내용 채움
+                answersContainer.innerHTML = '';
 
                 if (answers.length === 0) {
                     answersContainer.innerHTML = '<p class="no-data-message">이 날짜에 기록된 답변이 없습니다.</p>';
@@ -318,12 +511,112 @@
                         `;
                     });
                 }
-                loadedDateAnswers.add(`${childId}-${dateStr}`); // 성공적으로 로드 완료
+                loadedDateAnswers.add(`${childId}-${dateStr}`);
 
             } catch (error) {
                 console.error("Error loading answers for date:", error);
                 answersContainer.innerHTML = `<p class="error-message">답변을 로드하는 데 실패했습니다: ${error.message}</p>`;
             }
+        }
+
+        // 수정 모달을 여는 함수
+        const editModal = document.getElementById('editModal');
+        const editSurveyForm = document.getElementById('editSurveyForm');
+        const editAnswerArea = document.getElementById('editAnswerArea');
+        const cancelEditButton = document.getElementById('cancelEditButton');
+        const saveEditButton = document.getElementById('saveEditButton');
+        const editChildIdInput = document.getElementById('editChildId');
+        const editRecordDateInput = document.getElementById('editRecordDate');
+        const toastMessage = document.getElementById('toastMessage');
+
+        async function openEditModal(childId, recordDate) {
+            // 모달 input에 값 할당 시에도 Number() 변환 없이 문자열 그대로 할당
+            // (input 요소의 value는 항상 문자열이므로, 숫자로 변환하는 것은 DTO 전송 시점에)
+            editChildIdInput.value = childId;
+            editRecordDateInput.value = recordDate;
+            editAnswerArea.innerHTML = '<p class="loading-message">답변을 불러오는 중...</p>';
+            editModal.classList.remove('hidden');
+            editModal.classList.add('active');
+
+            try {
+                const url = `/admin/surveys/record/api/child/${childId}/date/${recordDate}/answers`;
+                const res = await fetch(url);
+                if (!res.ok) {
+                    throw new Error(`답변 상세 로드 실패: ${res.status} ${res.statusText}`);
+                }
+
+                const answers = await res.json();
+                editAnswerArea.innerHTML = '';
+
+                if (answers.length === 0) {
+                    editAnswerArea.innerHTML = '<p class="no-data-message">이 날짜에 기록된 답변이 없습니다.</p>';
+                    saveEditButton.disabled = true;
+                } else {
+                    answers.forEach((qa, index) => {
+                        editAnswerArea.innerHTML += `
+                            <div class="mb-4">
+                                <label for="edit_answer_${index}" class="block font-semibold mb-1">${index + 1}. ${qa.question}</label>
+                                <textarea id="edit_answer_${index}"
+                                          name="answers[${index}].answer"  data-question-id="${qa.questionId}"
+                                          class="w-full border p-2 rounded" rows="3"
+                                          required>${qa.answer || ''}</textarea>
+                            </div>
+                        `;
+                    });
+                    saveEditButton.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error loading answers for edit:", error);
+                editAnswerArea.innerHTML = `<p class="error-message">답변을 불러오는 데 실패했습니다: ${error.message}</p>`;
+                saveEditButton.disabled = true;
+            }
+        }
+
+        // 답변 삭제 함수
+        async function deleteRecord(childId, recordDate) {
+            if (!confirm(`정말로 ${recordDate}일자 문진 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/surveys/record/api/child/${childId}/date/${recordDate}/answers`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showToast('문진 기록이 성공적으로 삭제되었습니다!', 'success');
+                    const deletedDetails = document.querySelector(`details[data-child-id="${childId}"][data-record-date="${recordDate}"]`);
+                    if (deletedDetails) {
+                        deletedDetails.remove();
+                    }
+                    // 해당 자녀의 날짜 목록을 다시 로드하여 총 개수 및 페이지네이션 업데이트
+                    await loadChildDates(childId, 0);
+                } else {
+                    const errorData = await response.json();
+                    const errorMessage = errorData.message || '문진 기록 삭제에 실패했습니다.';
+                    showToast(errorMessage, 'error');
+                }
+            } catch (error) {
+                console.error('문진 기록 삭제 중 오류 발생:', error);
+                showToast('문진 기록 삭제 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'error');
+            }
+        }
+
+        // 토스트 메시지 함수
+        function showToast(message, type = 'info') {
+            toastMessage.textContent = message;
+            toastMessage.classList.add('show');
+            if (type === 'error') {
+                toastMessage.style.backgroundColor = '#ef4444';
+            } else if (type === 'success') {
+                toastMessage.style.backgroundColor = '#22c55e';
+            } else {
+                toastMessage.style.backgroundColor = '#333';
+            }
+
+            setTimeout(() => {
+                toastMessage.classList.remove('show');
+            }, 3000);
         }
     </script>
 </th:block>

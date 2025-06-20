@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
-    <title>그룹 문진 이력</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그룹 문진 응답 이력</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-4xl mx-auto p-6">
@@ -23,32 +25,72 @@
             </select>
         </div>
 
-        <!-- 2) 이력 리스트 -->
+        <!-- 2) 자녀 정보 (dailyAnswerHistory에서 그대로 복사) -->
+        <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
+            <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
+            <p><strong>이름:</strong> <span id="infoName"></span></p>
+            <p><strong>성별:</strong> <span id="infoGender"></span></p>
+            <p><strong>나이:</strong> <span id="infoAge"></span></p>
+            <p><strong>키:</strong> <span id="infoHeight"></span></p>
+            <p><strong>체중:</strong> <span id="infoWeight"></span></p>
+        </div>
+
+        <!-- 3) 이력 리스트 -->
         <div id="answerList" class="space-y-4"></div>
     </div>
 
-    <!-- 3) 수정 모달 (Daily 문진과 동일 구조) -->
+    <!-- 4) 수정 모달 (Daily와 동일) -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded shadow-xl w-full max-w-lg">
             <h2 class="text-xl font-bold mb-4">답변 수정</h2>
             <div id="modalOptions" class="space-y-2 mb-4"></div>
             <div class="flex justify-end gap-4">
                 <button id="cancelEdit" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">취소</button>
-                <button id="saveEdit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">저장</button>
+                <button id="saveEdit"   class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">저장</button>
             </div>
         </div>
     </div>
 
     <script>
+        // --- 자녀 정보 표시용 요소 캐싱 ---
+        const childSelect = document.getElementById('childSelect');
+        const childInfo   = document.getElementById('childInfo');
+        const infoName    = document.getElementById('infoName');
+        const infoGender  = document.getElementById('infoGender');
+        const infoAge     = document.getElementById('infoAge');
+        const infoHeight  = document.getElementById('infoHeight');
+        const infoWeight  = document.getElementById('infoWeight');
+
         let lastFetched = [];
         let currentEditId = null;
 
         document.getElementById('childSelect').addEventListener('change', () => {
-          const childId = document.getElementById('childSelect').value;
-          const list = document.getElementById('answerList');
-          if (!childId) { list.innerHTML = ''; return; }
+          const childId = childSelect.value;
+          const list    = document.getElementById('answerList');
 
-          // 이력 조회
+          if (!childId) {
+            // 자녀 미선택 시, 정보·리스트 둘 다 숨기기
+            childInfo.classList.add('hidden');
+            list.innerHTML = '';
+            return;
+          }
+
+          // -- (A) 자녀 정보 조회 및 표시 --
+          fetch(`/api/child/info/${childId}`)
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(data => {
+              childInfo.classList.remove('hidden');
+              infoName   .textContent = data.name;
+              infoGender .textContent = data.gender;
+              infoAge    .textContent = data.age + '세';
+              infoHeight .textContent = data.height;
+              infoWeight .textContent = data.weight;
+            })
+            .catch(() => {
+              // 필요 시 에러 처리
+            });
+
+          // -- (B) 기존 그룹 문진 이력 조회 로직 --
           fetch(`/groupAnswer/api/history/${childId}`)
             .then(r => r.json())
             .then(data => {
@@ -58,14 +100,12 @@
                 list.innerHTML = `<p class="text-gray-500">답변 이력이 없습니다.</p>`;
                 return;
               }
-
               // 날짜별 그룹핑
               const byDate = {};
               data.forEach(a => {
                 const d = a.createdAt.substring(0,10);
                 (byDate[d] = byDate[d]||[]).push(a);
               });
-
               // 렌더링
               Object.keys(byDate)
                 .sort((a,b) => new Date(b) - new Date(a))
@@ -84,13 +124,13 @@
                   byDate[date].forEach((ans,i) => {
                     const card = document.createElement('div');
                     card.className = 'border p-3 rounded flex justify-between';
-
                     card.innerHTML = `
                       <div>
                         <p class="font-semibold">
                           ${i+1}. [${ans.targetGroup} | ${ans.category}] ${ans.question}
                         </p>
-                        <p class="text-sm text-gray-700 whitespace-pre-line" id="answerText_${ans.id}">
+                        <p class="text-sm text-gray-700 whitespace-pre-line"
+                           id="answerText_${ans.id}">
                           ${ans.answer}
                         </p>
                         <p class="text-xs text-gray-500">가중치: ${ans.weight}</p>
@@ -107,7 +147,7 @@
 
                   header.addEventListener('click', () => body.classList.toggle('hidden'));
                   section.append(header, body);
-                  list.append(section);
+                  list.appendChild(section);
                 });
             });
         });
@@ -116,8 +156,8 @@
           if (!confirm('정말 삭제하시겠습니까?')) return;
           fetch(`/groupAnswer/api/answer/${id}`, { method: 'DELETE' })
             .then(r => {
-              if (r.ok) document.getElementById('childSelect').dispatchEvent(new Event('change'));
-              else alert('삭제 중 오류 발생');
+              if (r.ok) childSelect.dispatchEvent(new Event('change'));
+              else      alert('삭제 중 오류 발생');
             });
         }
 
@@ -130,16 +170,12 @@
             const v = i + 1;
             opts.insertAdjacentHTML("beforeend", `
               <label class="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="editAnswer"
-                  value="${v}"
-                  ${v === dto.selectedValue ? "checked" : ""}  <!-- () 없앰 -->
+                <input type="radio" name="editAnswer" value="${v}"
+                  ${v === dto.selectedValue ? "checked" : ""}/>
                 ${text}
               </label>
             `);
           });
-
           document.getElementById("editModal").classList.remove("hidden");
         }
 
@@ -159,7 +195,7 @@
             if (r.ok) {
               alert('수정되었습니다.');
               document.getElementById('editModal').classList.add('hidden');
-              document.getElementById('childSelect').dispatchEvent(new Event('change'));
+              childSelect.dispatchEvent(new Event('change'));
             } else {
               alert('수정 중 오류 발생');
             }

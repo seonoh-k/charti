@@ -35,6 +35,11 @@ public class ExpertService {
         Page<Expert> result = expertRepository.findByIsApprovedFalse(pageable);
         return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
     }
+    public PagingResultDTO<ExpertDTO, Expert> getPendingExpertListWithPaging(String type,String keyword,Pageable pageable) {
+
+        Page<Expert> result = expertRepository.findByIsApprovedFalse(pageable);
+        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
+    }
     // 미승인 상태 전문가 리스트 -> 리스트 반환
     public List<ExpertDTO> getExpertList(Pageable pageable) {
         Page<Expert> result = expertRepository.findByIsApprovedFalse(pageable);

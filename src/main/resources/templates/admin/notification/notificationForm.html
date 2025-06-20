@@ -32,7 +32,7 @@
                 <option value="">전체</option>
                 <option th:each="a : ${ageGroups}"
                         th:value="${a}"
-                        th:text="${a.label}">
+                        th:text="${a.displayName}">
                 </option>
             </select>
 

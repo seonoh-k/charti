@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
-    <title>데일리 문진 이력</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데일리 문진 답변 이력</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-4xl mx-auto p-6">
@@ -72,7 +74,7 @@
             const childId = childSelect.value;
             if (!childId) return;
 
-            // 자녀 정보 조회 (필요 시 ChildController 에 API 추가)
+            // 자녀 정보 조회
             fetch(`/api/child/info/${childId}`)
               .then(res => res.json())
               .then(data => {

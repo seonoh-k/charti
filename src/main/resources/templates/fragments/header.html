@@ -16,8 +16,7 @@
 <th:block th:fragment="headerFragment">
     <!-- 헤더 전체 -->
 
-    <header id="header" th:fragment="fragment-header"
-            class="sticky top-0 bg-white z-50 shadow">
+    <header id="header" th:fragment="fragment-header" class="sticky top-0 bg-white z-50 shadow">
 
         <!-- 상단: 로고 + 로그인 -->
         <div class="container mx-auto flex justify-between items-center py-4 px-6">
@@ -35,6 +34,8 @@
                     </th:block>
                 </ul>
             </nav>
+          <!-- 알림 아이콘 & 배지 -->
+          <div th:insert="fragments/notice :: noticeBell"></div>
         </div>
 
         <!-- 하단: 메뉴바 -->
@@ -55,13 +56,15 @@
                     </li>
 
                     <!-- 진단요청 -->
-                    <li class="relative group">
-                        <button class="hover:text-blue-100 p-4 text-md mx-3">진단요청</button>
-                        <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-black bg-opacity-70 text-white shadow-lg mt-1 min-w-[180px] text-center z-50 py-2">
-                            <li><a href="/request/list" class="block px-4 py-2 hover:text-gray-300">진단요청 목록</a></li>
-                            <li><a href="/request/new" class="block px-4 py-2 hover:text-gray-300">진단요청 작성</a></li>
-                        </ul>
-                    </li>
+                <li class="relative group">
+                    <button class="hover:text-blue-100 p-4 text-md mx-3">진단요청</button>
+
+                    <!-- 수정된 서브 메뉴 -->
+                    <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-black bg-opacity-70 text-white shadow-lg mt-1 min-w-[180px] text-center z-50 py-2">
+                        <li><a href="/request/list" class="block px-4 py-2 hover:text-gray-300">진단요청 목록</a></li>
+                        <li><a href="/request/new" class="block px-4 py-2 hover:text-gray-300">진단요청 작성</a></li>
+                    </ul>
+                </li>
 
                     <button><a href="/board" class="hover:text-blue-100 p-4 text-md mx-3">건강 게시판</a></button>
                     <button><a href="/faq" class="hover:text-blue-100 p-4 text-md mx-3">FAQ</a></button>
@@ -70,8 +73,5 @@
         </nav>
 
     </header>
-</th:block>
-
-
 </th:block>
 </html>

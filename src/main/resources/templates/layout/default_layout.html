@@ -20,6 +20,7 @@
   </body>
   
 <th:block th:replace="~{fragments/footer :: footerFragment}"></th:block>
+<th:block layout:fragment="script"></th:block>
 
 <!-- FCM 관련 스크립트: 로그인한 사용자에게만 적용 -->
 <th:block sec:authorize="isAuthenticated()">
