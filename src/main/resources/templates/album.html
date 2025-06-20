@@ -1,33 +1,38 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>데일리 문진</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
 <th:block layout:fragment="content">
     <div class="max-w-5xl mx-auto p-6" :class="{ 'space-y-6': !modalIsOpen }">
         <div class="relative p-4 mb-6">
+            <div th:if="${isOwner}" class="absolute top-0 right-0 m-3">
+                <div class="relative inline-block text-left">
+                    <button id="kebabMenuBtn" class="text-gray-500 text-2xl hover:text-gray-700">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
 
-            <div th:if="${isOwner}" class="absolute top-0 right-0 m-3 inline-flex items-center space-x-4">
-                <label class="inline-flex items-center cursor-pointer space-x-4">
-                    <span th:text="${album.isPublic} ? '공개' : '비공개'" id="isPublic" class="text-md text-gray-400"></span>
-                    <input type="checkbox" id="publicToggle" value="" class="sr-only peer" th:checked="${album.isPublic}">
-                    <div class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700
-                        peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
-                        peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
-                        after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
-                        after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600
-                        dark:peer-checked:bg-blue-600"></div>
-                </label>
-                <button id="albumDeleteBtn" class="text-gray-500 text-2xl hover:text-gray-300">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
+                    <div id="kebabDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
+                        <div class="p-2 space-y-2">
+                            <label class="flex items-center cursor-pointer text-sm space-x-2">
+                                <span th:text="${album.isPublic} ? '공개' : '비공개'" id="isPublic"
+                                      th:classappend="${album.isPublic} ? 'text-green-600' : 'text-red-500'">
+                                </span>
+                                <input type="checkbox" id="publicToggle" class="sr-only peer" th:checked="${album.isPublic}" th:attr="data-album-id=${album.id}">
+                                <div class="relative w-9 h-5 bg-gray-200 rounded-full peer dark:bg-gray-600
+                                    peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
+                                    peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
+                                    after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
+                                    after:h-4 after:w-4 after:transition-all dark:border-gray-500 peer-checked:bg-blue-500"></div>
+                            </label>
+
+                            <button id="albumUpdateBtn" class="w-full text-left text-sm text-gray-700 hover:text-blue-600">
+                                <i class="fa-solid fa-pen-to-square mr-2"></i>앨범 수정
+                            </button>
+
+                            <button id="albumDeleteBtn" class="w-full text-left text-sm text-gray-700 hover:text-red-600">
+                                <i class="fa-solid fa-trash-can mr-2.5"></i>앨범 삭제
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="flex items-center gap-4">
@@ -62,54 +67,68 @@
             </div>
         </div>
 
-        <!-- 원본 이미지 파일을 보기위한 모달창 -->
-        <div id="modal" class="fixed inset-0 pt-5 bg-black bg-opacity-70 flex justify-center items-center hidden z-50">
-            <div class="relative max-w-4xl max-h-[90vh] flex items-center">
-                <div class="absolute -top-10 right-11 z-50 p-1 rounded-lg flex items-center gap-4">
-                    <label th:if="${isOwner}" class="inline-flex items-center cursor-pointer space-x-4">
-                        <span id="modalPublicStatus" class="text-sm text-gray-200"></span>
-                        <input type="checkbox" id="modalToggle" value="" class="sr-only peer">
-                        <div class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700
-                        peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
-                        peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
-                        after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
-                        after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600
-                        dark:peer-checked:bg-blue-600"></div>
-                    </label>
-                    <button id="photoDownloadBtn" class="text-gray-200 text-lg hover:text-gray-500">
-                        <i class="fa-solid fa-file-arrow-down"></i>
-                    </button>
-                    <button th:if="${isOwner}" id="photoDeleteBtn" class="text-gray-200 text-lg hover:text-gray-500">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                    <button id="modalClose" class="text-gray-200 text-2xl hover:text-gray-500">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-                <button id="modalPrev" class="p-2 mr-2 hover:bg-gray-500 rounded-lg text-white text-4xl hover:text-gray-700">
-                    <i class="fa-solid fa-angle-left"></i>
-                </button>
-
-                <div class="relative max-w-full max-h-[90vh]">
-                    <img id="modalImage" src="" alt="" class="max-w-full max-h-[90vh] rounded" />
-                </div>
-
-                <button id="modalNext" class="p-2 ml-2 hover:bg-gray-500 rounded-lg text-white text-4xl hover:text-gray-700">
-                    <i class="fa-solid fa-angle-right"></i>
-                </button>
-            </div>
+        <hr class="my-4 border-gray-300">
+        <div class="flex justify-center mt-6">
+            <a th:href="@{/albumList/{id}(id=${album.member.id})}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow">앨범 목록</a>
         </div>
 
+        <!-- 원본 이미지 파일을 보기위한 모달창 -->
+        <div id="modal" class="fixed inset-0 pt-5 bg-black bg-opacity-70 flex justify-center items-center hidden z-50">
+            <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center">
+                <div class="flex flex-col items-center max-w-full">
+                    <div class="w-full flex items-center justify-between px-12 mb-2">
+                        <span id="modalCreatedAt" class="text-sm text-gray-200"></span>
+                        <div class="flex items-center gap-4">
+                            <label th:if="${isOwner}" class="inline-flex items-center cursor-pointer space-x-4">
+                                <span id="modalPublicStatus" class="text-sm text-gray-200"></span>
+                                <input type="checkbox" id="modalToggle" value="" class="sr-only peer">
+                                <div class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700
+                                    peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
+                                    peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
+                                    after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
+                                    after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600
+                                    dark:peer-checked:bg-blue-600"></div>
+                            </label>
+                            <button id="photoDownloadBtn" class="text-gray-200 text-lg hover:text-gray-500">
+                                <i class="fa-solid fa-file-arrow-down"></i>
+                            </button>
+                            <button th:if="${isOwner}" id="photoDeleteBtn" class="text-gray-200 text-lg hover:text-gray-500">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            <button id="modalClose" class="text-gray-200 text-2xl hover:text-gray-500">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="relative flex items-center max-w-full max-h-[85vh]">
+                        <button id="modalPrev" class="p-2 mr-2 hover:bg-gray-500 rounded-lg text-white text-4xl hover:text-gray-700">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </button>
+
+                        <div class="relative max-w-full max-h-[85vh]">
+                            <img id="modalImage" src="" alt="" class="max-w-full max-h-[85vh] rounded" />
+                        </div>
+
+                        <button id="modalNext" class="p-2 ml-2 hover:bg-gray-500 rounded-lg text-white text-4xl hover:text-gray-700">
+                            <i class="fa-solid fa-angle-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script th:inline="javascript">
 
         const isOwner = [[${isOwner}]];
+        const ownerId = [[${ownerId}]];
 
         // 모달 변수
         const modal = document.querySelector("#modal");
         const modalImage = document.querySelector("#modalImage");
         const modalPublicStatus = document.querySelector("#modalPublicStatus");
         const modalToggle = document.querySelector("#modalToggle");
+        const modalCreatedAt = document.querySelector("#modalCreatedAt");
 
         // 모달창에서 이전/다음 이미지 출력을 위한 변수
         let currentIndex = 0;
@@ -164,6 +183,7 @@
 
                     if (res.ok) {
                         document.querySelector("#isPublic").textContent = isChecked ? "공개" : "비공개";
+                        document.querySelector("#isPublic").className = isChecked ? 'text-green-600' : 'text-red-500';
                     } else {
                         e.target.checked = !isChecked;
                         alert("공개 설정 변경에 실패했습니다.");
@@ -197,7 +217,7 @@
                     const res = await fetch(`/api/album/delete?id=${id}`);
 
                     if(res.ok) {
-                        window.location.href = "/albums";
+                        window.location.href = `/albumList/${ownerId}`;
                     }
                 });
 
@@ -304,6 +324,7 @@
                 modalToggle.checked = currentPhoto.isPublic;
                 modalPublicStatus.textContent = modalToggle.checked ? '공개' : '비공개';
             }
+            modalCreatedAt.textContent = currentPhoto.createdAt;
             modal.classList.remove("hidden");
         }    
     
@@ -331,6 +352,7 @@
                 modalToggle.checked = currentPhoto.isPublic;
                 modalPublicStatus.textContent = modalToggle.checked ? '공개' : '비공개';
             }
+            modalCreatedAt.textContent = currentPhoto.createdAt;
         }
 
         function showPrev() {
@@ -351,6 +373,7 @@
                 modalToggle.checked = currentPhoto.isPublic;
                 modalPublicStatus.textContent = modalToggle.checked ? '공개' : '비공개';
             }
+            modalCreatedAt.textContent = currentPhoto.createdAt;
         }
 
         document.querySelector("#modalClose").addEventListener("click", closeModal);
@@ -374,6 +397,20 @@
                 showPrev();
             } else if (e.key === "Escape") {
                 closeModal();
+            }
+        });
+
+        const kebabBtn = document.getElementById("kebabMenuBtn");
+        const kebabDropdown = document.getElementById("kebabDropdown");
+
+        kebabBtn.addEventListener("click", () => {
+            kebabDropdown.classList.toggle("hidden");
+        });
+
+        // 바깥 클릭 시 닫기
+        document.addEventListener("click", (e) => {
+            if (!kebabBtn.contains(e.target) && !kebabDropdown.contains(e.target)) {
+                kebabDropdown.classList.add("hidden");
             }
         });
     </script>

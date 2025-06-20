@@ -6,8 +6,10 @@ import com.example.demo.entity.Album;
 import com.example.demo.entity.Photo;
 import com.example.demo.service.AlbumService;
 import com.example.demo.users.entity.Member;
+import com.example.demo.users.entity.Users;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.MemberService;
+import com.example.demo.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -26,12 +28,12 @@ public class AlbumController {
     private final AlbumService albumService;
     private final MemberService memberService;
 
-
-    @GetMapping("/albumList")
-    public String getAlbumList(@RequestParam("id") Long id, Model model) {
+    @GetMapping("/albumList/{id}")
+    public String getAlbumList(@PathVariable("id") Long id, Model model) {
 
         UserDTO userDTO = authService.getLoginUser();
         Member member = memberService.get(id);
+        Users user = member.getUsers();
 
         List<Album> albumList = member.getAlbums();
         List<String> urlList = new ArrayList<>();
@@ -47,6 +49,8 @@ public class AlbumController {
         }
 
         model.addAttribute("isOwner", isOwner);
+        model.addAttribute("loginUser", userDTO);
+        model.addAttribute("owner", user);
         model.addAttribute("albumList", albumList);
         model.addAttribute("urlList", urlList);
 
@@ -59,7 +63,7 @@ public class AlbumController {
         Album album = albumService.get(id);
         UserDTO userDTO = authService.getLoginUser();
 
-        if(!album.getIsPublic()) {
+        if(!album.getIsPublic() && !userDTO.getId().equals(album.getMember().getId())) {
             return "redirect:/";
         }
 
@@ -73,6 +77,7 @@ public class AlbumController {
         }
 
         model.addAttribute("isOwner", isOwner);
+        model.addAttribute("ownerId", album.getMember().getId());
         model.addAttribute("album", album);
         model.addAttribute("url", "/api/proxy/image?filename=thumbnail/"+album.getThumbnail());
         model.addAttribute("photoList", photoList);

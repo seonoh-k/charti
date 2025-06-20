@@ -86,7 +86,7 @@ public class StorageAPIController {
     }
 
     // 앨범 생성
-    @PostMapping("/api/album-create")
+    @PostMapping("/api/album/create")
     public ResponseEntity<ApiResponse> createAlbum(@RequestParam("file") MultipartFile file,
                                                    @RequestParam("title") String title) throws IOException {
 
@@ -105,6 +105,28 @@ public class StorageAPIController {
         member.getAlbums().add(album);
         // 회원 테이블 업데이트 -> 앨범도 같이 저장
         memberService.update(member);
+
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
+    }
+
+    @PostMapping("/api/album/update")
+    public ResponseEntity<ApiResponse> updateAlbum(@RequestParam("id") Long id,
+                                                   @RequestParam(value = "file", required = false) MultipartFile file,
+                                                   @RequestParam(value = "title", required = false) String title) throws IOException {
+
+        Album album = albumService.get(id);
+        album.setTitle(title);
+
+        if(file != null && !file.isEmpty()) {
+            String thumbnail = album.getThumbnail();
+            urlService.deleteFile("original/" + thumbnail);
+            urlService.deleteFile("thumbnail/" + thumbnail);
+
+            String filename = uploadImage(file);
+            album.setThumbnail(filename);
+        }
+
+        albumService.update(album);
 
         return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
     }
@@ -139,6 +161,7 @@ public class StorageAPIController {
 
         return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
     }
+
     // 전문가 회원 자격증파일 업로드
     @PostMapping("/api/expert/join/license")
     public ResponseEntity<ApiResponse> uploadLicense(@RequestParam("file") MultipartFile file) throws IOException {
@@ -172,9 +195,6 @@ public class StorageAPIController {
         // 5. 결과 반환 (파일명만 클라이언트로 보냄)
         return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK, filename));
     }
-
-
-
 
     public String uploadImage(MultipartFile file) throws IOException {
 
@@ -250,4 +270,5 @@ public class StorageAPIController {
 
         return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
     }
+
 }
