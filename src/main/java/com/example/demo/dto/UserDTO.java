@@ -19,6 +19,7 @@ public class UserDTO {
     private String uuid;
     private String name;
     private String username;
+    private String nickname;
     private String password;
     private String role;
     private String provider;
@@ -26,6 +27,8 @@ public class UserDTO {
     private String smsIdToken; // sms 인증
     private LocalDateTime createdAt;
     private String phoneNumber;
+
+    private AddressDTO address;
 
         /**
      * [✅ toEntity 메서드 추가 이유]

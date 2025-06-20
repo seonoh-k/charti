@@ -9,6 +9,10 @@ import com.example.demo.dto.request.ExpertJoinRequest;
 import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.dto.request.UserUpdateRequest;
+import com.example.demo.entity.Address;
+import com.example.demo.entity.Group;
+import com.example.demo.repository.AddressRepository;
+import com.example.demo.repository.GroupRepository;
 import com.example.demo.users.entity.*;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.ManagerRepository;
@@ -47,7 +51,9 @@ public class UserService {
     private final ManagerRepository managerRepository;
     private final ExpertRepository expertRepository;
     private final MemberRepository memberRepository;
+    private final AddressRepository addressRepository;
     private final PasswordEncoder passwordEncoder;
+    private final GroupRepository groupRepository;
 
 
     public UserDTO entityToDTO(Users users) {
@@ -57,6 +63,7 @@ public class UserService {
         return UserDTO.builder()
                 .id(users.getId())
                 .username(users.getUsername())
+                .nickname(users.getNickname())
                 .uuid(users.getUuid())
                 .password(users.getPassword())
                 .name(users.getName())
@@ -451,14 +458,14 @@ public class UserService {
         ExpertDTO expertDTO = ExpertDTO.fromEntity(byId.get());
         return expertDTO;
     }
-    public ManagerDTO findManagerById(Long id) throws UserNotFoundException{
+    public ManagerDTO findManagerById(Long id) throws UserNotFoundException {
         Optional<Users> byId = userRepository.findById(id);
-        if (byId.isEmpty()){
+        if (byId.isEmpty()) {
             throw new UserNotFoundException();
         }
         ManagerDTO managerDTO = ManagerDTO.fromEntity(byId.get());
         return managerDTO;
-
+    }
     /**
      * UUID로 유저를 가져온다.
      *
@@ -468,21 +475,83 @@ public class UserService {
      */
     @Transactional
     public void updateUser(UserUpdateRequest request, String uid) throws FirebaseAuthException {
+        log.info("🔄 회원정보 수정 요청:  getName={} ",  request.getName());
+        log.info("🔄 회원정보 수정 요청:  getNickname={}",request.getNickname());
+        log.info("🔄 회원정보 수정 요청:  getAddressId={}", request.getAddressId());
+        log.info("🔄 회원정보 수정 요청:  getPhoneNumber={}", request.getPhoneNumber());
+        log.info("🔄 회원정보 수정 요청:  getProfileImage={}", request.getProfileImage());
+        log.info("🔄 회원정보 수정 요청:  getNewUid={}", request.getNewUid());
+
+        String newUid = request.getNewUid();
+        // 휴대전화 인증을 통해 더미uid가 생겼을때만 삭제 시도
+        if (newUid != null && !newUid.isBlank()) {
+            log.info("🗑️ Firebase 임시 UID 삭제 시도: {}", newUid);
+            FirebaseAuth.getInstance().deleteUser(newUid);
+        }
         // 1. Firebase 업데이트
         UserRecord.UpdateRequest firebaseReq = new UserRecord.UpdateRequest(uid)
                 .setDisplayName(request.getName())
                 .setPhoneNumber(request.getPhoneNumber());
 
         FirebaseAuth.getInstance().updateUser(firebaseReq);
+        log.info("✅ Firebase 사용자 정보 업데이트 완료: name={}, phone={}", request.getName(), request.getPhoneNumber());
 
         // 2. DB 업데이트
-        Users user = userRepository.findByUuid(uid).orElseThrow();
+        Users user = userRepository.findByUuid(uid).orElseThrow(() -> new IllegalArgumentException("유저 없음: " + uid));
+        log.info("🧩 DB 사용자 정보 조회 완료: userId={}, role={}", user.getId(), user.getRole());
+
         user.setName(request.getName());
         user.setNickname(request.getNickname());
+        user.setPhoneNumber(request.getPhoneNumber());
 
-//        user.setUpdatedAt(LocalDateTime.now());
+        // ✅ 주소 분기 업데이트
+        if (request.getAddressId() != null) {
+            log.info("📌 주소 ID 수신됨: {}", request.getAddressId());
+
+            Address newAddress = addressRepository.findById(request.getAddressId())
+                    .orElseThrow(() -> new IllegalArgumentException("주소 정보 없음: ID=" + request.getAddressId()));
+            log.info("📍 새로운 주소 조회 완료: {}", newAddress.getId());
+
+            Role role = user.getRole();
+
+            switch (role) {
+                case ROLE_MEMBER -> {
+                    Member member = user.getMember();
+                    log.info("🔍 MEMBER 객체: {}", (member != null ? member.getId() : "null"));
+                    if (member != null) {
+                        member.setAddress(newAddress);
+                        memberRepository.save(member);
+                        log.info("✅ Member 주소 업데이트 완료");
+                    }
+                }
+                case ROLE_EXPERT -> {
+                    Expert expert = user.getExpert();
+                    log.info("🔍 EXPERT 객체: {}", (expert != null ? expert.getId() : "null"));
+                    if (expert != null) {
+                        expert.setAddress(newAddress);
+                        expertRepository.save(expert);
+                        log.info("✅ Expert 주소 업데이트 완료");
+                    }
+                }
+                case ROLE_MANAGER -> {
+                    Manager manager = user.getManager();
+                    log.info("🔍 MANAGER 객체: {}", (manager != null ? manager.getId() : "null"));
+                    if (manager != null && manager.getGroup() != null) {
+                        Group group = manager.getGroup();
+                        log.info("🔍 GROUP 객체: {}", group.getId());
+                        group.setAddress(newAddress);
+                        groupRepository.save(group);
+                        log.info("✅ Group 주소 업데이트 완료");
+                    }
+                }
+                default -> throw new IllegalStateException("알 수 없는 역할: " + role);
+            }
+        }
+
         userRepository.save(user);
+        log.info("✅ 사용자 정보 DB 업데이트 완료");
     }
+
 
     /**
      * UUID로 유저를 가져온다.

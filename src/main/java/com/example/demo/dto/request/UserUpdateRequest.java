@@ -10,6 +10,7 @@ public class UserUpdateRequest {
     private String nickname;     // DB 전용 필드
     private String password;     // DB 전용 필드
     private String profileImage;     // DB 전용 필드
+    private String newUid;  // sms 인증시 생겨난 유저
 
-    private String AddressDTO;     // DB 전용 필드
+    private Long addressId;     // DB 전용 필드
 }

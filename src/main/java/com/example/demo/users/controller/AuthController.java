@@ -120,6 +120,11 @@ public class AuthController {
 
         }
     }
+    @GetMapping("/findUsername")
+    public String showFindUsernamePage() {
+        return "findUsername"; // 템플릿 경로 (예: /templates/user/find-username.html)
+    }
+
 
     /**
      * 사용자가 입력한 동 이름으로 주소 목록을 검색해 반환한다.
@@ -145,6 +150,10 @@ public class AuthController {
             map.put("sido", address.getSido());
             map.put("gugun", address.getGugun());
             map.put("dong", address.getDong());
+            // ✅ bunji가 null도 아니고 빈 문자열도 아닐 때만 넣기
+            if (address.getBunji() != null && !address.getBunji().isBlank()) {
+                map.put("bunji", address.getBunji());
+            }
             return map;
         }).collect(Collectors.toList());
     }
@@ -350,7 +359,7 @@ public class AuthController {
         } catch (UserAlreadyExistsException userAlreadyExistsException){
 
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
+                     .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
 
         }
     }

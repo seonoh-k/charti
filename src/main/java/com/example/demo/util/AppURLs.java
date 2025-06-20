@@ -31,6 +31,7 @@ public class AppURLs {
             "/api/address/search",
             "/api/group/search",
             "/api/expert/join/license",
+            "/findUsername"
 
 
     };
