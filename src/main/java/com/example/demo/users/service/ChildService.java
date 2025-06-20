@@ -1,5 +1,6 @@
 package com.example.demo.users.service;
 
+import com.example.demo.exception.ChildNotFoundException;
 import com.example.demo.service.BaseService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -29,20 +31,47 @@ public class ChildService extends BaseService<Child, ChildRepository> {
 //        super.update(child);
     }
 
+    /**
+     * [자녀 ID로 자녀 조회]
+     *
+     * 자녀의 고유 ID(PK)를 기준으로 자녀(Child) 엔티티를 조회합니다.
+     *
+     * ✅ 사용 예:
+     * - 자녀 선택 시 선택된 자녀의 정보를 가져올 때
+     * - 기록 문진 등에서 자녀 정보에 접근할 때
+     *
+     * 예외 처리: 원래 다른방식으로 했다가 통일성 위해서 변경함
+     * - 해당 ID에 해당하는 자녀가 존재하지 않으면 `ChildNotFoundException` 예외를 발생시킵니다.
+     *
+     * @param id 조회할 자녀의 ID (기본키)
+     * @return 조회된 자녀(Child) 엔티티
+     * @throws ChildNotFoundException 해당 ID의 자녀가 존재하지 않을 경우 발생
+     */
     public Child findById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 자녀를 찾을 수 없습니다. ID=" + id));
+        Optional<Child> byId = repository.findById(id);
+        if (byId.isPresent()) {
+            return byId.get();
+        } else {
+            throw new ChildNotFoundException();
+        }
     }
 
     public List<Child> findByUsersId(Long usersId) {
         return repository.findByParentUsersId(usersId);
     }
 
-    public Child get(Long childId) {
-
-        return null;}
-
-    // 자녀 목록 조회
+    /**
+     * [회원의 자녀 목록 조회]
+     *
+     * 특정 보호자(Member)의 자녀(Child) 목록을 조회합니다.
+     *
+     * ✅ 사용 예:
+     * - 사용자 로그인 후, 자신의 자녀 목록을 화면에 출력할 때
+     * - 기록 문진, 데일리 문진 등에서 자녀 선택 기능 구현 시
+     *
+     * @param member 자녀를 조회할 대상 보호자 엔티티
+     * @return 해당 보호자와 연관된 모든 자녀 리스트
+     */
     public List<Child> getChildrenByMember(Member member) {
         return repository.findByParent(member);
     }

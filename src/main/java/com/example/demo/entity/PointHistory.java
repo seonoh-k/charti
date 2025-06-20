@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import com.example.demo.enums.PointType;
+import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -37,8 +38,9 @@ public class PointHistory extends BaseEntity {
 
     // 포인트 지급 대상 자녀 이름
     // 동일 보호자 계정 아래 여러 자녀가 있을 경우 자녀별 지급 여부 판별 용도
-    @Column(name = "child_name")
-    private String childName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "child_id") // 자녀와 관계, nullable = true로 하면 자녀와 무관한 포인트도 가능
+    private Child child; // Child 엔티티와의 연관 관계 추가
 
     // 포인트 지급 날짜
     // 1일 1회 지급 제한을 체크하기 위해 날짜 기준으로 중복 여부 확인

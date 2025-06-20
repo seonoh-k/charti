@@ -411,7 +411,7 @@ public class UserService {
     // Users → UserDTO → Member 로 안전하게 변환되므로 타입 충돌 없이 Member 엔티티 기반 기능(예: 문진, 자녀 조회 등)에 활용
     public Member getMemberEntityById(Long id) {
         return memberRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("해당 ID의 멤버가 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException());
     }
 
     public Users findByUsername(String username) {
@@ -451,13 +451,14 @@ public class UserService {
         ExpertDTO expertDTO = ExpertDTO.fromEntity(byId.get());
         return expertDTO;
     }
-    public ManagerDTO findManagerById(Long id) throws UserNotFoundException{
+    public ManagerDTO findManagerById(Long id) throws UserNotFoundException {
         Optional<Users> byId = userRepository.findById(id);
-        if (byId.isEmpty()){
+        if (byId.isEmpty()) {
             throw new UserNotFoundException();
         }
         ManagerDTO managerDTO = ManagerDTO.fromEntity(byId.get());
         return managerDTO;
+    }
 
     /**
      * UUID로 유저를 가져온다.
