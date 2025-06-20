@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -34,6 +35,12 @@ public interface DailyAnswerRepository extends JpaRepository<DailyAnswer, Long> 
             Pageable pageable
     );
 
-    List<DailyAnswer> findByChildIdOrderByCreatedAtDesc(Long childId);
+    List<DailyAnswer> findByChildIdAndDeletedFalseOrderByCreatedAtDesc(Long childId);
 
+    /**
+     * 특정 childId 가 주어진 기간(start~end)에 답변을 남겼는지 여부 확인
+     */
+    boolean existsByChildIdAndCreatedAtBetween(Long childId,
+                                               LocalDateTime start,
+                                               LocalDateTime end);
 }

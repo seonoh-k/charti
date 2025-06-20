@@ -44,6 +44,7 @@ public class UserDTO {
                 .id(this.id)
                 .uuid(this.uuid)
                 .name(this.name)
+                .nickname(this.nickname)
                 .username(this.username)
                 .password(this.password)
                 .role(Role.valueOf(this.role))

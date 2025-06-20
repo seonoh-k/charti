@@ -76,7 +76,12 @@ public class SpecialSurveyService {
     @Transactional
     public Map<String, Object> evaluate(SpecialSurveyRequestDto dto) {
         AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup()); // displayName 기반 입력
-        List<SpecialSurvey> surveys = specialSurveyRepository.findByAgeGroupAndDeletedFalse(ag);
+        SurveyCategory sc = SurveyCategory.fromValue(dto.getCategory());
+
+        List<SpecialSurvey> surveys = specialSurveyRepository
+                .findByAgeGroupAndDeletedFalse(ag).stream()
+                .filter(s -> s.getCategory() == sc)
+                .collect(Collectors.toList());
 
         if (surveys.size() != dto.getAnswers().size()) {
             throw new IllegalArgumentException("답변 수가 문진 수와 다릅니다.");

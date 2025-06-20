@@ -24,6 +24,39 @@
 
         <main class="flex-1 p-6 bg-gray-100">
             <h1 class="text-2xl font-bold mb-4">전문가 가입 요청 목록</h1>
+            <!-- 검색바 (폼 없이 구현) -->
+            <div class="flex justify-end gap-2 mb-6">
+                <!-- 검색 기준 -->
+                <select id="searchType"
+                        class="border border-gray-300 rounded px-3 py-2 text-sm">
+                    <option value="name">이름</option>
+                    <option value="email">이메일</option>
+                    <option value="phoneNumber">전화번호</option>
+                    <option value="major">전공</option>
+                </select>
+            
+                <!-- 검색 입력 -->
+                <div class="relative w-full max-w-xs">
+                    <input type="text" id="searchInput" placeholder="검색어 입력"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring" />
+                    <div id="suggestions"
+                        class="absolute top-full left-0 w-full mt-1 bg-white border border-gray-300 rounded shadow hidden z-20 max-h-60 overflow-y-auto text-sm">
+                        
+
+
+                    </div>
+                </div>
+            
+                <!-- 검색 버튼 -->
+                <button id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <!-- 초기화 버튼 -->
+                <button id="resetBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+            
             <form th:action="@{/admin/approve-expert}" method="post">
 
                 <!-- 페이징 요청 정보 숨겨서 전달 -->
@@ -56,7 +89,14 @@
                         <td class="border px-4 py-2" th:text="${dto.name}"></td>
                         <td class="border px-4 py-2" th:text="${dto.email}"></td>
                         <td class="border px-4 py-2" th:text="${dto.phoneNumber}"></td>
-                        <td class="border px-4 py-2" th:text="${dto.license}"></td>
+                        <td class="border px-4 py-2 text-center">
+                            
+                            <button type="button"
+                                    th:attr="data-filename=${dto.license}"
+                                    class="bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1 rounded download-btn">
+                                다운로드
+                            </button>
+                        </td>                       
                         <td class="border px-4 py-2" th:text="${dto.major}"></td>
                         <td class="border px-4 py-2" th:text="${dto.career}"></td>
                     </tr>
@@ -75,38 +115,168 @@
         
             <!-- 페이징 -->
             <div class="mt-4 flex justify-center gap-2" id="pagination">
-                <!-- ◀ 이전 페이지 이동 -->
-                <a th:href="${result.startPage - 1 > 0} ? @{/admin/expert-applicants(page=${result.startPage - 1}, size=10, sort='createdAt', direction='desc')} : '#'"
-                    th:classappend="${result.startPage - 1 <= 0} ? 'pointer-events-none opacity-50' : ''"
-                    class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
-                    ◀
-                </a>
-        
+                <!-- ◀ 이전 페이지 -->
+                <a th:href="@{/admin/expert-applicants(
+                    page=${result.startPage - 1},
+                    size=10,
+                    sort='createdAt',
+                    direction='desc',
+                    type=${type},
+                    keyword=${keyword})}"
+                th:if="${result.startPage - 1 > 0}"
+                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">◀</a>
+                
                 <!-- 페이지 번호 목록 -->
                 <a th:each="p : ${result.pageList}"
-                        th:text="${p}"
-                        th:href="@{/admin/expert-applicants(page=${p}, size=10, sort='createdAt', direction='desc')}"
-                        th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
-                        class="px-3 py-1 rounded hover:bg-blue-500">
-                </a>
-        
-                <!-- ▶ 다음 페이지 이동 -->
-                <a th:href="${result.endPage + 1 < result.totalPages} ? @{/admin/expert-applicants(page=${result.endPage + 1}, size=10, sort='createdAt', direction='desc')} : '#'"
-                        th:classappend="${result.endPage + 1 >= result.totalPages} ? 'pointer-events-none opacity-50' : ''"
-                        class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
-                    ▶
-                </a>
+                    th:text="${p}"
+                    th:href="@{/admin/expert-applicants(
+                    page=${p},
+                    size=10,
+                    sort='createdAt',
+                    direction='desc',
+                    type=${type},
+                    keyword=${keyword})}"
+                th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
+                class="px-3 py-1 rounded hover:bg-blue-500"></a>
+                
+                <!-- ▶ 다음 페이지 -->
+                <a th:href="@{/admin/expert-applicants(
+                    page=${result.endPage + 1},
+                    size=10,
+                    sort='createdAt',
+                    direction='desc',
+                    type=${type},
+                    keyword=${keyword})}"
+                th:if="${result.endPage + 1 < result.totalPages}"
+                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">▶</a>
             </div>
         </div>
         </main>
     
     </div>
 
-<script>
-    function toggleCheckboxes(master) {
-        document.querySelectorAll('input[name="ids"]').forEach(cb => cb.checked = master.checked);
-    }
-</script>    
+    
+    <script>
+        const input = document.getElementById('searchInput');
+        const type = document.getElementById('searchType');
+        const btn = document.getElementById('searchBtn');
+        const suggestions = document.getElementById('suggestions');
+        const resetBtn = document.getElementById('resetBtn');
+        const downloadBtns = document.querySelectorAll(".download-btn");
+        
+        let debounceTimer;
+    
+        // 입력 감지 + 디바운싱
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const keyword = input.value.trim();
+    
+            if (!keyword) {
+                suggestions.classList.add('hidden');
+                return;
+            }
+    
+            debounceTimer = setTimeout(() => {
+                fetchSuggestions(keyword);
+            }, 300);
+        });
+    
+        // 검색 버튼 클릭 시 페이지 이동
+        btn.addEventListener('click', () => {
+            const keyword = input.value.trim();
+            if (!keyword) return;
+            window.location.href = `/admin/expert-applicants?type=${type.value}&keyword=${encodeURIComponent(keyword)}`;
+        });
+        
+        // Reset 검색 조건 초기화
+        resetBtn.addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchType').value = 'name'; // 초기값 선택
+            window.location.href = '/admin/expert-applicants'; // 기본 조회 페이지로 이동
+        });
+    
+        // 비동기 검색 요청
+        async function fetchSuggestions(keyword) {
+            try {
+                const response = await fetch(`/admin/expert-applicants/search?type=${type.value}&keyword=${encodeURIComponent(keyword)}`);
+                if (response.status === 204) {
+                    suggestions.classList.add('hidden');
+                    return;
+                }
+    
+                const result = await response.json();
+                const list = result.data?.dtoList || [];
+                if (result.code !== "SWD" || list.length === 0) {
+                    suggestions.classList.add('hidden');
+                    return;
+                }
+    
+                suggestions.innerHTML = '';
+                list.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
+                    div.textContent = `${item.name} [${item.email}] 
+                    [${item.phoneNumber}] [${item.major || "기재X"}]`;
+                    div.onclick = () => {
+                        input.value = item[type.value] || item.name;
+                        suggestions.classList.add('hidden');
+                    };
+                    suggestions.appendChild(div);
+                });
+    
+                suggestions.classList.remove('hidden');
+    
+            } catch (e) {
+                console.error('검색 실패:', e);
+                suggestions.classList.add('hidden');
+            }
+        }
+
+    
+        downloadBtns.forEach((downloadBtn)=>{
+
+            downloadBtn.addEventListener("click", async () => {
+                let licenseURL = downloadBtn.dataset.filename;
+
+                if(licenseURL == null){
+                    alert("파일 이름이 없습니다.");
+                }
+                try {
+                    const res = await fetch(`/api/file/download?filename=${encodeURIComponent(licenseURL)}`);
+                    if (!res.ok) {
+                        alert("서버 오류 발생");
+                        return;
+                    }
+
+                    const data = await res.json();
+                    const downloadUrl = data.url;
+                    console.log(downloadUrl); // s3 경로
+                    console.log(licenseURL);
+                    if (!downloadUrl) {
+                        alert("다운로드 링크를 찾을 수 없습니다.");
+                        return;
+                    }
+
+                    const a = document.createElement("a");
+                    a.href = downloadUrl;
+                    a.download = licenseURL.split("/").pop();  // 파일명 추출
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+
+                } catch (e) {
+                    console.error("다운로드 중 오류:", e);
+                    alert("알 수 없는 오류가 발생했습니다.");
+                }    
+            });
+
+        });
+    
+        // 전체 선택
+        function toggleCheckboxes(master) {
+            document.querySelectorAll('input[name="ids"]').forEach(cb => cb.checked = master.checked);
+        }
+    </script>
 <!-- 스크립트 -->
 <script th:src="@{/js/admin/adminSideBar.js}"></script>
 </body>

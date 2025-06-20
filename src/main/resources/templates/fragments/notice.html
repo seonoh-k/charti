@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="noticeBell">
+    <div class="relative">
+        <!-- 벨 아이콘 + 배지 -->
+        <button id="bellIcon" class="relative focus:outline-none">
+            <i class="fa fa-bell text-2xl text-gray-700"></i>
+            <span id="bellBadge"
+                  class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1"
+                  th:classappend="${unreadCount > 0} ? '' : ' hidden'"
+                  th:text="${unreadCount}"></span>
+        </button>
+
+        <!-- 알림 패널 -->
+        <div id="noticePanel"
+             class="hidden absolute right-0 mt-2 w-80 bg-white shadow-lg max-h-96 overflow-auto z-50">
+            <!-- 카테고리 탭 -->
+            <div class="flex border-b">
+                <button data-cat="" class="flex-1 py-2 hover:bg-gray-100">전체</button>
+                <button data-cat="DAILY" class="flex-1 py-2 hover:bg-gray-100">데일리</button>
+                <button data-cat="SPECIAL" class="flex-1 py-2 hover:bg-gray-100">특별</button>
+                <button data-cat="NOTICE" class="flex-1 py-2 hover:bg-gray-100">공지</button>
+            </div>
+            <!-- 알림 리스트 -->
+            <ul id="noticeList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // 1) 벨 클릭 → 패널 토글 + 읽음 처리
+        document.getElementById("bellIcon").addEventListener("click", () => {
+          const panel = document.getElementById("noticePanel");
+          panel.classList.toggle("hidden");
+
+          // 읽음 처리 API 호출 후 badge 숨김
+          fetch('/api/notices/mark-read', { method: 'POST' })
+            .then(() => {
+              document.getElementById("bellBadge").classList.add('hidden');
+            });
+
+          loadNotices("");
+        });
+
+        // 2) 카테고리 필터 버튼
+        document.querySelectorAll("#noticePanel button[data-cat]")
+          .forEach(btn => btn.addEventListener("click", () => {
+            loadNotices(btn.getAttribute("data-cat"));
+          }));
+
+        // 3) 알림 로드 함수
+        function loadNotices(category) {
+          const url = `/api/notices${category ? "?category="+category : ""}`;
+          fetch(url)
+            .then(res => res.json())
+            .then(list => {
+              const ul = document.getElementById("noticeList");
+              ul.innerHTML = "";
+              if (list.length === 0) {
+                ul.innerHTML = `<li class="p-4 text-center text-gray-500">알림이 없습니다.</li>`;
+                return;
+              }
+              list.forEach(n => {
+                const li = document.createElement("li");
+                li.className = "flex justify-between items-center p-2 border-b hover:bg-gray-50";
+
+                // 내용
+                const content = document.createElement("div");
+                content.className = "flex-1 pr-4";
+                content.innerHTML = `
+                  <p class="font-bold">${n.title}</p>
+                  <p class="text-sm whitespace-pre-wrap">${n.body}</p>
+                  <p class="text-xs text-gray-400">${new Date(n.sentAt).toLocaleString()}</p>`;
+
+                // 버튼 그룹
+                const ctrl = document.createElement("div");
+                ctrl.className = "flex items-center space-x-2";
+
+                const linkBtn = document.createElement("button");
+                linkBtn.textContent = "바로가기";
+                linkBtn.className = "bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm";
+                linkBtn.addEventListener("click", () => window.location.href = n.url);
+
+                const delBtn = document.createElement("button");
+                delBtn.innerHTML = "&times;";
+                delBtn.className = "text-gray-400 text-lg";
+                delBtn.addEventListener("click", () => {
+                  fetch(`/api/notices/${n.id}`, { method: 'DELETE' })
+                    .then(resp => {
+                      if (resp.ok) {
+                        li.remove();
+                        updateBadge(-1);
+                      }
+                    });
+                });
+
+                ctrl.append(linkBtn, delBtn);
+                li.append(content, ctrl);
+                ul.appendChild(li);
+              });
+            });
+        }
+
+        // 4) badge 즉시 감소 함수
+        function updateBadge(delta) {
+          const badge = document.getElementById("bellBadge");
+          let count = parseInt(badge.innerText) || 0;
+          count += delta;
+          if (count > 0) {
+            badge.innerText = count;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+    </script>
+</th:block>
+</html>

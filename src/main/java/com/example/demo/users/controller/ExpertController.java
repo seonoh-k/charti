@@ -12,6 +12,7 @@ import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.ExpertService;
 import com.example.demo.users.service.FirebaseService;
+import com.example.demo.users.service.UserService;
 import com.example.demo.util.GlobalStatus;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -39,6 +40,7 @@ public class ExpertController {
     private final FirebaseService firebaseService;
     private final ExpertRepository expertRepository;
     private final UserRepository usersRepository;
+    private final UserService userService;
 
 //    @GetMapping("/expert")
 //    public String showExpertPage() {
@@ -80,13 +82,98 @@ public String showExpertPage(Model model) {
      * </ul>
      * @return
      */
+//    @GetMapping("/admin/expert-applicants")
+//    public String showAdminExpertApplicantsPage(@ModelAttribute PagingRequest pagingRequest, Model model) {
+//        Pageable pageable = pagingRequest.toPageable();
+//        PagingResultDTO<ExpertDTO, Expert> result = expertService.getPendingExpertListWithPaging(pageable);
+//        model.addAttribute("result",result);
+//        return "admin/expertApplicants"; // 뷰 파일
+//    }
+
+    // 검색 실패 1트
+//    @GetMapping("/admin/expert-applicants")
+//    public String showAdminExpertApplicantsPage(
+//            @ModelAttribute PagingRequest pagingRequest,
+//            @RequestParam(required = false) String type,
+//            @RequestParam(required = false) String keyword,
+//            Model model
+//    ) {
+//        Pageable pageable = pagingRequest.toPageable();
+//
+//        PagingResultDTO<ExpertDTO, Users> result;
+//        if (type != null && keyword != null && !keyword.isBlank()) {
+//            result = userService.getPendingExpertListWithPaging(type, keyword, pageable); // 검색용
+//        } else {
+//            result = userService.getPendingExpertListWithPaging(pageable); // 기본 전체 조회
+//        }
+//
+//        model.addAttribute("result", result);
+//        return "admin/expertApplicants";
+//    }
+//    @GetMapping("/admin/expert-applicants/search")
+//    public ResponseEntity<ApiResponse> searchAdminExpertApplicantsPage(
+//            @ModelAttribute PagingRequest pagingRequest,
+//            @RequestParam(required = false) String type,
+//            @RequestParam(required = false) String keyword,
+//            Model model
+//    ) {
+//        Pageable pageable = pagingRequest.toPageable();
+//
+//        PagingResultDTO<ExpertDTO, Users> result;
+//        if (type != null && keyword != null && !keyword.isBlank()) {
+//            result = userService.getPendingExpertListWithPaging(type, keyword, pageable); // 검색용
+//            if(result.getTotalElements() <= 0){
+//                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+//            } else{
+//                return ResponseEntity.status(HttpStatus.OK)
+//                        .body(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA,result));
+//            }
+//        } else {
+//            result = userService.getPendingExpertListWithPaging(pageable); // 기본 전체 조회
+//        }
+//
+//        model.addAttribute("result", result);
+//        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+//                .body(new ApiResponse(GlobalStatus.ACCEPTED));
+//    }
+
     @GetMapping("/admin/expert-applicants")
-    public String showAdminExpertApplicantsPage(@ModelAttribute PagingRequest pagingRequest, Model model) {
+    public String showExpertApplicants(
+            @ModelAttribute PagingRequest pagingRequest,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String keyword,
+            Model model) {
+
         Pageable pageable = pagingRequest.toPageable();
-        PagingResultDTO<ExpertDTO, Expert> result = expertService.getPendingExpertListWithPaging(pageable);
-        model.addAttribute("result",result);
-        return "admin/expertApplicants"; // 뷰 파일
+        PagingResultDTO<ExpertDTO, Users> result =
+                (type != null && keyword != null && !keyword.isBlank())
+                        ? userService.getPendingExpertListWithPaging(type, keyword, pageable)
+                        : userService.getPendingExpertListWithPaging(pageable);
+
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("result", result);
+
+        return "admin/expertApplicants";
     }
+
+    @GetMapping("/admin/expert-applicants/search")
+    public ResponseEntity<ApiResponse<?>> searchExpertApplicants(
+            @RequestParam String type,
+            @RequestParam String keyword,
+            @ModelAttribute PagingRequest pagingRequest) {
+
+        Pageable pageable = pagingRequest.toPageable();
+        PagingResultDTO<ExpertDTO, Users> result = userService.getPendingExpertListWithPaging(type, keyword, pageable);
+
+        if (result.getTotalElements() <= 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
+    }
+
     @PostMapping("/admin/approve-expert")
     public String approveExpert(@ModelAttribute PagingRequest pagingRequest,
                                 @RequestParam List<Long> ids ,

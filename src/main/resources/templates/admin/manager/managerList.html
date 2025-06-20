@@ -18,7 +18,39 @@
     <div class="flex flex-1">
         <div th:replace="fragments/adminFragments :: sideBar"></div>
         <div class="container mx-auto px-6 py-10">
-            <h2>일반 사용자</h2>
+            <h1 class="text-2xl font-bold mb-4">담당자 목록</h1>
+            <!-- 검색바 (폼 없이 구현) -->
+            <div class="flex justify-end gap-2 mb-6">
+                <!-- 검색 기준 -->
+                <select id="searchType"
+                        class="border border-gray-300 rounded px-3 py-2 text-sm">
+                    <option value="name">이름</option>
+                    <option value="email">이메일</option>
+                    <option value="phoneNumber">전화번호</option>
+                    <option value="groupName">그룹이름</option>
+                </select>
+            
+                <!-- 검색 입력 -->
+                <div class="relative w-full max-w-xs">
+                    <input type="text" id="searchInput" placeholder="검색어 입력"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring" />
+                    <div id="suggestions"
+                        class="absolute top-full left-0 w-full mt-1 bg-white border border-gray-300 rounded shadow hidden z-20 max-h-60 overflow-y-auto text-sm">
+                        
+
+
+                    </div>
+                </div>
+            
+                <!-- 검색 버튼 -->
+                <button id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <!-- 초기화 버튼 -->
+                <button id="resetBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
             <table class="w-full table-auto border text-center" id="manager-table">
                 <thead>
                 <tr>
@@ -26,47 +58,131 @@
                     <th class="border px-4 py-2">이름</th>
                     <th class="border px-4 py-2">이메일</th>
                     <th class="border px-4 py-2">전화번호</th>
-                    <th class="border px-4 py-2">그룹아이디</th>
+                    <th class="border px-4 py-2">그룹이름</th>
                 </tr>
                 </thead>
                 <tbody id="table-body">
                 <tr th:each="manager : ${result.dtoList}">
-                    <td class="border px-4 py-2" th:text="${manager.id}">홍길동</td>
+                    <td class="border px-4 py-2" th:text="${manager.id}"></td>
                     <td class="border px-4 py-2" ><a th:href="@{/admin/manager/{id}(id=${manager.id})}" th:text="${manager.name}" class="hover:underline"></a></td>
-                    <td class="border px-4 py-2" th:text="${manager.email}">hong@test.com</td>
+                    <td class="border px-4 py-2" th:text="${manager.email}"></td>
                     <td class="border px-4 py-2" th:text="${manager.phoneNumber}"></td>
-                    <td class="border px-4 py-2" th:text="${manager.groupId}"></td>
+                    <td class="border px-4 py-2" th:text="${manager.groupName}"></td>
                 </tr>
                 </tbody>
             </table>
+            <!-- 페이징 -->
             <div class="mt-4 flex justify-center gap-2" id="pagination">
-                <!-- ◀ 이전 페이지 이동 -->
-                <a th:href="${result.startPage - 1 > 0} ? @{/admin/manager/all(page=${result.startPage - 1}, size=10, sort='createdAt', direction='desc')} : '#'"
-                   th:classappend="${result.startPage - 1 <= 0} ? 'pointer-events-none opacity-50' : ''"
-                   class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
-                    ◀
-                </a>
-        
+                <!-- ◀ 이전 페이지 -->
+                <a th:href="@{/admin/manager/all(
+                    page=${result.startPage - 1},
+                    size=10,
+                    sort='createdAt',
+                    direction='desc',
+                    type=${type},
+                    keyword=${keyword})}"
+                th:if="${result.startPage - 1 > 0}"
+                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">◀</a>
+                
                 <!-- 페이지 번호 목록 -->
                 <a th:each="p : ${result.pageList}"
-                   th:text="${p}"
-                   th:href="@{/admin/expert-applicants(page=${p}, size=10, sort='createdAt', direction='desc')}"
-                   th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
-                   class="px-3 py-1 rounded hover:bg-blue-500">
-                </a>
-        
-                <!-- ▶ 다음 페이지 이동 -->
-                <a th:href="${result.endPage + 1 < result.totalPages} ? @{/admin/expert-applicants(page=${result.endPage + 1}, size=10, sort='createdAt', direction='desc')} : '#'"
-                   th:classappend="${result.endPage + 1 >= result.totalPages} ? 'pointer-events-none opacity-50' : ''"
-                   class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
-                    ▶
-                </a>
-        
+                    th:text="${p}"
+                    th:href="@{/admin/manager/all(
+                    page=${p},
+                    size=10,
+                    sort='createdAt',
+                    direction='desc',
+                    type=${type},
+                    keyword=${keyword})}"
+                th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
+                class="px-3 py-1 rounded hover:bg-blue-500"></a>
+                
+                <!-- ▶ 다음 페이지 -->
+                <a th:href="@{/admin/manager/all(
+                    page=${result.endPage + 1},
+                    size=10,
+                    sort='createdAt',
+                    direction='desc',
+                    type=${type},
+                    keyword=${keyword})}"
+                th:if="${result.endPage + 1 < result.totalPages}"
+                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">▶</a>
             </div>
-        
-        
         </div>
     </div>
+    <script>
+        const input = document.getElementById('searchInput');
+        const type = document.getElementById('searchType');
+        const btn = document.getElementById('searchBtn');
+        const suggestions = document.getElementById('suggestions');
+        const resetBtn = document.getElementById('resetBtn');
+        let debounceTimer;
+    
+        // 입력 감지 + 디바운싱
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const keyword = input.value.trim();
+    
+            if (!keyword) {
+                suggestions.classList.add('hidden');
+                return;
+            }
+    
+            debounceTimer = setTimeout(() => {
+                fetchSuggestions(keyword);
+            }, 300);
+        });
+    
+        // 검색 버튼 클릭 시 페이지 이동
+        btn.addEventListener('click', () => {
+            const keyword = input.value.trim();
+            if (!keyword) return;
+            window.location.href = `/admin/manager/all?type=${type.value}&keyword=${encodeURIComponent(keyword)}`;
+        });
+        // Reset 검색 조건 초기화
+        resetBtn.addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchType').value = 'name'; // 초기값 선택
+            window.location.href = '/admin/manager/all'; // 기본 조회 페이지로 이동
+        });
+    
+        // 비동기 검색 요청
+        async function fetchSuggestions(keyword) {
+            try {
+                const response = await fetch(`/admin/manager/all/search?type=${type.value}&keyword=${encodeURIComponent(keyword)}`);
+                if (response.status === 204) {
+                    suggestions.classList.add('hidden');
+                    return;
+                }
+    
+                const result = await response.json();
+                const list = result.data?.dtoList || [];
+                if (result.code !== "SWD" || list.length === 0) {
+                    suggestions.classList.add('hidden');
+                    return;
+                }
+    
+                suggestions.innerHTML = '';
+                list.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
+                    div.textContent = `${item.name} [${item.email}] 
+                    [${item.phoneNumber}] [${item.groupName || "기재X"}]`;
+                    div.onclick = () => {
+                        input.value = item[type.value] || item.name;
+                        suggestions.classList.add('hidden');
+                    };
+                    suggestions.appendChild(div);
+                });
+    
+                suggestions.classList.remove('hidden');
+    
+            } catch (e) {
+                console.error('검색 실패:', e);
+                suggestions.classList.add('hidden');
+            }
+        }    
+    </script>
 <script th:src="@{/js/admin/adminSideBar.js}"></script>
 </body>
 </html>

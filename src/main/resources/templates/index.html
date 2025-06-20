@@ -1,18 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charti</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
-          rel="stylesheet">
-    <style>
-        body { font-family: 'Poppins', sans-serif; }
-    </style>
-</head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
 <th:block layout:fragment="content">
     <div class="text-center bg-gray-100 h-[330px] content-center">
         <h2 class="pb-3 text-2xl">서비스 소개</h2>
@@ -62,15 +49,57 @@
             문진 이력 보기
         </a>
         <a href="/admin/surveys/record/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
-            🗂 관리자 이력 보기
+            관리자 이력 보기
         </a>
-
     </div>
 
+    <div class="flex justify-center mt-6 space-x-6">
 
+        <!-- 테스트 할 때마다 링크 치기 불편해서 만든 임시 버튼 -->
 
+        <a href="/dailySurvey" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            데일리 문진하기
+        </a>
+        <a href="/dailyAnswer/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            데일리 문진 응답 조회
+        </a>
+        <a href="/groupSurvey" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            그룹 문진하기
+        </a>
+        <a href="/dailyAnswer/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            그룹 문진 응답 조회
+        </a>
+        <a href="/specialSurvey" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            특별 문진하기
+        </a>
+        <a href="/specialAnswer/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            특별 문진 응답 조회
+        </a>
+    </div>
 
+    <div class="flex justify-center mt-6 space-x-6">
 
+        <!-- 테스트 할 때마다 링크 치기 불편해서 만든 임시 버튼 -->
+
+        <a href="/surveySets" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            문진 세트 메인 페이지
+        </a>
+        <a href="/surveySets/create?type=GROUP" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            그룹 문진 세트 생성
+        </a>
+        <a href="/surveySets/create?type=SPECIAL" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            특별 문진 세트 생성
+        </a>
+        <a href="/admin/surveys/daily" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            관리자 - 데일리 문진 목록
+        </a>
+        <a href="/admin/surveys/daily/new" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            관리자 - 데일리 문진 생성
+        </a>
+        <a href="/" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">
+            없음
+        </a>
+    </div>
 
 </th:block>
 </html>

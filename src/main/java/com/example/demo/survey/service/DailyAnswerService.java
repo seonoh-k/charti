@@ -15,7 +15,7 @@ public class DailyAnswerService {
     private final DailyAnswerRepository repo;
 
     public List<DailyAnswer> getAnswersByChild(Long childId) {
-        return repo.findByChildIdOrderByCreatedAtDesc(childId);
+        return repo.findByChildIdAndDeletedFalseOrderByCreatedAtDesc(childId);
     }
 
     public void updateAnswerValue(Long id, int value) {
