@@ -35,15 +35,15 @@
             </div>
 
             <ul class="space-y-2 text-sm">
-                <li><a href="#" class="block hover:bg-gray-700 px-2 py-1 rounded">홈</a></li>
+                <li><a th:href="@{/admin/main}" class="block hover:bg-gray-700 px-2 py-1 rounded">홈</a></li>
 
                 <li>
                     <button onclick="toggleAccordion('menu1')" class="w-full text-left hover:bg-gray-700 px-2 py-1 rounded flex justify-between items-center">
                         회원가입 승인 <i class="fa-solid fa-sort-down"></i>
                     </button>
                     <ul id="menu1" class="hidden ml-4 mt-1 space-y-1">
-                        <li><a href="#" class="block px-2 py-1 hover:underline">전문가 승인</a></li>
-                        <li><a href="#" class="block px-2 py-1 hover:underline">담당자 승인</a></li>
+                        <li><a th:href="@{/admin/expert-applicants}" class="block px-2 py-1 hover:underline">전문가 승인</a></li>
+                        <li><a th:href="@{/admin/manager-applicants}" class="block px-2 py-1 hover:underline">담당자 승인</a></li>
                     </ul>
                 </li>
 
@@ -61,9 +61,9 @@
                         회원 관리 <i class="fa-solid fa-sort-down"></i>
                     </button>
                     <ul id="menu3" class="hidden ml-4 mt-1 space-y-1">
-                        <li><a href="#" class="block px-2 py-1 hover:underline">일반 회원</a></li>
-                        <li><a href="#" class="block px-2 py-1 hover:underline">전문가</a></li>
-                        <li><a href="#" class="block px-2 py-1 hover:underline">담당자</a></li>
+                        <li><a th:href="@{/admin/member/all}" class="block px-2 py-1 hover:underline">일반 회원</a></li>
+                        <li><a th:href="@{/admin/expert/all}" class="block px-2 py-1 hover:underline">전문가</a></li>
+                        <li><a th:href="@{/admin/manager/all}" class="block px-2 py-1 hover:underline">담당자</a></li>
                     </ul>
                 </li>
 
@@ -87,7 +87,7 @@
                         포인트 관리 <i class="fa-solid fa-sort-down"></i>
                     </button>
                     <ul id="menu5" class="hidden ml-4 mt-1 space-y-1">
-                        <li><a href="#" class="block px-2 py-1 hover:underline">회원 포인트 내역</a></li>
+                        <li><a th:href="@{/admin/point}" class="block px-2 py-1 hover:underline">회원 포인트 내역</a></li>
                     </ul>
                 </li>
 

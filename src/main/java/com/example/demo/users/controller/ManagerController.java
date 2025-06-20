@@ -1,12 +1,15 @@
 package com.example.demo.users.controller;
 
+import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResponse;
 import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.users.entity.Manager;
+import com.example.demo.users.entity.Users;
 import com.example.demo.users.service.ManagerService;
+import com.example.demo.users.service.UserService;
 import com.example.demo.util.GlobalStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -26,6 +29,7 @@ import java.util.List;
 public class ManagerController {
 
     private final ManagerService managerService;
+    private final UserService userService;
 
 
     @GetMapping("/manager")
@@ -47,15 +51,39 @@ public class ManagerController {
      * @return
      */
     @GetMapping("/admin/manager-applicants")
-    public String showAdminManagerApplicantsPage(@ModelAttribute PagingRequest pagingRequest, Model model) {
+    public String showAdminManagerApplicantsPage(@ModelAttribute PagingRequest pagingRequest,
+                                                 @RequestParam(required = false) String type,
+                                                 @RequestParam(required = false) String keyword,
+                                                 Model model) {
+
         Pageable pageable = pagingRequest.toPageable();
-        PagingResultDTO<ManagerDTO, Manager> result = managerService.getPendingManagerListWithPaging(pageable);
+
+        PagingResultDTO<ManagerDTO, Users> result =
+                (type != null && keyword != null && !keyword.isBlank())
+                        ? userService.getPendingManagerListWithPaging(type, keyword, pageable)
+                        : userService.getPendingManagerListWithPaging(pageable);
+
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
         model.addAttribute("result", result);
-        log.info("Result : start Page {}" ,result.getStartPage());
-        log.info("Result : Current Page {}" ,result.getPage());
-        log.info("Result : End Page {}" ,result.getEndPage());
-        log.info("Result : TotalPage {}" ,result.getTotalPages());
+
         return "admin/managerApplicants"; // 뷰 파일
+    }
+    @GetMapping("/admin/manager-applicants/search")
+    public ResponseEntity<ApiResponse<?>> searchExpertApplicants(
+            @RequestParam String type,
+            @RequestParam String keyword,
+            @ModelAttribute PagingRequest pagingRequest) {
+
+        Pageable pageable = pagingRequest.toPageable();
+        PagingResultDTO<ManagerDTO, Users> result = userService.getPendingManagerListWithPaging(type, keyword, pageable);
+
+        if (result.getTotalElements() <= 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
     }
     @PostMapping("/admin/approve-manager")
     public String approveManager(@ModelAttribute PagingRequest pagingRequest, Model model){
