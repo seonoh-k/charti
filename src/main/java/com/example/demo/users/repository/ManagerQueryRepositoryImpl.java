@@ -1,11 +1,14 @@
 package com.example.demo.users.repository;
 
+import com.example.demo.dto.ChildDTO;
 import com.example.demo.dto.ManagerDTO;
 import com.example.demo.entity.QGroup;
+import com.example.demo.users.entity.QChild;
 import com.example.demo.users.entity.QManager;
 import com.example.demo.users.entity.QUsers;
 import com.example.demo.users.entity.Role;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -16,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,31 +32,66 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
     @Override
     public Optional<ManagerDTO> getManagerById(Long managerId) {
         QManager m = QManager.manager;
-        QUsers u   = QUsers.users;
+        QUsers u = QUsers.users;
         QGroup g = QGroup.group;
+        QChild c = QChild.child;
 
-        ManagerDTO managerDTO = queryFactory
-                .select(Projections.constructor(
-                        ManagerDTO.class,
-                        u.id,                       // users_id
-                        u.name,                     // 사용자 이름
-                        u.username,                 // 이메일
-                        u.nickname,                 // 닉네임
-                        u.phoneNumber,              // 전화번호
-                        g.id,                       // 그룹 아이디
-                        g.groupName,                // 그룹 이름
-                        g.groupEmail,               // 그룹 이메일
-                        m.isApproved,               // 승인 여부
-                        u.createdAt,                 // 가입 일시
-                        u.deleted                   // 탈퇴 여부
-                ))
+        // 플랫하게 Manager, Group, Child 한 번에 조회
+        List<Tuple> tuples = queryFactory
+                .select(
+                        u.id, u.name, u.username, u.nickname, u.phoneNumber,
+                        g.id, g.groupName, g.groupEmail,
+                        m.isApproved, u.createdAt, u.deleted,
+                        c.id, c.birthOrder, c.name, c.nickname, c.weight, c.height,
+                        c.gender, c.riskGroup, c.birthday
+                )
                 .from(m)
                 .join(m.users, u)
                 .join(m.group, g)
+                .leftJoin(g.children, c) // 연관관계 바로 join!
                 .where(m.id.eq(managerId))
-                .fetchOne();
+                .fetch();
+
+        ManagerDTO managerDTO = null;
+        List<ChildDTO> childList = new ArrayList<>();
+
+        for (Tuple t : tuples) {
+            if (managerDTO == null) {
+                managerDTO = ManagerDTO.builder()
+                        .id(t.get(u.id))
+                        .name(t.get(u.name))
+                        .username(t.get(u.username))
+                        .nickname(t.get(u.nickname))
+                        .phoneNumber(t.get(u.phoneNumber))
+                        .groupId(t.get(g.id))
+                        .groupName(t.get(g.groupName))
+                        .groupEmail(t.get(g.groupEmail))
+                        .isApproved(t.get(m.isApproved))
+                        .createdAt(t.get(u.createdAt))
+                        .deleted(t.get(u.deleted))
+                        .children(childList) // 자녀 리스트 세팅
+                        .build();
+            }
+            Long childId = t.get(c.id);
+            if (childId != null) {
+                ChildDTO child = ChildDTO.builder()
+                        .id(childId)
+                        .birthOrder(t.get(c.birthOrder))
+                        .name(t.get(c.name))
+                        .nickname(t.get(c.nickname))
+                        .weight(t.get(c.weight))
+                        .height(t.get(c.height))
+                        .gender(t.get(c.gender))
+                        .riskGroup(t.get(c.riskGroup))
+                        .birthday(t.get(c.birthday))
+                        .build();
+                childList.add(child);
+            }
+        }
+
         return Optional.ofNullable(managerDTO);
     }
+
 
     @Override
     public Page<ManagerDTO> searchUnapprovedManagerList(String type, String keyword, Pageable pageable) {

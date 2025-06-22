@@ -5,6 +5,7 @@ import com.example.demo.users.entity.Users;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,6 +25,7 @@ public class ManagerDTO {
     private Boolean isApproved;
     private Boolean deleted;
     private LocalDateTime createdAt;
+    private List<ChildDTO> children;
     // 엔티티 → DTO 변환 메서드
     public static ManagerDTO fromEntity(Manager manager) {
 

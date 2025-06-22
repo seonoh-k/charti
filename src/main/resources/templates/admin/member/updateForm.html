@@ -63,6 +63,9 @@
                     <button type="button" onclick="showModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                         수정하기
                     </button>
+                    <a th:if="${hasChildren}" th:href="@{'/admin/member/' + ${memberDTO.id} + '/children'}" class="btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded ml-2">
+                        자녀 정보 보기
+                    </a>
                 </div>
             </form>
         </main>
