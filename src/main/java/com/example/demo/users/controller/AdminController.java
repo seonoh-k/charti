@@ -38,6 +38,7 @@ public class AdminController {
     private final ManagerService managerService;
     private final UserService userService;
 
+
     @GetMapping("/admin")
     public String showAdminPage() {
         log.info("[GET] 👨‍💼 request Admin Page");
@@ -50,10 +51,9 @@ public class AdminController {
         Sort sort = Sort.by("createdAt").descending();
         Pageable pageable = PageRequest.of(0, 5, sort);
 
-        List<ManagerDTO> managerDTOList = managerService.getManagerList(pageable);
-        List<ExpertDTO> expertDTOList = expertService.getExpertList(pageable);
-        List<MemberDTO> memberDTOList = userService.getMemberList(pageable);
-        // List<MemberDTO> memberDTOList = memberService.getMemberList(pageable);
+        List<ManagerDTO> managerDTOList = managerService.getLatestUnapproving(pageable);
+        List<ExpertDTO> expertDTOList = expertService.getLatestUnapproving(pageable);
+        List<MemberDTO> memberDTOList = memberService.getLatestSignups(pageable);
 
         model.addAttribute("managerDTOList",managerDTOList);
         model.addAttribute("expertDTOList",expertDTOList);
@@ -70,9 +70,9 @@ public class AdminController {
 
         Pageable pageable = pagingRequest.toPageable();
 
-        PagingResultDTO<MemberDTO, Users> result = (type != null && keyword != null && !keyword.isBlank())
-                        ? userService.getMemberListWithPaging(type, keyword, pageable)
-                        : userService.getMemberListWithPaging(pageable);
+        PagingResultDTO<MemberDTO, Member> result = (type != null && keyword != null && !keyword.isBlank())
+                        ? memberService.searchMemberList(type, keyword, pageable)
+                        : memberService.getMemberList(pageable);
 
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
@@ -88,10 +88,10 @@ public class AdminController {
 
         Pageable pageable = pagingRequest.toPageable();
 
-        PagingResultDTO<ExpertDTO, Users> result =
+        PagingResultDTO result =
                 (type != null && keyword != null && !keyword.isBlank())
-                        ? userService.getPendingExpertListWithPaging(type, keyword, pageable)
-                        : userService.getPendingExpertListWithPaging(pageable);
+                        ? expertService.searchApprovedExpertList(type, keyword, pageable)
+                        : expertService.getApprovedExpertList(pageable);
 
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
@@ -107,10 +107,10 @@ public class AdminController {
 
         Pageable pageable = pagingRequest.toPageable();
 
-        PagingResultDTO<ManagerDTO, Users> result =
+        PagingResultDTO<ManagerDTO, Manager> result =
                 (type != null && keyword != null && !keyword.isBlank())
-                        ? userService.getPendingManagerListWithPaging(type, keyword, pageable)
-                        : userService.getPendingManagerListWithPaging(pageable);
+                        ? managerService.searchUnapprovedManagerList(type, keyword, pageable)
+                        : managerService.getApprovedManagerList(pageable);
 
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
@@ -126,7 +126,7 @@ public class AdminController {
                                                                  Model model){
         Pageable pageable = pagingRequest.toPageable();
 
-        PagingResultDTO<MemberDTO, Users> result = userService.getMemberListWithPaging(type, keyword, pageable);
+        PagingResultDTO<MemberDTO, Member> result = memberService.searchMemberList(type, keyword, pageable);
 
 
         if (result.getTotalElements() <= 0) {
@@ -145,7 +145,7 @@ public class AdminController {
 
         Pageable pageable = pagingRequest.toPageable();
 
-        PagingResultDTO<ExpertDTO, Users> result = userService.getPendingExpertListWithPaging(type,keyword,pageable);
+        PagingResultDTO result = expertService.searchApprovedExpertList(type,keyword,pageable);
 
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -162,7 +162,7 @@ public class AdminController {
                                              Model model){
 
         Pageable pageable = pagingRequest.toPageable();
-        PagingResultDTO<ManagerDTO, Users> result = userService.getPendingManagerListWithPaging(type, keyword, pageable);
+        PagingResultDTO<ManagerDTO, Manager> result = managerService.searchApprovedManagerList(type, keyword, pageable);
 
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -180,7 +180,7 @@ public class AdminController {
         MemberDTO memberDTO;
 
         try{
-            memberDTO = userService.findMemberById(id);
+            memberDTO = memberService.getMemberById(id);
             log.info(memberDTO.getCreatedAt());
         } catch (UserNotFoundException userNotFoundException){
             redirectAttribute.addAttribute("page",pagingRequest.getPage());
@@ -206,7 +206,7 @@ public class AdminController {
         ExpertDTO expertDTO;
 
         try{
-            expertDTO = userService.findExpertById(id);
+            expertDTO = expertService.getExpertById(id);
 
         } catch (UserNotFoundException userNotFoundException){
             redirectAttribute.addAttribute("page",pagingRequest.getPage());
@@ -228,7 +228,7 @@ public class AdminController {
         ManagerDTO managerDTO;
 
         try{
-            managerDTO = userService.findManagerById(id);
+            managerDTO = managerService.getManagerById(id);
 
         } catch (UserNotFoundException userNotFoundException){
             redirectAttribute.addAttribute("page",pagingRequest.getPage());

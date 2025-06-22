@@ -15,15 +15,15 @@ public class ManagerDTO {
     // users_id (Manager 엔티티에서 참조)
     private Long id;
     private String name;
+    private String username; // 이메일
     private String nickname;
-    private String email;
     private String phoneNumber; // 담당자 전화번호
-    private String groupName; // 그룹 이름
     private Long groupId; // 그룹 아이디
+    private String groupName; // 그룹 이름
     private String groupEmail; // 그룹 이메일
     private Boolean isApproved;
+    private Boolean deleted;
     private LocalDateTime createdAt;
-
     // 엔티티 → DTO 변환 메서드
     public static ManagerDTO fromEntity(Manager manager) {
 
@@ -34,7 +34,7 @@ public class ManagerDTO {
                     // 담당자 이름
                     .name(manager.getUsers().getName())
                     .nickname(manager.getUsers().getNickname())
-                    .email(manager.getUsers().getUsername())    // username == email
+                    .username(manager.getUsers().getUsername())    // username == email
                     .phoneNumber(manager.getUsers().getPhoneNumber())
                     .groupName(manager.getGroup().getGroupName())
                     .groupEmail(manager.getGroup().getGroupEmail())
@@ -48,7 +48,7 @@ public class ManagerDTO {
                     .name(manager.getUsers().getName())
                     .nickname(manager.getUsers().getNickname())
                     .phoneNumber(manager.getUsers().getPhoneNumber())
-                    .email(manager.getUsers().getUsername())
+                    .username(manager.getUsers().getUsername())
                     .groupId(manager.getGroup().getId())
                     .groupName(manager.getGroup().getGroupName())
                     .groupEmail(manager.getGroup().getGroupEmail())
@@ -65,7 +65,7 @@ public class ManagerDTO {
                 .id(user.getId())
                 .name(user.getName())
                 .nickname(user.getNickname())
-                .email(user.getUsername())    // username == email
+                .username(user.getUsername())    // username == email
                 .phoneNumber(user.getPhoneNumber())
                 .groupId(user.getManager().getGroup().getId())
                 .groupName(user.getManager().getGroup().getGroupName())
@@ -74,5 +74,35 @@ public class ManagerDTO {
                 .createdAt(user.getCreatedAt())
                 .build();
     }
+    public ManagerDTO(Long id, String name, String username, String nickname,
+                      String phoneNumber, Long groupId, String groupName, String groupEmail,
+                      Boolean isApproved, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.username = username;
+        this.nickname = nickname;
+        this.groupId = groupId;
+        this.phoneNumber = phoneNumber;
+        this.groupName = groupName;
+        this.groupEmail = groupEmail;
+        this.isApproved = isApproved;
+        this.createdAt = createdAt;
+    }
+    public ManagerDTO(Long id, String name, String username, String nickname,
+                      String phoneNumber, Long groupId, String groupName, String groupEmail,
+                      Boolean isApproved, LocalDateTime createdAt, Boolean deleted) {
+        this.id = id;
+        this.name = name;
+        this.username = username;
+        this.nickname = nickname;
+        this.phoneNumber = phoneNumber;
+        this.groupId = groupId;
+        this.groupName = groupName;
+        this.groupEmail = groupEmail;
+        this.isApproved = isApproved;
+        this.createdAt = createdAt;
+        this.deleted = deleted;
+    }
+
 
 }

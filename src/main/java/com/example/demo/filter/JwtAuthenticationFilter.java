@@ -1,8 +1,8 @@
 package com.example.demo.filter;
 
+import com.example.demo.dto.UserAuthDTO;
 import com.example.demo.jwt.JwtUtil;
-import com.example.demo.users.entity.Users;
-import com.example.demo.users.repository.UserRepository;
+import com.example.demo.users.repository.UserQueryRepository;
 import com.example.demo.util.AppURLs;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -11,7 +11,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -24,6 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 토큰 까기
@@ -35,7 +35,7 @@ import java.util.Map;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
+    private final UserQueryRepository userQueryRepository;
 
     // 우리가 생성한 Jwt Token Name
     private static final String TOKEN_NAME = "token";
@@ -106,11 +106,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String uuid = jwtUtil.getUuid(token);
 log.info("========================❌ ❌ ❌ ❌ ❌ ❌ 토큰에서 추출한 username  {}: ",uuid);
             // 🔹 DB에서 사용자 조회
-            Users user = userRepository.findByUuid(uuid)
-                    .orElseThrow(() -> new UsernameNotFoundException("사용자 없음"));
+            Optional<UserAuthDTO> authByUuid = userQueryRepository.findAuthByUuid(uuid);
+            authByUuid.orElseThrow(()-> new UsernameNotFoundException("사용자 없음"));
 
+            UserAuthDTO userAuthDTO = authByUuid.get();
             // 🔒 삭제된 사용자 차단
-            if (user.isDeleted()) {
+            if (userAuthDTO.isDeleted()) {
                 log.warn("❌ 탈퇴한 사용자 접근 차단: {}", uuid);
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "탈퇴한 사용자입니다.");
                 return;

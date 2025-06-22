@@ -58,10 +58,10 @@ public class ManagerController {
 
         Pageable pageable = pagingRequest.toPageable();
 
-        PagingResultDTO<ManagerDTO, Users> result =
+        PagingResultDTO<ManagerDTO, Manager> result =
                 (type != null && keyword != null && !keyword.isBlank())
-                        ? userService.getPendingManagerListWithPaging(type, keyword, pageable)
-                        : userService.getPendingManagerListWithPaging(pageable);
+                        ? managerService.searchUnapprovedManagerList(type, keyword, pageable)
+                        : managerService.getUnapprovedManagerList(pageable);
 
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
@@ -76,7 +76,7 @@ public class ManagerController {
             @ModelAttribute PagingRequest pagingRequest) {
 
         Pageable pageable = pagingRequest.toPageable();
-        PagingResultDTO<ManagerDTO, Users> result = userService.getPendingManagerListWithPaging(type, keyword, pageable);
+        PagingResultDTO<ManagerDTO, Manager> result = managerService.searchUnapprovedManagerList(type, keyword, pageable);
 
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -89,7 +89,7 @@ public class ManagerController {
     public String approveManager(@ModelAttribute PagingRequest pagingRequest, Model model){
         Pageable pageable = pagingRequest.toPageable();
 
-        PagingResultDTO<ManagerDTO, Manager> result = managerService.getPendingManagerListWithPaging(pageable);
+        PagingResultDTO<ManagerDTO, Manager> result = managerService.getUnapprovedManagerList(pageable);
         model.addAttribute("result",result);
 
 
@@ -100,7 +100,7 @@ public class ManagerController {
     @PostMapping("/api/admin/manager-applicants")
     public ResponseEntity<ApiResponse<PagingResponse<ManagerDTO>>> getPendingManagerList(@RequestBody PagingRequest request) {
         Pageable pageable = request.toPageable();
-        PagingResultDTO<ManagerDTO, Manager> result = managerService.getPendingManagerListWithPaging(pageable);
+        PagingResultDTO<ManagerDTO, Manager> result = managerService.getUnapprovedManagerList(pageable);
 
         PagingResponse<ManagerDTO> response = PagingResponse.from(result);
 

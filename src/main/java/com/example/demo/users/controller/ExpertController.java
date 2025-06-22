@@ -40,102 +40,29 @@ public class ExpertController {
     private final FirebaseService firebaseService;
     private final ExpertRepository expertRepository;
     private final UserRepository usersRepository;
-    private final UserService userService;
 
-//    @GetMapping("/expert")
-//    public String showExpertPage() {
-//        log.info("[GET] 👨‍💼 request expert Page");
-//        return "expert";
-//    }
-@GetMapping("/expert")
-public String showExpertPage(Model model) {
-    String uuid = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
-    log.info("===============================uuid : " + uuid);
+    @GetMapping("/expert")
+    public String showExpertPage(Model model) {
+        String uuid = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+        log.info("===============================uuid : " + uuid);
 
-    Users user = usersRepository.findByUuid(uuid)
-            .orElseThrow(() -> new RuntimeException("해당 사용자 없음"));
+        Users user = usersRepository.findByUuid(uuid)
+                .orElseThrow(() -> new RuntimeException("해당 사용자 없음"));
 
-    Optional<Expert> optionalExpert = expertRepository.findByUsersId(user.getId());
+        Optional<Expert> optionalExpert = expertRepository.findByUsersId(user.getId());
 
-    if (optionalExpert.isPresent()) {
-        Expert expert = optionalExpert.get();
-        String licenseUrl = "/api/proxy/image?filename=" + URLEncoder.encode(expert.getLicense(), StandardCharsets.UTF_8);
-        model.addAttribute("licenseImageUrl", licenseUrl);
-        log.info("===============================licenseUrl : " + licenseUrl);
-    } else {
-        model.addAttribute("licenseImageUrl", null); // 또는 기본 이미지 경로 등
-        log.info("===============================전문가 정보 없음, 기본 이미지 적용");
+        if (optionalExpert.isPresent()) {
+            Expert expert = optionalExpert.get();
+            String licenseUrl = "/api/proxy/image?filename=" + URLEncoder.encode(expert.getLicense(), StandardCharsets.UTF_8);
+            model.addAttribute("licenseImageUrl", licenseUrl);
+            log.info("===============================licenseUrl : " + licenseUrl);
+        } else {
+            model.addAttribute("licenseImageUrl", null); // 또는 기본 이미지 경로 등
+            log.info("===============================전문가 정보 없음, 기본 이미지 적용");
+        }
+
+        return "expert";
     }
-
-    return "expert";
-}
-
-    /**
-     * GET /api/admin/managers/pending
-     * localhost:8080/api/admin/managers/pending?page=0&size=5
-     *
-     * <ul>
-     *     <li>페이지 :  현재 페이지</li>
-     *     <li>페이지 하나당 보여줄 요소 개수</li>
-     *     <li>정렬 기준 필드를 기준</li>
-     *     <li>방향 [asc, desc]</li>
-     * </ul>
-     * @return
-     */
-//    @GetMapping("/admin/expert-applicants")
-//    public String showAdminExpertApplicantsPage(@ModelAttribute PagingRequest pagingRequest, Model model) {
-//        Pageable pageable = pagingRequest.toPageable();
-//        PagingResultDTO<ExpertDTO, Expert> result = expertService.getPendingExpertListWithPaging(pageable);
-//        model.addAttribute("result",result);
-//        return "admin/expertApplicants"; // 뷰 파일
-//    }
-
-    // 검색 실패 1트
-//    @GetMapping("/admin/expert-applicants")
-//    public String showAdminExpertApplicantsPage(
-//            @ModelAttribute PagingRequest pagingRequest,
-//            @RequestParam(required = false) String type,
-//            @RequestParam(required = false) String keyword,
-//            Model model
-//    ) {
-//        Pageable pageable = pagingRequest.toPageable();
-//
-//        PagingResultDTO<ExpertDTO, Users> result;
-//        if (type != null && keyword != null && !keyword.isBlank()) {
-//            result = userService.getPendingExpertListWithPaging(type, keyword, pageable); // 검색용
-//        } else {
-//            result = userService.getPendingExpertListWithPaging(pageable); // 기본 전체 조회
-//        }
-//
-//        model.addAttribute("result", result);
-//        return "admin/expertApplicants";
-//    }
-//    @GetMapping("/admin/expert-applicants/search")
-//    public ResponseEntity<ApiResponse> searchAdminExpertApplicantsPage(
-//            @ModelAttribute PagingRequest pagingRequest,
-//            @RequestParam(required = false) String type,
-//            @RequestParam(required = false) String keyword,
-//            Model model
-//    ) {
-//        Pageable pageable = pagingRequest.toPageable();
-//
-//        PagingResultDTO<ExpertDTO, Users> result;
-//        if (type != null && keyword != null && !keyword.isBlank()) {
-//            result = userService.getPendingExpertListWithPaging(type, keyword, pageable); // 검색용
-//            if(result.getTotalElements() <= 0){
-//                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-//            } else{
-//                return ResponseEntity.status(HttpStatus.OK)
-//                        .body(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA,result));
-//            }
-//        } else {
-//            result = userService.getPendingExpertListWithPaging(pageable); // 기본 전체 조회
-//        }
-//
-//        model.addAttribute("result", result);
-//        return ResponseEntity.status(HttpStatus.NO_CONTENT)
-//                .body(new ApiResponse(GlobalStatus.ACCEPTED));
-//    }
 
     @GetMapping("/admin/expert-applicants")
     public String showExpertApplicants(
@@ -145,10 +72,10 @@ public String showExpertPage(Model model) {
             Model model) {
 
         Pageable pageable = pagingRequest.toPageable();
-        PagingResultDTO<ExpertDTO, Users> result =
+        PagingResultDTO<ExpertDTO, Expert> result =
                 (type != null && keyword != null && !keyword.isBlank())
-                        ? userService.getPendingExpertListWithPaging(type, keyword, pageable)
-                        : userService.getPendingExpertListWithPaging(pageable);
+                        ? expertService.searchUnapprovedExpertList(type, keyword, pageable)
+                        : expertService.getUnapprovedExpertList(pageable);
 
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
@@ -164,7 +91,7 @@ public String showExpertPage(Model model) {
             @ModelAttribute PagingRequest pagingRequest) {
 
         Pageable pageable = pagingRequest.toPageable();
-        PagingResultDTO<ExpertDTO, Users> result = userService.getPendingExpertListWithPaging(type, keyword, pageable);
+        PagingResultDTO<ExpertDTO, Expert> result = expertService.searchUnapprovedExpertList(type, keyword, pageable);
 
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -185,7 +112,7 @@ public String showExpertPage(Model model) {
 
         Pageable pageable = pagingRequest.toPageable();
 
-        PagingResultDTO<ExpertDTO, Expert> result = expertService.getPendingExpertListWithPaging(pageable);
+        PagingResultDTO<ExpertDTO, Expert> result = expertService.getUnapprovedExpertList(pageable);
         ids.forEach(log::info);
 
         model.addAttribute("result",result);

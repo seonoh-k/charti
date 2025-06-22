@@ -65,7 +65,7 @@
                 <tr th:each="manager : ${result.dtoList}">
                     <td class="border px-4 py-2" th:text="${manager.id}"></td>
                     <td class="border px-4 py-2" ><a th:href="@{/admin/manager/{id}(id=${manager.id})}" th:text="${manager.name}" class="hover:underline"></a></td>
-                    <td class="border px-4 py-2" th:text="${manager.email}"></td>
+                    <td class="border px-4 py-2" th:text="${manager.username}"></td>
                     <td class="border px-4 py-2" th:text="${manager.phoneNumber}"></td>
                     <td class="border px-4 py-2" th:text="${manager.groupName}"></td>
                 </tr>
@@ -166,7 +166,7 @@
                 list.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
-                    div.textContent = `${item.name} [${item.email}] 
+                    div.textContent = `${item.name} [${item.username}] 
                     [${item.phoneNumber}] [${item.groupName || "기재X"}]`;
                     div.onclick = () => {
                         input.value = item[type.value] || item.name;

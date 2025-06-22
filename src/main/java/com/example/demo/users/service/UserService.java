@@ -296,47 +296,7 @@ public class UserService {
         }
     }
 
-    // Member
-    public PagingResultDTO<MemberDTO, Users> getMemberListWithPaging(Pageable pageable) {
-        Page<Users> result = userRepository.getAllMember(pageable);
-        result.forEach(users -> log.info("ID:" + users.getId()));
-        return new PagingResultDTO<>(result, MemberDTO::fromEntity);
-    }
-    public PagingResultDTO<MemberDTO, Users> getMemberListWithPaging(String type, String keyword, Pageable pageable) {
-        Page<Users> result = userRepository.getAllMember(type,keyword,pageable);
-        return new PagingResultDTO<>(result, MemberDTO::fromEntity);
-    }
 
-    public List<MemberDTO> getMemberList(Pageable pageable){
-
-        Page<Users> allMember = userRepository.getAllMember(pageable);
-        // Entity -> DTO로 변환 DTO 클래스의 Static Method 사용
-        List<MemberDTO> list = allMember.map(MemberDTO::fromEntity).toList();
-        return list;
-    }
-    public List<ExpertDTO>  getUnApprovedExpertList(Pageable pageable){
-        Page<Users> allExpertUnApproved = userRepository.getAllExpertUnApproved(pageable);
-        // Entity -> DTO의 Static Method 사용해서 변환
-        List<ExpertDTO> list = allExpertUnApproved .map(ExpertDTO::fromEntity).toList();
-        return list;
-    }
-    public List<ManagerDTO>  getUnApprovedManagerList(Pageable pageable){
-        Page<Users> allManagerUnApproved = userRepository.getAllManagerUnApproved(pageable);
-        // Entity -> DTO의 Static Method 사용해서 변환
-        List<ManagerDTO> list = allManagerUnApproved.map(ManagerDTO::fromEntity).toList();
-        return list;
-    }
-    public PagingResultDTO<ManagerDTO, Users>  getApprovedManagerListWithPaging(Pageable pageable){
-        Page<Users> result = userRepository.getAllManagerApproved(pageable);
-        // Entity -> DTO의 Static Method 사용해서 변환
-
-        return new PagingResultDTO<>(result, ManagerDTO::fromEntity);
-    }
-    public PagingResultDTO<ExpertDTO, Users>  getApprovedExpertListWithPaging(Pageable pageable){
-        Page<Users> result = userRepository.getAllExpertApproved(pageable);
-        // Entity -> DTO의 Static Method 사용해서 변환
-        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
-    }
     public UserStatus updateMember(UserDTO userDTO){
         Long id = userDTO.getId();
         Optional<Users> byId = userRepository.findById(id);
@@ -419,28 +379,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    // 미승인된 전문가 검색
-    public PagingResultDTO<ExpertDTO, Users> getPendingExpertListWithPaging(String type,String keyword,Pageable pageable) {
-        Page<Users> result = userRepository.searchExpertUnApprovedWithKeyword(type,keyword,pageable);
-        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
-    }
 
-    public PagingResultDTO<ExpertDTO, Users> getPendingExpertListWithPaging(Pageable pageable) {
-
-        Page<Users> result = userRepository.getAllExpertUnApproved(pageable);
-        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
-    }
-    // 미승인된 담당자 검색 에 사용
-    public PagingResultDTO<ManagerDTO, Users> getPendingManagerListWithPaging(String type,String keyword,Pageable pageable) {
-        Page<Users> result = userRepository.searchManagerUnApprovedWithKeyword(type,keyword,pageable);
-        return new PagingResultDTO<>(result, ManagerDTO::fromEntity);
-    }
-    // 미승인된 담당자 검색 에 사용
-    public PagingResultDTO<ManagerDTO, Users> getPendingManagerListWithPaging(Pageable pageable) {
-
-        Page<Users> result = userRepository.getAllManagerUnApproved(pageable);
-        return new PagingResultDTO<>(result, ManagerDTO::fromEntity);
-    }
 
     // Users → UserDTO → Member 로 안전하게 변환되므로 타입 충돌 없이 Member 엔티티 기반 기능(예: 문진, 자녀 조회 등)에 활용
     public Member getMemberEntityById(Long id) {
@@ -467,31 +406,6 @@ public class UserService {
     public Users findByUuidEntity(String uuid) {
         return userRepository.findByUuid(uuid)
                 .orElseThrow(() -> new UserNotFoundException("유저가 없어요 (uuid): " + uuid));
-    }
-
-    public MemberDTO findMemberById(Long id) throws UserNotFoundException{
-        Optional<Users> byId = userRepository.findById(id);
-        if (byId.isEmpty()){
-            throw new UserNotFoundException();
-        }
-        MemberDTO memberDTO = MemberDTO.fromEntity(byId.get());
-        return memberDTO;
-    }
-    public ExpertDTO findExpertById(Long id) throws UserNotFoundException{
-        Optional<Users> byId = userRepository.findById(id);
-        if (byId.isEmpty()){
-            throw new UserNotFoundException();
-        }
-        ExpertDTO expertDTO = ExpertDTO.fromEntity(byId.get());
-        return expertDTO;
-    }
-    public ManagerDTO findManagerById(Long id) throws UserNotFoundException {
-        Optional<Users> byId = userRepository.findById(id);
-        if (byId.isEmpty()) {
-            throw new UserNotFoundException();
-        }
-        ManagerDTO managerDTO = ManagerDTO.fromEntity(byId.get());
-        return managerDTO;
     }
 
     /**

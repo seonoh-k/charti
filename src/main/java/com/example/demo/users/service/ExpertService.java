@@ -1,11 +1,10 @@
 package com.example.demo.users.service;
 
 import com.example.demo.dto.ExpertDTO;
-import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.users.entity.Expert;
-import com.example.demo.users.entity.Manager;
 import com.example.demo.users.exception.UserNotFoundException;
+import com.example.demo.users.repository.ExpertQueryRepository;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.util.StatusCode;
 import com.example.demo.util.UserStatus;
@@ -13,13 +12,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,27 +23,51 @@ import java.util.Optional;
 public class ExpertService {
 
     private final ExpertRepository expertRepository;
+    private final ExpertQueryRepository expertQueryRepository;
 
-    public PagingResultDTO<ExpertDTO, Expert> getPendingExpertListWithPaging(Pageable pageable) {
-
-        Page<Expert> result = expertRepository.findByIsApprovedFalse(pageable);
-        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
+    public ExpertDTO getExpertById(Long id) throws UserNotFoundException {
+        Optional<ExpertDTO> byId = expertQueryRepository.getExpertById(id);
+        if (byId.isEmpty()) {
+            throw new UserNotFoundException();
+        }
+        return byId.get();
     }
-    public PagingResultDTO<ExpertDTO, Expert> getPendingExpertListWithPaging(String type,String keyword,Pageable pageable) {
 
-        Page<Expert> result = expertRepository.findByIsApprovedFalse(pageable);
-        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
+    // 승인 상태의 전문가 페이징으로 가져오기
+    public PagingResultDTO getApprovedExpertList(Pageable pageable) {
+
+        Page<ExpertDTO> result = expertQueryRepository.getApprovedExpertList(pageable);
+
+        return new PagingResultDTO<>(result);
+
     }
+    // 미승인 상태의 전문가 페이징으로 가져오기
+    public PagingResultDTO getUnapprovedExpertList(Pageable pageable) {
+
+        Page<ExpertDTO> result = expertQueryRepository.getUnapprovedExpertList(pageable);
+
+        return new PagingResultDTO<>(result);
+    }
+    // 승인된 전문가 검색
+    public PagingResultDTO searchApprovedExpertList(String type, String keyword,Pageable pageable) {
+
+        Page<ExpertDTO> result = expertQueryRepository.searchApprovedExpertList(type,keyword,pageable);
+
+        return new PagingResultDTO<>(result);
+    }
+    // 미승인된 전문가 검색
+    public PagingResultDTO searchUnapprovedExpertList(String type, String keyword,Pageable pageable) {
+
+        Page<ExpertDTO> result = expertQueryRepository.searchUnapprovedExpertList(type,keyword,pageable);
+
+        return new PagingResultDTO<>(result);
+    }
+
+
     // 미승인 상태 전문가 리스트 -> 리스트 반환
-    public List<ExpertDTO> getExpertList(Pageable pageable) {
-        Page<Expert> result = expertRepository.findByIsApprovedFalse(pageable);
-        List<ExpertDTO> list = result.map(ExpertDTO::fromEntity).toList();
-        return list;
-    }
-    // 승인 상태 전문가 리스트 -> 페이지 DTO
-    public PagingResultDTO<ExpertDTO, Expert> getApprovedExpertListWithPaging(Pageable pageable) {
-        Page<Expert> result = expertRepository.findByIsApprovedTrue(pageable);
-        return new PagingResultDTO<>(result, ExpertDTO::fromEntity);
+    public List<ExpertDTO> getLatestUnapproving(Pageable pageable) {
+        Page<ExpertDTO> result = expertQueryRepository.getUnapprovedExpertList(pageable);
+        return result.toList();
     }
 
     // 승인 하기
