@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.AlbumDTO;
 import com.example.demo.dto.PhotoDTO;
 import com.example.demo.dto.UrlResponse;
 import com.example.demo.dto.UserDTO;
@@ -16,6 +17,7 @@ import com.example.demo.util.GlobalStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,8 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -131,15 +131,34 @@ public class StorageAPIController {
         return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
     }
 
+    @GetMapping("/api/albumList/{id}")
+    public ResponseEntity<List<AlbumDTO>> getAlbumList(@PathVariable("id") Long id,
+                                                       @RequestParam("page") int page) {
+        UserDTO userDTO = authService.getLoginUser();
+        Member member = memberService.get(id);
+        boolean isOwner = userDTO.getId().equals(member.getId());
+        Page<Album> albums = albumService.getPagedList(id, page);
+        List<AlbumDTO> albumList = new ArrayList<>();
+
+        for(Album album : albums) {
+            if(isOwner || album.getIsPublic()) {
+                albumList.add(new AlbumDTO(album));
+            }
+        }
+
+        return ResponseEntity.ok(albumList);
+    }
+
     // 앨범 내 사진 리스트 조회
-    @GetMapping("/api/album/{id}")
-    public ResponseEntity<List<PhotoDTO>> getAlbumDetail(@PathVariable("id") Long id) {
+    @GetMapping("/api/album/{id}/photos")
+    public ResponseEntity<List<PhotoDTO>> getAlbumDetail(@PathVariable("id") Long id,
+                                                         @RequestParam("page") int page) {
         UserDTO userDTO = authService.getLoginUser();
         Album album = albumService.get(id);
+        Page<Photo> photos = photoService.getPagedList(id, page);
         List<PhotoDTO> photoList = new ArrayList<>();
 
-
-        for(Photo photo : album.getPhotos()) {
+        for(Photo photo : photos) {
             if(album.getMember().getId().equals(userDTO.getId()) || photo.getIsPublic()){
                 photoList.add(new PhotoDTO(photo));
             }

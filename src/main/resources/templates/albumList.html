@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
 <th:block layout:fragment="content">
     <div class="max-w-5xl mx-auto p-6" :class="{ 'space-y-6': !modalIsOpen }">
-        <h2 th:text="|${owner.nickname}님의 앨범 목록|" class="text-3xl font-semibold text-gray-800"></h2>
+        <h2 th:text="${owner.nickname != null ? owner.nickname + '님의 앨범 목록' : owner.name + '님의 앨범 목록'}" class="text-3xl font-semibold text-gray-800"></h2>
         <div class="relative p-4 mb-6">
             <div th:if="${isOwner}" class="absolute top-0 right-0 m-3 inline-flex items-center space-x-4">
                 <button id="albumCreateBtn" class="text-blue-500 text-3xl hover:text-blue-600">
@@ -24,18 +24,281 @@
                     <div class="flex items-center justify-between">
                         <a th:href="@{/album/{id}(id=${album.id})}" class="album-title text-lg font-semibold text-gray-800 truncate" th:text="${album.title}"></a>
                         <div th:if="${isOwner}" class="relative inline-block text-left">
-                            <button id="kebabMenuBtn" class="text-gray-500 text-2xl hover:text-gray-700">
+                            <button class="kebab-menu-btn text-gray-500 text-2xl hover:text-gray-700">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
 
-                            <div id="kebabDropdown" class="hidden absolute right-0 mt-1 py-2 w-40 bg-white rounded-md shadow-lg z-50">
+                            <div class="kebab-dropdown hidden absolute right-0 mt-1 py-2 w-40 bg-white rounded-md shadow-lg z-50">
                                 <div class="p-2 space-y-2 flex flex-col items-center">
                                     <label th:if="${isOwner}" class="inline-flex items-center cursor-pointer space-x-8">
                                         <span th:text="${album.isPublic} ? '공개' : '비공개'"
                                               th:classappend="${album.isPublic} ? 'text-green-600' : 'text-red-500'"
                                               class="public-status text-sm font-medium">
                                         </span>
-                                        <input type="checkbox" class="sr-only peer" th:checked="${album.isPublic}" th:attr="data-album-id=${album.id}">
+                                        <input type="checkbox" class="public-toggle sr-only peer" th:checked="${album.isPublic}" th:attr="data-album-id=${album.id}">
+                                        <div class="relative w-7 h-4 bg-gray-200 rounded-full peer
+                                            peer-checked:after:translate-x-full
+                                            after:content-[''] after:absolute after:top-[2px] after:start-[2px]
+                                            after:bg-white after:border-gray-300 after:border after:rounded-full
+                                            after:h-3 after:w-3 after:transition-all
+                                            peer-checked:bg-blue-500">
+                                        </div>
+                                    </label>
+
+                                    <button class="album-modify-btn text-gray-500 text-md hover:text-gray-300">
+                                        <i class="fa-solid fa-pen-to-square mr-2"></i>앨범 수정
+                                    </button>
+
+                                    <button class="album-delete-btn text-gray-500 text-md hover:text-gray-300">
+                                        <i class="fa-solid fa-trash-can mr-2.5"></i>앨범 삭제
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1" th:text="${album.createdAt}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 앨범 생성 모달창 -->
+    <div id="modal" class="fixed inset-0 pt-5 bg-black bg-opacity-70 flex justify-center items-center hidden z-50">
+        <form id="albumForm" class="bg-white p-6 rounded-2xl shadow-lg w-96 flex flex-col gap-4 relative">
+            <button id="modalClose" type="button" class="absolute top-2 right-3.5 text-gray-200 text-2xl hover:text-gray-500">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h2 id="modalTitle" class="text-xl mt-2 font-semibold text-gray-800 text-center"></h2>
+            <input type="text" name="title" id="albumTitle"
+                    class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            <label class="border border-gray-300 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <input type="file" name="file" id="fileInput" accept="image/*" class="hidden"/>
+                <span id="fileInputLabel">앨범 표지 선택</span>
+            </label>
+            <button type="submit" id="albumFormSubmit" class="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
+            </button>
+            <div id="result" class="text-center text-sm text-red-500 mt-1"></div>
+        </form>
+    </div>
+
+    <script th:inline="javascript">
+
+        const isOwner = [[${isOwner}]];
+
+        // 모달 변수
+        const modal = document.querySelector("#modal");
+        let albumForm = document.querySelector("#albumForm");
+        let modalTitle = document.querySelector("#modalTitle");
+        let albumTitle = document.querySelector("#albumTitle");
+        let fileInput = document.querySelector("#fileInput");
+        let albumFormSubmit = document.querySelector("#albumFormSubmit");
+        let fileInputLabel = document.querySelector("#fileInputLabel");
+        let result = document.querySelector("#result");
+
+        // 앨범 리스트
+        const albumListEl = document.querySelector("#albumList");
+
+        // 앨범 페이징 처리용 변수
+        let page = 1;
+        let isLoading = false;
+        let isLastPage = [[${isLastPage}]];
+
+        // 앨범 주인 아이디
+        const ownerId = [[${owner.id}]];
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // 서버에서 전달 받은 앨범 리스트 데이터
+            /*<![CDATA[*/
+            const albumList = /*[[${albumList}]]*/ [];
+            /*]]>*/
+
+            if(isOwner) {
+                document.querySelector("#albumCreateBtn").addEventListener("click", () => {
+                    openCreateModal();
+                })
+            }
+
+            if(!Array.isArray(albumList) || albumList.length === 0) {
+                albumListEl.innerHTML = '';
+                const div = document.createElement("div");
+                div.className = "text-center text-gray-500 py-10";
+                div.textContent = "아직 앨범이 없습니다.";
+                albumListEl.appendChild(div);
+                return
+            }
+
+            if(isOwner) {
+                addEvent();
+            }
+        });
+
+        function addEvent() {
+            if(isOwner) {
+                document.querySelectorAll(".album-modify-btn").forEach(button => {
+                    if(button) {
+                        button.addEventListener("click", () => {
+                            const card = button.closest(".album-card");
+
+                            const albumId = card.querySelector("input[type=checkbox]").dataset.albumId;
+                            const albumTitle = card.querySelector(".album-title").textContent.trim();
+                            const albumThumbnail = card.querySelector(".album-thumbnail");
+
+                            const album = {albumId, albumTitle, albumThumbnail};
+                            openUpdateModal(album);
+                        })
+                    }
+                })
+
+                document.querySelectorAll(".album-delete-btn").forEach(button => {
+                    if(button) {
+                        button.addEventListener("click", async (e) => {
+                            e.preventDefault();
+                            const card = button.closest(".album-card");
+                            const albumId = card.querySelector("input[type=checkbox]").dataset.albumId;
+
+                            const res = await fetch(`/api/album/delete?id=${albumId}`);
+
+                            if(res.ok) {
+                                closeModal();
+                                card.remove();
+                            }
+                        })
+                    }
+                })
+
+                const kebabBtn = document.querySelectorAll(".kebab-menu-btn");
+                const kebabDropdown = document.querySelectorAll(".kebab-dropdown");
+
+                kebabBtn.forEach((btn, i) => {
+                    if(btn) {
+                        const dropdown = kebabDropdown[i];
+                        btn.addEventListener("click", (e) => {
+                            e.stopPropagation();
+                            dropdown.classList.toggle("hidden");
+                        })
+                    }
+                })
+
+                // 바깥 클릭 시 닫기
+                document.addEventListener("click", (e) => {
+                    let clickedBtn = false;
+                    let clickedDropdown = false;
+
+                    kebabBtn.forEach(btn => {
+                        if(btn.contains(e.target)) {
+                            clickedBtn = true;
+                        }
+                    });
+
+                    kebabDropdown.forEach(dropdown => {
+                        if(dropdown.contains(e.target)) {
+                            clickedDropdown = true;
+                        }
+                    });
+
+                    if(!clickedBtn && !clickedDropdown) {
+                        kebabDropdown.forEach(dropdown => {
+                            dropdown.classList.add("hidden");
+                        });
+                    }
+                });
+
+                document.querySelectorAll(".public-toggle").forEach(toggle => {
+                    toggle.addEventListener("change", async (e) => {
+                        const isChecked = e.target.checked;
+                        const albumId = e.target.dataset.albumId;
+
+                        const formData = new FormData();
+                        formData.append("id", albumId);
+                        formData.append("isPublic", isChecked);
+
+                        const res = await fetch("/api/album/visibility", {
+                            method: "POST",
+                            body: formData
+                        });
+
+                        if (res.ok) {
+                            const publicStatus = e.target.closest(".album-card").querySelector(".public-status");
+                            publicStatus.textContent = isChecked ? "공개" : "비공개";
+                            publicStatus.classList.remove('text-green-600', 'text-red-500');
+                            publicStatus.classList.add(isChecked ? 'text-green-600' : 'text-red-500');
+                        } else {
+                            e.target.checked = !isChecked;
+                            alert("공개 설정 변경에 실패했습니다.");
+                        }
+                    });
+                });
+            }
+        }
+
+        async function loadAlbumList(options = {}) {
+            const { append = false, reset = false } = options;
+
+            if(isLoading || (isLastPage && append)) return;
+            isLoading = true;
+
+            if(reset) {
+                albumListEl.innerHTML = "";
+                page = 0;
+                isLastPage = false;
+            }
+
+            const res = await fetch(`/api/albumList/${ownerId}?page=${page}`);
+            const albums = await res.json();
+
+            if(albums.length < 10) {
+                isLastPage = true;
+            }
+
+            albums.forEach(album => {
+                const card = createAlbumCard(album);
+                albumListEl.appendChild(card);
+            })
+
+            addEvent();
+            page++;
+            isLoading = false;
+        }
+
+        // 무한 스크롤 이벤트 리스너 등록
+        window.addEventListener("scroll", () => {
+            const scrollTop = window.scrollY;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.body.scrollHeight;
+
+            if(scrollTop + windowHeight >= documentHeight - 200) {
+                if(isLastPage) {
+                    return
+                }
+                loadAlbumList({ append: true });
+            }
+        })
+
+        function createAlbumCard(album) {
+            const card = document.createElement("div");
+            card.className = "album-card relative bg-white shadow-md rounded-xl hover:shadow-lg transition-shadow duration-300";
+            card.innerHTML = `
+                <div class="overflow-hidden rounded-t-xl">
+                    <a href="/album/${album.id}">
+                        <img src="/api/proxy/image?filename=thumbnail/${album.thumbnail}" alt="${album.thumbnail}" class="album-thumbnail w-full h-48 object-cover">
+                    </a>
+                </div>
+                <div class="p-4">
+                    <div class="flex items-center justify-between">
+                        <a href="/album/${album.id}" class="album-title text-lg font-semibold text-gray-800 truncate">${album.title}</a>
+                        <div class="relative inline-block text-left">
+                            <button class="kebab-menu-btn text-gray-500 text-2xl hover:text-gray-700">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+
+                            <div class="kebab-dropdown hidden absolute right-0 mt-1 py-2 w-40 bg-white rounded-md shadow-lg z-50">
+                                <div class="p-2 space-y-2 flex flex-col items-center">
+                                    <label class="inline-flex items-center cursor-pointer space-x-8">
+                                        <span class="public-status text-sm font-medium ${album.isPublic ? 'text-green-600' : 'text-red-500'}">
+                                              ${album.isPublic ? '공개' : '비공개'}
+                                        </span>
+                                        <input type="checkbox" class="sr-only peer" ${album.isPublic ? 'checked' : ''} data-album-id="${album.id}">
                                         <div class="public-toggle relative w-7 h-4 bg-gray-200 rounded-full peer
                                             peer-checked:after:translate-x-full
                                             after:content-[''] after:absolute after:top-[2px] after:start-[2px]
@@ -56,98 +319,30 @@
                             </div>
                         </div>
                     </div>
-                    <p class="text-sm text-gray-500 mt-1" th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}"></p>
+                    <p class="text-sm text-gray-500 mt-1">${album.createdAt}</p>
                 </div>
             </div>
-        </div>
-    </div>
+            `;
 
-    <!-- 앨범 생성 모달창 -->
-    <div id="modal" class="fixed inset-0 pt-5 bg-black bg-opacity-70 flex justify-center items-center hidden z-50">
-        <div class="relative">
-            <button id="modalClose" class="absolute top-2 right-2 text-gray-200 text-2xl hover:text-gray-500">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <form id="albumForm" class="bg-white p-6 rounded-2xl shadow-lg w-96 flex flex-col gap-4">
-            <h2 id="modalTitle" class="text-xl font-semibold text-gray-800 text-center"></h2>
-            <input type="text" name="title" id="albumTitle" placeholder=""
-                    class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-            <label class="border border-gray-300 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                <input type="file" name="file" id="fileInput" accept="image/*" class="hidden"/>
-                앨범 표지 선택
-            </label>
-            <button type="submit" id="albumFormSubmit" class="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
-            </button>
-            <div id="result" class="text-center text-sm text-red-500 mt-1"></div>
-        </form>
-    </div>
-
-    <script th:inline="javascript">
-
-        // 모달 변수
-        const modal = document.querySelector("#modal");
-        const albumForm = document.querySelector("#albumForm");
-        const modalTitle = document.querySelector("#modalTitle");
-        const albumTitle = document.querySelector("#albumTitle");
-        const fileInput = document.querySelector("#fileInput");
-        const albumFormSubmit = document.querySelector("#albumFormSubmit");
-        const result = document.querySelector("#result");
-
-        document.addEventListener("DOMContentLoaded", () => {
-
-            const userId = [[${loginUser.id}]];
-            const ownerId = [[${owner.id}]];
-            /*<![CDATA[*/
-            var albumList = /*[[${albumList}]]*/ [];
-            /*]]>*/
-
-            document.querySelector("#albumCreateBtn").addEventListener("click", () => {
-                openCreateModal();
-            })
-
-            if(albumList && albumList.length > 0) {
-                document.querySelectorAll(".album-modify-btn").forEach(button => {
-                    button.addEventListener("click", () => {
-                        const card = button.closest(".album-card");
-
-                        const albumId = card.querySelector("input[type=checkbox]").dataset.albumId;
-                        const albumTitle = card.querySelector(".album-title").textContent.trim();
-                        const albumThumbnail = card.querySelector(".album-thumbnail");
-
-                        const album = {albumId, albumTitle, albumThumbnail};
-                        openUpdateModal(album);
-                    })
-                })
-
-                document.querySelectorAll(".album-delete-btn").forEach(button => {
-                    button.addEventListener("click", async (e) => {
-                        e.preventDefault();
-                        const card = button.closest(".album-card");
-                        const albumId = card.querySelector("input[type=checkbox]").dataset.albumId;
-
-                        const res = await fetch(`/api/album/delete?id=${albumId}`);
-
-                        if(res.ok) {
-                            closeModal();
-                            loadAlbums();
-                        }
-                    })
-                })
-            }
-
-        });
+            return card;
+        }
 
         function openUpdateModal(album) {
-            modalTitle.textContent = "앨범 수정하기";
-            albumFormSubmit.textContent = "앨범 수정";
+            modalTitle.textContent = "";
+            albumFormSubmit.textContent = "";
+            fileInputLabel.textContent = "";
+            modalTitle.textContent = "앨범 수정";
+            albumFormSubmit.textContent = "수정";
+
+            fileInputLabel.textContent = album.albumThumbnail.alt.replace(/^[a-f0-9-]+_/, "");
             albumTitle.value = album.albumTitle;
 
             replaceForm(() => {
                 const file = fileInput.files[0];
+                const title = document.querySelector("#albumTitle").value;
                 const formData = new FormData();
                 formData.append("id", parseInt(album.albumId));
-                formData.append("title", albumTitle.value);
+                formData.append("title", title);
                 if(file != null) {
                     formData.append("file", file);
                 }
@@ -158,13 +353,22 @@
         }
 
         function openCreateModal() {
-            modalTitle.textContent = "앨범 추가하기";
-            albumFormSubmit.textContent = "앨범 추가";
+            modalTitle.textContent = "";
+            albumFormSubmit.textContent = "";
+            fileInputLabel.textContent = "";
+            modalTitle.textContent = "앨범 추가";
+            albumFormSubmit.textContent = "추가";
+            fileInputLabel.textContent = "앨범 표지 선택";
+
+            albumTitle.value = "";
+            fileInput.value = null;
+            result.textContent = "";
 
             replaceForm(() => {
                 const file = fileInput.files[0];
+                const title = document.querySelector("#albumTitle").value;
                 const formData = new FormData();
-                formData.append("title", albumTitle.value);
+                formData.append("title", title);
                 formData.append("file", file);
                 createAlbum(formData)
             })
@@ -175,11 +379,20 @@
         function replaceForm(callback) {
             const newForm = albumForm.cloneNode(true);
             albumForm.replaceWith(newForm);
+            albumForm = document.querySelector("#albumForm");
 
-            const updatedForm = document.querySelector("#albumForm");
-            fileInput = updatedForm.querySelector('input[type="file"]');
-            updatedForm.addEventListener("submit", (e) => {
+            modalTitle = document.querySelector("#modalTitle");
+            albumTitle = albumForm.querySelector("#albumTitle");
+            fileInput = albumForm.querySelector('input[type="file"]');
+            fileInputLabel = albumForm.querySelector("#fileInputLabel");
+            albumFormSubmit = albumForm.querySelector("#albumFormSubmit");
+
+            const modalClose = document.querySelector("#modalClose");
+            modalClose.addEventListener("click", closeModal);
+
+            albumForm.addEventListener("submit", (e) => {
                 e.preventDefault();
+                result.innerHTML = '';
                 callback();
             })
         }
@@ -191,7 +404,8 @@
             });
 
             if(res.ok) {
-                result.innerHTML = `<p class="text-green-600 font-semibold">Upload Success</p>`;
+                closeModal();
+                await loadAlbumList({reset: true});
             }else {
                 result.innerHTML = `<p class="text-red-600 font-semibold">Upload Fail!</p>`;
             }
@@ -204,9 +418,10 @@
             });
 
             if(res.ok) {
-                result.innerHTML = `<p class="text-green-600 font-semibold">Upload Success</p>`;
+                closeModal();
+                await loadAlbumList({reset: true});
             }else {
-                result.innerHTML = `<p class="text-red-600 font-semibold">Upload Fail!</p>`;
+                result.innerHTML = `<p class="text-red-600 font-semibold">Update Fail!</p>`;
             }
         }
 
@@ -214,26 +429,10 @@
             modal.classList.add("hidden");
         }
 
-        document.querySelector("#modalClose").addEventListener("click", closeModal);
-
         // 모달 배경 클릭 시 닫기
         modal.addEventListener("click", (e) => {
             if (e.target === modal) {
                 closeModal();
-            }
-        });
-
-        const kebabBtn = document.getElementById("kebabMenuBtn");
-        const kebabDropdown = document.getElementById("kebabDropdown");
-
-        kebabBtn.addEventListener("click", () => {
-            kebabDropdown.classList.toggle("hidden");
-        });
-
-        // 바깥 클릭 시 닫기
-        document.addEventListener("click", (e) => {
-            if (!kebabBtn.contains(e.target) && !kebabDropdown.contains(e.target)) {
-                kebabDropdown.classList.add("hidden");
             }
         });
     </script>

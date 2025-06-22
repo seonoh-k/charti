@@ -36,7 +36,7 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <img th:src="${url}" th:alt="${album.thumbnail}"
+                <img th:src="${url}" th:alt="${album.thumbnail}" id="albumThumbnail"
                      class="max-w-[400px] max-h-[400px] w-auto h-auto object-contain rounded-lg shadow" />
                 <h3 th:text="${album.title}" class="text-2xl font-semibold text-gray-800">예시 타이틀</h3>
                 <span th:text="${#temporals.format(album.createdAt, 'yyyy-MM-dd')}"
@@ -73,7 +73,7 @@
         </div>
 
         <!-- 원본 이미지 파일을 보기위한 모달창 -->
-        <div id="modal" class="fixed inset-0 pt-5 bg-black bg-opacity-70 flex justify-center items-center hidden z-50">
+        <div id="modal" class="modal fixed inset-0 pt-5 bg-black bg-opacity-70 flex justify-center items-center hidden z-50">
             <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center">
                 <div class="flex flex-col items-center max-w-full">
                     <div class="w-full flex items-center justify-between px-12 mb-2">
@@ -117,6 +117,26 @@
                 </div>
             </div>
         </div>
+
+        <!-- 앨범 수정 모달창 -->
+        <div id="updateModal" class="modal fixed inset-0 pt-5 bg-black bg-opacity-70 flex justify-center items-center hidden z-50">
+            <form id="albumForm" class="bg-white p-6 rounded-2xl shadow-lg w-96 flex flex-col gap-4 relative">
+                <button id="updateModalClose" type="button" class="absolute top-2 right-3.5 text-gray-200 text-2xl hover:text-gray-500">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <h2 class="text-xl mt-2 font-semibold text-gray-800 text-center">앨범 수정</h2>
+                <input type="text" name="title" id="albumTitle" th:value="${album.title}"
+                       class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <label class="border border-gray-300 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <input type="file" name="file" id="albumFileInput" accept="image/*" class="hidden"/>
+                    <span id="fileInputLabel"></span>
+                </label>
+                <button type="submit" class="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
+                    수정
+                </button>
+                <div id="albumResult" class="text-center text-sm text-red-500 mt-1"></div>
+            </form>
+        </div>
     </div>
     <script th:inline="javascript">
 
@@ -130,17 +150,29 @@
         const modalToggle = document.querySelector("#modalToggle");
         const modalCreatedAt = document.querySelector("#modalCreatedAt");
 
-        // 모달창에서 이전/다음 이미지 출력을 위한 변수
-        let currentIndex = 0;
-        let photos = [];
+        const updateModal = document.querySelector("#updateModal");
+        const albumResult = document.querySelector("#albumResult");
 
+        // 사진 페이징 처리를 위한 전역 변수
+        let photos = [];
+        let page = 1;
+        let isLoading = false;
+        let isLastPage = [[${isLastPage}]];
+        const id = [[${album.id}]];
+        const photoGrid = document.querySelector("#photoGrid");
         const proxyUrl = "/api/proxy/image?filename=";
 
+        // 모달창에서 이전/다음 이미지 출력을 위한 변수
+        let currentIndex = 0;
+
         document.addEventListener("DOMContentLoaded", () => {
-            const id = [[${album.id}]];
 
             const fileInput = document.querySelector("#fileInput");
             const result = document.querySelector("#result");
+
+            const albumThumbnail = document.querySelector("#albumThumbnail").alt.replace(/^[a-f0-9-]+_/, "");
+            const fileInputLabel = document.querySelector("#fileInputLabel");
+            fileInputLabel.textContent = albumThumbnail;
 
             if(isOwner) {
                 fileInput.addEventListener("change", async () => {
@@ -162,7 +194,7 @@
                     });
 
                     if (res.ok) {
-                        loadPhotos(id);
+                        await loadPhotos({reset: true});
                     } else {
                         result.innerHTML = `<p class="text-red-600 font-semibold">Upload Fail!</p>`;
                     }
@@ -212,6 +244,36 @@
 
                 })
 
+                document.querySelector("#albumUpdateBtn").addEventListener("click", () => {
+                    openUpdateModal();
+                })
+
+                document.querySelector("#albumForm").addEventListener("submit", async (e) => {
+                    e.preventDefault();
+
+                    const albumTitle = document.querySelector("#albumTitle").value;
+                    const albumFileInput = document.querySelector("#albumFileInput");
+                    const file = albumFileInput.files[0];
+
+                    const formData = new FormData();
+                    formData.append("id", id);
+                    formData.append("title", albumTitle);
+                    if(file != null) {
+                        formData.append("file", file);
+                    }
+
+                    const res = await fetch("/api/album/update", {
+                        method: "POST",
+                        body: formData
+                    })
+
+                    if(res.ok) {
+                        location.reload();
+                    }else {
+                        albumResult.innerHTML = `<p class=\"text-red-600 font-semibold\">Update Fail!</p>`;
+                    }
+                })
+
                 document.querySelector("#albumDeleteBtn").addEventListener("click", async () => {
 
                     const res = await fetch(`/api/album/delete?id=${id}`);
@@ -228,9 +290,23 @@
 
                     if(res.ok) {
                         closeModal();
-                        loadPhotos(id);
+                        await loadPhotos({reset: true});
                     }
                 })
+
+                const kebabBtn = document.getElementById("kebabMenuBtn");
+                const kebabDropdown = document.getElementById("kebabDropdown");
+
+                kebabBtn.addEventListener("click", () => {
+                    kebabDropdown.classList.toggle("hidden");
+                });
+
+                // 바깥 클릭 시 닫기
+                document.addEventListener("click", (e) => {
+                    if (!kebabBtn.contains(e.target) && !kebabDropdown.contains(e.target)) {
+                        kebabDropdown.classList.add("hidden");
+                    }
+                });
             }
             document.querySelectorAll(".modal-trigger").forEach((img, index) => {
                 const photoId = img.dataset.photoid;
@@ -271,13 +347,25 @@
             })
         })
 
-        async function loadPhotos(albumId) {
-            const photoGrid = document.querySelector("#photoGrid");
-            photoGrid.innerHTML = '';
-            photos = [];
+        async function loadPhotos(options = {}) {
+            const { append = false, reset = false } = options;
 
-            const res = await fetch(`/api/album/${albumId}`);
+            if(isLoading || (isLastPage && append)) return;
+            isLoading = true;
+
+            if(reset) {
+                photoGrid.innerHTML = '';
+                photos = [];
+                page = 0;
+                isLastPage = false;
+            }
+
+            const res = await fetch(`/api/album/${id}/photos?page=${page}`);
             const data = await res.json();
+
+            if(data.length < 10) {
+                isLastPage = true;
+            }
 
             data.forEach((photo, idx) => {
                 const wrapper = document.createElement("div");
@@ -307,7 +395,24 @@
                     openModal();
                 });
             });
+
+            page++;
+            isLoading = false;
         }
+
+        // 무한 스크롤 이벤트 리스너 등록
+        window.addEventListener("scroll", () => {
+            const scrollTop = window.scrollY;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.body.scrollHeight;
+
+            if(scrollTop + windowHeight >= documentHeight - 200) {
+                if(isLastPage) {
+                    return
+                }
+                loadPhotos({ append: true });
+            }
+        })
 
         function openModal() {
             const currentPhoto = photos[currentIndex];
@@ -327,11 +432,16 @@
             modalCreatedAt.textContent = currentPhoto.createdAt;
             modal.classList.remove("hidden");
         }    
-    
 
-        function closeModal() {
+        function openUpdateModal() {
+            updateModal.classList.remove("hidden");
+        }
+
+        function closeModal(modal) {
             modal.classList.add("hidden");
-            modalImage.src = "";
+            if(modalImage.src) {
+                modalImage.src = "";
+            }
         }
 
         function showNext() {
@@ -376,15 +486,21 @@
             modalCreatedAt.textContent = currentPhoto.createdAt;
         }
 
-        document.querySelector("#modalClose").addEventListener("click", closeModal);
+        document.querySelectorAll("#modalClose, #updateModalClose").forEach(btn => {
+          btn.addEventListener("click", () => {
+              closeModal(btn.closest(".modal"));
+          });
+        });
         document.querySelector("#modalPrev").addEventListener("click", showPrev);
         document.querySelector("#modalNext").addEventListener("click", showNext);
 
         // 모달 배경 클릭 시 닫기
-        modal.addEventListener("click", (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
+        document.querySelectorAll(".modal").forEach(modalEl => {
+            modalEl.addEventListener("click", (e) => {
+                if(e.target === modalEl) {
+                    closeModal(modalEl);
+                }
+            });
         });
 
         // 키보드 화살표로 이미지 넘기기
@@ -396,21 +512,7 @@
             } else if (e.key === "ArrowLeft") {
                 showPrev();
             } else if (e.key === "Escape") {
-                closeModal();
-            }
-        });
-
-        const kebabBtn = document.getElementById("kebabMenuBtn");
-        const kebabDropdown = document.getElementById("kebabDropdown");
-
-        kebabBtn.addEventListener("click", () => {
-            kebabDropdown.classList.toggle("hidden");
-        });
-
-        // 바깥 클릭 시 닫기
-        document.addEventListener("click", (e) => {
-            if (!kebabBtn.contains(e.target) && !kebabDropdown.contains(e.target)) {
-                kebabDropdown.classList.add("hidden");
+                closeModal(modal);
             }
         });
     </script>

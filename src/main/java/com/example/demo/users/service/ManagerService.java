@@ -96,6 +96,9 @@ public class ManagerService {
         return UserStatus.APPROVE_SUCCESS;
     }
 
-
+    // 매니저 단일 조회가 없어서 작성
+    public Manager get(Long id) {
+        return managerRepository.findById(id).get();
+    }
 
 }
