@@ -86,11 +86,11 @@ public class DailySurveyService {
     // 응답 점수 배수
     private double getMultiplier(int answer) {
         switch (answer) {
-            case 1: return 0.0;    // 전혀 아니다
-            case 2: return 0.25;   // 거의 그렇지 않다
+            case 1: return 1.0;    // 전혀 아니다
+            case 2: return 0.75;   // 거의 그렇지 않다
             case 3: return 0.5;    // 잘 모르겠다
-            case 4: return 0.75;   // 약간 그렇다
-            case 5: return 1.0;    // 매우 그렇다
+            case 4: return 0.25;   // 약간 그렇다
+            case 5: return 0.0;    // 매우 그렇다
             default: return 0.0;
         }
     }

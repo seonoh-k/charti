@@ -76,4 +76,8 @@ public interface RecordAnswerRepository extends JpaRepository<RecordAnswer, Long
      */
     Page<RecordAnswer> findByChildAndDeletedFalse(Child child, Pageable pageable);
 
+    /**
+     * 특정 childId 가 주어진 기간(start~end)에 답변을 남겼는지 여부 확인
+     */
+    boolean existsByChildIdAndCreatedAtBetween(Long id, LocalDateTime start, LocalDateTime end);
 }

@@ -1,10 +1,12 @@
 package com.example.demo.entity;
 
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Manager;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.lang.annotation.Target;
 import java.util.List;
 
 @Entity
@@ -32,12 +34,13 @@ public class Group extends BaseEntity {
     private String groupEmail;
     // 그룹 전화번호 회사전화기
     private String groupPhoneNumber;
+    // 타겟 그룹(유치원, 어린이집, 보육원)
+    private TargetGroup targetGroup;
 
     @OneToOne(mappedBy = "group")
     private Manager manager;
 
     @OneToMany(mappedBy = "group")
     private List<Child> children;
-
 }
 
