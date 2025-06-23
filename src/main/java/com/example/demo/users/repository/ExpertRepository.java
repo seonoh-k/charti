@@ -10,8 +10,9 @@ import java.util.Optional;
 public interface ExpertRepository extends JpaRepository<Expert,Long> {
 
     @Modifying
-    @Query("UPDATE Users u SET u.role = 'ROLE_EXPERT' WHERE u.id = :id AND u.expert.isApproved = true")
+    @Query("UPDATE Expert e SET e.isApproved = true WHERE e.users.id = :id")
     int approveExpert(Long id);
+
 
     Optional<Expert> findByUsersId(Long userId); // 여기서 Users.id로 조회
 }

@@ -7,6 +7,7 @@ import com.example.demo.users.entity.Role;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ManagerQueryRepository;
 import com.example.demo.users.repository.ManagerRepository;
+import com.example.demo.users.repository.UserRepository;
 import com.example.demo.util.UserStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class ManagerService {
 
     private final ManagerRepository managerRepository;
     private final ManagerQueryRepository managerQueryRepository;
-
+    private final UserRepository userRepository;
 
     public ManagerDTO getManagerById(Long id) throws UserNotFoundException {
         Optional<ManagerDTO> byId = managerQueryRepository.getManagerById(id);
@@ -64,12 +65,17 @@ public class ManagerService {
     }
 
     @Transactional
-    public UserStatus approvePendingManager(Manager ... managers){
-        Arrays.stream(managers).forEach(manager -> {
-            manager.getUsers().setRole(Role.ROLE_MANAGER);
-            manager.setIsApproved(true);
-            managerRepository.save(manager);
-        });
+    public UserStatus approveManager(Long id) throws UserNotFoundException{
+
+        boolean isExists = managerRepository.existsById(id);
+
+        if(isExists){
+            managerRepository.approveManager(id);
+            userRepository.updateUserRoleToManager(id);
+        } else{
+            throw new UserNotFoundException();
+        }
+
         return UserStatus.APPROVE_SUCCESS;
     }
 

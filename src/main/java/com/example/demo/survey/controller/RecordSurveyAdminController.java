@@ -34,6 +34,7 @@ public class RecordSurveyAdminController {
                        Model model) {
 
         Pageable pageable = pagingDto.toPageable();
+        // Pageable pageable = pagingDto.toZeroBasedPageable();
         Page<RecordSurvey> page = (ageGroup == AgeGroup.ALL)
                 ? recordSurveyService.findAll(pageable)
                 : recordSurveyService.findByAgeGroup(ageGroup, pageable);

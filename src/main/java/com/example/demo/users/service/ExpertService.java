@@ -6,8 +6,10 @@ import com.example.demo.users.entity.Expert;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ExpertQueryRepository;
 import com.example.demo.users.repository.ExpertRepository;
+import com.example.demo.users.repository.UserRepository;
 import com.example.demo.util.StatusCode;
 import com.example.demo.util.UserStatus;
+import com.google.firebase.auth.FirebaseAuthException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +26,12 @@ public class ExpertService {
 
     private final ExpertRepository expertRepository;
     private final ExpertQueryRepository expertQueryRepository;
+    private final UserRepository userRepository;
+    private final FirebaseService firebaseService;
 
     public ExpertDTO getExpertById(Long id) throws UserNotFoundException {
         Optional<ExpertDTO> byId = expertQueryRepository.getExpertById(id);
+
         if (byId.isEmpty()) {
             throw new UserNotFoundException();
         }
@@ -72,30 +77,30 @@ public class ExpertService {
 
     // 승인 하기
     @Transactional
-    public StatusCode approveExpert(Long id) throws UserNotFoundException{
-        int i = 0;
-        Optional<Expert> byId = expertRepository.findById(id);
+    public StatusCode approveExpert(Long id) throws UserNotFoundException {
 
-        if(byId.isPresent()){
-            i = expertRepository.approveExpert(id);
+
+        boolean isExists = expertRepository.existsById(id);
+
+        userRepository.updateUserRoleToExpert(id);
+        if(isExists){
+
+            expertRepository.approveExpert(id);
         } else{
             throw new UserNotFoundException();
         }
 
-        if(i >= 1){
-            return UserStatus.APPROVE_SUCCESS;
-        } else {
-            return UserStatus.APPROVE_FAIL;
-        }
-
+        return UserStatus.APPROVE_SUCCESS;
     }
     // 여러명 한꺼번에 승인하기
     @Transactional
     public void approveExpertsByIds(List<Long> ids) throws UserNotFoundException{
         for (Long id : ids) {
-            Optional<Expert> byId = expertRepository.findById(id);
-            if(byId.isPresent()){
+            boolean isExist = expertRepository.existsById(id);
+            if(isExist){
+
                 int i = expertRepository.approveExpert(id);
+
             } else{
                 throw new UserNotFoundException();
             }
