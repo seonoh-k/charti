@@ -85,30 +85,6 @@ public class StorageAPIController {
         return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
     }
 
-    // 앨범 생성
-    @PostMapping("/api/album/create")
-    public ResponseEntity<ApiResponse> createAlbum(@RequestParam("file") MultipartFile file,
-                                                   @RequestParam("title") String title) throws IOException {
-
-        String filename = uploadImage(file);
-
-        UserDTO userDTO = authService.getLoginUser();
-        // 멤버 조회
-        Member member = memberService.get(userDTO.getId());
-        // 앨범 생성
-        Album album = new Album();
-        album.setMember(member);
-        album.setTitle(title);
-        album.setThumbnail(filename);
-
-        // 회원 테이블에 앨범 저장
-        member.getAlbums().add(album);
-        // 회원 테이블 업데이트 -> 앨범도 같이 저장
-        memberService.update(member);
-
-        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
-    }
-
     @PostMapping("/api/album/update")
     public ResponseEntity<ApiResponse> updateAlbum(@RequestParam("id") Long id,
                                                    @RequestParam(value = "file", required = false) MultipartFile file,

@@ -30,7 +30,7 @@ public class UserDTO {
 
     private AddressDTO address;
 
-        /**
+    /**
      * [✅ toEntity 메서드 추가 이유]
      * - AuthService에서 getLoginUser()를 통해 로그인한 사용자 정보를 UserDTO로 가져오는데,
      *   실제 도메인 로직(예: 문진 제출, 자녀 등록 등)에서는 Users 엔티티 객체가 필요함.
@@ -52,6 +52,11 @@ public class UserDTO {
                 .providerId(this.providerId)
                 .phoneNumber(this.phoneNumber)
                 .build();
+    }
+
+    public UserDTO(Users user) {
+        this.id = user.getId();
+        this.nickname = user.getNickname();
     }
 
 }

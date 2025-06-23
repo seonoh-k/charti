@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">자주 묻는 질문</h1>
+        <hr class="mb-8 border-gray-300">
+
+        <div th:each="faqList : ${faqList}" class="mb-10">
+            <h2 th:text="${faqList.category}" class="text-xl font-semibold text-blue-600 mb-4"></h2>
+
+            <ul class="space-y-4">
+                <li th:each="faq, idx : ${faqList.faqs}" class="bg-white p-5 rounded-xl shadow border border-gray-200">
+                    <button type="button"
+                            th:attr="data-index=${faqList.category + '_' + idx.index}"
+                            class="faq-question w-full text-left px-4 py-3 flex justify-between items-center bg-gray-50 hover:bg-gray-100 rounded-t-lg">
+                        <span th:text="${faq.question}" class="font-medium text-gray-900 mb-2"></span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 faq-icon"></i>
+                    </button>
+
+                    <div th:attr="id=${faqList.category + '_' + idx.index}"
+                         class="faq-answer hidden px-4 py-3 text-gray-700 bg-white rounded-b-lg border-t transition-all duration-300 ease-in-out">
+                        <p th:text="${faq.answer}"></p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const buttons = document.querySelectorAll(".faq-question");
+
+            buttons.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const targetId = btn.getAttribute("data-index");
+                    const content = document.getElementById(targetId);
+                    const icon = document.querySelector(".faq-icon");
+
+                    content.classList.toggle("hidden");
+                    icon.classList.toggle("rotate-180");
+
+                })
+            })
+        })
+    </script>
+</th:block>
+</html>
