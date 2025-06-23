@@ -76,7 +76,7 @@
                   </td>
                   <td class="border px-4 py-2" th:text="${dto.id}">홍길동</td>
                   <td class="border px-4 py-2" th:text="${dto.name}">홍길동</td>
-                  <td class="border px-4 py-2" th:text="${dto.email}">hong@test.com</td>
+                  <td class="border px-4 py-2" th:text="${dto.username}">hong@test.com</td>
                   <td class="border px-4 py-2" th:text="${dto.phoneNumber}"></td>
                   <td class="border px-4 py-2" th:text="${dto.groupName}">OO대학교</td>
               </tr>
@@ -188,7 +188,7 @@
           list.forEach(item => {
               const div = document.createElement('div');
               div.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
-              div.textContent = `${item.name} [${item.email}] 
+              div.textContent = `${item.name} [${item.username}] 
               [${item.phoneNumber}] [${item.groupName || "기재X"}]`;
               div.onclick = () => {
                   input.value = item[type.value] || item.name;

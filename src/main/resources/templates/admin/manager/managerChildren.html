@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Fontawesome 연결 Embed Code Start-->
+    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
+    <!-- Fontawesome 연결 Embed Code End-->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>관리자 페이지</title>
+</head>
+<body class="h-screen flex flex-col">
+
+<!-- 헤더 (햄버거 버튼) -->
+<div th:replace="fragments/adminFragments :: hamburger"></div>
+
+<div class="flex flex-1">
+    <div th:replace="fragments/adminFragments :: sideBar"></div>
+
+    <main class="flex-1 p-6 bg-gray-100">
+        <h1 class="text-2xl font-bold mb-4">[[${managerDTO.name}+'님']] 자녀🐣</h1>
+        <th:block th:if="${hasChildren}">
+            <table class="min-w-full bg-white text-center">
+                <thead>
+                    <tr class="bg-gray-200 text-gray-600 uppercase text-sm">
+                        <th class="px-4 py-2">ID</th>
+                        <th class="px-4 py-2">그룹이름</th>
+                        <th class="px-4 py-2">이름</th>
+                        <th class="px-4 py-2">별명</th>
+                        <th class="px-4 py-2">생년월일</th>
+                        <th class="px-4 py-2">나이</th>
+                        <!-- <th class="px-4 py-2">연령대</th> -->
+                        <th class="px-4 py-2">위험군</th>
+                        <th class="px-4 py-2">키/몸무게</th>
+                        <th class="px-4 py-2">성별</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="child : ${children}" class="border-b">
+                        <td class="px-4 py-2" th:text="${child.id}">1</td>
+                        <td class="px-4 py-2" th:text="${managerDTO.groupName}">1</td>
+                        <td class="px-4 py-2" th:text="${child.name}">홍길동</td>
+                        <td class="px-4 py-2" th:text="${child.nickname}">길동이</td>
+                        <td class="px-4 py-2" th:text="${#temporals.format(child.birthday, 'yyyy년MM월dd일')}">2022-01-01</td>
+                        <td class="px-4 py-2" th:text="${child.age}+세">3</td>
+                        <!-- <td class="px-4 py-2">
+                            <span th:switch="${child.ageGroup}">
+                                <span th:case="'AGE_0_12'" class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">0-12개월</span>
+                                <span th:case="'AGE_1_2'" class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">1-2세</span>
+                                <span th:case="'AGE_3_4'" class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">3-4세</span>
+                                <span th:case="'AGE_5'"   class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">5세 이상</span>
+                            </span>
+                        </td> -->
+                        <td class="px-4 py-2">
+                            <span th:if="${child.riskGroup}"
+                            class="px-2 py-1 bg-red-500 text-white rounded-full text-xs">위험</span>
+                            <span th:unless="${child.riskGroup}"
+                            class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full text-xs">정상</span>
+                        </td>
+                        <td class="px-4 py-2" th:text="${child.height} + ' / ' + ${child.weight}">120cm / 20kg</td>
+                        <td class="px-4 py-2" th:text="${child.gender}">F</td>
+                    </tr>
+                </tbody>
+            </table>
+        </th:block>
+        <th:block th:unless="${hasChildren}">
+            <div class="text-center text-gray-500 text-lg py-10">
+                <i class="fas fa-child fa-2x mb-2"></i><br>
+                자녀가 없습니다.
+            </div>
+        </th:block>
+        
+    </main>
+
+</div>
+
+<!-- 스크립트 -->
+<script th:src="@{/js/admin/adminSideBar.js}"></script>
+</body>
+</html>

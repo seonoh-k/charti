@@ -1,8 +1,11 @@
 package com.example.demo.entity;
 
+import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Manager;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -32,6 +35,9 @@ public class Group extends BaseEntity {
 
     @OneToOne(mappedBy = "group")
     private Manager manager;
+
+    @OneToMany(mappedBy = "group")
+    private List<Child> children;
 
 }
 

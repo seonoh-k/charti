@@ -51,6 +51,18 @@ public class PagingResultDTO<DTO, EN> {
 
         makePageList();
     }
+    public PagingResultDTO(Page<DTO> result) {
+        this.dtoList = result.getContent();
+        this.totalPages = result.getTotalPages();
+        this.totalElements = result.getTotalElements();
+        this.page = result.getNumber() + 1;
+        this.size = result.getSize();
+        this.hasPrev = result.hasPrevious();
+        this.hasNext = result.hasNext();
+
+        makePageList();
+    }
+
 
     private void makePageList() {
         // 현재 페이지가 3인경우 임시 마지막 페이지는 10임

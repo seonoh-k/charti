@@ -34,7 +34,7 @@
         
                 <div>
                     <label class="block mb-1 text-sm font-medium">이메일</label>
-                    <input type="email" th:field="*{email}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                    <input type="email" th:field="*{username}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
                 </div>
         
                 <div>
@@ -63,6 +63,9 @@
                     <button type="button" onclick="showModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                         수정하기
                     </button>
+                    <a th:if="${hasChildren}" th:href="@{'/admin/member/' + ${memberDTO.id} + '/children'}" class="btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded ml-2">
+                        자녀 정보 보기
+                    </a>
                 </div>
             </form>
         </main>

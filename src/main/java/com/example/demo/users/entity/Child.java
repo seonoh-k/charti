@@ -1,5 +1,6 @@
 package com.example.demo.users.entity;
 
+import com.example.demo.entity.Group;
 import com.example.demo.enums.AgeGroup;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
@@ -37,6 +38,10 @@ public class Child {
     private String gender;
     private Integer birthOrder;
     private Boolean riskGroup;
+
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    private Group group;
 
 
     /**
