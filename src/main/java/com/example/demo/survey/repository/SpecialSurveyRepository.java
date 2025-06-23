@@ -1,19 +1,17 @@
+// com.example.demo.survey.repository.SpecialSurveyRepository.java
 package com.example.demo.survey.repository;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
-import com.example.demo.survey.entity.GroupSurvey;
 import com.example.demo.survey.entity.SpecialSurvey;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Arrays;
 import java.util.List;
 
 public interface SpecialSurveyRepository extends JpaRepository<SpecialSurvey, Long> {
 
-    //    List<SpecialSurvey> findByChildId(Long childId);
     @Query("""
         select ss
           from SpecialSurvey ss
@@ -25,7 +23,6 @@ public interface SpecialSurveyRepository extends JpaRepository<SpecialSurvey, Lo
     List<SpecialSurvey> findByAgeGroupAndDeletedFalse(AgeGroup ag);
     List<SpecialSurvey> findByCategoryAndDeletedFalse(SurveyCategory sc);
 
-
-
-
+    // 신규 메소드 추가
+    List<SpecialSurvey> findByAgeGroupAndCategoryAndDeletedFalse(AgeGroup ageGroup, SurveyCategory category);
 }
