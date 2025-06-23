@@ -44,10 +44,10 @@ public class AlbumController {
         UserDTO owner;
         if(userDTO.getRole().equals("MEMBER")) {
             member = memberService.get(targetId);
-            owner = new UserDTO(member.getUsers());
+            // owner = new UserDTO(member.getUsers());
         }else if(userDTO.getRole().equals("MANAGER")) {
             manager = managerService.get(targetId);
-            owner = new UserDTO(manager.getUsers());
+            // owner = new UserDTO(manager.getUsers());
         }else { // 전문가 회원과 관리자는 앨범페이지를 가지지 않음
             return "redirect:/";
         }
@@ -69,7 +69,7 @@ public class AlbumController {
        log.info(albums.toString());
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("loginUser", userDTO);
-        model.addAttribute("owner", owner);
+        // model.addAttribute("owner", owner);
         model.addAttribute("albumList", albumList);
         model.addAttribute("urlList", urlList);
         model.addAttribute("isLastPage", albums.isLast());

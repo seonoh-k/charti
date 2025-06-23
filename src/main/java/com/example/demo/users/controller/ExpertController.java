@@ -4,15 +4,19 @@ import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResultDTO;
+import com.example.demo.dto.request.IdsRequest;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.users.entity.Expert;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.ExpertService;
 import com.example.demo.users.service.FirebaseService;
 import com.example.demo.users.service.UserService;
+import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -25,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -102,23 +107,43 @@ public class ExpertController {
     }
 
     @PostMapping("/admin/approve-expert")
-    public String approveExpert(@ModelAttribute PagingRequest pagingRequest,
-                                @RequestParam List<Long> ids ,
+    public ResponseEntity<ApiResponse> approveExpert(@ModelAttribute PagingRequest pagingRequest,
+                                @RequestBody IdsRequest ids ,
+                                @RequestParam(required = false) String type,
+                                @RequestParam(required = false) String keyword,
+                                RedirectAttributes redirectAttributes,
                                 Model model) throws FirebaseAuthException{
 
-        ids.forEach(firebaseService::setFirebaseMemberRoleToExpert);
-
-        log.info(pagingRequest.getSort());
+        // 리스트 순회 -> 승인
+        // 1. 파이어 베이스 클레임 변경
+        // 2. 데이터베이스 정보 변경
+        // 3. 성공 시 실패에 따라 응답 코드 발생
+        // 5. 모달 창 띄워줌
+        try{
+            for (Long id : ids.getIds()){
+                log.info("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥ID : {} 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥",id);
+                firebaseService.setRoleToExpertInClaim(id);
+                expertService.approveExpert(id);
+            }
+        } catch (UserNotFoundException userNotFoundException){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.USER_NOT_FOUND));
+        } catch (FirebaseAuthenticationException firebaseAuthenticationException){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(GlobalStatus.FIREBASE_ERROR));
+        }
 
         Pageable pageable = pagingRequest.toPageable();
 
         PagingResultDTO<ExpertDTO, Expert> result = expertService.getUnapprovedExpertList(pageable);
-        ids.forEach(log::info);
 
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
         model.addAttribute("result",result);
 
 
-        return "redirect:/admin/expert-applicants";
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse(GlobalStatus.OK));
     }
 
 

@@ -3,6 +3,7 @@ package com.example.demo.users.service;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.info.CommonInfo;
 import com.example.demo.dto.request.MemberJoinRequest;
+import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
@@ -15,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
@@ -158,38 +160,40 @@ public class FirebaseService {
 
     }
 
-    public StatusCode setFirebaseMemberRoleToExpert(Long id) {
+    @Transactional
+    public StatusCode setFirebaseMemberRoleToExpert(Long id) throws UserNotFoundException {
 
         Optional<Users> byId = userRepository.findById(id);
         if(byId.isEmpty()){
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("우리 서비스에 계정이 없어요");
         }
 
         if(!userRepository.existsByUuid(byId.get().getUuid())){
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("잘못된 계정 생성");
         }
-        Users users = byId.get();
-        users.setRole(Role.ROLE_EXPERT);
-        users.getExpert().setIsApproved(true);
-
-
-        Users saved = userRepository.save(users);
-
         try{
+            Users users = byId.get();
+            users.setRole(Role.ROLE_EXPERT);
+            users.getExpert().setIsApproved(true);
+
+
+            Users saved = userRepository.save(users);
+
             Map<String,Object> claims = new HashMap<>();
             claims.put("role", saved.getRole().name());
 
             firebaseAuth.setCustomUserClaims(saved.getUuid(), claims);
             firebaseAuth.revokeRefreshTokens(saved.getUuid());
         } catch (FirebaseAuthException firebaseAuthException){
-            return UserStatus.APPROVE_FAIL;
+            throw new FirebaseAuthenticationException();
         }
+
 
 
         return UserStatus.APPROVE_SUCCESS;
 
     }
-    public StatusCode setFirebaseMemberRoleToManager(Long id) {
+    public StatusCode setFirebaseMemberRoleToManager(Long id) throws UserNotFoundException {
 
         Optional<Users> byId = userRepository.findById(id);
         if(byId.isEmpty()){
@@ -199,19 +203,21 @@ public class FirebaseService {
         if(!userRepository.existsByUuid(byId.get().getUuid())){
             throw new UserNotFoundException();
         }
-        Users users = byId.get();
-        users.setRole(Role.ROLE_MANAGER);
-        users.getManager().setIsApproved(true);
 
-        Users saved = userRepository.save(users);
         try{
+            Users users = byId.get();
+            users.setRole(Role.ROLE_MANAGER);
+            users.getManager().setIsApproved(true);
+
+            Users saved = userRepository.save(users);
+
             Map<String,Object> claims = new HashMap<>();
             claims.put("role", saved.getRole().name());
 
             firebaseAuth.setCustomUserClaims(saved.getUuid(), claims);
             firebaseAuth.revokeRefreshTokens(saved.getUuid());
         } catch (FirebaseAuthException firebaseAuthException){
-            return UserStatus.APPROVE_FAIL;
+            throw new FirebaseAuthenticationException();
         }
 
         return UserStatus.APPROVE_SUCCESS;
@@ -305,6 +311,64 @@ public class FirebaseService {
     }
 
 
+    public StatusCode setRoleToExpertInClaim(Long expertId){
+
+        Optional<Users> byId = userRepository.findById(expertId);
+        if(byId.isEmpty()){
+            throw new UserNotFoundException();
+        }
+
+        if(!userRepository.existsByUuid(byId.get().getUuid())){
+            throw new UserNotFoundException();
+        }
+
+        try{
+            String uuid = byId.get().getUuid();
+
+
+            Map<String,Object> claims = new HashMap<>();
+            claims.put("role", Role.ROLE_EXPERT.name());
+
+            firebaseAuth.setCustomUserClaims(uuid, claims);
+            log.info("33333".repeat(10));
+            firebaseAuth.revokeRefreshTokens(uuid);
+            log.info("44444".repeat(10));
+        } catch (FirebaseAuthException firebaseAuthException){
+            throw new FirebaseAuthenticationException();
+        }
+
+        return UserStatus.APPROVE_SUCCESS;
+
+    }
+    public StatusCode setRoleToManagerInClaim(Long managerId){
+
+        Optional<Users> byId = userRepository.findById(managerId);
+        if(byId.isEmpty()){
+            throw new UserNotFoundException();
+        }
+
+        if(!userRepository.existsByUuid(byId.get().getUuid())){
+            throw new UserNotFoundException();
+        }
+
+        try{
+
+            String uuid = byId.get().getUuid();
+            log.info("uuid : {}",uuid);
+            Map<String,Object> claims = new HashMap<>();
+            claims.put("role", Role.ROLE_MANAGER.name());
+
+            firebaseAuth.setCustomUserClaims(uuid, claims);
+            firebaseAuth.revokeRefreshTokens(uuid);
+
+        } catch (FirebaseAuthException firebaseAuthException){
+            firebaseAuthException.printStackTrace();
+            throw new FirebaseAuthenticationException();
+        }
+
+        return UserStatus.APPROVE_SUCCESS;
+
+    }
 
 
 
