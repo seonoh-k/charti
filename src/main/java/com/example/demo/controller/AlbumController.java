@@ -1,17 +1,20 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.AlbumDTO;
 import com.example.demo.dto.PhotoDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.entity.Album;
 import com.example.demo.entity.Photo;
 import com.example.demo.service.AlbumService;
+import com.example.demo.service.PhotoService;
+import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Member;
-import com.example.demo.users.entity.Users;
 import com.example.demo.users.service.AuthService;
+import com.example.demo.users.service.ManagerService;
 import com.example.demo.users.service.MemberService;
-import com.example.demo.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,33 +29,50 @@ public class AlbumController {
 
     private final AuthService authService;
     private final AlbumService albumService;
+    private final PhotoService photoService;
     private final MemberService memberService;
+    private final ManagerService managerService;
 
-    @GetMapping("/albumList/{id}")
-    public String getAlbumList(@PathVariable("id") Long id, Model model) {
+    @GetMapping({"/albumList","/albumList/{id}"})
+    public String getAlbumList(@PathVariable(value = "id", required = false) Long id, Model model) {
 
         UserDTO userDTO = authService.getLoginUser();
-        Member member = memberService.get(id);
-        Users user = member.getUsers();
+        Long targetId = id == null ? userDTO.getId() : id;
 
-        List<Album> albumList = member.getAlbums();
+        Member member;
+        Manager manager;
+        UserDTO owner;
+        if(userDTO.getRole().equals("MEMBER")) {
+            member = memberService.get(targetId);
+            owner = new UserDTO(member.getUsers());
+        }else if(userDTO.getRole().equals("MANAGER")) {
+            manager = managerService.get(targetId);
+            owner = new UserDTO(manager.getUsers());
+        }else { // 전문가 회원과 관리자는 앨범페이지를 가지지 않음
+            return "redirect:/";
+        }
+
+        Page<Album> albums = albumService.getPagedList(targetId, 0);
+        List<AlbumDTO> albumList = new ArrayList<>();
         List<String> urlList = new ArrayList<>();
 
-        boolean isOwner = userDTO.getId().equals(member.getId());
+        boolean isOwner = userDTO.getId().equals(targetId);
 
-        for(Album album : albumList) {
-            if(id.equals(userDTO.getId()) || album.getIsPublic()){
+        for(Album album : albums) {
+            if(isOwner || album.getIsPublic()){
+                albumList.add(new AlbumDTO(album));
                 String filename = album.getThumbnail();
                 String presignedUrl = "/api/proxy/image?filename=thumbnail/"+filename;
                 urlList.add(presignedUrl);
             }
         }
-
+       log.info(albums.toString());
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("loginUser", userDTO);
-        model.addAttribute("owner", user);
+        model.addAttribute("owner", owner);
         model.addAttribute("albumList", albumList);
         model.addAttribute("urlList", urlList);
+        model.addAttribute("isLastPage", albums.isLast());
 
         return "albumList";
     }
@@ -68,9 +88,10 @@ public class AlbumController {
         }
 
         boolean isOwner = userDTO.getId().equals(album.getMember().getId());
+        Page<Photo> photos = photoService.getPagedList(id, 0);
         List<PhotoDTO> photoList = new ArrayList<>();
 
-        for(Photo photo : album.getPhotos()) {
+        for(Photo photo : photos.getContent()) {
             if(isOwner || photo.getIsPublic()){
                 photoList.add(new PhotoDTO(photo));
             }
@@ -81,6 +102,7 @@ public class AlbumController {
         model.addAttribute("album", album);
         model.addAttribute("url", "/api/proxy/image?filename=thumbnail/"+album.getThumbnail());
         model.addAttribute("photoList", photoList);
+        model.addAttribute("isLastPage", photos.isLast());
 
         return "album";
     }
