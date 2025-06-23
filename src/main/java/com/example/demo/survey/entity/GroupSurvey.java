@@ -39,8 +39,8 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     @Column(name = "target_group", nullable = false)
     private TargetGroup targetGroup;
 
-    @Column(nullable = false)
-    private int weight;
+//    @Column(nullable = false)
+//    private int weight;
 
     @Column(nullable = false)
     private String answer1;
@@ -57,11 +57,6 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     @Column
     private String answer5;
 
-    @Column(name = "selected_answer", nullable = false)
-    private String selectedAnswer;
-
-    @Column(name = "calculated_score", nullable = false)
-    private int calculatedScore;
 
 
     @Override

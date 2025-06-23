@@ -14,8 +14,7 @@
     <div class="max-w-4xl mx-auto p-6">
         <h1 class="text-2xl font-bold mb-6">문진 결과</h1>
 
-        <div id="resultContainer" class="space-y-4">
-            <!-- JS가 여기에 카테고리별 점수, 통합 점수를 뿌려줍니다 -->
+        <div id="resultContainer" class="space-y-6">
         </div>
 
         <div class="mt-8">
@@ -27,12 +26,10 @@
     </div>
 
     <script>
-        // 1) URL에서 data 파라미터 뽑아오기
         const params = new URLSearchParams(window.location.search);
         const dataParam = params.get("data");
         let result;
         try {
-          // encodeURIComponent 로 넘겼으니 decode 한 뒤 JSON.parse
           result = JSON.parse(decodeURIComponent(dataParam));
         } catch (e) {
           console.error("결과 파싱 실패", e);
@@ -41,26 +38,63 @@
           throw e;
         }
 
-        const { categoryScores, totalRiskScore } = result;
+        const { categoryScores, childId, ageGroup } = result;
         const container = document.getElementById("resultContainer");
+        container.innerHTML = ''; // 컨테이너 초기화
 
-        // 2) 카테고리별 점수
-        for (const [cat, score] of Object.entries(categoryScores)) {
-          const div = document.createElement("div");
-          div.className = "p-4 border rounded bg-gray-50";
-          div.innerHTML = `
-            <p class="font-semibold">${cat} 위험도: ${score.toFixed(2)}%</p>
-          `;
-          container.appendChild(div);
+        // [수정 1] 카테고리 표시 이름과 ENUM 이름을 매핑하는 도우미 객체
+        const categoryEnumMap = {
+            "의사소통/정서/심리": "BEHAVIOR_EMOTION",
+            "운동/인지 발달": "MOTOR_COGNITIVE",
+            "사회성/인지/창의": "SOCIAL_COGNITIVE_CREATIVITY",
+            "생활습관": "LIFESTYLE"
+            // 참고: 추후 카테고리가 추가/변경되면 이 부분을 업데이트해야 합니다.
+        };
+
+        // [수정 2] 카테고리별로 결과를 표시하고, 조건에 따라 특별 문진 버튼을 개별적으로 추가
+        for (const [catDisplayName, score] of Object.entries(categoryScores)) {
+            const isHighRisk = score >= 60;
+
+            // 각 카테고리별 결과 카드 생성
+            const wrapperDiv = document.createElement('div');
+            wrapperDiv.className = `p-4 border rounded-lg ${isHighRisk ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'}`;
+
+            let contentHTML = `
+                <div class="flex justify-between items-center">
+                    <p class="font-semibold text-lg">${catDisplayName}</p>
+                    <p class="text-2xl font-bold ${isHighRisk ? 'text-orange-600' : 'text-green-700'}">${score.toFixed(2)}%</p>
+                </div>
+            `;
+
+            // 점수가 60 이상인 경우에만 특별 문진 안내 및 버튼 추가
+            if (isHighRisk) {
+                // [수정 3] 매핑 객체를 사용해 ENUM 이름을 찾음
+                const catEnumName = categoryEnumMap[catDisplayName];
+
+                if (catEnumName) { // 매핑된 ENUM 이름이 있을 경우에만 버튼 생성
+                    const specialParams = new URLSearchParams();
+                    specialParams.append('childId', childId);
+                    specialParams.append('ageGroup', ageGroup);
+                    specialParams.append('categories', catEnumName); // 해당 카테고리의 ENUM 이름만 전달
+
+                    contentHTML += `
+                        <div class="mt-3 pt-3 border-t border-orange-200">
+                            <p class="text-sm text-orange-800">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                <strong>'${catDisplayName}'</strong> 항목에 대한 심층적인 확인이 권장됩니다.
+                            </p>
+                            <p class="text-xs text-gray-600 mt-1">아래 버튼을 눌러 관련된 특별 문진을 진행해주세요.</p>
+                            <a href="/specialSurvey?${specialParams.toString()}" class="mt-2 inline-block bg-orange-500 text-white px-4 py-1 rounded hover:bg-orange-600 text-sm font-bold">
+                                특별 문진 시작하기
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+
+            wrapperDiv.innerHTML = contentHTML;
+            container.appendChild(wrapperDiv);
         }
-
-        // 3) 통합 위험도 (문진 항목 수에 따라 나눌 수도 있고, 그대로 보여도 좋습니다)
-        const overallDiv = document.createElement("div");
-        overallDiv.className = "mt-4 p-4 border rounded bg-blue-50";
-        overallDiv.innerHTML = `
-          <p class="font-bold text-lg">통합 위험도: ${totalRiskScore.toFixed(2)}</p>
-        `;
-        container.appendChild(overallDiv);
     </script>
 </th:block>
 </html>

@@ -42,6 +42,7 @@ public class GroupAnswer extends BaseEntity {
     @Column(nullable = false)
     private SurveyCategory category;
 
+
     @Column(nullable = false)
     private String question;
 
@@ -49,7 +50,7 @@ public class GroupAnswer extends BaseEntity {
     @Column(nullable = false)
     private String answer;
 
-    // 가중치(위험도 도출 시 사용)
-    @Column(nullable = false)
-    private Integer weight;
+//    // 가중치(위험도 도출 시 사용)
+//    @Column(nullable = false)
+//    private Integer weight;
 }

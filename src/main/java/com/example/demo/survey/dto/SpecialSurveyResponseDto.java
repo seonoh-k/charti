@@ -12,28 +12,24 @@ import java.util.stream.Collectors;
 public class SpecialSurveyResponseDto {
     private Long id;
     private String question;
-    private String category;      // ENUM → String
-    private String ageGroup;      // ENUM → String
-    private int weight;
+    private String category;
+    private String ageGroup;
+    // private int weight; // weight 제거
     private String answer1, answer2, answer3, answer4, answer5;
-    private String selectedAnswer;
-    private int calculatedScore;
     private List<String> surveySetTitles;
 
     public static SpecialSurveyResponseDto fromEntity(SpecialSurvey entity) {
         return SpecialSurveyResponseDto.builder()
                 .id(entity.getId())
                 .question(entity.getQuestion())
-                .category(entity.getCategory().getDisplayName())       // ENUM → String
-                .ageGroup(entity.getAgeGroup().getDisplayName())       // ENUM → String
-                .weight(entity.getWeight())
+                .category(entity.getCategory().getDisplayName())
+                .ageGroup(entity.getAgeGroup().getDisplayName())
+                // .weight(entity.getWeight()) // weight 제거
                 .answer1(entity.getAnswer1())
                 .answer2(entity.getAnswer2())
                 .answer3(entity.getAnswer3())
                 .answer4(entity.getAnswer4())
                 .answer5(entity.getAnswer5())
-                .selectedAnswer(entity.getSelectedAnswer())
-                .calculatedScore(entity.getCalculatedScore())
                 .surveySetTitles(entity.getSurveySets().stream()
                         .map(set -> set.getSetTitle())
                         .collect(Collectors.toList()))

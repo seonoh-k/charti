@@ -15,10 +15,8 @@ public class GroupSurveyResponseDto {
     private String category;      // ENUM -> String
     private String ageGroup;      // ENUM -> String
     private String targetGroup;   // ENUM -> String (nullable)
-    private int weight;
+//    private int weight;         // 제거
     private String answer1, answer2, answer3, answer4, answer5;
-    private String selectedAnswer;
-    private int calculatedScore;
     private List<String> surveySetTitles;
 
     public static GroupSurveyResponseDto fromEntity(GroupSurvey entity) {
@@ -30,14 +28,12 @@ public class GroupSurveyResponseDto {
                 .targetGroup(entity.getTargetGroup()                       // Optional 처리
                         .map(tg -> tg.getDisplayName())
                         .orElse(null))
-                .weight(entity.getWeight())
+//                .weight(entity.getWeight())     //제거
                 .answer1(entity.getAnswer1())
                 .answer2(entity.getAnswer2())
                 .answer3(entity.getAnswer3())
                 .answer4(entity.getAnswer4())
                 .answer5(entity.getAnswer5())
-                .selectedAnswer(entity.getSelectedAnswer())
-                .calculatedScore(entity.getCalculatedScore())
                 .surveySetTitles(
                         entity.getSurveySets().stream()
                                 .map(set -> set.getSetTitle())

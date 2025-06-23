@@ -18,7 +18,7 @@ public class GroupAnswerDto {
     private String targetGroup;
     private String question;
     private String answer;
-    private Integer weight;
+//    private Integer weight;
     private LocalDateTime createdAt;
 
     // 버튼 모달용 옵션 목록
@@ -40,7 +40,7 @@ public class GroupAnswerDto {
         d.setTargetGroup(a.getTargetGroup().getDisplayName());
         d.setQuestion(a.getQuestion());
         d.setAnswer(a.getAnswer());
-        d.setWeight(a.getWeight());
+//        d.setWeight(a.getWeight());
         d.setCreatedAt(a.getCreatedAt());
 
         // survey 엔티티에서 옵션 꺼내기

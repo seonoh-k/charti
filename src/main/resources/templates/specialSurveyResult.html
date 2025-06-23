@@ -9,41 +9,90 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
+
 <th:block layout:fragment="content">
     <div class="max-w-4xl mx-auto p-6">
-        <h1 class="text-2xl font-bold mb-6">문진 결과</h1>
-        <div id="resultContainer" class="space-y-4"></div>
+        <h1 class="text-2xl font-bold mb-6">특별 문진 결과</h1>
+
+        <div id="resultContainer" class="space-y-6">
+        </div>
+
         <div class="mt-8">
-            <button onclick="location.href='/specialSurvey'"
+            <button onclick="history.back()"
                     class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                 다시 문진하기
             </button>
         </div>
     </div>
+
     <script>
+        // URL에서 결과 데이터 파싱
         const params = new URLSearchParams(window.location.search);
         const dataParam = params.get("data");
         let result;
         try {
           result = JSON.parse(decodeURIComponent(dataParam));
-        } catch {
-          document.getElementById("resultContainer")
-            .innerHTML = `<p class="text-red-500">결과를 불러오는 데 실패했습니다.</p>`;
-          throw Error();
+        } catch (e) {
+          console.error("결과 파싱 실패", e);
+          document.getElementById("resultContainer").innerHTML = `<p class="text-red-500">결과를 불러오는 데 실패했습니다.</p>`;
+          throw e;
         }
-        const { categoryScores, totalRiskScore } = result;
-        const container = document.getElementById("resultContainer");
 
-        Object.entries(categoryScores).forEach(([cat,score]) => {
-          const div = document.createElement("div");
-          div.className = "p-4 border rounded bg-gray-50";
-          div.innerHTML = `<p class="font-semibold">${cat} 위험도: ${score.toFixed(2)}%</p>`;
-          container.appendChild(div);
-        });
-        const overall = document.createElement("div");
-        overall.className = "mt-4 p-4 border rounded bg-blue-50";
-        overall.innerHTML = `<p class="font-bold text-lg">통합 위험도: ${totalRiskScore.toFixed(2)}</p>`;
-        container.appendChild(overall);
+        const { categoryScores, childId, ageGroup, needsMatching, category } = result;
+        const container = document.getElementById("resultContainer");
+        container.innerHTML = ''; // 컨테이너 초기화
+
+        // 카테고리별 결과 표시
+        for (const [catDisplayName, score] of Object.entries(categoryScores)) {
+            const isHighRisk = score >= 60;
+
+            const wrapperDiv = document.createElement('div');
+            wrapperDiv.className = `p-4 border rounded-lg ${isHighRisk ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'}`;
+
+            let contentHTML = `
+                <div class="flex justify-between items-center">
+                    <p class="font-semibold text-lg">${catDisplayName}</p>
+                    <p class="text-2xl font-bold ${isHighRisk ? 'text-red-600' : 'text-green-700'}">${score.toFixed(2)}%</p>
+                </div>
+            `;
+
+            // [수정] needsMatching 플래그가 true일 때만 '전문가 매칭하기' 버튼 추가
+            // 특별 문진은 카테고리가 하나이므로, isHighRisk와 needsMatching은 사실상 같은 조건
+            if (needsMatching) {
+                contentHTML += `
+                    <div class="mt-3 pt-3 border-t border-red-200">
+                        <p class="text-sm text-red-800">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            <strong>'${catDisplayName}'</strong> 항목에 대한 전문가의 심층 상담이 필요할 수 있습니다.
+                        </p>
+                        <p class="text-xs text-gray-600 mt-1">아래 버튼을 눌러 전문가 매칭을 요청하세요.</p>
+                        <button onclick="requestMatching('${childId}', '${ageGroup}', '${category}')" class="mt-2 inline-block bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 text-sm font-bold">
+                            전문가 매칭하기
+                        </button>
+                    </div>
+                `;
+            }
+
+            wrapperDiv.innerHTML = contentHTML;
+            container.appendChild(wrapperDiv);
+        }
+
+        // '전문가 매칭하기' 버튼 클릭 시 실행될 함수
+        function requestMatching(childId, ageGroup, category) {
+            // 여기에 추후 실제 매칭 정보를 저장하는 API를 호출하는 로직을 구현합니다.
+            // fetch('/api/matching', { method: 'POST', ... });
+
+            const message = `
+                전문가 매칭을 요청합니다.
+                - 자녀 ID: ${childId}
+                - 연령대: ${ageGroup}
+                - 카테고리: ${category}
+            `;
+            alert(message);
+
+            // 예시: 요청 후 매칭 페이지로 이동
+            // window.location.href = '/matching/request-complete';
+        }
     </script>
 </th:block>
 </html>

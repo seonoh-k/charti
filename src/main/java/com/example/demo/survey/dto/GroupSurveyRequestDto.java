@@ -1,5 +1,6 @@
 package com.example.demo.survey.dto;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,6 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@Builder
 public class GroupSurveyRequestDto {
     private Long childId;       // 추가: 자녀 ID
     private String ageGroup;    // 연령대

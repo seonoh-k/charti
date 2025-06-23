@@ -59,7 +59,7 @@
         const infoGender  = document.getElementById('infoGender');
         const infoAge     = document.getElementById('infoAge');
         const infoHeight  = document.getElementById('infoHeight');
-        const infoWeight  = document.getElementById('infoWeight');
+
 
         let lastFetched = [];
         let currentEditId = null;
@@ -133,7 +133,7 @@
                            id="answerText_${ans.id}">
                           ${ans.answer}
                         </p>
-                        <p class="text-xs text-gray-500">가중치: ${ans.weight}</p>
+
                       </div>
                       <div class="flex flex-col gap-2 justify-center">
                         <button onclick="showEditModal(${ans.id})"

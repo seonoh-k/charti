@@ -54,7 +54,6 @@ public class GroupAnswerService {
             a.setCategory(s.getCategory());
             a.setQuestion(s.getQuestion());
             a.setAnswer(text);
-            a.setWeight(s.getWeight());
             answerRepo.save(a);
         }
     }
