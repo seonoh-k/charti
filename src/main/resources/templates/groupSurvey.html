@@ -68,6 +68,14 @@
         const submitBtn     = document.getElementById('submitBtn');
         let surveys = [];
 
+        const params      = new URLSearchParams(window.location.search);
+        const preChildId  = params.get('childId');
+        if (preChildId) {
+            Array.from(childSelect.options)
+                 .find(opt => opt.value === preChildId)
+                 ?.setAttribute('selected', 'selected');
+        }
+
         function loadSurveys() {
           const age = ageSelect.value;
           if (!age) { container.innerHTML=''; return; }

@@ -1,5 +1,7 @@
 package com.example.demo.fcm.service;
 
+import com.example.demo.entity.Group;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.FcmCategory;
 import com.example.demo.fcm.entity.FcmSendHistory;
@@ -9,6 +11,8 @@ import com.example.demo.fcm.repository.FcmSendHistoryRepository;
 import com.example.demo.fcm.repository.NoticeRepository;
 import com.example.demo.fcm.repository.UserFcmTokenRepository;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.repository.UserRepository;
+import com.example.demo.users.entity.Child;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FcmService {
 
+    private final UserRepository userRepo;
     private final UserFcmTokenRepository tokenRepository;
     private final FcmSender fcmSender;
     private final FcmSendHistoryRepository historyRepository;
@@ -131,6 +136,121 @@ public class FcmService {
                         .build()
         );
 
+        return successCount;
+    }
+
+    @Transactional
+    public int sendNotificationToRiskGroupChildren() {
+        LocalDateTime now = LocalDateTime.now();
+        int successCount = 0;
+        int targetCount = 0;
+
+        for (Users user : userRepo.findAll()) {
+            if (user.getMember() == null) continue;
+
+            for (Child child : user.getMember().getChildren()) {
+                if (Boolean.TRUE.equals(child.getRiskGroup())) {
+                    // 이 유저의 활성 토큰 조회
+                    for (UserFcmToken token : tokenRepository.findByUserAndIsActiveTrue(user)) {
+                        targetCount++;
+                        boolean sent = fcmSender.send(
+                                token.getFcmToken(),
+                                child.getName() + "님이 위험군에 속해있어요!",
+                                "지금 바로 특별 문진을 완료해주세요.."
+                        );
+                        if (sent) {
+                            successCount++;
+                            // Notice 저장
+                            noticeRepository.save(
+                                    Notice.builder()
+                                            .user(user)
+                                            .title(child.getName() + "님이 위험군에 속해있어요!")
+                                            .body("지금 바로 특별 문진을 완료해주세요..")
+                                            .category(FcmCategory.SPECIAL)
+                                            .sentAt(now)
+                                            .url("http://localhost:8080/specialSurvey?childId=" + child.getId())
+                                            .build()
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        // 발송 이력 저장
+        historyRepository.save(
+                FcmSendHistory.builder()
+                        .title("위험군 속한 자녀 대상")
+                        .body("특별문진 요청 알림")
+                        .category(FcmCategory.SPECIAL)
+                        .targetCondition("riskGroup=true")
+                        .targetCount(targetCount)
+                        .successCount(successCount)
+                        .sentAt(now)
+                        .build()
+        );
+
+        return successCount;
+    }
+
+    /**
+     * 그룹(targetGroup) 문진 알림.
+     * @param targetGroup Group.targetGroup 필드값 (e.g. "유치원")
+     */
+    @Transactional
+    public int sendNotificationToGroupChildren(TargetGroup targetGroup) {
+        LocalDateTime now = LocalDateTime.now();
+        int successCount = 0, targetCount = 0;
+
+        for (Users user : userRepo.findAll()) {
+            if (user.getMember() == null) continue;
+            for (Child child : user.getMember().getChildren()) {
+                if (child.getGroup() != null
+                        && child.getGroup().getTargetGroup() == targetGroup) {
+
+                    for (UserFcmToken token :
+                            tokenRepository.findByUserAndIsActiveTrue(user)) {
+                        targetCount++;
+                        boolean sent = fcmSender.send(
+                                token.getFcmToken(),
+                                child.getName() + "님, " +
+                                        targetGroup.getDisplayName() +
+                                        "에서 그룹 문진이 왔어요!",
+                                "지금 바로 그룹 문진을 완료해주세요.."
+                        );
+                        if (sent) {
+                            successCount++;
+                            noticeRepository.save(
+                                    Notice.builder()
+                                            .user(user)
+                                            .title(child.getName() +
+                                                    "님, " +
+                                                    targetGroup.getDisplayName() +
+                                                    "에서 그룹 문진이 왔어요!")
+                                            .body("지금 바로 그룹 문진을 완료해주세요..")
+                                            .category(FcmCategory.SPECIAL)
+                                            .sentAt(now)
+                                            .url("http://localhost:8080/groupSurvey?childId="
+                                                    + child.getId())
+                                            .build()
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        historyRepository.save(
+                FcmSendHistory.builder()
+                        .title(targetGroup.getDisplayName() + " 그룹 대상자")
+                        .body("그룹 문진 요청 알림")
+                        .category(FcmCategory.SPECIAL)
+                        .targetCondition("group=" + targetGroup.name())
+                        .targetCount(targetCount)
+                        .successCount(successCount)
+                        .sentAt(now)
+                        .build()
+        );
         return successCount;
     }
 

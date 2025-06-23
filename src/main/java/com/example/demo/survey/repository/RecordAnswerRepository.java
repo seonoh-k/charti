@@ -105,6 +105,11 @@ public interface RecordAnswerRepository extends JpaRepository<RecordAnswer, Long
     Page<RecordAnswer> findByChildAndDeletedFalse(Child child, Pageable pageable);
 
     /**
+     * 특정 childId 가 주어진 기간(start~end)에 답변을 남겼는지 여부 확인
+     */
+    boolean existsByChildIdAndCreatedAtBetween(Long id, LocalDateTime start, LocalDateTime end);
+
+    /**
      * 여러 자녀에 대한 각각의 고유 문진 기록일 카운트를 한 번의 쿼리로 조회합니다. (N+1 문제 해결용)
      * @param children 조회할 자녀 엔티티 목록
      * @return 각 자녀의 ID와 기록일 카운트를 담은 ChildRecordCountDto 목록
