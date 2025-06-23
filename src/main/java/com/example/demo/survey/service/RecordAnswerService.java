@@ -10,19 +10,23 @@ import com.example.demo.survey.entity.RecordAnswer;
 import com.example.demo.survey.entity.RecordSurvey;
 import com.example.demo.survey.repository.RecordAnswerRepository;
 import com.example.demo.survey.repository.RecordSurveyRepository;
+import com.example.demo.users.dto.ChildHistorySummaryDto;
+import com.example.demo.users.dto.ChildRecordCountDto;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.service.ChildService;
 import com.example.demo.service.PointService;
-import com.example.demo.users.dto.ChildHistorySummaryDto;
 import com.example.demo.users.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -36,7 +40,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerRepository> {
 
-
     private final ChildService childService;
     private final RecordSurveyRepository recordSurveyRepository;
     private final PointService pointService;
@@ -44,7 +47,6 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
 
     public RecordAnswerService(
             RecordAnswerRepository recordAnswerRepository,
-            RecordSurveyService recordSurveyService,
             ChildService childService,
             RecordSurveyRepository recordSurveyRepository,
             PointService pointService,
@@ -79,7 +81,6 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
      */
     @Transactional
     public void softDelete(Long id) {
-        log.info("답변 ID '{}' soft delete 요청", id);
         RecordAnswer answer = repository.findById(id)
                 .orElseThrow(() -> new RecordAnswerNotFoundException("삭제할 답변을 찾을 수 없습니다. ID: " + id));
         answer.markAsDeleted();
@@ -106,17 +107,18 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
                 .orElseThrow(() -> new UserNotFoundException("해당 ID의 멤버를 찾을 수 없습니다. ID: " + memberId));
 
         List<Child> children = childService.getChildrenByMember(member);
+        if (children.isEmpty()) return new ArrayList<>();
+
+        Map<Long, Long> countsByChildId = repository.countDistinctRecordDatesByChildren(children).stream()
+                .collect(Collectors.toMap(ChildRecordCountDto::getChildId, ChildRecordCountDto::getRecordCount));
 
         return children.stream()
-                .map(child -> {
-                    long totalRecordDatesCount = repository.countDistinctRecordDatesByChild(child);
-                    return ChildHistorySummaryDto.builder()
-                            .childId(child.getId())
-                            .childName(child.getName())
-                            .childAge(child.getAge())
-                            .totalRecordDatesCount(totalRecordDatesCount)
-                            .build();
-                })
+                .map(child -> ChildHistorySummaryDto.builder()
+                        .childId(child.getId())
+                        .childName(child.getName())
+                        .childAge(child.getAge())
+                        .totalRecordDatesCount(countsByChildId.getOrDefault(child.getId(), 0L))
+                        .build())
                 .collect(Collectors.toList());
     }
 
@@ -126,7 +128,8 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
     @Transactional(readOnly = true)
     public Page<RecordDateSummaryDto> getRecordDatesPagedByChild(Long childId, Pageable pageable) {
         Child child = childService.findById(childId);
-        return repository.findDistinctRecordDatesByChild(child, pageable);
+        Page<Object[]> rawPage = repository.findDistinctRecordDatesByChild(child, pageable);
+        return rawPage.map(row -> new RecordDateSummaryDto((Date) row[0], (Long) row[1]));
     }
 
     /**
@@ -147,8 +150,8 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
     @Transactional(readOnly = true)
     public boolean hasAnsweredToday(Child child) {
         LocalDateTime start = LocalDate.now().atStartOfDay();
-        LocalDateTime end = start.plusDays(1);
-        return repository.countByChildAndCreatedAtBetween(child, start, end) > 0;
+        LocalDateTime end = LocalDate.now().atTime(LocalTime.MAX);
+        return repository.existsByChildAndCreatedAtBetween(child, start, end);
     }
 
     /**
@@ -171,6 +174,7 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
             throw new DuplicateSurveySubmissionException("선택하신 자녀는 오늘 이미 기록 문진을 작성했습니다.");
         }
 
+        List<RecordAnswer> answersToSave = new ArrayList<>();
         for (RecordSurveyAnswerDto req : requestList) {
             RecordSurvey survey = recordSurveyRepository.findById(req.getQuestionId())
                     .orElseThrow(() -> new RecordSurveyQuestionNotFoundException("존재하지 않는 질문입니다. ID: " + req.getQuestionId()));
@@ -182,8 +186,9 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
             answer.setQuestion(survey.getQuestion());
             answer.setAnswer(req.getText());
             answer.setAnswered(true);
-            repository.save(answer);
+            answersToSave.add(answer);
         }
+        repository.saveAll(answersToSave);
 
         pointService.giveRecordSurveyPointIfEligible(member, child);
     }
@@ -197,19 +202,23 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
         LocalDateTime end = recordDate.atTime(LocalTime.MAX);
 
         List<RecordAnswer> existingAnswers = repository.findByChild_IdAndCreatedAtBetween(childId, start, end);
-
         if (existingAnswers.isEmpty()) {
             throw new RecordHistoryNotFoundException("해당 날짜에 기록된 문진 답변이 없습니다.");
         }
 
+        Map<Long, RecordAnswer> answerMap = existingAnswers.stream()
+                .collect(Collectors.toMap(ra -> ra.getSurvey().getSurveyId(), ra -> ra));
+
+        List<RecordAnswer> answersToUpdate = new ArrayList<>();
         for (UpdateAnswerRequestDto updateDto : updatedAnswers) {
-            RecordAnswer answerToUpdate = existingAnswers.stream()
-                    .filter(ra -> ra.getSurvey().getSurveyId().equals(updateDto.getQuestionId()))
-                    .findFirst()
-                    .orElseThrow(() -> new RecordAnswerNotFoundException("질문 ID " + updateDto.getQuestionId() + " 에 해당하는 기존 답변을 찾을 수 없습니다."));
+            RecordAnswer answerToUpdate = answerMap.get(updateDto.getQuestionId());
+            if (answerToUpdate == null) {
+                throw new RecordAnswerNotFoundException("질문 ID " + updateDto.getQuestionId() + " 에 해당하는 기존 답변을 찾을 수 없습니다.");
+            }
             answerToUpdate.setAnswer(updateDto.getAnswer());
-            repository.save(answerToUpdate);
+            answersToUpdate.add(answerToUpdate);
         }
+        repository.saveAll(answersToUpdate);
     }
 
     /**
@@ -221,27 +230,30 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
         LocalDateTime end = recordDate.atTime(LocalTime.MAX);
 
         List<RecordAnswer> answersToDelete = repository.findByChild_IdAndCreatedAtBetween(childId, start, end);
-
         if (answersToDelete.isEmpty()) {
             throw new RecordHistoryNotFoundException("삭제할 문진 기록이 존재하지 않습니다.");
         }
-
         repository.deleteAll(answersToDelete);
     }
 
     /**
      * 특정 자녀의 기록 문진 답변 이력을 페이지 단위로 조회합니다.
-     *
-     * @param childId 자녀 ID
-     * @param pagingRequest 페이징 요청 정보
-     * @return 페이징된 답변 응답 목록
      */
+    @Transactional(readOnly = true)
     public PagingResponse<RecordAnswerResponse> getRecordAnswersPageByChild(Long childId, PagingRequest pagingRequest) {
         Child child = childService.findById(childId);
-        Pageable pageable = pagingRequest.toPageable();
+
+        Pageable pageable = PageRequest.of(
+                pagingRequest.getPage() != null ? pagingRequest.getPage() : 0,
+                pagingRequest.getSize() != null ? pagingRequest.getSize() : 5,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
         Page<RecordAnswer> result = repository.findByChildAndDeletedFalse(child, pageable);
+
         PagingResultDTO<RecordAnswerResponse, RecordAnswer> pagingResultDTO =
                 new PagingResultDTO<>(result, RecordAnswerResponse::fromEntity);
+
         return PagingResponse.from(pagingResultDTO);
     }
 }

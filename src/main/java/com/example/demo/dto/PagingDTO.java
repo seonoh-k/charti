@@ -27,4 +27,23 @@ public class PagingDTO<T> {
 
         return PageRequest.of(safePage, safeSize, Sort.by(safeDirection, safeSort));
     }
+
+    public Pageable toZeroBasedPageable() {
+        int safeSize = (size != null && size > 0) ? size : 10;
+        int safePage = (page != null && page >= 0) ? page : 0;
+        String safeSort = (sort != null && !sort.isBlank()) ? sort : "createdAt";
+        Sort.Direction safeDirection = "asc".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        return PageRequest.of(safePage, safeSize, Sort.by(safeDirection, safeSort));
+    }
+
+//    public Pageable toZeroBasedPageable() {
+//        int safeSize = (this.size != null && this.size > 0) ? this.size : 10;
+//        int safePage = (this.page != null && this.page >= 0) ? this.page : 0;
+//
+//        // Repository의 @Query에서 이미 ORDER BY로 정렬하고 있으므로,
+//        // PageRequest에서는 별도의 정렬 설정을 하지 않습니다. (Sort.unsorted())
+//        // 이렇게 하면 PropertyReferenceException을 방지할 수 있습니다.
+//        return PageRequest.of(safePage, safeSize, Sort.unsorted());
+//    }
 }

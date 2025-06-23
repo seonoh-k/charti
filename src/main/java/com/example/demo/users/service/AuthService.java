@@ -260,5 +260,10 @@ public class AuthService {
     }
 
 
+    // AuthService 내부에 직접 구현
+    public Member getMemberEntityById(Long id) {
+        return memberRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("ID " + id + "에 해당하는 멤버를 찾을 수 없습니다."));
+    }
 
 }
