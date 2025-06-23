@@ -44,12 +44,12 @@
         
                 <div>
                     <label class="block mb-1 text-sm font-medium">가입 경로 (provider)</label>
-                    <input type="text" th:field="*{provider}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                    <input type="text" th:field="*{provider}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" readonly disabled />
                 </div>
         
                 <div>
                     <label class="block mb-1 text-sm font-medium">총 포인트</label>
-                    <input type="text" th:field="*{totalPoint}" class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 cursor-not-allowed" disabled />
+                    <input type="text" th:field="*{totalPoint}" class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 cursor-not-allowed" readonly disabled />
                 </div>
                 <div>
                     <label class="block mb-1 text-sm font-medium">가입 일자</label>

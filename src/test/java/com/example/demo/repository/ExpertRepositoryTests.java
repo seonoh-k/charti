@@ -3,6 +3,7 @@ package com.example.demo.repository;
 import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.paging.PagingResultDTO;
+import com.example.demo.users.entity.Expert;
 import com.example.demo.users.repository.*;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -98,6 +99,14 @@ class ExpertRepositoryTests {
 
 
 
+
+    }
+
+    @Test
+    public void eeee(){
+
+        Long id = 508L;
+        Optional<Expert> byId = expertRepository.findById(id);
 
     }
 }

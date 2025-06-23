@@ -7,6 +7,7 @@ import com.example.demo.users.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -30,5 +31,13 @@ public interface UserRepository extends JpaRepository<Users,Long> {
 
     // 닉네임으로 검색 (대소문자 무시)
     List<Users> findByNicknameContainingIgnoreCase(String keyword);
+
+    @Modifying
+    @Query("UPDATE Users u SET u.role = 'ROLE_EXPERT' WHERE u.id = :id")
+    int updateUserRoleToExpert(Long id);
+
+    @Modifying
+    @Query("UPDATE Users u SET u.role = 'ROLE_MANAGER' WHERE u.id = :id")
+    int updateUserRoleToManager(Long id);
 
 }
