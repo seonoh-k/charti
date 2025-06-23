@@ -31,4 +31,8 @@ public interface UserRepository extends JpaRepository<Users,Long> {
     // 닉네임으로 검색 (대소문자 무시)
     List<Users> findByNicknameContainingIgnoreCase(String keyword);
 
+    Optional<Users> findByNameAndPhoneNumber(String name, String phoneNumber);
+    Optional<Users> findByUsernameAndPhoneNumber(String username, String phoneNumber);
+
+
 }

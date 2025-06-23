@@ -30,6 +30,33 @@ public class MemberController {
         return "member";
     }
 
+    @GetMapping("/myInfo")
+    public String myInfoPage() {
+        UserDTO userDTO = authService.getLoginUser();
+        Role role = Role.valueOf(userDTO.getRole());
+
+        // ✅ 권한에 따라 마이페이지 리다이렉트
+        return switch (role) {
+            case ROLE_MEMBER -> "redirect:/member/myPage";
+            case ROLE_EXPERT -> "redirect:/expert/myPage";
+            case ROLE_MANAGER -> "redirect:/manager/myPage";
+            default -> "redirect:/error";
+        };
+    }
+
+    @GetMapping("/member/myPage")
+    public String showMemberMyPage(Model model) {
+        log.info("[GET] 👨‍💼 request member Page");
+        UserDTO userDTO = authService.getLoginUser();
+
+        AddressDTO address =  addressService.getByMemberUid(userDTO.getUuid());
+
+        userDTO.setAddress(address);
+        model.addAttribute("userInfo", userDTO);
+
+        return "member/myPage";
+    }
+
     @GetMapping("/main")
     public String showMainPage(Model model){
 
@@ -56,23 +83,6 @@ public class MemberController {
         }
         return "main";
 
-    }
-
-    @GetMapping("/myInfo")
-    public String myInfoPage(Model model) {
-        UserDTO userinfo = authService.getLoginUser();
-        Role role = Role.valueOf(userinfo.getRole());
-
-        AddressDTO address = switch (role) {
-            case ROLE_MEMBER -> addressService.getByMemberUid(userinfo.getUuid());
-            case ROLE_EXPERT -> addressService.getByExpertUid(userinfo.getUuid());
-            case ROLE_MANAGER -> addressService.getGroupIdByManagerUid(userinfo.getUuid());
-            default -> throw new RuntimeException("주소를 불러올 수 없습니다.");
-        };
-
-        userinfo.setAddress(address);
-        model.addAttribute("userInfo", userinfo);
-        return "/myInfo"; // templates/user/my-info.html
     }
 
 
