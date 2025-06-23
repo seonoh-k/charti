@@ -58,4 +58,5 @@ public class UserDTO {
         this.id = user.getId();
         this.nickname = user.getNickname();
     }
+
 }
