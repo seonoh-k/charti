@@ -1,11 +1,14 @@
 package com.example.demo.users.controller;
 
+import com.example.demo.dto.AddressDTO;
 import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.ManagerDTO;
+import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.IdsRequest;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.service.AddressService;
 import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.users.entity.Expert;
 import com.example.demo.users.entity.Manager;
@@ -13,10 +16,7 @@ import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.UserRepository;
-import com.example.demo.users.service.ExpertService;
-import com.example.demo.users.service.FirebaseService;
-import com.example.demo.users.service.UserService;
-import com.example.demo.util.AuthStatus;
+import com.example.demo.users.service.*;
 import com.example.demo.util.GlobalStatus;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -45,6 +45,8 @@ public class ExpertController {
     private final FirebaseService firebaseService;
     private final ExpertRepository expertRepository;
     private final UserRepository usersRepository;
+    private final AuthService authService;
+    private final AddressService addressService;
 
     @GetMapping("/expert")
     public String showExpertPage(Model model) {
@@ -68,6 +70,20 @@ public class ExpertController {
 
         return "expert";
     }
+
+    @GetMapping("/expert/myPage")
+    public String showExpertMyPage(Model model) {
+        log.info("[GET] 👨‍💼 request manager Page");
+        UserDTO userDTO = authService.getLoginUser();
+
+        AddressDTO address = addressService.getByExpertUid(userDTO.getUuid());
+
+        userDTO.setAddress(address);
+        model.addAttribute("userInfo", userDTO);
+
+        return "expert/myPage";
+    }
+
 
     @GetMapping("/admin/expert-applicants")
     public String showExpertApplicants(

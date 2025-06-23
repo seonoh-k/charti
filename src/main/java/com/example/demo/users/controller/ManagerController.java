@@ -1,15 +1,20 @@
 package com.example.demo.users.controller;
 
+import com.example.demo.dto.AddressDTO;
 import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.ManagerDTO;
+import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResponse;
 import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.IdsRequest;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.service.AddressService;
 import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.users.entity.Manager;
+import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.service.AuthService;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.FirebaseService;
 import com.example.demo.users.service.ManagerService;
@@ -35,8 +40,10 @@ import java.util.List;
 @Log4j2
 public class ManagerController {
 
+    private final AuthService authService;
     private final ManagerService managerService;
     private final UserService userService;
+    private final AddressService addressService;
     private final FirebaseService firebaseService;
 
 
@@ -45,6 +52,20 @@ public class ManagerController {
         log.info("[GET] 👨‍💼 request manager Page");
         return "manager";
     }
+
+    @GetMapping("/manager/myPage")
+    public String showMangerMyPage(Model model) {
+        log.info("[GET] 👨‍💼 request manager Page");
+        UserDTO userDTO = authService.getLoginUser();
+
+        AddressDTO address = addressService.getGroupIdByManagerUid(userDTO.getUuid());
+
+        userDTO.setAddress(address);
+        model.addAttribute("userInfo", userDTO);
+
+        return "manager/myPage";
+    }
+
 
     /**
      * GET /api/admin/managers/pending

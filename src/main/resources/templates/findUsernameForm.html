@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <title>아이디 찾기</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="/js/sms-auth.js" type="module"></script>
+
+    <!-- Firebase SMS 인증  -->
+<script type="module" src="/js/smsAuth.js"></script>
+
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
@@ -29,9 +32,9 @@
         </select>
         <input id="phone2" type="text" maxlength="4" class="border p-2 rounded w-20" placeholder="1234" />
         <input id="phone3" type="text" maxlength="4" class="border p-2 rounded w-20" placeholder="5678" />
-        <button type="button" id="send-otp-btn"
+        <button type="button" id="send-otp-btn " onclick="sendSmsOtp('find')"
                 class="px-3 bg-blue-600 text-white rounded">
-        인증
+        인증번호<br>받기
         </button>
     </div>
     </div>
@@ -40,7 +43,7 @@
     <div class="mb-4">
     <label class="block mb-1 font-medium">인증번호</label>
     <input id="otp" type="text" class="border p-2 rounded w-full" placeholder="6자리" disabled />
-    <button type="button" id="verify-otp-btn"
+    <button type="button" id="verify-otp-btn" onclick="verifySmsOtp('find')"
             class="mt-2 px-3 py-1 bg-green-600 text-white rounded"
             disabled>
         인증 확인
@@ -61,8 +64,7 @@
     <div id="recaptcha-container"></div>
 </div>
 
-<script type="module">
-    import { getVerifiedSmsToken } from '/js/smsAuth.js';
+<script>
 
     async function findUsername() {
     const token = getVerifiedSmsToken();
@@ -72,17 +74,22 @@
     }
 
     try {
-        const res = await fetch('/api/find-username', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-        });
+            const name = document.getElementById('name').value.trim();
+
+            const res = await fetch('/api/findUsername', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name }) // 🔹 이름 함께 전송
+            });
 
         const data = await res.json();
         if (res.ok) {
-        document.getElementById('result').textContent = `회원님의 아이디는: ${data.username}`;
+            console.log("👉 전체 data:", data);
+            console.log("👉 찾아온 아이디:", data.data.username);
+        document.getElementById('result').textContent = `회원님의 아이디는: ${data.data.username}`;
         } else {
         alert(data.message || '사용자 정보를 찾을 수 없습니다.');
         }

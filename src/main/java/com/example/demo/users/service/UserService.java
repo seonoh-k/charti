@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.users.exception.UserNotFoundException;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -534,7 +535,24 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+    @Transactional
+    public void resetPassword(String username, String phoneNumber, String rawPassword) throws FirebaseAuthException {
+        Users user = userRepository.findByUsernameAndPhoneNumber(username, phoneNumber)
+                .orElseThrow(() -> new NoSuchElementException("사용자 없음"));
 
+        log.info("🔐 변경 전 비번: {}", user.getPassword());
+
+        // 1. Firebase 비밀번호 변경
+        UserRecord.UpdateRequest request = new UserRecord.UpdateRequest(user.getUuid())
+                .setPassword(rawPassword); // rawPassword 그대로 전달
+        FirebaseAuth.getInstance().updateUser(request);
+
+        // 2. DB 비밀번호도 변경 (암호화)
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        userRepository.save(user);
+
+        log.info("✅ 비밀번호 변경 완료 - Firebase + DB");
+    }
 
     @Transactional
     public void softDeleteUser(String uid) {

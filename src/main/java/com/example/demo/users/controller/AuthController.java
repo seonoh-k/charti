@@ -16,6 +16,7 @@ import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.Role;
+import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ManagerRepository;
@@ -43,9 +44,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -120,10 +119,120 @@ public class AuthController {
 
         }
     }
-    @GetMapping("/findUsername")
-    public String showFindUsernamePage() {
-        return "findUsername"; // 템플릿 경로 (예: /templates/user/find-username.html)
+    @GetMapping("/findUsernameForm")
+    public String findUsernameForm() {
+        return "findUsernameForm"; // 템플릿 경로 (예: /templates/user/findUsernameForm.html)
     }
+    @GetMapping("/resetPasswordForm")
+    public String resetPasswordForm() {
+        return "resetPasswordForm"; // 템플릿 경로 (예: /templates/user/resetPasswordForm.html)
+    }
+
+    /**
+     * 이름 + 인증된 전화번호를 기반으로 아이디(이메일)를 찾아 반환한다.
+     *
+     * @param request 클라이언트에서 전달한 JSON 요청 (name 필수)
+     * @param requestToken Firebase 인증 토큰 (헤더 Authorization: Bearer ...)
+     * @return 사용자의 username(email) 또는 오류 메시지
+     */
+    @ResponseBody
+    @PostMapping("/api/findUsername")
+    public ResponseEntity<ApiResponse> findUsername(
+            @RequestBody Map<String, String> request,
+            @RequestHeader("Authorization") String requestToken) {
+
+        // 🔐 Firebase 토큰에서 uid 추출
+        String idToken = requestToken.replace("Bearer ", "");
+        try {
+            FirebaseToken decodedToken = firebaseService.verifyIdToken(idToken);
+
+            String uid = decodedToken.getUid();
+            log.info("[POST] 🎈 sms 토큰에서 뽑아온 uid : {} ",uid);
+//            firebaseService.deleteFirebaseMember(uid);
+            String phoneNumber = (String) decodedToken.getClaims().get("phone_number");
+            log.info("[POST] 🎈 sms 토큰에서 뽑아온 전화번호 '{}' :  ",phoneNumber);
+
+            // 인증 실패: 잘못된 토큰이거나 SMS 인증이 아님
+            if (phoneNumber == null) {
+                // code : "PAF", message : "sms 인증 실패"
+                log.info("[POST] 🎈 설마 여기서 걸렸나? : sms인증토큰이 이상한가  ");
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(AuthStatus.PHONE_AUTH_FAIL));
+            }
+
+            String name = request.get("name");
+            if (name == null || name.isBlank()) {
+                log.info("[POST] 🎈 설마 여기서 걸렸나? : 이름이 이상한가 :{} ", name);
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(AuthStatus.VALIDATION_FAILED));
+            }
+
+            // 🔎 이름 + 전화번호로 사용자 검색
+            Optional<Users> username = userRepository.findByNameAndPhoneNumber(name, phoneNumber);
+            log.info("[POST] 🎈 전화번호와 이름으로 찾는 유저아이디 : {} ",username);
+            if (username.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse(AuthStatus.USER_NOT_FOUND));
+            }
+
+            Users users = username.get();
+            log.info("[POST] 🎈 폼으로 보내줄 최종 유저 아이디 : {} ",users.getUsername());
+            return ResponseEntity.ok(
+                    new ApiResponse(GlobalStatus.OK,  Map.of("username", users.getUsername()))
+            );
+
+        } catch (FirebaseAuthException e) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(AuthStatus.AUTHENTICATION_FAIL));
+        }
+    }
+
+    @PostMapping("/api/resetPassword")
+    @ResponseBody
+    public ResponseEntity<ApiResponse> resetPassword(
+            @RequestBody Map<String, String> request,
+            @RequestHeader("Authorization") String requestToken) {
+
+        // 토큰에서 전화번호 추출
+        String idToken = requestToken.replace("Bearer ", "");
+        try {
+            FirebaseToken decodedToken = firebaseService.verifyIdToken(idToken);
+            String phoneNumber = (String) decodedToken.getClaims().get("phone_number");
+            // 인증 실패: 잘못된 토큰이거나 SMS 인증이 아님
+            if (phoneNumber == null) {
+                // code : "PAF", message : "sms 인증 실패"
+                log.info("[POST] 🎈 설마 여기서 걸렸나? : sms인증토큰이 이상한가  ");
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(AuthStatus.PHONE_AUTH_FAIL));
+            }
+
+            String username    = request.get("username");
+            String newPassword = request.get("newPassword");
+
+            // 기본 유효성 검사
+            if (username == null || newPassword == null || newPassword.length() < 8) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(AuthStatus.VALIDATION_FAILED));
+            }
+
+            userService.resetPassword(username, phoneNumber, newPassword);
+
+            return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK, "비밀번호가 성공적으로 재설정되었습니다."));
+
+        } catch (FirebaseAuthException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(AuthStatus.AUTHENTICATION_FAIL));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(AuthStatus.USER_NOT_FOUND));
+        }
+    }
+
+
+
 
 
     /**
