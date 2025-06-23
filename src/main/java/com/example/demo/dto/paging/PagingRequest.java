@@ -32,6 +32,14 @@ public class PagingRequest {
 
         return PageRequest.of(safePage, safeSize, Sort.by(safeDirection, safeSort));
     }
+    public Pageable toZeroBasedPageable() {
+        int safeSize = (size != null && size > 0) ? size : 10;
+        int safePage = (page != null && page >= 0) ? page : 0;
+        String safeSort = (sort != null && !sort.isBlank()) ? sort : "createdAt";
+        Sort.Direction safeDirection = "asc".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        return PageRequest.of(safePage, safeSize, Sort.by(safeDirection, safeSort));
+    }
 
 }
 

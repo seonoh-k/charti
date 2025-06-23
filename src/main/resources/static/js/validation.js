@@ -2,38 +2,42 @@
 (() => {
 const rules = {
     name: {
-    regex: /^[가-힣]{2,8}$/,
-    message: '2~8자 한글만 가능합니다. 공백은 불가.'
+        regex: /^[가-힣]{2,8}$/,
+        message: '2~8자 한글만 가능합니다. 공백은 불가.'
     },
     nickname: {
-    regex: /^[가-힣A-Za-z0-9_-]{2,10}$/,
-    message: '2~10자: 한글·영문·숫자·_,- 만 가능합니다. 공백 금지.'
+        regex: /^[가-힣A-Za-z0-9_-]{2,10}$/,
+        message: '2~10자: 한글·영문·숫자·_,- 만 가능합니다. 공백 금지.'
     },
     username: {
-    regex: /^\S{4,30}$/,
-    message: '4~30자, 공백 없이 입력해주세요.'
+        regex: /^\S{4,30}$/,
+        message: '4~30자, 공백 없이 입력해주세요.'
     },
     password: {
-    regex: /^(?=.{8,16}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)[^\s]+$/,
-    message: '8~16자, 대문자·소문자·특수문자 모두 1개 이상 포함. 공백 금지.'
+        regex: /^(?=.{8,16}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)[^\s]+$/,
+        message: '8~16자, 대문자·소문자·특수문자 모두 1개 이상 포함. 공백 금지.'
+    },
+    newPassword: {
+        regex: /^(?=.{8,16}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)[^\s]+$/,
+        message: '8~16자, 대문자·소문자·특수문자 모두 1개 이상 포함. 공백 금지.'
     }
 };
 
-// // 개별 요소에 실시간 validity 세팅
-// function attachFieldValidation(el, rule) {
-//     el.addEventListener('input', () => {
-//     el.setCustomValidity('');
-//     if (!rule.regex.test(el.value)) {
-//         el.setCustomValidity(rule.message);
-//     }
-//     });
-//     el.addEventListener('blur', () => {
-//     el.value = el.value.trim();
-//     if (!rule.regex.test(el.value)) {
-//         el.reportValidity();
-//     }
-//     });
-// }
+// 개별 요소에 실시간 validity 세팅
+function attachFieldValidation(el, rule) {
+    el.addEventListener('input', () => {
+    el.setCustomValidity('');
+    if (!rule.regex.test(el.value)) {
+        el.setCustomValidity(rule.message);
+    }
+    });
+    el.addEventListener('blur', () => {
+    el.value = el.value.trim();
+    if (!rule.regex.test(el.value)) {
+        el.reportValidity();
+    }
+    });
+}
 // 비정상 한글 음절 리스트 (확장 가능)
 const abnormalSyllables = [
         "팑","팒","팕","팘","팙","팚","팛","팞","팭","팮",

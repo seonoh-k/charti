@@ -22,6 +22,7 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -34,63 +35,69 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
         QManager m = QManager.manager;
         QUsers u = QUsers.users;
         QGroup g = QGroup.group;
-        QChild c = QChild.child;
 
-        // 플랫하게 Manager, Group, Child 한 번에 조회
-        List<Tuple> tuples = queryFactory
+        // 1. Manager + User + Group 정보 조회
+        Tuple managerTuple = queryFactory
                 .select(
                         u.id, u.name, u.username, u.nickname, u.phoneNumber,
                         g.id, g.groupName, g.groupEmail,
-                        m.isApproved, u.createdAt, u.deleted,
-                        c.id, c.birthOrder, c.name, c.nickname, c.weight, c.height,
-                        c.gender, c.riskGroup, c.birthday
+                        m.isApproved, u.createdAt, u.deleted
                 )
                 .from(m)
                 .join(m.users, u)
                 .join(m.group, g)
-                .leftJoin(g.children, c) // 연관관계 바로 join!
                 .where(m.id.eq(managerId))
-                .fetch();
+                .fetchOne();
 
-        ManagerDTO managerDTO = null;
-        List<ChildDTO> childList = new ArrayList<>();
-
-        for (Tuple t : tuples) {
-            if (managerDTO == null) {
-                managerDTO = ManagerDTO.builder()
-                        .id(t.get(u.id))
-                        .name(t.get(u.name))
-                        .username(t.get(u.username))
-                        .nickname(t.get(u.nickname))
-                        .phoneNumber(t.get(u.phoneNumber))
-                        .groupId(t.get(g.id))
-                        .groupName(t.get(g.groupName))
-                        .groupEmail(t.get(g.groupEmail))
-                        .isApproved(t.get(m.isApproved))
-                        .createdAt(t.get(u.createdAt))
-                        .deleted(t.get(u.deleted))
-                        .children(childList) // 자녀 리스트 세팅
-                        .build();
-            }
-            Long childId = t.get(c.id);
-            if (childId != null) {
-                ChildDTO child = ChildDTO.builder()
-                        .id(childId)
-                        .birthOrder(t.get(c.birthOrder))
-                        .name(t.get(c.name))
-                        .nickname(t.get(c.nickname))
-                        .weight(t.get(c.weight))
-                        .height(t.get(c.height))
-                        .gender(t.get(c.gender))
-                        .riskGroup(t.get(c.riskGroup))
-                        .birthday(t.get(c.birthday))
-                        .build();
-                childList.add(child);
-            }
+        if (managerTuple == null) {
+            return Optional.empty();
         }
 
-        return Optional.ofNullable(managerDTO);
+        Long groupId = managerTuple.get(g.id);
+
+        // 2. 해당 Group ID로 Child 목록 조회
+        QChild c = QChild.child;
+        List<ChildDTO> childList = queryFactory
+                .select(
+                        c.id, c.birthOrder, c.name, c.nickname, c.weight,
+                        c.height, c.gender, c.riskGroup, c.birthday
+                )
+                .from(c)
+                .where(c.group.id.eq(groupId))
+                .fetch()
+                .stream()
+                .map(child -> ChildDTO.builder()
+                        .id(child.get(c.id))
+                        .birthOrder(child.get(c.birthOrder))
+                        .name(child.get(c.name))
+                        .nickname(child.get(c.nickname))
+                        .weight(child.get(c.weight))
+                        .height(child.get(c.height))
+                        .gender(child.get(c.gender))
+                        .riskGroup(child.get(c.riskGroup))
+                        .birthday(child.get(c.birthday))
+                        .build())
+                .collect(Collectors.toList());
+
+        // 3. ManagerDTO 생성
+        ManagerDTO managerDTO = ManagerDTO.builder()
+                .id(managerTuple.get(u.id))
+                .name(managerTuple.get(u.name))
+                .username(managerTuple.get(u.username))
+                .nickname(managerTuple.get(u.nickname))
+                .phoneNumber(managerTuple.get(u.phoneNumber))
+                .groupId(groupId)
+                .groupName(managerTuple.get(g.groupName))
+                .groupEmail(managerTuple.get(g.groupEmail))
+                .isApproved(managerTuple.get(m.isApproved))
+                .createdAt(managerTuple.get(u.createdAt))
+                .deleted(managerTuple.get(u.deleted))
+                .children(childList)
+                .build();
+
+        return Optional.of(managerDTO);
     }
+
 
 
     @Override

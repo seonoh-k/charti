@@ -6,23 +6,35 @@
     <meta charset="UTF-8">
     <title>기록 문진 이력</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* 선택 사항: 비활성화된 버튼에 대한 기본 스타일 추가 */
         .pagination-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        /* 현재 활성화된 페이지 번호 스타일 */
         .page-number.active {
             font-weight: bold;
-            color: #2563EB; /* blue-700 */
+            color: #2563EB; /* blue-600 */
+            border-color: #2563EB;
+        }
+        .loading-message, .no-data-message {
+            text-align: center;
+            padding: 1rem;
+            font-style: italic;
+            color: #6b7280; /* gray-500 */
+        }
+        .error-message {
+            text-align: center;
+            padding: 1rem;
+            color: #ef4444; /* red-500 */
+            font-weight: bold;
         }
     </style>
 </head>
 
 <th:block layout:fragment="content">
     <div class="max-w-4xl mx-auto p-6">
-        <h1 class="text-2xl font-bold mb-6">기록 문진 답변 이력</h1>
+        <h1 class="text-2xl font-bold mb-6">기록 문진 이력</h1>
 
         <div class="mb-6">
             <label for="childSelect" class="font-semibold mr-2">자녀 선택:</label>
@@ -32,217 +44,190 @@
             </select>
         </div>
 
-        <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
-            <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
-            <p><strong>이름:</strong> <span id="infoName"></span></p>
-            <p><strong>성별:</strong> <span id="infoGender"></span></p>
-            <p><strong>나이:</strong> <span id="infoAge"></span></p>
-            <p><strong>키:</strong> <span id="infoHeight"></span></p>
-            <p><strong>체중:</strong> <span id="infoWeight"></span></p>
-        </div>
-
-        <div id="answerList" class="space-y-4">
-        </div>
-
-        <div id="paginationControls" class="flex justify-center items-center space-x-2 mt-8 hidden">
-            <button id="prevPage" class="pagination-button px-4 py-2 border rounded bg-gray-200 hover:bg-gray-300">이전</button>
-            <div id="pageNumbers" class="flex space-x-1">
-            </div>
-            <button id="nextPage" class="pagination-button px-4 py-2 border rounded bg-gray-200 hover:bg-gray-300">다음</button>
+        <div id="answerListContainer" class="hidden">
+            <div id="dateList" class="space-y-2"></div>
+            <div id="paginationControls" class="flex justify-center items-center space-x-2 mt-8"></div>
         </div>
     </div>
 
-    <script th:inline="javascript">
+    <script>
+        /**
+         * 페이지 로딩이 완료되면 실행되는 초기화 로직입니다.
+         */
         document.addEventListener("DOMContentLoaded", function () {
             const childSelect = document.getElementById("childSelect");
-            const answerList = document.getElementById("answerList");
-            const childInfo = document.getElementById("childInfo");
-            const infoName = document.getElementById("infoName");
-            const infoGender = document.getElementById("infoGender");
-            const infoAge = document.getElementById("infoAge");
-            const infoHeight = document.getElementById("infoHeight");
-            const infoWeight = document.getElementById("infoWeight");
+            const answerListContainer = document.getElementById("answerListContainer");
 
-            const paginationControls = document.getElementById("paginationControls");
-            const prevPageBtn = document.getElementById("prevPage");
-            const nextPageBtn = document.getElementById("nextPage");
-            const pageNumbersDiv = document.getElementById("pageNumbers");
-
-            let currentPage = 0; // 0-indexed 페이지 번호
-            const pageSize = 5; // 한 페이지에 표시할 답변 개수 (백엔드와 일치해야 함)
-            let totalPages = 0; // 총 페이지 수
-
-            // --- 도우미 함수 ---
-
-            // 자녀 정보를 화면에 표시하는 함수
-            function displayChildInfo(data) {
-                childInfo.classList.remove("hidden");
-                infoName.textContent = data.name;
-                infoGender.textContent = data.gender;
-                infoAge.textContent = data.age + '세';
-                infoHeight.textContent = data.height + 'cm';
-                infoWeight.textContent = data.weight + 'kg';
-            }
-
-            // 답변 목록을 화면에 렌더링하는 함수
-            function renderAnswers(answers) {
-                answerList.innerHTML = ""; // 기존 목록 초기화
-
-                if (answers.length === 0) {
-                    answerList.innerHTML = `<p class="text-gray-500">선택한 자녀의 답변 이력이 없습니다.</p>`;
-                    return;
-                }
-
-                // 현재 페이지의 답변들을 날짜별로 그룹화
-                const grouped = {};
-                answers.forEach(item => {
-                    if (!item.createdAt) return;
-                    const date = item.createdAt.substring(0, 10); // YYYY-MM-DD 형식
-                    if (!grouped[date]) grouped[date] = [];
-                    grouped[date].push(item);
-                });
-
-                // 날짜를 최신순으로 정렬 후 표시
-                Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
-                    const container = document.createElement("div");
-                    container.className = "border rounded mb-4";
-
-                    const header = document.createElement("button");
-                    header.className = "w-full text-left px-4 py-2 bg-blue-100 font-semibold hover:bg-blue-200";
-                    header.textContent = `${date} 문진 답변`;
-
-                    const body = document.createElement("div");
-                    body.className = "hidden p-4 space-y-4 bg-gray-50"; // 초기에는 숨김
-
-                    grouped[date].forEach((answer, index) => {
-                        const item = document.createElement("div");
-                        item.className = "border p-3 rounded";
-                        item.innerHTML = `
-                            <div class="w-full">
-                                <p class="font-semibold">${index + 1}. ${answer.question}</p>
-                                <p class="text-sm text-gray-700 whitespace-pre-line">${answer.answer}</p>
-                            </div>
-                        `;
-                        body.appendChild(item);
-                    });
-
-                    // 헤더 클릭 시 답변 내용 토글
-                    header.addEventListener("click", () => body.classList.toggle("hidden"));
-                    container.appendChild(header);
-                    container.appendChild(body);
-                    answerList.appendChild(container);
-                });
-            }
-
-            // 페이지네이션 컨트롤을 업데이트하는 함수
-            function updatePaginationControls(totalPagesFromResponse, currentPageNumber) {
-                totalPages = totalPagesFromResponse; // 총 페이지 수 업데이트
-                pageNumbersDiv.innerHTML = ''; // 기존 페이지 번호 초기화
-                paginationControls.classList.remove("hidden"); // 페이지네이션 컨트롤 표시
-
-                // '이전' / '다음' 버튼 활성화/비활성화
-                prevPageBtn.disabled = currentPageNumber === 0;
-                nextPageBtn.disabled = currentPageNumber === totalPages - 1;
-
-                // 페이지 번호 렌더링
-                for (let i = 0; i < totalPages; i++) {
-                    const pageSpan = document.createElement('span');
-                    pageSpan.textContent = i + 1; // 1-indexed로 표시
-                    pageSpan.className = `page-number cursor-pointer px-3 py-1 border rounded ${i === currentPageNumber ? 'active bg-blue-100' : 'hover:bg-gray-100'}`;
-                    pageSpan.dataset.page = i; // 0-indexed 페이지 번호 저장
-                    pageSpan.addEventListener('click', (e) => {
-                        const childId = childSelect.value;
-                        loadAnswers(childId, parseInt(e.target.dataset.page));
-                    });
-                    pageNumbersDiv.appendChild(pageSpan);
-                }
-            }
-
-            // 답변 목록과 페이지네이션 컨트롤을 초기화 (숨김)하는 함수
-            function clearAnswerListAndPagination() {
-                answerList.innerHTML = `<p class="text-gray-500">자녀를 선택하여 답변 이력을 확인해주세요.</p>`;
-                paginationControls.classList.add("hidden");
-                childInfo.classList.add("hidden");
-            }
-
-            // --- 메인 로드 함수 (답변 이력을 불러오는 핵심 함수) ---
-            function loadAnswers(childId, page = 0) { // 기본값으로 0페이지 설정
-                currentPage = page; // 현재 페이지 업데이트
-
-                // 문진 답변 이력 불러오기 (페이징 적용)
-                fetch(`/survey/record/history/${childId}?page=${page}&size=${pageSize}&sort=createdAt,desc`)
-                    .then(response => {
-                        if (!response.ok) {
-                            if (response.status === 404) {
-                                throw new Error('데이터를 찾을 수 없습니다.');
-                            }
-                            throw new Error('네트워크 응답이 올바르지 않습니다.');
-                        }
-                        return response.json();
-                    })
-                    .then(apiResponse => { // ApiResponse (JSON)를 받음
-                        const pagingResponse = apiResponse.data; // 실제 PagingResponse 객체
-                        const answers = pagingResponse.content; // 현재 페이지의 답변 목록
-
-                        renderAnswers(answers); // 답변 렌더링
-                        updatePaginationControls(pagingResponse.totalPages, pagingResponse.number); // 페이지네이션 컨트롤 업데이트
-                    })
-                    .catch(error => {
-                        console.error("답변 이력을 불러오는 중 오류 발생:", error);
-                        answerList.innerHTML = `<p class="text-red-500">답변 이력을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
-                        paginationControls.classList.add("hidden"); // 오류 시 페이지네이션 숨김
-                    });
-            }
-
-            // --- 이벤트 리스너 ---
             childSelect.addEventListener("change", function () {
                 const childId = this.value;
                 if (!childId) {
-                    clearAnswerListAndPagination(); // '자녀를 선택하세요' 선택 시 초기화
+                    answerListContainer.classList.add("hidden");
+                    return;
+                }
+                answerListContainer.classList.remove("hidden");
+                loadRecordDates(childId, 0);
+            });
+
+            if (childSelect.options.length > 1) {
+                childSelect.selectedIndex = 1;
+                childSelect.dispatchEvent(new Event("change"));
+            } else if (childSelect.options.length === 1) {
+                 answerListContainer.innerHTML = `<p class="no-data-message">조회할 자녀를 선택해주세요.</p>`;
+            }
+        });
+
+        /**
+         * 특정 자녀의 '기록 날짜' 목록을 페이징하여 가져와 화면에 렌더링하는 메인 함수입니다.
+         * @param {string} childId - 자녀 ID
+         * @param {number} page - 조회할 페이지 번호 (0-based)
+         */
+        async function loadRecordDates(childId, page = 0) {
+            const dateListDiv = document.getElementById("dateList");
+            dateListDiv.innerHTML = '<p class="loading-message">날짜 목록을 로딩 중...</p>';
+            document.getElementById("paginationControls").innerHTML = '';
+
+            try {
+                const url = `/survey/record/history/${childId}/dates?page=${page}&size=5`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const apiResponse = await response.json();
+                if (apiResponse.code !== 'SWD') throw new Error(apiResponse.message);
+
+                const pageData = apiResponse.data;
+                const recordDates = pageData.result;
+
+                dateListDiv.innerHTML = "";
+                if (!recordDates || recordDates.length === 0) {
+                    dateListDiv.innerHTML = `<p class="no-data-message">답변 이력이 없습니다.</p>`;
                     return;
                 }
 
-                // 자녀 정보 불러오기
-                fetch(`/api/child/info/${childId}`)
-                    .then(res => res.json())
-                    .then(displayChildInfo) // displayChildInfo 함수 사용
-                    .catch(error => {
-                        console.error("자녀 정보를 불러오는 중 오류 발생:", error);
-                        alert("자녀 정보를 불러오는 중 오류가 발생했습니다.");
-                        childInfo.classList.add("hidden");
-                    });
+                recordDates.forEach(dateSummary => {
+                    const dateElement = createDateAccordionElement(childId, dateSummary.recordDate);
+                    dateListDiv.appendChild(dateElement);
+                });
 
-                // 새로운 자녀 선택 시 항상 첫 페이지(0페이지)부터 로드
-                loadAnswers(childId, 0);
-            });
+                createPagination(pageData, (p) => loadRecordDates(childId, p));
 
-            // '이전' 버튼 클릭 시
-            prevPageBtn.addEventListener('click', () => {
-                const childId = childSelect.value;
-                if (childId && currentPage > 0) {
-                    loadAnswers(childId, currentPage - 1);
-                }
-            });
-
-            // '다음' 버튼 클릭 시
-            nextPageBtn.addEventListener('click', () => {
-                const childId = childSelect.value;
-                if (childId && currentPage < totalPages - 1) { // 현재 페이지가 총 페이지 수보다 작을 때만 다음 페이지로 이동
-                    loadAnswers(childId, currentPage + 1);
-                }
-            });
-
-
-            // 페이지 로드 시 자녀가 한 명이라도 있으면 자동으로 첫 번째 자녀를 선택하도록 트리거
-            // (Thymeleaf 모델에 children이 없을 경우를 대비하여 options.length > 1로 체크: '자녀를 선택하세요' 옵션 포함)
-            if (childSelect.options.length > 1) {
-                childSelect.selectedIndex = 1; // '자녀를 선택하세요' (index 0) 다음인 첫 번째 자녀를 선택
-                childSelect.dispatchEvent(new Event("change")); // change 이벤트 강제 발생
-            } else {
-                // 자녀가 없거나 선택 옵션만 있는 경우, 답변 목록 및 페이지네이션 숨김
-                clearAnswerListAndPagination();
+            } catch (error) {
+                console.error("날짜 이력 로딩 중 오류:", error);
+                dateListDiv.innerHTML = `<p class="error-message">날짜 목록을 불러오는 중 오류가 발생했습니다.</p>`;
             }
-        });
+        }
+
+        /**
+         * 특정 날짜에 해당하는 상세 답변 목록을 비동기적으로 가져와 표시하는 함수입니다.
+         * @param {string} childId - 자녀 ID
+         * @param {string} dateStr - 조회할 날짜 (yyyy-MM-dd)
+         * @param {HTMLElement} bodyElement - 답변 목록을 표시할 div 요소
+         */
+        async function loadDetailedAnswers(childId, dateStr, bodyElement) {
+            bodyElement.innerHTML = '<p class="loading-message">상세 답변 로딩 중...</p>';
+            try {
+                const url = `/survey/record/history/${childId}/date/${dateStr}`;
+                const response = await fetch(url);
+                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const apiResponse = await response.json();
+                if (apiResponse.code !== 'SWD') throw new Error(apiResponse.message);
+
+                const detailedAnswers = apiResponse.data;
+
+                bodyElement.innerHTML = '';
+                if (!detailedAnswers || detailedAnswers.length === 0) {
+                     bodyElement.innerHTML = `<p class="no-data-message">이 날짜의 답변이 없습니다.</p>`;
+                     return;
+                }
+
+                const ul = document.createElement('ul');
+                ul.className = 'space-y-3';
+                detailedAnswers.forEach((answer, index) => {
+                    const li = document.createElement("li");
+                    li.className = "border-b pb-2";
+                    li.innerHTML = `
+                        <p class="font-semibold">${index + 1}. ${answer.question}</p>
+                        <p class="text-gray-700 whitespace-pre-line pl-2">→ ${answer.answer}</p>`;
+                    ul.appendChild(li);
+                });
+                bodyElement.appendChild(ul);
+            } catch (error) {
+                 console.error(`상세 답변 로딩 중 오류 (${dateStr}):`, error);
+                 bodyElement.innerHTML = `<p class="error-message">상세 답변을 불러오는 중 오류가 발생했습니다.</p>`;
+            }
+        }
+
+        /**
+         * 날짜 하나에 대한 아코디언 UI 요소(헤더, 바디)를 생성합니다.
+         * @param {string} childId
+         * @param {string} dateStr
+         * @returns {HTMLElement} 생성된 div 컨테이너 요소
+         */
+        function createDateAccordionElement(childId, dateStr) {
+            const container = document.createElement("div");
+            container.className = "border rounded mb-2 shadow-sm";
+
+            const header = document.createElement("button");
+            header.className = "w-full text-left px-4 py-3 bg-gray-50 font-semibold hover:bg-gray-100 flex justify-between items-center transition-colors";
+            header.innerHTML = `<span>📅 ${dateStr}</span><span class="toggle-icon text-lg font-bold text-gray-400">+</span>`;
+
+            const body = document.createElement("div");
+            body.className = "hidden p-4 bg-white";
+
+            let isLoaded = false;
+            header.addEventListener("click", () => {
+                const icon = header.querySelector('.toggle-icon');
+                const isHidden = body.classList.toggle("hidden");
+
+                if (!isHidden) {
+                    icon.textContent = '−';
+                    if (!isLoaded) {
+                        loadDetailedAnswers(childId, dateStr, body);
+                        isLoaded = true;
+                    }
+                } else {
+                    icon.textContent = '+';
+                }
+            });
+
+            container.appendChild(header);
+            container.appendChild(body);
+            return container;
+        }
+
+        /**
+         * 페이징 데이터를 기반으로 페이지네이션 버튼 UI를 생성합니다.
+         * @param {object} pageData - 백엔드에서 받은 페이징 데이터 객체
+         * @param {Function} loadFn - 페이지 번호 클릭 시 호출될 함수
+         */
+        function createPagination(pageData, loadFn) {
+            const paginationContainer = document.getElementById("paginationControls");
+            paginationContainer.innerHTML = '';
+
+            const totalPages = pageData.totalPages;
+            const currentPage = pageData.page - 1;
+            if (totalPages <= 1) return;
+
+            const renderButton = (text, pageNum, disabled = false, isCurrent = false) => {
+                const button = document.createElement('button');
+                button.textContent = text;
+                button.disabled = disabled;
+                button.className = `page-number px-3 py-1 border rounded ${ isCurrent ? 'active bg-blue-100' : 'hover:bg-gray-100' }`;
+                if(disabled) button.classList.add('pagination-button');
+                if (!disabled) button.onclick = () => loadFn(pageNum);
+                return button;
+            };
+
+            paginationContainer.appendChild(renderButton('이전', currentPage - 1, currentPage === 0));
+
+            const pageList = pageData.pageList;
+            pageList.forEach(p => {
+                const pageNum = p - 1;
+                paginationContainer.appendChild(renderButton(p, pageNum, false, pageNum === currentPage));
+            });
+
+            paginationContainer.appendChild(renderButton('다음', currentPage + 1, currentPage >= totalPages - 1));
+        }
     </script>
 </th:block>
 </html>
