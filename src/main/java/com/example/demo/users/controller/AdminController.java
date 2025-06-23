@@ -239,8 +239,11 @@ public class AdminController {
             redirectAttribute.addAttribute("direction",pagingRequest.getDirection());
             return "redirect:/admin/manager/all";
         }
-
-        model.addAttribute("hasChildren", !managerDTO.getChildren().isEmpty());
+        log.info("!managerDTO.getChildren().isEmpty() : {}",!managerDTO.getChildren().isEmpty());
+        if(!managerDTO.getChildren().isEmpty()){
+            managerDTO.getChildren().forEach((child)->log.info("child.getName() : {}", child.getName()));
+        }
+        model.addAttribute("hasChildren", !managerDTO.getChildren().isEmpty()); // 값이 있으면
         model.addAttribute("managerDTO",managerDTO);
 
         return "admin/manager/updateForm";

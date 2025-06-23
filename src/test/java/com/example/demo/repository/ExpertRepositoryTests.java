@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import com.example.demo.dto.ExpertDTO;
+import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.users.repository.*;
 import jakarta.transaction.Transactional;
@@ -12,7 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -38,6 +41,8 @@ class ExpertRepositoryTests {
     @Autowired
     private ChildRepository childRepository;
 
+    @Autowired
+    private ManagerQueryRepository managerQueryRepository;
 
 
 //    @Test
@@ -70,13 +75,29 @@ class ExpertRepositoryTests {
 //    }
     @Test
     public void zz(){
-        System.out.println("ExpertRepositoryTests.zz");
-        Pageable pageable  = PageRequest.of(0, 10);
+//        System.out.println("ExpertRepositoryTests.zz");
+//        Pageable pageable  = PageRequest.of(0, 10);
         // Page<ExpertDTO> allApprovedExperts = expertQueryRepository.findAllApprovedExperts(pageable);
         // allApprovedExperts.forEach(System.out::println);
-        Page<ExpertDTO> allUnapprovedExperts = expertQueryRepository.getUnapprovedExpertList(pageable);
-        PagingResultDTO pagingResultDTO = new PagingResultDTO(allUnapprovedExperts);
-        List dtoList = pagingResultDTO.getDtoList();
-        dtoList.forEach(System.out::println);
+//        Page<ExpertDTO> allUnapprovedExperts = expertQueryRepository.getUnapprovedExpertList(pageable);
+//        PagingResultDTO pagingResultDTO = new PagingResultDTO(allUnapprovedExperts);
+//        List dtoList = pagingResultDTO.getDtoList();
+
+        List<Integer> list = new ArrayList<>();
+        boolean b = list.addAll(List.of(38, 39, 40, 41, 42, 43, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100));
+
+
+        for(Integer item : list){
+            Optional<ManagerDTO> managerDTO = managerQueryRepository.getManagerById(item.longValue());
+            if (managerDTO.isPresent()){
+                System.out.println("ExpertRepositoryTests : {"+managerDTO.get()+"}");
+            }
+        }
+
+
+
+
+
+
     }
 }

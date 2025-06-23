@@ -12,6 +12,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class ManagerDTO {
     // users_id (Manager 엔티티에서 참조)
     private Long id;
