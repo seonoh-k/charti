@@ -33,6 +33,12 @@ public class ApiResponse<U> {
         this.fieldName = fieldName;
         this.data    = data;
     }
+    // ✨ 새로 추가될 메서드를 여기에 넣으시면 됩니다.
+    public static <T, V extends Enum<V> & StatusCode> ApiResponse<T> success(V statusCode, String message, T data) {
+        ApiResponse<T> apiResponse = new ApiResponse<>(statusCode, data);
+        apiResponse.message = message; // 기본 메시지를 오버라이드
+        return apiResponse;
+    }
 
     public static <T> ApiResponse<T> error(StatusCode statusCode) {
         return new ApiResponse<>(statusCode);

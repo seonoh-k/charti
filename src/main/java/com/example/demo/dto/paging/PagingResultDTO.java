@@ -1,5 +1,6 @@
 package com.example.demo.dto.paging;
 
+import com.example.demo.survey.dto.RecordAnswerResponse;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 
@@ -62,6 +63,8 @@ public class PagingResultDTO<DTO, EN> {
 
         makePageList();
     }
+
+
 
 
     private void makePageList() {
