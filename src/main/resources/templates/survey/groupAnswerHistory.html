@@ -25,7 +25,7 @@
             </select>
         </div>
 
-        <!-- 2) 자녀 정보 (dailyAnswerHistory에서 그대로 복사) -->
+        <!-- 2) 자녀 정보 -->
         <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
             <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
             <p><strong>이름:</strong> <span id="infoName"></span></p>
@@ -39,7 +39,7 @@
         <div id="answerList" class="space-y-4"></div>
     </div>
 
-    <!-- 4) 수정 모달 (Daily와 동일) -->
+    <!-- 4) 수정 모달 -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded shadow-xl w-full max-w-lg">
             <h2 class="text-xl font-bold mb-4">답변 수정</h2>
@@ -52,47 +52,90 @@
     </div>
 
     <script>
-        // --- 자녀 정보 표시용 요소 캐싱 ---
         const childSelect = document.getElementById('childSelect');
         const childInfo   = document.getElementById('childInfo');
         const infoName    = document.getElementById('infoName');
         const infoGender  = document.getElementById('infoGender');
         const infoAge     = document.getElementById('infoAge');
         const infoHeight  = document.getElementById('infoHeight');
-
+        const infoWeight  = document.getElementById('infoWeight');
 
         let lastFetched = [];
         let currentEditId = null;
+
+        /**
+         * [수정] 선택 값과 '선택지 배열'에 따라 위험도 퍼센트를 반환하는 헬퍼 함수
+         * GroupSurveyService의 getMultiplier 로직과 100% 동일하게 작동합니다.
+         */
+        function getRiskPercentage(selectedValue, possibleAnswers) {
+            if (!possibleAnswers || possibleAnswers.length === 0) {
+                return 0; // 안전 장치
+            }
+            const totalOptions = possibleAnswers.length;
+
+            switch (totalOptions) {
+                case 5: // 5지선다
+                    switch (selectedValue) {
+                        case 1: return 100;
+                        case 2: return 75;
+                        case 3: return 50;
+                        case 4: return 25;
+                        case 5: return 0;
+                        default: return 0;
+                    }
+                case 3: // 3지선다
+                    switch (selectedValue) {
+                        case 1: return 100;
+                        case 2: return 50;
+                        case 3: return 0;
+                        default: return 0;
+                    }
+                case 2: // 2지선다 (역계산)
+                    switch (selectedValue) {
+                        case 1: return 0;
+                        case 2: return 100;
+                        default: return 0;
+                    }
+                default: // 그 외
+                    return 0;
+            }
+        }
+
+        /**
+         * [추가] 위험도에 따라 다른 색상 클래스를 반환하는 헬퍼 함수
+         */
+        function getRiskColorClass(percentage) {
+            if (percentage >= 60) return 'text-red-600 font-semibold';
+            if (percentage >= 40) return 'text-orange-500 font-semibold';
+            return 'text-green-600';
+        }
+
 
         document.getElementById('childSelect').addEventListener('change', () => {
           const childId = childSelect.value;
           const list    = document.getElementById('answerList');
 
           if (!childId) {
-            // 자녀 미선택 시, 정보·리스트 둘 다 숨기기
             childInfo.classList.add('hidden');
             list.innerHTML = '';
             return;
           }
 
-          // -- (A) 자녀 정보 조회 및 표시 --
+          // 자녀 정보 조회
           fetch(`/api/child/info/${childId}`)
-            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(r => r.ok ? r.json() : Promise.reject(r))
             .then(data => {
               childInfo.classList.remove('hidden');
-              infoName   .textContent = data.name;
-              infoGender .textContent = data.gender;
-              infoAge    .textContent = data.age + '세';
-              infoHeight .textContent = data.height;
-              infoWeight .textContent = data.weight;
-            })
-            .catch(() => {
-              // 필요 시 에러 처리
+              infoName.textContent   = data.name;
+              infoGender.textContent = data.gender;
+              infoAge.textContent    = data.age + '세';
+              infoHeight.textContent = data.height;
+              infoWeight.textContent = data.weight;
             });
 
-          // -- (B) 기존 그룹 문진 이력 조회 로직 --
+          // 그룹 문진 이력 조회
           fetch(`/groupAnswer/api/history/${childId}`)
-            .then(r => r.json())
+            .then(r => r.ok ? r.json() : Promise.reject(r))
             .then(data => {
               lastFetched = data;
               list.innerHTML = '';
@@ -100,12 +143,16 @@
                 list.innerHTML = `<p class="text-gray-500">답변 이력이 없습니다.</p>`;
                 return;
               }
+
               // 날짜별 그룹핑
               const byDate = {};
               data.forEach(a => {
-                const d = a.createdAt.substring(0,10);
-                (byDate[d] = byDate[d]||[]).push(a);
+                if (a && a.createdAt) {
+                    const d = a.createdAt.substring(0,10);
+                    (byDate[d] = byDate[d] || []).push(a);
+                }
               });
+
               // 렌더링
               Object.keys(byDate)
                 .sort((a,b) => new Date(b) - new Date(a))
@@ -113,29 +160,54 @@
                   const section = document.createElement('div');
                   section.className = 'border rounded mb-4';
 
+                  // --- [수정] 헤더에 전체 평균 위험도 계산 및 표시 ---
+                  const dailyAnswers = byDate[date];
+                  const totalMultiplierSum = dailyAnswers.reduce((sum, ans) => {
+                      // [수정] 수정된 함수를 사용하여 위험도 계수(0~1)를 구함
+                      return sum + (getRiskPercentage(ans.selectedValue, ans.possibleAnswers) / 100);
+                  }, 0);
+                  const averageRisk = dailyAnswers.length > 0
+                        ? (totalMultiplierSum / dailyAnswers.length) * 100
+                        : 0;
+
                   const header = document.createElement('button');
                   header.type = 'button';
-                  header.className = 'w-full text-left px-4 py-2 bg-blue-100 font-semibold hover:bg-blue-200';
-                  header.textContent = `${date} 문진 답변`;
+                  header.className = 'w-full flex justify-between items-center text-left px-4 py-2 bg-blue-100 font-semibold hover:bg-blue-200';
+                  header.innerHTML = `
+                    <span>${date} 문진 답변</span>
+                    <span class="text-sm ${getRiskColorClass(averageRisk)}">
+                        전체 위험도: ${averageRisk.toFixed(1)}%
+                    </span>
+                  `;
 
                   const body = document.createElement('div');
                   body.className = 'hidden p-4 space-y-4 bg-gray-50';
 
-                  byDate[date].forEach((ans,i) => {
+                  dailyAnswers.forEach((ans,i) => {
                     const card = document.createElement('div');
-                    card.className = 'border p-3 rounded flex justify-between';
-                    card.innerHTML = `
-                      <div>
-                        <p class="font-semibold">
-                          ${i+1}. [${ans.targetGroup} | ${ans.category}] ${ans.question}
-                        </p>
-                        <p class="text-sm text-gray-700 whitespace-pre-line"
-                           id="answerText_${ans.id}">
-                          ${ans.answer}
-                        </p>
+                    card.className = 'border p-3 rounded flex justify-between items-start';
 
+                    // --- [수정] 개별 답변의 위험도 계산 ---
+                    const riskPercentage = getRiskPercentage(ans.selectedValue, ans.possibleAnswers);
+                    const riskColorClass = getRiskColorClass(riskPercentage);
+
+                    const targetGroupText = ans.targetGroup || '대상 그룹 없음';
+                    const categoryText = ans.category || '카테고리 없음';
+
+                    card.innerHTML = `
+                      <div class="flex-grow">
+                        <p class="font-semibold">
+                          ${i+1}. [${targetGroupText} | ${categoryText}] ${ans.question || ''}
+                        </p>
+                        <p class="text-sm text-gray-700 whitespace-pre-line" id="answerText_${ans.id}">
+                          ${ans.answer || ''}
+                        </p>
+                        <!-- [추가] 개별 위험도 표시 -->
+                        <p class="text-xs mt-1">
+                          위험도: <span class="${riskColorClass}">${riskPercentage}%</span>
+                        </p>
                       </div>
-                      <div class="flex flex-col gap-2 justify-center">
+                      <div class="flex flex-col items-end gap-2 ml-4 flex-shrink-0">
                         <button onclick="showEditModal(${ans.id})"
                                 class="text-blue-600 hover:underline text-sm">수정</button>
                         <button onclick="deleteAnswer(${ans.id})"
@@ -149,33 +221,48 @@
                   section.append(header, body);
                   list.appendChild(section);
                 });
+            })
+            .catch(err => {
+                console.error("그룹문진 이력을 불러오는 중 오류:", err);
+                list.innerHTML = `<p class="text-red-500">답변 이력을 불러오는 중 오류가 발생했습니다.</p>`;
             });
         });
 
-        function deleteAnswer(id) {
+        window.deleteAnswer = function(id) {
           if (!confirm('정말 삭제하시겠습니까?')) return;
           fetch(`/groupAnswer/api/answer/${id}`, { method: 'DELETE' })
             .then(r => {
-              if (r.ok) childSelect.dispatchEvent(new Event('change'));
-              else      alert('삭제 중 오류 발생');
+              if (r.ok) {
+                  alert('삭제되었습니다.');
+                  childSelect.dispatchEvent(new Event('change'));
+              }
+              else {
+                  alert('삭제 중 오류 발생');
+              }
             });
         }
 
-        function showEditModal(id) {
+        window.showEditModal = function(id) {
           currentEditId = id;
           const dto = lastFetched.find(a => a.id === id);
+          if (!dto) {
+              alert('수정할 답변 데이터를 찾지 못했습니다.');
+              return;
+          }
           const opts = document.getElementById('modalOptions');
           opts.innerHTML = '';
-          dto.possibleAnswers.forEach((text, i) => {
-            const v = i + 1;
-            opts.insertAdjacentHTML("beforeend", `
-              <label class="flex items-center gap-2">
-                <input type="radio" name="editAnswer" value="${v}"
-                  ${v === dto.selectedValue ? "checked" : ""}/>
-                ${text}
-              </label>
-            `);
-          });
+          if (Array.isArray(dto.possibleAnswers)) {
+              dto.possibleAnswers.forEach((text, i) => {
+                const v = i + 1;
+                opts.insertAdjacentHTML("beforeend", `
+                  <label class="flex items-center gap-2">
+                    <input type="radio" name="editAnswer" value="${v}"
+                      ${v === dto.selectedValue ? "checked" : ""}/>
+                    ${text}
+                  </label>
+                `);
+              });
+          }
           document.getElementById("editModal").classList.remove("hidden");
         }
 

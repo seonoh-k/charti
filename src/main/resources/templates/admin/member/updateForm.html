@@ -34,28 +34,31 @@
         
                 <div>
                     <label class="block mb-1 text-sm font-medium">이메일</label>
-                    <input type="email" th:field="*{username}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                    <input type="email" th:field="*{username}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring text-gray-500 bg-gray-100 cursor-not-allowed" readonly />
                 </div>
-        
+                <div>
+                    <label class="block mb-1 text-sm font-medium">비밀먼호</label>
+                    <input type="password" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring text-gray-500 bg-gray-100 cursor-not-allowed" readonly />
+                </div>
                 <div>
                     <label class="block mb-1 text-sm font-medium">전화번호</label>
-                    <input type="text" th:field="*{phoneNumber}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                    <input type="text" th:field="*{phoneNumber}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring text-gray-500 bg-gray-100 cursor-not-allowed" readonly />
                 </div>
         
                 <div>
                     <label class="block mb-1 text-sm font-medium">가입 경로 (provider)</label>
-                    <input type="text" th:field="*{provider}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" readonly disabled />
+                    <input type="text" th:field="*{provider}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring text-gray-500 bg-gray-100 cursor-not-allowed" readonly />
                 </div>
         
                 <div>
                     <label class="block mb-1 text-sm font-medium">총 포인트</label>
-                    <input type="text" th:field="*{totalPoint}" class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 cursor-not-allowed" readonly disabled />
+                    <input type="text" th:field="*{totalPoint}" class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 text-gray-500 bg-gray-100 cursor-not-allowed" readonly />
                 </div>
                 <div>
                     <label class="block mb-1 text-sm font-medium">가입 일자</label>
                     <input type="text"
                         th:value="${#temporals.format(memberDTO.createdAt, 'yyyy년MM월dd일 HH시mm분')}"
-                        class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 cursor-not-allowed" readonly disabled />
+                        class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 text-gray-500 cursor-not-allowed" readonly />
                 </div>
                 
         

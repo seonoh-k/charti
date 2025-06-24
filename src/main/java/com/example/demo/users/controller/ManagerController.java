@@ -8,6 +8,7 @@ import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResponse;
 import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.IdsRequest;
+import com.example.demo.dto.request.ManagerUpdateRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.service.AddressService;
 import com.example.demo.exception.FirebaseAuthenticationException;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -54,17 +56,54 @@ public class ManagerController {
     }
 
     @GetMapping("/manager/myPage")
-    public String showMangerMyPage(Model model) {
+    public String showManagerMyPage(Model model) {
         log.info("[GET] 👨‍💼 request manager Page");
-        UserDTO userDTO = authService.getLoginUser();
 
-        AddressDTO address = addressService.getGroupIdByManagerUid(userDTO.getUuid());
+        UserDTO loginUser = authService.getLoginUser(); // 유저 전체 정보
+        AddressDTO address = addressService.getGroupIdByManagerUid(loginUser.getUuid());
+        ManagerDTO  managerDTO = managerService.getManagerById(loginUser.getId());
+        managerDTO.setAddress(address);
 
-        userDTO.setAddress(address);
-        model.addAttribute("userInfo", userDTO);
+        log.info("📞 managerDTO.getGroupEmail = {}", managerDTO.getGroupEmail());
+        log.info("📞 managerDTO.getPhoneNumber = {}", managerDTO.getPhoneNumber());
+        log.info("📞 managerDTO.getGroupId = {}", managerDTO.getGroupId());
+        log.info("📞 managerDTO.getTargetGroup = {}", managerDTO.getTargetGroup());
+        log.info("📞 managerDTO.getGroupPhoneNumber = {}", managerDTO.getGroupPhoneNumber());
+        model.addAttribute("userInfo", managerDTO);
+        model.addAttribute("hasChildren", !managerDTO.getChildren().isEmpty());
 
         return "manager/myPage";
     }
+
+    @PostMapping("/manager/update")
+    public String updateManager(
+            @ModelAttribute ManagerUpdateRequest req,
+            Authentication authentication,
+            RedirectAttributes rttr) {
+
+        String uid = authentication.getPrincipal().toString();
+        log.info("📞 /manager/update정보 : {}", req.getName());
+        log.info("📞 /manager/update정보: {}", req.getNickname());
+        log.info("📞 /manager/update정보: {}", req.getPhoneNumber());
+        log.info("📞 /manager/update정보: {}", req.getAddressId());
+        log.info("📞 /manager/update정보: {}", req.getGroupName());
+        log.info("📞 /manager/update정보: {}", req.getGroupPhoneNumber());
+        log.info("📞 /manager/update정보: {}", req.getGroupEmail());
+        try {
+            managerService.updateManager(req, uid);
+            rttr.addFlashAttribute("msg", "정보가 성공적으로 수정되었습니다.");
+        } catch (FirebaseAuthException e) {
+            // Firebase  업데이트 실패 시
+            log.error("❌ Firebase 업데이트 실패: {}", e.getMessage(), e);
+            rttr.addFlashAttribute("error", "Firebase 업데이트 실패: " + e.getMessage());
+        } catch (Exception e) {
+            // 기타 예외 처리 (Optional)
+            log.error("❌ 정보 수정 중 오류 발생", e);
+            rttr.addFlashAttribute("error", "정보 수정 중 오류가 발생했습니다.");
+        }
+        return "redirect:/managers/mypage";
+    }
+
 
 
     /**

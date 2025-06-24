@@ -35,6 +35,9 @@ public class ChildDTO {
     private String gender;
 
     private Boolean riskGroup;
+    private String groupName;
+    private String groupEmail;
+    private String groupPhone;
 
     private LocalDateTime birthday;
 
@@ -89,6 +92,26 @@ public class ChildDTO {
         this.height = height;
         this.gender = gender;
         this.riskGroup = riskGroup;
+        this.birthday = birthday;
+        this.age = calculateAge();
+    }
+
+    public ChildDTO(Long id, Integer birthOrder, String name,
+                    String nickname, String weight, String height,
+                    String gender, Boolean riskGroup, String groupName,
+                    String groupEmail, String groupPhone, LocalDateTime birthday) {
+
+        this.id = id;
+        this.birthOrder = birthOrder;
+        this.name = name;
+        this.nickname = nickname;
+        this.weight = weight;
+        this.height = height;
+        this.gender = gender;
+        this.riskGroup = riskGroup;
+        this.groupName = groupName;
+        this.groupEmail = groupEmail;
+        this.groupPhone = groupPhone;
         this.birthday = birthday;
         this.age = calculateAge();
     }
