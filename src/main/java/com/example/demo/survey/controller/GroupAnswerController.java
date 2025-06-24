@@ -94,9 +94,6 @@ public class GroupAnswerController {
             // 사용자를 찾지 못하면 로그인 페이지로 리다이렉트
             return "redirect:/login";
         }
-        List<Child> children = childService.findByUsersId(me.getId());
-        model.addAttribute("children", children);
-        return "survey/groupAnswerHistory";
     }
 
     /** API: 특정 자녀의 답변 이력 조회 */

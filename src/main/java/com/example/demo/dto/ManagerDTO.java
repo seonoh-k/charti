@@ -25,7 +25,6 @@ public class ManagerDTO {
     private Long groupId; // 그룹 아이디
     private String groupName; // 그룹 이름
     private String groupEmail; // 그룹 이메일
-    private String targetGroup;
     private String groupPhoneNumber; // 그룹 전화번호
     private TargetGroup targetGroup; // 그룹 분류 ex)유치원,어린이집....
     private Boolean isApproved;

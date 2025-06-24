@@ -3,6 +3,7 @@ package com.example.demo.users.repository;
 import com.example.demo.dto.ChildDTO;
 import com.example.demo.dto.ManagerDTO;
 import com.example.demo.entity.QGroup;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.users.entity.QChild;
 import com.example.demo.users.entity.QManager;
 import com.example.demo.users.entity.QUsers;
@@ -89,13 +90,12 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                 .groupId(groupId)
                 .groupName(managerTuple.get(g.groupName))
                 .groupEmail(managerTuple.get(g.groupEmail))
-                .targetGroup(managerTuple.get(g.targetGroup.stringValue()))
+                .targetGroup(TargetGroup.valueOf(managerTuple.get(g.targetGroup.stringValue())))
                 .isApproved(managerTuple.get(m.isApproved))
                 .createdAt(managerTuple.get(u.createdAt))
                 .deleted(managerTuple.get(u.deleted))
                 .children(childList)
                 .build();
-
         return Optional.of(managerDTO);
     }
 

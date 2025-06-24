@@ -46,4 +46,12 @@ public interface UserRepository extends JpaRepository<Users,Long> {
     @Query("SELECT u.uuid FROM Users u WHERE u.id = :id")
     String getUuidById(@Param("id") Long id);
 
+    /**
+     * [그룹 ID로 소속 사용자 전체 조회]
+     * 특정 그룹(group_id)에 속한 사용자들을 모두 조회한다.
+     *
+     * @param groupId 그룹 ID
+     * @return 해당 그룹 소속 사용자 리스트
+     */
+    List<Users> findAllByManager_Group_Id(Long groupId);
 }

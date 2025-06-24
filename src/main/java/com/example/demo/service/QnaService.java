@@ -22,24 +22,24 @@ public class QnaService extends BaseService<Qna, QnaRepository> {
 
     public List<QnaDTO> getPagedList(int page) {
         Pageable pageable = PageRequest.of(page, 20, Sort.Direction.DESC, "createdAt");
-        Page<Qna> qnaPage = repository.findALLQna(pageable);
+//        Page<Qna> qnaPage = repository.findALL(pageable);
 
         List<QnaDTO> qnaDTOList = new ArrayList<>();
-        for(Qna qna : qnaPage) {
-            qnaDTOList.add(new QnaDTO(qna));
-        }
+//        for(Qna qna : qnaPage) {
+//            qnaDTOList.add(new QnaDTO(qna));
+//        }
 
         return qnaDTOList;
     }
 
     public List<QnaDTO> getPagedCategoryList(QnaCategory category, int page) {
         Pageable pageable = PageRequest.of(page, 20, Sort.Direction.DESC, "createdAt");
-        Page<Qna> qnaPage = repository.findQnaByCategory(category, pageable);
+//        Page<Qna> qnaPage = repository.findByCategory(category, pageable);
         List<QnaDTO> qnaDTOList = new ArrayList<>();
 
-        for(Qna qna : qnaPage) {
-            qnaDTOList.add(new QnaDTO(qna));
-        }
+//        for(Qna qna : qnaPage) {
+//            qnaDTOList.add(new QnaDTO(qna));
+//        }
 
         return qnaDTOList;
     }
