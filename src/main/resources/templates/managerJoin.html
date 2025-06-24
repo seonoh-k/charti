@@ -131,11 +131,17 @@
             <input type="text" id="addr1" name="addr1" readonly class="mt-2 border px-4 py-2 bg-gray-100 rounded w-full" />
             <input type="hidden" id="addressId" name="addressId" />
         </div>
-        <!-- ③ category 입력란 -->
+        
+        <!-- ③ targetGroup 입력란 -->
         <div>
-            <label for="category" class="block mb-1">기관 분류</label>
-            <input type="text" name="category" id="category" 
+        <label for="targetGroup" class="block mb-1">기관 분류</label>
+        <select name="targetGroup" id="targetGroup" 
                 class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
+            <option value="">선택하세요</option>
+            <option value="KINDERGARTEN">유치원</option>
+            <option value="DAYCARE">어린이집</option>
+            <option value="CHILDRENS_HOME">보육원</option>
+        </select>
         </div>
 
         <!-- ③ groupPhone 입력란 -->
@@ -368,7 +374,7 @@
         const addressId = document.getElementById('addressId').value.trim();
         
         const groupName = document.getElementById('groupName').value.trim();
-        const category = document.getElementById('category').value.trim();
+        const targetGroup = document.getElementById('targetGroup').value.trim();
         const groupPhoneNumber = document.getElementById('groupPhone').value.trim();
         const groupEmail = document.getElementById('groupEmail').value.trim();
         const position = document.getElementById('position').value.trim();
@@ -402,7 +408,7 @@
                 },
                 groupInfo: {
                     groupName,
-                    category,
+                    targetGroup,
                     groupPhoneNumber,
                     groupEmail,
                     groupId

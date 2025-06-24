@@ -542,7 +542,7 @@ public class AuthController {
             log.info("[POST] 🎈 managerJoinRequest 그룹 전화번호 '{}' :  ",managerJoinRequest.getGroupInfo().getGroupPhoneNumber());
             log.info("[POST] 🎈 managerJoinRequest 그룹 이름 '{}' :  ",managerJoinRequest.getGroupInfo().getGroupName());
             log.info("[POST] 🎈 managerJoinRequest 그룹 id '{}' :  ",managerJoinRequest.getGroupInfo().getGroupId());
-            log.info("[POST] 🎈 managerJoinRequest 그룹 카테고리 '{}' :  ",managerJoinRequest.getGroupInfo().getCategory());
+            log.info("[POST] 🎈 managerJoinRequest 그룹 카테고리 '{}' :  ",managerJoinRequest.getGroupInfo().getTargetGroup());
 
 
             // 공통 정보 인포
