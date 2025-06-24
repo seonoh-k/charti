@@ -38,6 +38,29 @@
                 class="w-full border p-2 rounded-md bg-gray-100" readonly />
         </div>
 
+        <!-- 🔐 휴대전화 입력 및 인증 -->
+    <div class="mt-4">
+        <label for="phone" class="block text-sm font-semibold mb-1">휴대전화</label>
+        <div class="flex space-x-2">
+            <select id="phone1" class="p-2 rounded border w-20">
+            <option value="010">010</option>
+            <option value="011">011</option>
+            <option value="016">016</option>
+            <option value="017">017</option>
+            <option value="018">018</option>
+            <option value="019">019</option>
+            </select>
+            <input id="phone2" type="text" maxlength="4" placeholder="1234"
+                class="p-2 rounded border w-20" pattern="\d*" />
+            <input id="phone3" type="text" maxlength="4" placeholder="5678"
+                class="p-2 rounded border w-20" pattern="\d*" />
+            <button type="button" id="send-otp-btn"
+            class="px-4 py-2 bg-blue-600 text-white rounded" onclick="sendSmsOtp()">
+            인증번호 받기
+            </button>
+        </div>
+    </div>
+
             <!-- 인증번호 입력 -->
     <div class="mt-2">
         <label for="otp" class="block text-sm font-semibold mb-1">인증번호</label>

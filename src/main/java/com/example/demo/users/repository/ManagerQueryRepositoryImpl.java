@@ -40,7 +40,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
         Tuple managerTuple = queryFactory
                 .select(
                         u.id, u.name, u.username, u.nickname, u.phoneNumber,
-                        g.id, g.groupName, g.groupEmail,
+                        g.id, g.groupName, g.groupEmail,g.groupPhoneNumber, g.targetGroup,
                         m.isApproved, u.createdAt, u.deleted
                 )
                 .from(m)
@@ -89,6 +89,8 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                 .groupId(groupId)
                 .groupName(managerTuple.get(g.groupName))
                 .groupEmail(managerTuple.get(g.groupEmail))
+                .groupPhoneNumber(managerTuple.get(g.groupPhoneNumber)) // ✅ 추가
+                .targetGroup(managerTuple.get(g.targetGroup))           // ✅ 추가
                 .isApproved(managerTuple.get(m.isApproved))
                 .createdAt(managerTuple.get(u.createdAt))
                 .deleted(managerTuple.get(u.deleted))

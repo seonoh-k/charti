@@ -52,16 +52,19 @@
 
     <!-- 인증된 전화번호로 아이디 찾기 -->
     <div class="mt-6">
-    <button onclick="findUsername()"
-            class="w-full bg-black text-white py-2 rounded hover:bg-gray-800">
-        아이디 찾기
-    </button>
+        <button onclick="findUsername()"
+                class="w-full bg-black text-white py-2 rounded hover:bg-gray-800">
+            아이디 찾기
+        </button>
     </div>
 
     <!-- 결과 -->
     <div id="result" class="mt-4 text-center text-green-700 font-semibold"></div>
 
     <div id="recaptcha-container"></div>
+    <div class="mt-4 text-center">
+        <a th:href="@{/loginForm}" class="text-sm text-gray-700 hover:underline">로그인</a>
+    </div>
 </div>
 
 <script>
