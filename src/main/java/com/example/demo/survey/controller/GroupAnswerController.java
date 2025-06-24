@@ -2,7 +2,9 @@ package com.example.demo.survey.controller;
 
 import com.example.demo.survey.dto.AnswerUpdateRequest;
 import com.example.demo.survey.dto.GroupAnswerDto;
+import com.example.demo.survey.dto.GroupAnswerRequest;
 import com.example.demo.survey.service.GroupAnswerService;
+import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.ChildService;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/groupAnswer")
 @RequiredArgsConstructor
 public class GroupAnswerController {
+
     private final UserService userService;
     private final ChildService childService;
     private final GroupAnswerService answerService;
@@ -91,6 +94,18 @@ public class GroupAnswerController {
             // 사용자를 찾지 못하면 로그인 페이지로 리다이렉트
             return "redirect:/login";
         }
+        List<Child> children = childService.findByUsersId(me.getId());
+        model.addAttribute("children", children);
+        return "survey/groupAnswerHistory";
+    }
+
+    /** API: 특정 자녀의 답변 이력 조회 */
+    @GetMapping("/api/history/{childId}")
+    @ResponseBody
+    public List<GroupAnswerDto> apiHistory(@PathVariable Long childId) {
+        return answerService.findByChild(childId).stream()
+                .map(GroupAnswerDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
     /** API: 답변 수정 */

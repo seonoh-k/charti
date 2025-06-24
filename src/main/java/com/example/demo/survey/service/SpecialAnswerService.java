@@ -57,12 +57,11 @@ public class SpecialAnswerService {
             a.setCategory(s.getCategory());
             a.setQuestion(s.getQuestion());
             a.setAnswer(text);
-            // a.setWeight(s.getWeight()); // weight 저장 로직 제거
             answerRepo.save(a);
         }
     }
 
-    // (이하 기존 코드 유지)
+
     public List<SpecialAnswer> findByChild(Long childId) {
         return answerRepo.findByChildIdAndDeletedFalseOrderByCreatedAtDesc(childId);
     }

@@ -59,8 +59,9 @@ public class GroupAnswerService {
     }
 
     public List<GroupAnswer> findByChild(Long childId) {
-        return answerRepo.findByChildIdAndDeletedFalseOrderByCreatedAtDesc(childId);
+        return answerRepo.findByChildIdWithDetails(childId);
     }
+
 
     // 수정
     @Transactional
