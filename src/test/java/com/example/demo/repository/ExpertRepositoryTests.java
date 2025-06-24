@@ -2,7 +2,11 @@ package com.example.demo.repository;
 
 import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.ManagerDTO;
+import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResultDTO;
+import com.example.demo.entity.Group;
+import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Expert;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.repository.*;
@@ -15,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +27,7 @@ import java.util.Optional;
 
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @SpringBootTest
-@Transactional
+//@Transactional
 class ExpertRepositoryTests {
 
     @Autowired
@@ -39,12 +44,17 @@ class ExpertRepositoryTests {
 
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private GroupRepository groupRepository;
 
     @Autowired
     private ChildRepository childRepository;
 
     @Autowired
     private ManagerQueryRepository managerQueryRepository;
+
+    @Autowired
+    private UserQueryRepository userQueryRepository;
 
 
 //    @Test
@@ -109,6 +119,47 @@ class ExpertRepositoryTests {
 
         Long id = 508L;
         Optional<Expert> byId = expertRepository.findById(id);
+
+    }
+
+//    @Test
+//    void insertYoungerSiblingsOfKimSeoyeon() {
+//        Member parent = memberRepository.getReferenceById(60L);
+//        Group group   = groupRepository.getReferenceById(9L);
+//
+//        LocalDateTime baseBirthday = LocalDateTime.of(2023, 12, 5, 0, 0);
+//
+//        for (int idx = 1; idx <= 10; idx++) {
+//            int birthOrder = 3 + idx;  // 김서연 양이 3번째, 동생부터 4번 시작
+//            LocalDateTime birthday = baseBirthday.plusMonths(idx);
+//
+//            String name = "김동생" + idx;
+//            String gender = (idx % 2 == 0) ? "여" : "남";
+//
+//            Child child = new Child();
+//            child.setParent(parent);
+//            child.setGroup(group);
+//            child.setBirthOrder(birthOrder);
+//            child.setName(name);
+//            child.setNickname("");      // 필요 시 빈 문자열 또는 null 허용
+//            child.setBirthday(birthday);
+//            child.setWeight("5kg");     // 기본 weight
+//            child.setHeight("60cm");    // 기본 height
+//            child.setGender(gender);
+//            child.setRiskGroup(false);
+//
+//            childRepository.save(child);
+//        }
+//    }
+    @Test
+    public void test12(){
+        PagingRequest pagingRequest = new PagingRequest();
+        Pageable pageable = pagingRequest.toPageable();
+
+        Page<UserDTO> deletedUserList = userQueryRepository.getDeletedUserList(pageable);
+        PagingResultDTO pagingResultDTO = new PagingResultDTO(deletedUserList);
+        List dtoList = pagingResultDTO.getDtoList();
+        dtoList.forEach(System.out::println);
 
     }
 }

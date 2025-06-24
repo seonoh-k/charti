@@ -1,15 +1,20 @@
 package com.example.demo.users.service;
 
+import com.example.demo.dto.ChildDTO;
 import com.example.demo.dto.GroupDTO;
+import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.exception.ChildNotFoundException;
 import com.example.demo.repository.GroupQueryRepository;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.service.BaseService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
+import com.example.demo.users.repository.ChildQueryRepository;
 import com.example.demo.users.repository.ChildRepository;
 import groovy.util.logging.Slf4j;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,8 +25,11 @@ import java.util.Optional;
 public class ChildService extends BaseService<Child, ChildRepository> {
 
 
-    public ChildService(ChildRepository repository) {
+    private ChildQueryRepository childQueryRepository;
+
+    public ChildService(ChildRepository repository,ChildQueryRepository childQueryRepository) {
         super(repository);
+        this.childQueryRepository = childQueryRepository;
     }
 //        extends BaseService<Child, ChildRepository> {
 
@@ -80,4 +88,9 @@ public class ChildService extends BaseService<Child, ChildRepository> {
         return repository.findByParent(member);
     }
 
+    public PagingResultDTO<ChildDTO, Child> getChildrenByGroup(Long groupId, Pageable pageable) {
+        Page<ChildDTO> result = childQueryRepository.getChildDTOsByGroupIdOrderByAgeAndName(groupId, pageable);
+
+        return new PagingResultDTO<>(result);
+    }
 }

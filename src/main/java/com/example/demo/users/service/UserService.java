@@ -8,13 +8,11 @@ import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.*;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
+import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.users.entity.*;
-import com.example.demo.users.repository.ExpertRepository;
-import com.example.demo.users.repository.ManagerRepository;
-import com.example.demo.users.repository.MemberRepository;
-import com.example.demo.users.repository.UserRepository;
+import com.example.demo.users.repository.*;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.UserStatus;
 import com.google.firebase.auth.FirebaseAuth;
@@ -25,6 +23,7 @@ import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.jaxb.SpringDataJaxb;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +51,9 @@ public class UserService {
     private final AddressRepository addressRepository;
     private final PasswordEncoder passwordEncoder;
     private final GroupRepository groupRepository;
+    private final FirebaseService firebaseService;
+    private final UserQueryRepository userQueryRepository;
+
 
 
     public UserDTO entityToDTO(Users users) {
@@ -295,7 +297,47 @@ public class UserService {
     }
 
     @Transactional
-    public void updateMemberByAdmin(MemberUpdateRequestByAdmin request) {
+    public void updateMemberByAdmin(MemberUpdateRequestByAdmin request) throws FirebaseAuthenticationException{
+        // 1) Users 프록시 로드 (SELECT 없이)
+        Users user = userRepository.getReferenceById(request.getId());
+
+        // 2) 허용된 필드만 반영
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+
+    }
+
+    @Transactional
+    public void updateExpertByAdmin(ExpertUpdateRequestByAdmin request) throws FirebaseAuthenticationException{
+        // 1) Users 프록시 로드 (SELECT 없이)
+        Users user = userRepository.getReferenceById(request.getId());
+        // 2) 수정 허용 필드만 반영
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+
+        // 3) Expert 프록시 로드
+        Expert expert = expertRepository.getReferenceById(request.getId());
+
+    }
+
+    @Transactional
+    public void updateManagerByAdmin(ManagerUpdateRequestByAdmin request) throws FirebaseAuthenticationException{
+        // 1) Users 프록시만 로드
+        Users user = userRepository.getReferenceById(request.getId());
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+
+        // 2) Manager 프록시 로드
+        Manager manager = managerRepository.getReferenceById(request.getId());
+
+        // 3) Group 프록시 로드
+        Long groupId = manager.getGroup().getId();
+        Group group = groupRepository.getReferenceById(groupId);
+
+
+    }
+    @Transactional
+    public void updateMemberBySuperAdmin(MemberUpdateRequestBySuperAdmin request) throws FirebaseAuthenticationException{
         // 1) Users 프록시 로드 (SELECT 없이)
         Users user = userRepository.getReferenceById(request.getId());
 
@@ -305,44 +347,82 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setProvider(request.getProvider());
-        // (password, profileImage, role 등은 변경하지 않음)
+
+
+        try{
+            String proxyUUID = user.getUuid();
+            if (request.getPassword() != null && !request.getPassword().isBlank()) {
+                // 변경이 감지되면, 원하는 초기값으로 설정
+                String DEFAULT_PW = "Charti@1234";  // 예: 초기 비밀번호 상수
+                firebaseService.initFirebasePassword(proxyUUID);
+                user.setPassword(passwordEncoder.encode(DEFAULT_PW));
+            }
+        } catch (FirebaseAuthException firebaseAuthException){
+            throw new FirebaseAuthenticationException();
+        }
+
     }
 
     @Transactional
-    public void updateExpertByAdmin(ExpertUpdateRequestByAdmin req) {
+    public void updateExpertBySuperAdmin(ExpertUpdateRequestBySuperAdmin request) throws FirebaseAuthenticationException{
         // 1) Users 프록시 로드 (SELECT 없이)
-        Users user = userRepository.getReferenceById(req.getId());
+        Users user = userRepository.getReferenceById(request.getId());
         // 2) 수정 허용 필드만 반영
-        user.setName(req.getName());
-        user.setNickname(req.getNickname());
-        user.setUsername(req.getUsername());
-        user.setPhoneNumber(req.getPhoneNumber());
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+        user.setUsername(request.getUsername());
+        user.setPhoneNumber(request.getPhoneNumber());
 
         // 3) Expert 프록시 로드
-        Expert expert = expertRepository.getReferenceById(req.getId());
+        Expert expert = expertRepository.getReferenceById(request.getId());
         // 4) Expert 필드 반영
-        expert.setMajor(req.getMajor());
-        expert.setCareer(req.getCareer());
+        expert.setMajor(request.getMajor());
+        expert.setCareer(request.getCareer());
         // (license, address, isApproved 등 다른 필드는 건드리지 않습니다)
+        try{
+            String proxyUUID = user.getUuid();
+            if (request.getPassword() != null && !request.getPassword().isBlank()) {
+                // 변경이 감지되면, 원하는 초기값으로 설정
+                String DEFAULT_PW = "Charti@1234";  // 예: 초기 비밀번호 상수
+                firebaseService.initFirebasePassword(proxyUUID);
+                user.setPassword(passwordEncoder.encode(DEFAULT_PW));
+            }
+        } catch (FirebaseAuthException firebaseAuthException){
+            throw new FirebaseAuthenticationException();
+        }
+
     }
 
     @Transactional
-    public void updateManagerByAdmin(ManagerUpdateRequestByAdmin req) {
+    public void updateManagerBySuperAdmin(ManagerUpdateRequestBySuperAdmin request) throws FirebaseAuthenticationException{
         // 1) Users 프록시만 로드
-        Users user = userRepository.getReferenceById(req.getId());
-        user.setName(req.getName());
-        user.setNickname(req.getNickname());
-        user.setUsername(req.getUsername());
-        user.setPhoneNumber(req.getPhoneNumber());
+        Users user = userRepository.getReferenceById(request.getId());
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+        user.setUsername(request.getUsername());
+        user.setPhoneNumber(request.getPhoneNumber());
 
         // 2) Manager 프록시 로드
-        Manager manager = managerRepository.getReferenceById(req.getId());
+        Manager manager = managerRepository.getReferenceById(request.getId());
 
         // 3) Group 프록시 로드
         Long groupId = manager.getGroup().getId();
         Group group = groupRepository.getReferenceById(groupId);
-        group.setGroupName(req.getGroupName());
-        group.setGroupEmail(req.getGroupEmail());
+        group.setGroupName(request.getGroupName());
+        group.setGroupEmail(request.getGroupEmail());
+
+        try{
+            String proxyUUID = user.getUuid();
+            if (request.getPassword() != null && !request.getPassword().isBlank()) {
+                // 변경이 감지되면, 원하는 초기값으로 설정
+                String DEFAULT_PW = "Charti@1234";  // 예: 초기 비밀번호 상수
+                firebaseService.initFirebasePassword(proxyUUID);
+                user.setPassword(passwordEncoder.encode(DEFAULT_PW));
+            }
+        } catch (FirebaseAuthException firebaseAuthException){
+            throw new FirebaseAuthenticationException();
+        }
+
     }
 
 
@@ -558,5 +638,13 @@ public class UserService {
         // ❗ Firebase 계정은 삭제하지 않고 유지 (선택적)
     }
 
+    public PagingResultDTO<UserDTO,Users> searchDeletedUsers(String type, String keyword,Pageable pageable){
+        Page<UserDTO> result = userQueryRepository.searchDeletedUsers(type,keyword,pageable);
+        return new PagingResultDTO<>(result);
+    }
+    public PagingResultDTO<UserDTO,Users> getDeletedUserList(Pageable pageable){
+        Page<UserDTO> result = userQueryRepository.getDeletedUserList(pageable);
+        return new PagingResultDTO<>(result);
+    }
 
 }

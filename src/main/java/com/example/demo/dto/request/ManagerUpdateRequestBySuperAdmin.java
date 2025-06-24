@@ -9,9 +9,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MemberUpdateRequestByAdmin {
+public class ManagerUpdateRequestBySuperAdmin {
     private Long id;
     private String name;
     private String nickname;
-
+    private String username;
+    private String password;
+    private String phoneNumber;
+    private String groupName;
+    private String groupEmail;
 }
