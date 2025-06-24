@@ -2,8 +2,12 @@ package com.example.demo.users.entity;
 
 
 import com.example.demo.entity.BaseEntity;
+import com.example.demo.entity.Qna;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -49,4 +53,8 @@ public class Users extends BaseEntity{
 
     @OneToOne(mappedBy = "users")
     private Expert expert;
+
+    // QNA 테이블과 1:N 관계 설정
+    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Qna> qnas = new ArrayList<>();
 }

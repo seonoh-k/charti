@@ -83,4 +83,14 @@ public class SpecialSurveyController {
         Map<String,Object> result = specialSurveyService.evaluate(dto);
         return ResponseEntity.ok(result);
     }
+
+
+     //[추가] 위험군 타겟 특별 문진 페이지를 보여주는 메소드
+     //groupSurveyResult.html에서 생성된 링크('/specialSurvey/by-risk?...') 요청을 처리
+     //@return "survey/specialSurveyByRisk" 뷰 경로
+    @GetMapping("/by-risk")
+    public String showTargetedSurveyPage() {
+        // templates/survey/specialSurveyByRisk.html 파일을 찾아 렌더링합니다.
+        return "survey/specialSurveyByRisk";
+    }
 }

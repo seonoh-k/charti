@@ -28,6 +28,7 @@ public class UserFcmTokenService {
         userFcmTokenRepository.findByFcmToken(request.getFcmToken())
                 .ifPresentOrElse(
                         existing -> {
+                            existing.setUser(user);
                             existing.setLastUsedAt(LocalDateTime.now());
                             existing.setActive(true);
                         },

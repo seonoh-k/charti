@@ -28,7 +28,7 @@ import lombok.Data;
  *     "position": "심리상담사"
  *   },
  *   "groupInfo": {
- *     "category": "심리치료",
+ *     "targetGroup": "심리치료",
  *     "email": "contact@mindgroup.kr",
  *     "name": "떡잎유치원",
  *     "phoneNumber": "02-1234-5678"

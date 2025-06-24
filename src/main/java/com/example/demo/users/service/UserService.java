@@ -482,7 +482,7 @@ public class UserService {
     }
 
     /**
-     * UUID로 유저를 가져온다.
+     * 서용자가 입력한 정보로파이어베이스와 db의 회원정보를 수정한다
      *
      * @param request : 사용자가 입력한 수정 데이터
      * @param uid : 접속중인 사용자 uid
@@ -569,7 +569,7 @@ public class UserService {
 
 
     /**
-     * UUID로 유저를 가져온다.
+     * 사용자가 입력한 정보로 파이어베이스와 db의 패스워드를 수정한다
      *
      * @param currentPassword : 사용자가 입력한 현재 패스워드
      * @param newPassword : 사용자가 입력한 새 패스워드

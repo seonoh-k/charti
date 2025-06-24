@@ -75,6 +75,7 @@ public class AuthService {
                 .groupName(groupInfo.getGroupName())
                 .groupPhoneNumber(groupInfo.getGroupPhoneNumber())
                 .groupEmail(groupInfo.getGroupEmail())
+                .targetGroup(groupInfo.getTargetGroup())
                 .build();
 
         return group;
@@ -179,6 +180,7 @@ public class AuthService {
 
         // Address & Group 저장 절차
         AddressInfo addressInfo = managerJoinRequest.getAddressInfo();
+        Address address = addressService.getAddressById(addressInfo.getAddressId());
         GroupInfo groupInfo = managerJoinRequest.getGroupInfo();
 
 
@@ -191,6 +193,7 @@ public class AuthService {
         } else {
             group = groupInfoToEntity(groupInfo);
             groupRepository.save(group);
+            group.setAddress(address);
             log.info("➕ 새로운 그룹 생성: {}", group.getGroupName());
         }
 

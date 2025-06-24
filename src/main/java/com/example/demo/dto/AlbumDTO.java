@@ -8,12 +8,12 @@ import java.time.format.DateTimeFormatter;
 
 @Getter
 public class AlbumDTO {
-    private Long id;
-    private String title;
-    private String thumbnail;
+    private final Long id;
+    private final String title;
+    private final String thumbnail;
     @JsonProperty("isPublic")
     private boolean isPublic;
-    private String createdAt;
+    private final String createdAt;
 
     public AlbumDTO(Album album) {
         this.id = album.getId();

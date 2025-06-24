@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
-import com.example.demo.users.entity.Member;
+import com.example.demo.enums.QnaCategory;
+import com.example.demo.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,12 +20,19 @@ public class Qna extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "users_id")
-    private Member member; // 일반 회원 참조
+    private Users users;
 
-    private String category;
+    @Enumerated(EnumType.STRING)
+    private QnaCategory category;
+
     private String title;
     private String content;
-    private Integer status;
+
+    // 공개 여부 - 디폴트 true : 공개
+    private boolean isPublic = true;
+
+    // 답변 여부 - 디폴트 false : 답변 대기
+    private boolean isAnswered = false;
 
     @OneToMany(mappedBy = "qna", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QnaAnswer> answers = new ArrayList<>();

@@ -1,6 +1,7 @@
 package com.example.demo.dto;
 
 import com.example.demo.dto.paging.PagingResultDTO;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Users;
 import lombok.*;
@@ -25,11 +26,15 @@ public class ManagerDTO {
     private String groupName; // 그룹 이름
     private String groupEmail; // 그룹 이메일
     private String targetGroup;
+    private String groupPhoneNumber; // 그룹 전화번호
+    private TargetGroup targetGroup; // 그룹 분류 ex)유치원,어린이집....
     private Boolean isApproved;
     private Boolean deleted;
 
     private LocalDateTime createdAt;
     private List<ChildDTO> children;
+
+    private AddressDTO address;
     // 엔티티 → DTO 변환 메서드
     public static ManagerDTO fromEntity(Manager manager) {
 
@@ -44,6 +49,8 @@ public class ManagerDTO {
                     .phoneNumber(manager.getUsers().getPhoneNumber())
                     .groupName(manager.getGroup().getGroupName())
                     .groupEmail(manager.getGroup().getGroupEmail())
+                    .groupPhoneNumber(manager.getGroup().getGroupPhoneNumber())  // ✅ 추가
+                    .targetGroup(manager.getGroup().getTargetGroup())            // ✅ 추가
                     .groupId(manager.getGroup().getId())
                     .isApproved(manager.getIsApproved())
                     .createdAt(manager.getUsers().getCreatedAt())
@@ -58,6 +65,8 @@ public class ManagerDTO {
                     .groupId(manager.getGroup().getId())
                     .groupName(manager.getGroup().getGroupName())
                     .groupEmail(manager.getGroup().getGroupEmail())
+                    .groupPhoneNumber(manager.getGroup().getGroupPhoneNumber())  // ✅ 추가
+                    .targetGroup(manager.getGroup().getTargetGroup())            // ✅ 추가
                     .isApproved(manager.getIsApproved())
                     .createdAt(manager.getUsers().getCreatedAt())
                     .build();
@@ -76,13 +85,15 @@ public class ManagerDTO {
                 .groupId(user.getManager().getGroup().getId())
                 .groupName(user.getManager().getGroup().getGroupName())
                 .groupEmail(user.getManager().getGroup().getGroupEmail())
+                .groupPhoneNumber(user.getManager().getGroup().getGroupPhoneNumber())  // ✅ 추가
+                .targetGroup(user.getManager().getGroup().getTargetGroup())  // ✅ 추가
                 .isApproved(user.getManager().getIsApproved())
                 .createdAt(user.getCreatedAt())
                 .build();
     }
     public ManagerDTO(Long id, String name, String username, String nickname,
                       String phoneNumber, Long groupId, String groupName, String groupEmail,
-                      Boolean isApproved, LocalDateTime createdAt) {
+                      String groupPhoneNumber,TargetGroup targetGroup, Boolean isApproved, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.username = username;
@@ -91,6 +102,8 @@ public class ManagerDTO {
         this.phoneNumber = phoneNumber;
         this.groupName = groupName;
         this.groupEmail = groupEmail;
+        this.groupPhoneNumber = groupPhoneNumber; // ✅ 추가
+        this.targetGroup = targetGroup; // ✅ 추가
         this.isApproved = isApproved;
         this.createdAt = createdAt;
     }
@@ -137,6 +150,10 @@ public class ManagerDTO {
         this.isApproved = isApproved;
         this.createdAt = createdAt;
         this.deleted = deleted;
+    }
+
+    public String getTargetGroupDisplayName() {
+        return targetGroup != null ? targetGroup.getDisplayName() : "";
     }
 
 
