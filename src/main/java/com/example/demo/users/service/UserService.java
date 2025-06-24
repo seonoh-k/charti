@@ -5,10 +5,7 @@ import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.MemberDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.paging.PagingResultDTO;
-import com.example.demo.dto.request.ExpertJoinRequest;
-import com.example.demo.dto.request.ManagerJoinRequest;
-import com.example.demo.dto.request.MemberJoinRequest;
-import com.example.demo.dto.request.UserUpdateRequest;
+import com.example.demo.dto.request.*;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
 import com.example.demo.repository.AddressRepository;
@@ -297,60 +294,55 @@ public class UserService {
         }
     }
 
+    @Transactional
+    public void updateMemberByAdmin(MemberUpdateRequestByAdmin request) {
+        // 1) Users 프록시 로드 (SELECT 없이)
+        Users user = userRepository.getReferenceById(request.getId());
 
-    public UserStatus updateMember(UserDTO userDTO){
-        Long id = userDTO.getId();
-        Optional<Users> byId = userRepository.findById(id);
-        if (byId.isPresent()){
-            Users users = byId.get();
-
-            // JPA는 영속 상태 엔티티의 필드가 변경되면 자동으로 update 쿼리 발생
-            // 엔티티를 가져와서 Set 하면 DirtyChecking사용한 update
-            // 그렇다면 Member를 변경하려면 어떻게 해야할까?
-            // Member에서 관리자가 변경 가능한 항목은 ?
-            // 어떤 항목이 비즈니스 관점에서 변경 가능 해야 하고 변경 불가 한가?
-            // 관리자 일반 회원들 확인 하는 목록에서는 어떤 정보를 확인할 수 있어야 하는지?
-            // 이름,닉네임, 아이디(이메일), 전화번호,가입일,가족,포인트, 소셜로그인 사용 여부
-            return UserStatus.UPDATE_SUCCESS;
-        } else{
-            throw new UserNotFoundException();
-        }
+        // 2) 허용된 필드만 반영
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+        user.setUsername(request.getUsername());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setProvider(request.getProvider());
+        // (password, profileImage, role 등은 변경하지 않음)
     }
-    public UserStatus updateExpert(ExpertDTO expertDTO){
-        Long id = expertDTO.getId();
-        Optional<Users> byId = userRepository.findById(id);
-        if (byId.isPresent()){
-            Users users = byId.get();
 
-            // JPA는 영속 상태 엔티티의 필드가 변경되면 자동으로 update 쿼리 발생
-            // 엔티티를 가져와서 Set 하면 DirtyChecking사용한 update
-            // 그렇다면 Member를 변경하려면 어떻게 해야할까?
-            // Member에서 관리자가 변경 가능한 항목은 ?
-            // 어떤 항목이 비즈니스 관점에서 변경 가능 해야 하고 변경 불가 한가?
-            // 관리자 일반 회원들 확인 하는 목록에서는 어떤 정보를 확인할 수 있어야 하는지?
-            // 이름,닉네임, 아이디(이메일), 전화번호,가입일,가족,포인트, 소셜로그인 사용 여부
-            return UserStatus.UPDATE_SUCCESS;
-        } else{
-            throw new UserNotFoundException();
-        }
+    @Transactional
+    public void updateExpertByAdmin(ExpertUpdateRequestByAdmin req) {
+        // 1) Users 프록시 로드 (SELECT 없이)
+        Users user = userRepository.getReferenceById(req.getId());
+        // 2) 수정 허용 필드만 반영
+        user.setName(req.getName());
+        user.setNickname(req.getNickname());
+        user.setUsername(req.getUsername());
+        user.setPhoneNumber(req.getPhoneNumber());
+
+        // 3) Expert 프록시 로드
+        Expert expert = expertRepository.getReferenceById(req.getId());
+        // 4) Expert 필드 반영
+        expert.setMajor(req.getMajor());
+        expert.setCareer(req.getCareer());
+        // (license, address, isApproved 등 다른 필드는 건드리지 않습니다)
     }
-    public UserStatus updateManager(ManagerDTO managerDTO){
-        Long id = managerDTO.getId();
-        Optional<Users> byId = userRepository.findById(id);
-        if (byId.isPresent()){
-            Users users = byId.get();
 
-            // JPA는 영속 상태 엔티티의 필드가 변경되면 자동으로 update 쿼리 발생
-            // 엔티티를 가져와서 Set 하면 DirtyChecking사용한 update
-            // 그렇다면 Member를 변경하려면 어떻게 해야할까?
-            // Member에서 관리자가 변경 가능한 항목은 ?
-            // 어떤 항목이 비즈니스 관점에서 변경 가능 해야 하고 변경 불가 한가?
-            // 관리자 일반 회원들 확인 하는 목록에서는 어떤 정보를 확인할 수 있어야 하는지?
-            // 이름,닉네임, 아이디(이메일), 전화번호,가입일,가족,포인트, 소셜로그인 사용 여부
-            return UserStatus.UPDATE_SUCCESS;
-        } else{
-            throw new UserNotFoundException();
-        }
+    @Transactional
+    public void updateManagerByAdmin(ManagerUpdateRequestByAdmin req) {
+        // 1) Users 프록시만 로드
+        Users user = userRepository.getReferenceById(req.getId());
+        user.setName(req.getName());
+        user.setNickname(req.getNickname());
+        user.setUsername(req.getUsername());
+        user.setPhoneNumber(req.getPhoneNumber());
+
+        // 2) Manager 프록시 로드
+        Manager manager = managerRepository.getReferenceById(req.getId());
+
+        // 3) Group 프록시 로드
+        Long groupId = manager.getGroup().getId();
+        Group group = groupRepository.getReferenceById(groupId);
+        group.setGroupName(req.getGroupName());
+        group.setGroupEmail(req.getGroupEmail());
     }
 
 

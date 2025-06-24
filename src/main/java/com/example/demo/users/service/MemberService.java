@@ -1,16 +1,21 @@
 package com.example.demo.users.service;
 
 import com.example.demo.dto.MemberDTO;
+import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.paging.PagingResultDTO;
+import com.example.demo.dto.request.MemberUpdateRequestByAdmin;
 import com.example.demo.service.BaseService;
 import com.example.demo.users.entity.Member;
+import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.MemberQueryRepository;
 import com.example.demo.users.repository.MemberRepository;
+import com.example.demo.util.UserStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -54,5 +59,7 @@ public class MemberService extends BaseService<Member, MemberRepository> {
         Page<MemberDTO> result = memberQueryRepository.searchMemberList(type,keyword,pageable);
         return new PagingResultDTO(result);
     }
+
+
 
 }

@@ -5,6 +5,9 @@ import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.MemberDTO;
 import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResultDTO;
+import com.example.demo.dto.request.ExpertUpdateRequestByAdmin;
+import com.example.demo.dto.request.ManagerUpdateRequestByAdmin;
+import com.example.demo.dto.request.MemberUpdateRequestByAdmin;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.users.entity.*;
 import com.example.demo.users.exception.UserNotFoundException;
@@ -14,6 +17,8 @@ import com.example.demo.users.service.MemberService;
 import com.example.demo.users.service.UserService;
 import com.example.demo.util.GlobalStatus;
 import com.example.demo.util.StatusCode;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +26,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -250,67 +258,143 @@ public class AdminController {
     }
 
     @PostMapping("/admin/member/{id:[0-9]+}")
-    public ResponseEntity<ApiResponse> updateMember(@RequestBody MemberDTO memberDTO,
-                                                    @ModelAttribute PagingRequest pagingRequest,
-                                                    RedirectAttributes redirectAttributes) {
-        // 수정 하기
-        // userService.updateMember(memberDTO);
-        log.info(memberDTO);
-        // 수정 성공 후 페이징 위치 유지하며 리다이렉트
-        redirectAttributes.addAttribute("page", pagingRequest.getPage());
-        redirectAttributes.addAttribute("size", pagingRequest.getSize());
-        redirectAttributes.addAttribute("sort", pagingRequest.getSort());
-        redirectAttributes.addAttribute("direction", pagingRequest.getDirection());
+    public ResponseEntity<ApiResponse> updateMember( @PathVariable Long id,
+                                                     @RequestBody MemberUpdateRequestByAdmin request,
+                                                     @ModelAttribute PagingRequest pagingRequest) {
 
-        // 권한 없음 관리자가 아닌 사용자가 수정 시도 ACCESS_DENIED
-        // 인증 실패 로그인 상태 아님, 만료된 세션	AUTHENTICATION_FAIL
-        // ID 미존재 	존재하지 않는 회원을 수정 시도 ENTITY_NOT_FOUND
-        // JWT 토큰 오류 JWT_VALIDATION_FAIL
+        try {
+            // 1) Path ID vs. payload ID 검증
+            if (!id.equals(request.getId())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND, "잘못된 요청: ID 불일치"));
+            }
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse(GlobalStatus.OK));
+            // 2) 수정 로직 호출
+            userService.updateMemberByAdmin(request);
+
+            // 3) 성공 응답
+            return ResponseEntity
+                    .ok(new ApiResponse(GlobalStatus.OK));
+
+        } catch (AccessDeniedException ex) {
+            log.warn("권한 없음: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse(GlobalStatus.ACCESS_DENIED));
+        } catch (AuthenticationException ex) {
+            log.warn("인증 실패: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(GlobalStatus.AUTHENTICATION_FAIL));
+        } catch (EntityNotFoundException ex) {
+            log.warn("회원 미존재: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND));
+        } catch (JwtException ex) {
+            log.warn("JWT 오류: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(GlobalStatus.JWT_VALIDATION_FAIL));
+        } catch (Exception ex) {
+            log.error("알 수 없는 오류: ", ex);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(GlobalStatus.SERVER_ERROR, "서버 오류 발생"));
+        }
+
+
     }
     @PostMapping("/admin/expert/{id:[0-9]+}")
-    public ResponseEntity<ApiResponse> updateExpert(@RequestBody ExpertDTO expertDTO,
-                                                    @ModelAttribute PagingRequest pagingRequest,
-                                                    RedirectAttributes redirectAttributes) {
-        // 수정 하기
-        // userService.updateMember(memberDTO);
-        log.info(expertDTO);
-        // 수정 성공 후 페이징 위치 유지하며 리다이렉트
-        redirectAttributes.addAttribute("page", pagingRequest.getPage());
-        redirectAttributes.addAttribute("size", pagingRequest.getSize());
-        redirectAttributes.addAttribute("sort", pagingRequest.getSort());
-        redirectAttributes.addAttribute("direction", pagingRequest.getDirection());
+    public ResponseEntity<ApiResponse> updateExpert( @PathVariable Long id,
+                                                    @RequestBody @Valid ExpertUpdateRequestByAdmin request,
+                                                    @ModelAttribute PagingRequest pagingRequest) {
+        try {
+            // 1) Path ID vs. payload ID 검증
+            if (!id.equals(request.getId())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND, "잘못된 요청: ID 불일치"));
+            }
 
-        // 권한 없음 관리자가 아닌 사용자가 수정 시도 ACCESS_DENIED
-        // 인증 실패 로그인 상태 아님, 만료된 세션	AUTHENTICATION_FAIL
-        // ID 미존재 	존재하지 않는 회원을 수정 시도 ENTITY_NOT_FOUND
-        // JWT 토큰 오류 JWT_VALIDATION_FAIL
+            // 2) 수정 로직 호출
+            userService.updateExpertByAdmin(request);
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse(GlobalStatus.OK));
+            // 3) 성공 응답
+            return ResponseEntity
+                    .ok(new ApiResponse(GlobalStatus.OK));
+
+        } catch (AccessDeniedException ex) {
+            log.warn("권한 없음: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse(GlobalStatus.ACCESS_DENIED));
+        } catch (AuthenticationException ex) {
+            log.warn("인증 실패: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(GlobalStatus.AUTHENTICATION_FAIL));
+        } catch (EntityNotFoundException ex) {
+            log.warn("회원 미존재: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND));
+        } catch (JwtException ex) {
+            log.warn("JWT 오류: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(GlobalStatus.JWT_VALIDATION_FAIL));
+        } catch (Exception ex) {
+            log.error("알 수 없는 오류: ", ex);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(GlobalStatus.SERVER_ERROR, "서버 오류 발생"));
+        }
+
     }
     @PostMapping("/admin/manager/{id:[0-9]+}")
-    public ResponseEntity<ApiResponse> updateManager(@RequestBody ManagerDTO managerDTO,
-                                                    @ModelAttribute PagingRequest pagingRequest,
-                                                    RedirectAttributes redirectAttributes) {
-        // 수정 하기
-        // userService.updateMember(memberDTO);
-        log.info(managerDTO);
-        // 수정 성공 후 페이징 위치 유지하며 리다이렉트
-        redirectAttributes.addAttribute("page", pagingRequest.getPage());
-        redirectAttributes.addAttribute("size", pagingRequest.getSize());
-        redirectAttributes.addAttribute("sort", pagingRequest.getSort());
-        redirectAttributes.addAttribute("direction", pagingRequest.getDirection());
+    public ResponseEntity<ApiResponse> updateManager(@PathVariable Long id,
+                                                     @RequestBody @Valid ManagerUpdateRequestByAdmin request,
+                                                     @ModelAttribute PagingRequest pagingRequest) {
+        try {
+            // 1) Path ID vs. payload ID 검증
+            if (!id.equals(request.getId())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND, "잘못된 요청: ID 불일치"));
+            }
 
-        // 권한 없음 관리자가 아닌 사용자가 수정 시도 ACCESS_DENIED
-        // 인증 실패 로그인 상태 아님, 만료된 세션	AUTHENTICATION_FAIL
-        // ID 미존재 	존재하지 않는 회원을 수정 시도 ENTITY_NOT_FOUND
-        // JWT 토큰 오류 JWT_VALIDATION_FAIL
+            // 2) 수정 로직 호출
+            userService.updateManagerByAdmin(request);
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse(GlobalStatus.OK));
+            // 3) 성공 응답
+            return ResponseEntity
+                    .ok(new ApiResponse(GlobalStatus.OK));
+
+        } catch (AccessDeniedException ex) {
+            log.warn("권한 없음: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse(GlobalStatus.ACCESS_DENIED));
+        } catch (AuthenticationException ex) {
+            log.warn("인증 실패: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(GlobalStatus.AUTHENTICATION_FAIL));
+        } catch (EntityNotFoundException ex) {
+            log.warn("회원 미존재: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND));
+        } catch (JwtException ex) {
+            log.warn("JWT 오류: {}", ex.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(GlobalStatus.JWT_VALIDATION_FAIL));
+        } catch (Exception ex) {
+            log.error("알 수 없는 오류: ", ex);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(GlobalStatus.SERVER_ERROR, "서버 오류 발생"));
+        }
     }
 
     @GetMapping("/admin/member/{id:[0-9]+}/children")
@@ -341,8 +425,8 @@ public class AdminController {
         return "admin/member/memberChildren";
     }
     @GetMapping("/admin/manager/{id:[0-9]+}/children")
-    public String showAdminManagerChildrenPage(@ModelAttribute PagingRequest pagingRequest,
-                                              @PathVariable Long id,
+    public String showAdminManagerChildrenPage(@PathVariable Long id,
+                                               @ModelAttribute PagingRequest pagingRequest,
                                               RedirectAttributes redirectAttribute,
                                               Model model){
         ManagerDTO managerDTO;

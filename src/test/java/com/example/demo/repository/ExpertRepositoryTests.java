@@ -4,6 +4,7 @@ import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.users.entity.Expert;
+import com.example.demo.users.entity.Member;
 import com.example.demo.users.repository.*;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -84,20 +85,21 @@ class ExpertRepositoryTests {
 //        PagingResultDTO pagingResultDTO = new PagingResultDTO(allUnapprovedExperts);
 //        List dtoList = pagingResultDTO.getDtoList();
 
-        List<Integer> list = new ArrayList<>();
-        boolean b = list.addAll(List.of(38, 39, 40, 41, 42, 43, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100));
+//        List<Integer> list = new ArrayList<>();
+//        boolean b = list.addAll(List.of(38, 39, 40, 41, 42, 43, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100));
+//
+//
+//        for(Integer item : list){
+//            Optional<ManagerDTO> managerDTO = managerQueryRepository.getManagerById(item.longValue());
+//            if (managerDTO.isPresent()){
+//                System.out.println("ExpertRepositoryTests : {"+managerDTO.get()+"}");
+//            }
+//        }
 
-
-        for(Integer item : list){
-            Optional<ManagerDTO> managerDTO = managerQueryRepository.getManagerById(item.longValue());
-            if (managerDTO.isPresent()){
-                System.out.println("ExpertRepositoryTests : {"+managerDTO.get()+"}");
-            }
+        Optional<Member> withUsersById = memberRepository.findWithUsersById(60L);
+        if (withUsersById.isPresent()){
+            System.out.println("ExpertRepositoryTests.zz : " + withUsersById.get().getName());
         }
-
-
-
-
 
 
     }

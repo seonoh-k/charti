@@ -1,6 +1,9 @@
 package com.example.demo.users.service;
 
+import com.example.demo.dto.GroupDTO;
 import com.example.demo.exception.ChildNotFoundException;
+import com.example.demo.repository.GroupQueryRepository;
+import com.example.demo.repository.GroupRepository;
 import com.example.demo.service.BaseService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
@@ -15,6 +18,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class ChildService extends BaseService<Child, ChildRepository> {
+
 
     public ChildService(ChildRepository repository) {
         super(repository);

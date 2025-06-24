@@ -38,7 +38,7 @@ public class MemberQueryRepositoryImpl implements MemberQueryRepository{
         // 1) 플랫하게 조회
         List<Tuple> tuples = queryFactory
                 .select(
-                        u.id, u.name, u.nickname, u.username.as("username"),
+                        u.id, u.name, u.nickname, u.username,
                         u.phoneNumber, u.provider,
                         m.totalPoint, u.createdAt, u.deleted,
                         c.id, c.birthOrder,
