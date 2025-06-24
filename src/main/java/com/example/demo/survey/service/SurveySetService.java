@@ -2,10 +2,14 @@ package com.example.demo.survey.service;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.survey.dto.SurveySetSearchDto;
 import com.example.demo.survey.dto.SurveySetForm;
 import com.example.demo.survey.entity.*;
 import com.example.demo.survey.repository.*;
+import com.example.demo.users.entity.Manager;
+import com.example.demo.users.repository.ManagerRepository;
+import com.example.demo.users.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import com.example.demo.exception.SurveySetNotFoundException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -27,6 +32,7 @@ public class SurveySetService {
     private final SurveySetRepository     surveySetRepo;
     private final GroupSurveyRepository   groupRepo;
     private final SpecialSurveyRepository specialRepo;
+    private final ManagerRepository managerRepo;
 
     /** 목록 + 필터 + 페이징 */
     public Page<SurveySet> list(SurveySetSearchDto dto, Pageable pageable) {
@@ -130,4 +136,30 @@ public class SurveySetService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * [담당자용] 소속 그룹(TargetGroup)에 해당하는 문진 세트 목록 조회
+     *
+     * @param managerId 현재 로그인한 담당자 ID
+     * @return 문진 세트 목록
+     */
+    public List<SurveySet> getSetsForManager(Long managerId) {
+        Manager manager = managerRepo.findById(managerId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저입니다."));
+        TargetGroup targetGroup = manager.getGroup().getTargetGroup();
+
+        return surveySetRepo.findAllByTargetGroupForManager(targetGroup);
+    }
+
+
+    /**
+     * [문진 세트 ID로 단일 조회]
+     *
+     * @param setId 문진 세트 ID
+     * @return SurveySet 엔티티
+     * @throws SurveySetNotFoundException 해당 ID에 해당하는 문진 세트가 없을 경우
+     */
+    public SurveySet getById(Long setId) {
+        return surveySetRepo.findById(setId)
+                .orElseThrow(SurveySetNotFoundException::new);
+    }
 }

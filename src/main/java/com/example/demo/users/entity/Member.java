@@ -3,6 +3,7 @@ package com.example.demo.users.entity;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Album;
 import com.example.demo.entity.BaseEntity;
+import com.example.demo.entity.Qna;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;

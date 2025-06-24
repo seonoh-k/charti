@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charti - 문진 알림 발송</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-2xl mx-auto bg-white shadow p-6 mt-8 rounded">
+        <h1 class="text-2xl font-bold mb-6">📮 문진 세트 알림 발송</h1>
+
+        <form th:action="@{/manager/notification/send}" method="post">
+            <!-- 1) 문진 세트 선택 -->
+            <div class="mb-4">
+                <label for="setId" class="block font-semibold mb-1">문진 세트</label>
+                <select name="setId" id="setId" class="w-full border p-2 rounded" required>
+                    <option value="">세트를 선택해주세요</option>
+                    <option th:each="s : ${surveySets}"
+                            th:value="${s.id}"
+                            th:text="${s.title}"></option>
+                </select>
+            </div>
+
+            <!-- 2) 미리보기 -->
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">알림 미리보기</label>
+                <div class="p-4 border rounded bg-gray-50">
+                    <p class="font-bold" id="preview-title">[제목]</p>
+                    <p id="preview-body" class="text-sm text-gray-700">문진 링크가 포함된 안내 메시지가 여기에 표시됩니다.</p>
+                </div>
+            </div>
+
+            <!-- 3) 제출 -->
+            <button type="submit"
+                    class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                    onclick="this.disabled=true; this.innerText='발송 중...'; this.form.submit();">
+                문진 알림 발송
+            </button>
+
+        </form>
+
+        <p th:if="${message}" class="mt-6 text-green-600 font-semibold"
+           th:text="${message}"></p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const select = document.getElementById("setId");
+            const titleEl = document.getElementById("preview-title");
+            const bodyEl = document.getElementById("preview-body");
+
+            select.addEventListener("change", () => {
+                const selectedTitle = select.options[select.selectedIndex].text;
+                titleEl.textContent = `[문진 알림] ${selectedTitle}`;
+                bodyEl.textContent = `지금 바로 '${selectedTitle}' 문진을 작성해주세요.\n문진 링크는 알림에 포함되어 있습니다.`;
+            });
+        });
+    </script>
+</th:block>
+</html>
