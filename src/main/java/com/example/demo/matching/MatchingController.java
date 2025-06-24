@@ -73,7 +73,7 @@ public class MatchingController {
         for (SpecialAnswer answer : answers) {
             Matching m = new Matching();
             m.setChild(child);
-            m.setSpecialAnswer(answer);
+//            m.setSpecialAnswer(answer);
             m.setCategory(req.getCategory());
             m.setTitle(req.getTitle());
             m.setContent(req.getContent());

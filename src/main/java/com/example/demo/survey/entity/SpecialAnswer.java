@@ -3,6 +3,7 @@ package com.example.demo.survey.entity;
 
 import com.example.demo.entity.BaseEntity;
 import com.example.demo.enums.AgeGroup;
+import com.example.demo.matching.entity.Matching;
 import com.example.demo.users.entity.Child;
 import com.example.demo.enums.TargetGroup;
 import com.example.demo.enums.SurveyCategory;
@@ -19,6 +20,11 @@ public class SpecialAnswer extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "special_answer_id")
     private Long id;
+
+    // --- Matching 과 N:1 (여러 Answer → 하나 Matching) ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "matching_id")
+    private Matching matching;
 
     //  특별 문진 항목 (special_survey) 과 N:1
     @ManyToOne(fetch = FetchType.LAZY)
