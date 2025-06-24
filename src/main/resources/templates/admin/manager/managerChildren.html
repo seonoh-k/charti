@@ -38,7 +38,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="child : ${children}" class="border-b">
+                    <tr th:each="child : ${result.dtoList}" class="border-b">
                         <td class="px-4 py-2" th:text="${child.id}">1</td>
                         <td class="px-4 py-2" th:text="${managerDTO.groupName}">1</td>
                         <td class="px-4 py-2" th:text="${child.name}">홍길동</td>
@@ -64,6 +64,37 @@
                     </tr>
                 </tbody>
             </table>
+            <!-- 페이징 -->
+            <div class="mt-4 flex justify-center gap-2" id="pagination">
+                <!-- ◀ 이전 페이지 -->
+                <a th:if="${result.startPage > 1}"
+                    th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
+                                                            page=${result.startPage - 1},
+                                                            size=${result.size})}"
+                    class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
+                ◀
+                </a>
+
+                <!-- 페이지 번호 목록 -->
+                <a th:each="p : ${result.pageList}"
+                    th:text="${p}"
+                    th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
+                                                            page=${p},
+                                                            size=${result.size})}"
+                    th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
+                    class="px-3 py-1 rounded hover:bg-blue-500">
+                </a>
+
+                <!-- ▶ 다음 페이지 -->
+                <a th:if="${result.endPage < result.totalPages}"
+                    th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
+                                                            page=${result.endPage + 1},
+                                                            size=${result.size})}"
+                    class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
+                ▶
+                </a>
+
+            </div>
         </th:block>
         <th:block th:unless="${hasChildren}">
             <div class="text-center text-gray-500 text-lg py-10">

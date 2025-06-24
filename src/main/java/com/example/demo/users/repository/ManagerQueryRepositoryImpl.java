@@ -40,7 +40,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
         Tuple managerTuple = queryFactory
                 .select(
                         u.id, u.name, u.username, u.nickname, u.phoneNumber,
-                        g.id, g.groupName, g.groupEmail,g.groupPhoneNumber, g.targetGroup,
+                        g.id, g.groupName, g.groupEmail,g.targetGroup.stringValue(),
                         m.isApproved, u.createdAt, u.deleted
                 )
                 .from(m)
@@ -89,8 +89,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                 .groupId(groupId)
                 .groupName(managerTuple.get(g.groupName))
                 .groupEmail(managerTuple.get(g.groupEmail))
-                .groupPhoneNumber(managerTuple.get(g.groupPhoneNumber)) // ✅ 추가
-                .targetGroup(managerTuple.get(g.targetGroup))           // ✅ 추가
+                .targetGroup(managerTuple.get(g.targetGroup.stringValue()))
                 .isApproved(managerTuple.get(m.isApproved))
                 .createdAt(managerTuple.get(u.createdAt))
                 .deleted(managerTuple.get(u.deleted))
@@ -147,6 +146,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                         g.id,                       // 그룹 아이디
                         g.groupName,                // 그룹 이름
                         g.groupEmail,               // 그룹 이메일
+                        g.targetGroup.stringValue(),// 그룹 분류
                         m.isApproved,
                         u.createdAt,
                         u.deleted                   // 탈퇴 여부
@@ -200,6 +200,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                         g.id,                          // 그룹 아이디
                         g.groupName,                // 그룹 이름
                         g.groupEmail,               // 그룹 이메일
+                        g.targetGroup.stringValue(), // 그룹 분류
                         m.isApproved,                 // isApproved
                         u.createdAt,
                         u.deleted                   // 탈퇴 여부
@@ -278,6 +279,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                         g.id,                       // 그룹 아이디
                         g.groupName,                // 그룹 이름
                         g.groupEmail,               // 그룹 이메일
+                        g.targetGroup.stringValue(), // 그룹 분류
                         m.isApproved,
                         u.createdAt,
                         u.deleted                   // 탈퇴 여부
@@ -331,6 +333,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                         g.id,                       // 그룹 아이디
                         g.groupName,                // 그룹 이름
                         g.groupEmail,               // 그룹 이메일
+                        g.targetGroup.stringValue(), // 그룹 분류
                         m.isApproved,                 // isApproved
                         u.createdAt,
                         u.deleted                   // 탈퇴 여부

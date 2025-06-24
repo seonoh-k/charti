@@ -28,7 +28,7 @@ public class GroupQueryRepositoryImpl implements GroupQueryRepository{
 
         List<Tuple> tuples = queryFactory
                 .select(
-                        g.id, g.groupName, g.groupEmail, g.groupPhoneNumber,
+                        g.id, g.groupName, g.groupEmail, g.groupPhoneNumber, g.targetGroup.stringValue(),
                         c.id, c.birthOrder, c.name, c.nickname, c.weight, c.height,
                         c.gender, c.riskGroup, c.birthday
                 )
@@ -46,6 +46,7 @@ public class GroupQueryRepositoryImpl implements GroupQueryRepository{
                         .id(t.get(g.id))
                         .groupName(t.get(g.groupName))
                         .groupEmail(t.get(g.groupEmail))
+                        .targetGroup(t.get(g.targetGroup.stringValue()))
                         .groupPhoneNumber(t.get(g.groupPhoneNumber))
                         .children(childList)
                         .build();

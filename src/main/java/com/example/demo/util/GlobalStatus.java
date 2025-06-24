@@ -29,6 +29,7 @@ public enum GlobalStatus implements StatusCode{
 
     UNKNOWN_ERROR("NE", "알 수 없는 오류"),
     STATIC_RESOURCE_NOT_FOUND("SRNF","정적 리소스 탐색 실패"),
+    SERVER_ERROR("SE","서비스 서버 이상"),
     FIREBASE_ERROR("FE","인증 서버 오류");
 
 

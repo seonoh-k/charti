@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.enums.TargetGroup;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Users;
@@ -24,10 +25,12 @@ public class ManagerDTO {
     private Long groupId; // 그룹 아이디
     private String groupName; // 그룹 이름
     private String groupEmail; // 그룹 이메일
+    private String targetGroup;
     private String groupPhoneNumber; // 그룹 전화번호
     private TargetGroup targetGroup; // 그룹 분류 ex)유치원,어린이집....
     private Boolean isApproved;
     private Boolean deleted;
+
     private LocalDateTime createdAt;
     private List<ChildDTO> children;
 
@@ -107,6 +110,35 @@ public class ManagerDTO {
     public ManagerDTO(Long id, String name, String username, String nickname,
                       String phoneNumber, Long groupId, String groupName, String groupEmail,
                       Boolean isApproved, LocalDateTime createdAt, Boolean deleted) {
+        this.id = id;
+        this.name = name;
+        this.username = username;
+        this.nickname = nickname;
+        this.phoneNumber = phoneNumber;
+        this.groupId = groupId;
+        this.groupName = groupName;
+        this.groupEmail = groupEmail;
+        this.isApproved = isApproved;
+        this.createdAt = createdAt;
+        this.deleted = deleted;
+    }
+    public ManagerDTO(Long id, String name, String username, String nickname,
+                      String phoneNumber, Long groupId, String groupName, String groupEmail,
+                      String targetGroup,Boolean isApproved, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.username = username;
+        this.nickname = nickname;
+        this.groupId = groupId;
+        this.phoneNumber = phoneNumber;
+        this.groupName = groupName;
+        this.groupEmail = groupEmail;
+        this.isApproved = isApproved;
+        this.createdAt = createdAt;
+    }
+    public ManagerDTO(Long id, String name, String username, String nickname,
+                      String phoneNumber, Long groupId, String groupName, String groupEmail,
+                      String targetGroup, Boolean isApproved, LocalDateTime createdAt, Boolean deleted) {
         this.id = id;
         this.name = name;
         this.username = username;

@@ -16,6 +16,7 @@ public class GroupDTO {
     private String groupName;
     private String groupEmail;
     private String groupPhoneNumber;
+    private String targetGroup;
 
     private List<ChildDTO> children;
 

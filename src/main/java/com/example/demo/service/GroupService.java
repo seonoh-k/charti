@@ -18,7 +18,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupQueryRepository groupQueryRepository;
 
-    public GroupDTO get(Long groupId) throws GroupNotFoundException {
+    public GroupDTO getGroup(Long groupId) throws GroupNotFoundException {
 
         Optional<GroupDTO> groupDTO = groupQueryRepository.getGroupWithChildrenByGroupId(groupId);
 

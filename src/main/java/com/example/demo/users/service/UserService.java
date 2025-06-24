@@ -5,19 +5,14 @@ import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.MemberDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.paging.PagingResultDTO;
-import com.example.demo.dto.request.ExpertJoinRequest;
-import com.example.demo.dto.request.ManagerJoinRequest;
-import com.example.demo.dto.request.MemberJoinRequest;
-import com.example.demo.dto.request.UserUpdateRequest;
+import com.example.demo.dto.request.*;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
+import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.users.entity.*;
-import com.example.demo.users.repository.ExpertRepository;
-import com.example.demo.users.repository.ManagerRepository;
-import com.example.demo.users.repository.MemberRepository;
-import com.example.demo.users.repository.UserRepository;
+import com.example.demo.users.repository.*;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.UserStatus;
 import com.google.firebase.auth.FirebaseAuth;
@@ -28,6 +23,7 @@ import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.jaxb.SpringDataJaxb;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +51,9 @@ public class UserService {
     private final AddressRepository addressRepository;
     private final PasswordEncoder passwordEncoder;
     private final GroupRepository groupRepository;
+    private final FirebaseService firebaseService;
+    private final UserQueryRepository userQueryRepository;
+
 
 
     public UserDTO entityToDTO(Users users) {
@@ -297,60 +296,133 @@ public class UserService {
         }
     }
 
+    @Transactional
+    public void updateMemberByAdmin(MemberUpdateRequestByAdmin request) throws FirebaseAuthenticationException{
+        // 1) Users 프록시 로드 (SELECT 없이)
+        Users user = userRepository.getReferenceById(request.getId());
 
-    public UserStatus updateMember(UserDTO userDTO){
-        Long id = userDTO.getId();
-        Optional<Users> byId = userRepository.findById(id);
-        if (byId.isPresent()){
-            Users users = byId.get();
+        // 2) 허용된 필드만 반영
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
 
-            // JPA는 영속 상태 엔티티의 필드가 변경되면 자동으로 update 쿼리 발생
-            // 엔티티를 가져와서 Set 하면 DirtyChecking사용한 update
-            // 그렇다면 Member를 변경하려면 어떻게 해야할까?
-            // Member에서 관리자가 변경 가능한 항목은 ?
-            // 어떤 항목이 비즈니스 관점에서 변경 가능 해야 하고 변경 불가 한가?
-            // 관리자 일반 회원들 확인 하는 목록에서는 어떤 정보를 확인할 수 있어야 하는지?
-            // 이름,닉네임, 아이디(이메일), 전화번호,가입일,가족,포인트, 소셜로그인 사용 여부
-            return UserStatus.UPDATE_SUCCESS;
-        } else{
-            throw new UserNotFoundException();
-        }
     }
-    public UserStatus updateExpert(ExpertDTO expertDTO){
-        Long id = expertDTO.getId();
-        Optional<Users> byId = userRepository.findById(id);
-        if (byId.isPresent()){
-            Users users = byId.get();
 
-            // JPA는 영속 상태 엔티티의 필드가 변경되면 자동으로 update 쿼리 발생
-            // 엔티티를 가져와서 Set 하면 DirtyChecking사용한 update
-            // 그렇다면 Member를 변경하려면 어떻게 해야할까?
-            // Member에서 관리자가 변경 가능한 항목은 ?
-            // 어떤 항목이 비즈니스 관점에서 변경 가능 해야 하고 변경 불가 한가?
-            // 관리자 일반 회원들 확인 하는 목록에서는 어떤 정보를 확인할 수 있어야 하는지?
-            // 이름,닉네임, 아이디(이메일), 전화번호,가입일,가족,포인트, 소셜로그인 사용 여부
-            return UserStatus.UPDATE_SUCCESS;
-        } else{
-            throw new UserNotFoundException();
-        }
+    @Transactional
+    public void updateExpertByAdmin(ExpertUpdateRequestByAdmin request) throws FirebaseAuthenticationException{
+        // 1) Users 프록시 로드 (SELECT 없이)
+        Users user = userRepository.getReferenceById(request.getId());
+        // 2) 수정 허용 필드만 반영
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+
+        // 3) Expert 프록시 로드
+        Expert expert = expertRepository.getReferenceById(request.getId());
+
     }
-    public UserStatus updateManager(ManagerDTO managerDTO){
-        Long id = managerDTO.getId();
-        Optional<Users> byId = userRepository.findById(id);
-        if (byId.isPresent()){
-            Users users = byId.get();
 
-            // JPA는 영속 상태 엔티티의 필드가 변경되면 자동으로 update 쿼리 발생
-            // 엔티티를 가져와서 Set 하면 DirtyChecking사용한 update
-            // 그렇다면 Member를 변경하려면 어떻게 해야할까?
-            // Member에서 관리자가 변경 가능한 항목은 ?
-            // 어떤 항목이 비즈니스 관점에서 변경 가능 해야 하고 변경 불가 한가?
-            // 관리자 일반 회원들 확인 하는 목록에서는 어떤 정보를 확인할 수 있어야 하는지?
-            // 이름,닉네임, 아이디(이메일), 전화번호,가입일,가족,포인트, 소셜로그인 사용 여부
-            return UserStatus.UPDATE_SUCCESS;
-        } else{
-            throw new UserNotFoundException();
+    @Transactional
+    public void updateManagerByAdmin(ManagerUpdateRequestByAdmin request) throws FirebaseAuthenticationException{
+        // 1) Users 프록시만 로드
+        Users user = userRepository.getReferenceById(request.getId());
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+
+        // 2) Manager 프록시 로드
+        Manager manager = managerRepository.getReferenceById(request.getId());
+
+        // 3) Group 프록시 로드
+        Long groupId = manager.getGroup().getId();
+        Group group = groupRepository.getReferenceById(groupId);
+
+
+    }
+    @Transactional
+    public void updateMemberBySuperAdmin(MemberUpdateRequestBySuperAdmin request) throws FirebaseAuthenticationException{
+        // 1) Users 프록시 로드 (SELECT 없이)
+        Users user = userRepository.getReferenceById(request.getId());
+
+        // 2) 허용된 필드만 반영
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+        user.setUsername(request.getUsername());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setProvider(request.getProvider());
+
+
+        try{
+            String proxyUUID = user.getUuid();
+            if (request.getPassword() != null && !request.getPassword().isBlank()) {
+                // 변경이 감지되면, 원하는 초기값으로 설정
+                String DEFAULT_PW = "Charti@1234";  // 예: 초기 비밀번호 상수
+                firebaseService.initFirebasePassword(proxyUUID);
+                user.setPassword(passwordEncoder.encode(DEFAULT_PW));
+            }
+        } catch (FirebaseAuthException firebaseAuthException){
+            throw new FirebaseAuthenticationException();
         }
+
+    }
+
+    @Transactional
+    public void updateExpertBySuperAdmin(ExpertUpdateRequestBySuperAdmin request) throws FirebaseAuthenticationException{
+        // 1) Users 프록시 로드 (SELECT 없이)
+        Users user = userRepository.getReferenceById(request.getId());
+        // 2) 수정 허용 필드만 반영
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+        user.setUsername(request.getUsername());
+        user.setPhoneNumber(request.getPhoneNumber());
+
+        // 3) Expert 프록시 로드
+        Expert expert = expertRepository.getReferenceById(request.getId());
+        // 4) Expert 필드 반영
+        expert.setMajor(request.getMajor());
+        expert.setCareer(request.getCareer());
+        // (license, address, isApproved 등 다른 필드는 건드리지 않습니다)
+        try{
+            String proxyUUID = user.getUuid();
+            if (request.getPassword() != null && !request.getPassword().isBlank()) {
+                // 변경이 감지되면, 원하는 초기값으로 설정
+                String DEFAULT_PW = "Charti@1234";  // 예: 초기 비밀번호 상수
+                firebaseService.initFirebasePassword(proxyUUID);
+                user.setPassword(passwordEncoder.encode(DEFAULT_PW));
+            }
+        } catch (FirebaseAuthException firebaseAuthException){
+            throw new FirebaseAuthenticationException();
+        }
+
+    }
+
+    @Transactional
+    public void updateManagerBySuperAdmin(ManagerUpdateRequestBySuperAdmin request) throws FirebaseAuthenticationException{
+        // 1) Users 프록시만 로드
+        Users user = userRepository.getReferenceById(request.getId());
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+        user.setUsername(request.getUsername());
+        user.setPhoneNumber(request.getPhoneNumber());
+
+        // 2) Manager 프록시 로드
+        Manager manager = managerRepository.getReferenceById(request.getId());
+
+        // 3) Group 프록시 로드
+        Long groupId = manager.getGroup().getId();
+        Group group = groupRepository.getReferenceById(groupId);
+        group.setGroupName(request.getGroupName());
+        group.setGroupEmail(request.getGroupEmail());
+
+        try{
+            String proxyUUID = user.getUuid();
+            if (request.getPassword() != null && !request.getPassword().isBlank()) {
+                // 변경이 감지되면, 원하는 초기값으로 설정
+                String DEFAULT_PW = "Charti@1234";  // 예: 초기 비밀번호 상수
+                firebaseService.initFirebasePassword(proxyUUID);
+                user.setPassword(passwordEncoder.encode(DEFAULT_PW));
+            }
+        } catch (FirebaseAuthException firebaseAuthException){
+            throw new FirebaseAuthenticationException();
+        }
+
     }
 
 
@@ -566,5 +638,13 @@ public class UserService {
         // ❗ Firebase 계정은 삭제하지 않고 유지 (선택적)
     }
 
+    public PagingResultDTO<UserDTO,Users> searchDeletedUsers(String type, String keyword,Pageable pageable){
+        Page<UserDTO> result = userQueryRepository.searchDeletedUsers(type,keyword,pageable);
+        return new PagingResultDTO<>(result);
+    }
+    public PagingResultDTO<UserDTO,Users> getDeletedUserList(Pageable pageable){
+        Page<UserDTO> result = userQueryRepository.getDeletedUserList(pageable);
+        return new PagingResultDTO<>(result);
+    }
 
 }

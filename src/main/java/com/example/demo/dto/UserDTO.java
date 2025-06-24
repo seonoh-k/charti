@@ -59,4 +59,14 @@ public class UserDTO {
         this.nickname = user.getNickname();
     }
 
+    public UserDTO(Long id, String name, String nickname, String username,
+                     String phoneNumber, String provider, String role) {
+        this.id = id;
+        this.name = name;
+        this.username = username;
+        this.nickname = nickname;
+        this.role = role;
+        this.provider = provider;
+        this.phoneNumber = phoneNumber;
+    }
 }
