@@ -12,7 +12,8 @@
 <th:block layout:fragment="content">
 
     <div class="max-w-lg mx-auto">
-        <h1 class="text-2xl font-bold mb-4">[상담 신청] <span th:text="${category}">CATEGORY</span></h1>
+        <h1 class="text-2xl font-bold mb-4">[상담 신청]
+            <span th:text="${category.displayName}" class="text-grey-600 font-semibold">생활습관</span></h1>
 
         <!-- 2) 자녀 정보 출력 -->
         <div class="mb-4">
@@ -21,16 +22,29 @@
         </div>
 
         <!-- 3) 상담 제목, 내용 입력 -->
-        <form th:action="@{/matching}" th:object="${matchingRequest}" method="post">
-            <input type="hidden" th:field="*{childId}" th:value="${child.id}" />
-            <input type="hidden" th:field="*{category}" th:value="${category}" />
+        <form th:action="@{/matching}"
+              th:object="${matchingRequest}"
+              method="post">
+            <input type="hidden" th:field="*{childId}" />
+            <input type="hidden" th:field="*{category}" />
 
-            <div th:each="ans : ${answers}">
-                <input type="hidden" th:field="*{answerIds}" th:value="${ans.id}" />
-                <p>질문: <span th:text="${ans.question}"></span></p>
-                <p>답변: <span th:text="${ans.answer}"></span></p>
-                <hr/>
-            </div>
+            <!-- 전체 질문/답변 아코디언 -->
+            <details class="mb-6 border rounded-lg overflow-hidden">
+                <!-- summary 클릭 시 펼쳐짐/닫힘 -->
+                <summary class="px-4 py-3 bg-gray-100 cursor-pointer hover:bg-gray-200 font-medium">
+                    질문 및 답변 보기
+                </summary>
+                <div class="px-4 py-4 space-y-4 bg-white">
+                    <div th:each="ans : ${answers}">
+                        <!-- 각 답변 ID를 hidden 으로 폼 전송 -->
+                        <input type="hidden" name="answerIds" th:value="${ans.id}" />
+
+                        <p class="font-semibold" th:text="${ans.question}">질문</p>
+                        <p class="ml-2"      th:text="${ans.answer}">답변</p>
+                        <hr/>
+                    </div>
+                </div>
+            </details>
 
             <div class="mb-4">
                 <label class="block font-semibold mb-1" for="title">제목</label>
