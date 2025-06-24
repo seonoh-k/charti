@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>위험군 특별 문진</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-4xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-2 text-red-700">
+            <i class="fas fa-notes-medical mr-2"></i>위험군 특별 문진
+        </h1>
+        <p class="text-gray-600 mb-6">그룹 문진 결과에 따라 심층적인 확인이 필요한 항목들입니다.</p>
+
+        <div id="infoContainer" class="mb-6 p-4 border-l-4 border-red-300 bg-red-50 rounded-r-lg space-y-1 text-gray-700">
+            <p>정보를 불러오는 중입니다...</p>
+        </div>
+
+        <form id="surveyForm" class="space-y-8">
+            <div id="questionContainer">
+                <p class="text-center text-gray-500">문항을 불러오는 중입니다...</p>
+            </div>
+            <div class="mt-8 text-center">
+                <button type="submit"
+                        class="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 text-lg font-bold shadow-lg transition-transform transform hover:scale-105">
+                    문진 결과 제출하기
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const form = document.getElementById('surveyForm');
+            const infoContainer = document.getElementById('infoContainer');
+            const questionContainer = document.getElementById('questionContainer');
+            const params = new URLSearchParams(window.location.search);
+
+            const childId = params.get('childId');
+            const ageGroupEnum = params.get('ageGroup');
+            const categoryEnum = params.get('categories');
+
+            if (!childId || !ageGroupEnum || !categoryEnum) {
+                questionContainer.innerHTML = `<p class="text-red-500 text-center">문진 정보를 불러올 수 없습니다. URL을 확인해주세요.</p>`;
+                return;
+            }
+
+            // [핵심 수정] Java Enum의 displayName과 동일한 구조의 매핑 객체 생성
+            const ageGroupMap = {
+                "AGE_0_12": "0~12개월",
+                "AGE_1_2": "1~2세",
+                "AGE_3_4": "3~4세",
+                "AGE_5": "5세"
+            };
+            const categoryMap = {
+                "COMMUNICATION": "의사소통/정서/심리", // Enum 이름에 맞춰 수정
+                "MOTOR_COGNITIVE": "운동/인지 발달",
+                "SOCIAL_COGNITIVE": "사회성/인지/창의",
+                "LIFESTYLE": "생활습관"
+            };
+
+            // [핵심 수정] URL에서 받은 ENUM 이름들을 한글 표시 이름으로 변환
+            const ageGroupDisplayName = ageGroupMap[ageGroupEnum] || ageGroupEnum;
+            const categoryDisplayName = categoryMap[categoryEnum] || categoryEnum;
+
+            try {
+                // 1. 자녀 정보 조회 및 표시
+                const childRes = await fetch(`/api/child/info/${childId}`);
+                if (!childRes.ok) throw new Error('Child not found');
+                const childData = await childRes.json();
+                infoContainer.innerHTML = `
+                    <p><strong><i class="fas fa-child mr-2 text-gray-500"></i>대상 아동:</strong> ${childData.name} (${childData.age}세)</p>
+                    <p><strong><i class="fas fa-baby-carriage mr-2 text-gray-500"></i>적용 연령대:</strong> ${ageGroupDisplayName}</p>
+                    <p><strong><i class="fas fa-tags mr-2 text-gray-500"></i>진단 카테고리:</strong> ${categoryDisplayName}</p>
+                `;
+
+                // [핵심 수정] API 호출 시, 백엔드가 기대하는 '한글 표시 이름'을 사용
+                const surveyRes = await fetch(`/api/special-surveys/by-age/${encodeURIComponent(ageGroupDisplayName)}`);
+                if(!surveyRes.ok) throw new Error('Survey fetch failed');
+                const surveyData = await surveyRes.json();
+
+                // 받아온 전체 연령대 문항에서, 해당 카테고리 문항만 필터링
+                const filteredSurveys = surveyData.filter(s => s.category === categoryDisplayName);
+
+                if (filteredSurveys.length === 0) {
+                     throw new Error('No questions found for this category.');
+                }
+
+                questionContainer.innerHTML = '';
+                filteredSurveys.forEach((q, index) => {
+                    const questionCard = document.createElement('div');
+                    questionCard.className = 'p-4 border bg-white rounded-md shadow-sm';
+                    let optionsHtml = '';
+                    ['answer1', 'answer2', 'answer3', 'answer4', 'answer5'].forEach((key, i) => {
+                        const value = i + 1;
+                        optionsHtml += `
+                            <label class="flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-gray-100">
+                                <input type="radio" name="answer_${q.id}" value="${value}" required class="form-radio text-red-600 focus:ring-red-500">
+                                <span>${q[key] || ''}</span>
+                            </label>`;
+                    });
+                    questionCard.innerHTML = `
+                        <p class="font-semibold mb-2">${index + 1}. ${q.question || ''}</p>
+                        <div class="space-y-1">${optionsHtml}</div>`;
+                    questionContainer.appendChild(questionCard);
+                });
+
+            } catch (err) {
+                console.error('Error:', err);
+                questionContainer.innerHTML = `<p class="text-red-500 text-center">문항을 불러오는 데 실패했습니다. (원인: ${err.message})</p>`;
+            }
+
+            // 3. 폼 제출 이벤트 처리
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const formData = new FormData(form);
+                const answers = [];
+                for (const [key, value] of formData.entries()) {
+                    if (key.startsWith('answer_')) {
+                        answers.push({
+                            surveyId: parseInt(key.split('_')[1], 10),
+                            answerValue: parseInt(value, 10)
+                        });
+                    }
+                }
+
+                const totalQuestions = document.querySelectorAll('input[type="radio"][name^="answer_"]').length / 5;
+                if (answers.length < totalQuestions) {
+                    alert('모든 문항에 답변해주세요.');
+                    return;
+                }
+
+                const submissionData = {
+                    childId: Number(childId),
+                    // [핵심 수정] 제출 시에도 한글 표시 이름 사용
+                    ageGroup: ageGroupDisplayName,
+                    category: categoryDisplayName,
+                    answers: answers
+                };
+
+                // 기존 제출 API인 /api/special-surveys/submit 으로 제출
+                fetch('/api/special-surveys/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(submissionData)
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Submission failed.');
+                    return res.json();
+                })
+                .then(data => {
+                    alert('문진이 성공적으로 제출되었습니다.');
+                    // 결과 페이지로 이동
+                    const payload = encodeURIComponent(JSON.stringify(data));
+                    window.location.href = `/specialSurvey/result?data=${payload}`;
+                })
+                .catch(err => {
+                    console.error('Submission Error:', err);
+                    alert('제출 중 오류가 발생했습니다.');
+                });
+            });
+        });
+    </script>
+</th:block>
+</html>

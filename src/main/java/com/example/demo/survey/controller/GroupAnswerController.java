@@ -2,7 +2,9 @@ package com.example.demo.survey.controller;
 
 import com.example.demo.survey.dto.AnswerUpdateRequest;
 import com.example.demo.survey.dto.GroupAnswerDto;
+import com.example.demo.survey.dto.GroupAnswerRequest;
 import com.example.demo.survey.service.GroupAnswerService;
+import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.ChildService;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/groupAnswer")
 @RequiredArgsConstructor
 public class GroupAnswerController {
+
     private final UserService userService;
     private final ChildService childService;
     private final GroupAnswerService answerService;
@@ -34,7 +37,8 @@ public class GroupAnswerController {
         } catch (UserNotFoundException e) {
             me = userService.findByUuidEntity(auth.getName());
         }
-        model.addAttribute("children", childService.findByUsersId(me.getId()));
+        List<Child> children = childService.findByUsersId(me.getId());
+        model.addAttribute("children", children);
         return "survey/groupAnswerHistory";
     }
 

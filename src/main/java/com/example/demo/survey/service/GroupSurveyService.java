@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -71,7 +72,6 @@ public class GroupSurveyService {
         existing.setTargetGroup(entity.getTargetGroup().orElse(null));
         existing.setQuestion(entity.getQuestion());
         existing.setCategory(entity.getCategory());
-//        existing.setWeight(entity.getWeight());
         existing.setAnswer1(entity.getAnswer1());
         existing.setAnswer2(entity.getAnswer2());
         existing.setAnswer3(entity.getAnswer3());
@@ -117,24 +117,27 @@ public class GroupSurveyService {
             );
         }
 
-        // [수정] '답변 비율의 평균'을 계산하기 위한 Map만 사용
         Map<SurveyCategory, Double> categoryMultiplierSum = new HashMap<>();
         Map<SurveyCategory, Integer> categoryQuestionCount = new HashMap<>();
 
-        // [수정] 루프에서 weight 관련 계산 모두 제거
         for (int i = 0; i < surveys.size(); i++) {
             GroupSurvey survey = surveys.get(i);
             int answer = dto.getAnswers().get(i);
-            double multiplier = getMultiplier(answer);
+
+            // [수정] 엔티티 수정 없이 서비스 내에서 직접 선택지 개수 계산
+            long totalOptions = Stream.of(survey.getAnswer1(), survey.getAnswer2(), survey.getAnswer3(), survey.getAnswer4(), survey.getAnswer5())
+                    .filter(ans -> ans != null && !ans.isBlank())
+                    .count();
+
+            // [수정] 수정된 getMultiplier 호출 (long을 int로 캐스팅)
+            double multiplier = getMultiplier(answer, (int)totalOptions);
 
             SurveyCategory cat = survey.getCategory();
 
-            // 카테고리별 답변 비율(multiplier)의 합과 문항 수를 기록
             categoryMultiplierSum.merge(cat, multiplier, Double::sum);
             categoryQuestionCount.merge(cat, 1, Integer::sum);
         }
 
-        // [수정] 최종 점수 계산 및 특별 설문 필요 여부 동시 확인
         Map<String, Double> finalCategoryScores = new HashMap<>();
         boolean needsSpecialSurvey = false;
         List<String> specialCategories = new ArrayList<>();
@@ -143,26 +146,21 @@ public class GroupSurveyService {
             double sumOfMultipliers = categoryMultiplierSum.get(cat);
             int countOfQuestions = categoryQuestionCount.get(cat);
 
-            // 카테고리별 '답변 위험도 평균 퍼센트' 계산
             double averageRiskPercentage = (countOfQuestions > 0)
                     ? (sumOfMultipliers / countOfQuestions) * 100
                     : 0.0;
 
-            // 최종 결과 맵에 저장
             finalCategoryScores.put(cat.getDisplayName(), averageRiskPercentage);
 
-            // 평균 위험도가 60% 이상인지 확인
             if (needsSpecialSurvey(averageRiskPercentage)) {
                 needsSpecialSurvey = true;
                 specialCategories.add(cat.name());
             }
         }
 
-        // [수정] 최종 결과 Map 구성
         Map<String,Object> result = new HashMap<>();
-        result.put("categoryScores", finalCategoryScores); // weight와 무관한 평균 위험도 점수
+        result.put("categoryScores", finalCategoryScores);
 
-        // 특별 설문 관련 정보 추가
         result.put("needsSpecialSurvey", needsSpecialSurvey);
         if (needsSpecialSurvey) {
             result.put("childId", dto.getChildId());
@@ -173,15 +171,39 @@ public class GroupSurveyService {
         return result;
     }
 
-    private double getMultiplier(int answer) {
-        return switch (answer) {
-            case 1 -> 1.0;  // 100%
-            case 2 -> 0.75; // 75%
-            case 3 -> 0.5;  // 50%
-            case 4 -> 0.25; // 25%
-            case 5 -> 0.0;  // 0%
-            default -> 0.0;
-        };
+    /**
+     * [수정] 답변 값과 '총 선택지 개수'에 따라 위험도 계수를 반환하는 메소드
+     * @param answer 선택한 답변 번호 (1, 2, 3...)
+     * @param totalOptions 해당 질문의 총 선택지 개수 (2, 3, 5 등)
+     * @return 위험도 계수 (0.0 ~ 1.0)
+     */
+    private double getMultiplier(int answer, int totalOptions) {
+        switch (totalOptions) {
+            case 5: // 5지선다
+                return switch (answer) {
+                    case 1 -> 1.0;  // 100%
+                    case 2 -> 0.75; // 75%
+                    case 3 -> 0.5;  // 50%
+                    case 4 -> 0.25; // 25%
+                    case 5 -> 0.0;  // 0%
+                    default -> 0.0;
+                };
+            case 3: // 3지선다
+                return switch (answer) {
+                    case 1 -> 1.0; // 100%
+                    case 2 -> 0.5; // 50%
+                    case 3 -> 0.0; // 0%
+                    default -> 0.0;
+                };
+            case 2: // 2지선다 (역계산)
+                return switch (answer) {
+                    case 1 -> 0.0;  // 0%
+                    case 2 -> 1.0;  // 100%
+                    default -> 0.0;
+                };
+            default: // 그 외의 경우는 0점 처리
+                return 0.0;
+        }
     }
 
     public boolean needsSpecialSurvey(double categoryScore) {

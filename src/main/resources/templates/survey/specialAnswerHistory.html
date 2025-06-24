@@ -25,7 +25,7 @@
             </select>
         </div>
 
-        <!-- 2) 자녀 정보 (Daily에서 복사) -->
+        <!-- 2) 자녀 정보 -->
         <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
             <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
             <p><strong>이름:</strong> <span id="infoName"></span></p>
@@ -39,7 +39,7 @@
         <div id="answerList" class="space-y-4"></div>
     </div>
 
-    <!-- 4) 수정 모달 (Daily와 동일) -->
+    <!-- 4) 수정 모달 -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded shadow-xl w-full max-w-lg">
             <h2 class="text-xl font-bold mb-4">답변 수정</h2>
@@ -52,7 +52,6 @@
     </div>
 
     <script>
-        // --- 자녀 정보용 요소 ---
         const childSelect = document.getElementById('childSelect');
         const childInfo   = document.getElementById('childInfo');
         const infoName    = document.getElementById('infoName');
@@ -65,33 +64,44 @@
         let historyData = [];
         let currentId   = null;
 
+        /**
+         * 답변 값(1~5)에 따른 위험도 퍼센트를 반환하는 헬퍼 함수
+         */
+        function getRiskPercentage(selectedValue) {
+            switch (selectedValue) {
+                case 1: return 100;
+                case 2: return 75;
+                case 3: return 50;
+                case 4: return 25;
+                case 5: return 0;
+                default: return 0;
+            }
+        }
+
+        /**
+         * 위험도에 따라 다른 색상 클래스를 반환하는 헬퍼 함수
+         */
+        function getRiskColorClass(percentage) {
+            if (percentage >= 75) return 'text-red-600 font-semibold';
+            if (percentage >= 50) return 'text-orange-500 font-semibold';
+            return 'text-green-600';
+        }
+
         childSelect.addEventListener('change', () => {
           const childId = childSelect.value;
-          // 자녀 미선택 시
           if (!childId) {
             childInfo.classList.add('hidden');
             answerList.innerHTML = '';
             return;
           }
 
-          // (A) 자녀 정보 조회
+          // 자녀 정보 조회
           fetch(`/api/child/info/${childId}`)
-            .then(r => r.ok ? r.json() : Promise.reject())
-            .then(data => {
-              childInfo.classList.remove('hidden');
-              infoName   .textContent = data.name;
-              infoGender .textContent = data.gender;
-              infoAge    .textContent = data.age + '세';
-              infoHeight .textContent = data.height;
-              infoWeight .textContent = data.weight;
-            })
-            .catch(() => {
-              /* 필요 시 에러 처리 */
-            });
+            .then(r => r.ok ? r.json() : Promise.reject(r));
 
-          // (B) 기존 이력 조회 로직
+          // 이력 조회
           fetch(`/specialAnswer/api/history/${childId}`)
-            .then(r => r.json())
+            .then(r => r.ok ? r.json() : Promise.reject(r))
             .then(data => {
               historyData = data;
               answerList.innerHTML = '';
@@ -99,44 +109,59 @@
                 answerList.innerHTML = `<p class="text-gray-500">답변 이력이 없습니다.</p>`;
                 return;
               }
-              // 날짜별 그룹핑
               const byDate = {};
               data.forEach(a => {
                 const d = a.createdAt.substring(0,10);
                 (byDate[d] = byDate[d]||[]).push(a);
               });
-              // 렌더링
+
               Object.keys(byDate)
                 .sort((a,b) => new Date(b) - new Date(a))
                 .forEach(date => {
                   const section = document.createElement('div');
                   section.className = 'border rounded mb-4';
 
+                  const dailyAnswers = byDate[date];
+                  const totalMultiplierSum = dailyAnswers.reduce((sum, ans) => sum + (getRiskPercentage(ans.selectedValue) / 100), 0);
+                  const averageRisk = dailyAnswers.length > 0 ? (totalMultiplierSum / dailyAnswers.length) * 100 : 0;
+
                   const header = document.createElement('button');
                   header.type = 'button';
-                  header.className = 'w-full text-left px-4 py-2 bg-blue-100 font-semibold';
-                  header.textContent = `${date} 문진 답변`;
+                  header.className = 'w-full flex justify-between items-center text-left px-4 py-2 bg-blue-100 font-semibold hover:bg-blue-200';
+                  header.innerHTML = `
+                    <span>${date} 문진 답변</span>
+                    <span class="text-sm ${getRiskColorClass(averageRisk)}">
+                        전체 위험도: ${averageRisk.toFixed(1)}%
+                    </span>
+                  `;
 
                   const body = document.createElement('div');
                   body.className = 'hidden p-4 space-y-4 bg-gray-50';
 
-                  byDate[date].forEach((ans,i) => {
+                  dailyAnswers.forEach((ans,i) => {
                     const card = document.createElement('div');
-                    card.className = 'border p-3 rounded flex justify-between';
+                    card.className = 'border p-3 rounded flex justify-between items-start';
+
+                    const riskPercentage = getRiskPercentage(ans.selectedValue);
+                    const riskColorClass = getRiskColorClass(riskPercentage);
+
                     card.innerHTML = `
-                      <div>
+                      <div class="flex-grow">
                         <p class="font-semibold">
-                          ${i+1}. [${ans.ageGroup} | ${ans.category}] ${ans.question}
+                          ${i+1}. [${ans.ageGroup || ''} | ${ans.category || ''}] ${ans.question || ''}
                         </p>
                         <p class="text-sm text-gray-700" id="answerText_${ans.id}">
-                          ${ans.answer}
+                          ${ans.answer || ''}
                         </p>
-                        <p class="text-xs text-gray-500">가중치: ${ans.weight}</p>
+                        <!-- [수정] 가중치 표시를 제거하고 위험도만 표시 -->
+                        <p class="text-xs mt-1">
+                            위험도: <span class="${riskColorClass}">${riskPercentage}%</span>
+                        </p>
                       </div>
-                      <div class="flex flex-col gap-2 justify-center">
-                        <button onclick="openEdit(${ans.id})"
+                      <div class="flex flex-col items-end gap-2 ml-4 flex-shrink-0">
+                        <button onclick="showEditModal(${ans.id})"
                                 class="text-blue-600 hover:underline text-sm">수정</button>
-                        <button onclick="deleteAns(${ans.id})"
+                        <button onclick="deleteAnswer(${ans.id})"
                                 class="text-red-600 hover:underline text-sm">삭제</button>
                       </div>
                     `;
@@ -147,33 +172,43 @@
                   section.append(header, body);
                   answerList.append(section);
                 });
+            })
+            .catch(err => {
+                console.error("특별문진 이력을 불러오는 중 오류:", err);
+                answerList.innerHTML = `<p class="text-red-500">답변 이력을 불러오는 중 오류가 발생했습니다.</p>`;
             });
         });
 
-        function deleteAns(id) {
+        window.deleteAnswer = function(id) {
           if (!confirm('정말 삭제하시겠습니까?')) return;
           fetch(`/specialAnswer/api/answer/${id}`, { method: 'DELETE' })
             .then(r => {
-              if (r.ok) childSelect.dispatchEvent(new Event('change'));
+              if (r.ok) {
+                  alert('삭제되었습니다.');
+                  childSelect.dispatchEvent(new Event('change'));
+              }
               else alert('삭제 중 오류 발생');
             });
         }
 
-        function openEdit(id) {
+        window.showEditModal = function(id) {
           currentId = id;
           const dto = historyData.find(a => a.id === id);
+          if (!dto) return;
           const opts = document.getElementById('modalOptions');
           opts.innerHTML = '';
-          dto.possibleAnswers.forEach((txt,i) => {
-            const v = i+1;
-            opts.insertAdjacentHTML('beforeend', `
-              <label class="flex items-center gap-2">
-                <input type="radio" name="editAnswer" value="${v}"
-                  ${dto.selectedValue===v ? 'checked' : ''}/>
-                ${txt}
-              </label>
-            `);
-          });
+          if(Array.isArray(dto.possibleAnswers)) {
+            dto.possibleAnswers.forEach((txt,i) => {
+                const v = i+1;
+                opts.insertAdjacentHTML('beforeend', `
+                <label class="flex items-center gap-2">
+                    <input type="radio" name="editAnswer" value="${v}"
+                    ${dto.selectedValue===v ? 'checked' : ''}/>
+                    ${txt}
+                </label>
+                `);
+            });
+          }
           document.getElementById('editModal').classList.remove('hidden');
         }
 
@@ -181,8 +216,9 @@
           document.getElementById('editModal').classList.add('hidden');
 
         document.getElementById('saveEdit').onclick = () => {
-          const sel = +document.querySelector('input[name="editAnswer"]:checked')?.value;
-          if (!sel) return alert('답변을 선택해주세요');
+          const selNode = document.querySelector('input[name="editAnswer"]:checked');
+          if (!selNode) return alert('답변을 선택해주세요');
+          const sel = +selNode.value;
           fetch(`/specialAnswer/api/answer/${currentId}`, {
             method: 'PUT',
             headers: {'Content-Type':'application/json'},
