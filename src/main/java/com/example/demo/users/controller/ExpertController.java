@@ -17,6 +17,7 @@ import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.*;
+import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuthException;

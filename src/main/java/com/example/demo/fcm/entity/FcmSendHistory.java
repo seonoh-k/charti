@@ -68,4 +68,16 @@ public class FcmSendHistory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
     private Users sender;
+
+    /**
+     * [이동 링크]
+     * 이 알림을 클릭했을 때 이동하게 될 공통 URL.
+     * 예: 특정 문진 세트 응답 페이지 (/survey/set/123 등)
+     *
+     * 수신자 개별 알림(Notice.url)과는 다르게,
+     * 발송 기록 차원에서 '어떤 링크로 안내했는가'를 남기기 위해 사용함.
+     */
+    @Column(name = "link", length = 1024)
+    private String link;
+
 }
