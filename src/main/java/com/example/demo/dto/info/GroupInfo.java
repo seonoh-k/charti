@@ -7,7 +7,7 @@ import lombok.Data;
 public class GroupInfo {
 
     private Long groupId;
-    private TargetGroup targetGroup;
+    private String targetGroup;
     private String groupEmail;
     private String groupName;
     private String groupPhoneNumber;
