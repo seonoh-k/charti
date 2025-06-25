@@ -113,9 +113,9 @@
             <div id="targetGroupSelectBox" class="hidden">
                 <label class="block text-sm font-semibold mb-1">그룹 분류</label>
                 <select name="targetGroup" id="targetGroup" class="w-full border p-2 rounded-md">
-                <option value="KINDERGARTEN" th:selected="${userInfo.targetGroup.name() == 'KINDERGARTEN'}">유치원</option>
-                <option value="DAYCARE" th:selected="${userInfo.targetGroup.name() == 'DAYCARE'}">어린이집</option>
-                <option value="CHILDRENS_HOME" th:selected="${userInfo.targetGroup.name() == 'CHILDRENS_HOME'}">보육원</option>
+                <option value="KINDERGARTEN" th:selected="${userInfo.targetGroup == '유치원'}">유치원</option>
+                <option value="DAYCARE" th:selected="${userInfo.targetGroup == '어린이집'}">어린이집</option>
+                <option value="CHILDRENS_HOME" th:selected="${userInfo.targetGroup == '보육원'}">보육원</option>
                 </select>
             </div>
 

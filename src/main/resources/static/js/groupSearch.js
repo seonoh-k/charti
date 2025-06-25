@@ -60,6 +60,24 @@ function fillGroupFields(group) {
     document.getElementById('groupPhone').value = group.phoneNumber;
     document.getElementById('addressId').value = group.addressId;
 
+    // 한글을 코드값으로 변환
+    const korToCode = {
+        "유치원": "KINDERGARTEN",
+        "어린이집": "DAYCARE",
+        "보육원": "CHILDRENS_HOME"
+    };
+    let codeValue = group.targetGroup;
+    if (korToCode[codeValue]) {
+        codeValue = korToCode[codeValue];
+    }
+    //  기관분류 활성화 및 값 채우기
+    const targetGroupSelect = document.getElementById('targetGroup');
+    targetGroupSelect.value = codeValue || '';
+    targetGroupSelect.disabled = true;
+    // 주소찾기 버튼 비활성화
+    const addressSearchBtn = document.getElementById('addressSearch');
+    addressSearchBtn.disabled = true;
+
     setGroupFieldsReadonly(true);
     // 주소 정보도 비동기로 불러오기
     fetchAddressInfo(group.addressId);
@@ -70,8 +88,17 @@ function enableGroupManualInput() {
     // groupId 제거 (새 그룹 생성 흐름)
     document.getElementById('groupId').value = '';
 
-  // 읽기 전용 해제
+    // 읽기 전용 해제
     setGroupFieldsReadonly(false);
+
+    //  기관분류 활성화 및 초기화
+    const targetGroupSelect = document.getElementById('targetGroup');
+    targetGroupSelect.disabled = false;
+    targetGroupSelect.value = '';
+
+    // 주소찾기 버튼 활성화
+    const addressSearchBtn = document.getElementById('addressSearch');
+    addressSearchBtn.disabled = false;
 }
 
 function setGroupFieldsReadonly(isReadonly) {

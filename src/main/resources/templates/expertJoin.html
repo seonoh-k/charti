@@ -137,11 +137,20 @@
             </label><br>
         </div>
 
+        <!-- 약관동의 -->
+        <div th:replace="fragments/terms-expert :: terms-expert"></div>
+
         <div class="mt-6">
-            <button type="submit"
-                    class="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition">
-                회원가입
-            </button>
+                <button 
+                    id="signupBtn"
+                    type="submit"
+                    class="w-full py-3 rounded-lg font-bold transition
+                            bg-blue-500 hover:bg-blue-600
+                            disabled:bg-gray-400 disabled:hover:bg-gray-400
+                            disabled:cursor-not-allowed"
+                    disabled>
+                    회원가입
+                </button>
         </div>
     </form>
 

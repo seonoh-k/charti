@@ -123,7 +123,7 @@
 
         <!-- ③ 그룹 주소 검색  -->
         <div>
-            <button type="button" onclick="openAddressModal()"
+            <button type="button" onclick="openAddressModal()" id="addressSearch" disabled
             class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
             주소 검색
             </button>
@@ -134,14 +134,15 @@
         
         <!-- ③ targetGroup 입력란 -->
         <div>
-        <label for="targetGroup" class="block mb-1">기관 분류</label>
-        <select name="targetGroup" id="targetGroup" 
-                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
-            <option value="">선택하세요</option>
-            <option value="유치원">유치원</option>
-            <option value="어린이집">어린이집</option>
-            <option value="보육원">보육원</option>
-        </select>
+            <label for="targetGroup" class="block mb-1">기관 분류</label>
+            <select name="targetGroup" id="targetGroup" required
+                    class="w-full p-2 rounded border" disabled>
+                <option value="">선택하세요</option>
+                <option th:each="tg : ${targetGroups}"
+                        th:value="${tg.name()}"
+                        th:text="${tg.displayName}">
+                </option>
+            </select>
         </div>
 
         <!-- ③ groupPhone 입력란 -->
@@ -172,12 +173,20 @@
                 class="text-sm text-blue-500 underline mt-2">
         직접 입력
         </button>
+        <!-- 약관동의 -->
+    <div th:replace="fragments/terms-manager :: terms-manager"></div>
 
         <div class="mt-6">
-            <button type="submit"
-                    class="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition">
-                회원가입
-            </button>
+                <button 
+                    id="signupBtn"
+                    type="submit"
+                    class="w-full py-3 rounded-lg font-bold transition
+                            bg-blue-500 hover:bg-blue-600
+                            disabled:bg-gray-400 disabled:hover:bg-gray-400
+                            disabled:cursor-not-allowed"
+                    disabled>
+                    회원가입
+                </button>
         </div>
     </form>
 
