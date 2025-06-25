@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface QnaRepository extends JpaRepository<Qna, Long> {
-//    Page<Qna> findALL(Pageable pageable);
-//    Page<Qna> findByCategory(QnaCategory category, Pageable pageable);
+    Page<Qna> findAllByDeletedFalse(Pageable pageable);
+    Page<Qna> findByCategory(QnaCategory category, Pageable pageable);
 }

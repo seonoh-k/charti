@@ -10,7 +10,8 @@ import java.time.format.DateTimeFormatter;
 @Getter
 public class QnaDTO {
     private final Long id;
-    private final Long userId;
+    private final String name;
+    private final String nickname;
     private final QnaCategory category;
     private final String title;
     private final String content;
@@ -22,7 +23,8 @@ public class QnaDTO {
 
     public QnaDTO(Qna qna) {
         this.id = qna.getId();
-        this.userId = qna.getUsers().getId();
+        this.name = qna.getUsers().getName();
+        this.nickname = qna.getUsers().getNickname();
         this.category = qna.getCategory();
         this.title = qna.getTitle();
         this.content = qna.getContent();
