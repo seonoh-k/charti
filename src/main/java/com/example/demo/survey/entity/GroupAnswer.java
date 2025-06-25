@@ -1,4 +1,3 @@
-// com.example.demo.survey.entity.GroupAnswer.java
 package com.example.demo.survey.entity;
 
 import com.example.demo.entity.BaseEntity;
@@ -20,10 +19,10 @@ public class GroupAnswer extends BaseEntity {
     @Column(name = "group_answer_id")
     private Long id;
 
-    //  그룹 문진 항목 (group_survey) 과 N:1
+    //  그룹 세트 (group_survey_set) 과 N:1
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "survey_id", nullable = false)
-    private GroupSurvey survey;
+    @JoinColumn(name = "survey_set_id", nullable = false)
+    private SurveySet surveySet;
 
     // 자녀 (child) 과 N:1
     @ManyToOne(fetch = FetchType.LAZY)

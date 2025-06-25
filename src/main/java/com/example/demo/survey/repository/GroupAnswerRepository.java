@@ -14,14 +14,13 @@ import java.util.List;
 public interface GroupAnswerRepository extends JpaRepository<GroupAnswer, Long> {
 
 
-    @Query("SELECT ga FROM GroupAnswer ga " +
-            "JOIN FETCH ga.survey " +
-            "JOIN FETCH ga.child " +
-            "WHERE ga.child.id = :childId AND ga.deleted = false " +
-            "ORDER BY ga.createdAt DESC")
+    @Query(
+            "SELECT ga FROM GroupAnswer ga " +
+                    "JOIN FETCH ga.surveySet " +
+                    "JOIN FETCH ga.child " +
+                    "WHERE ga.child.id = :childId AND ga.deleted = false " +
+                    "ORDER BY ga.createdAt DESC")
     List<GroupAnswer> findByChildIdWithDetails(@Param("childId") Long childId);
-
-
 
     List<GroupAnswer> findByChildIdAndDeletedFalseOrderByCreatedAtDesc(Long childId);
 
