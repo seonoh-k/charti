@@ -77,7 +77,7 @@ public class ExpertController {
         log.info("[GET] 👨‍💼 request manager Page");
         UserDTO userDTO = authService.getLoginUser();
 
-        AddressDTO address = addressService.getByExpertUid(userDTO.getUuid());
+        AddressDTO address = addressService.getAddressByUid(userDTO.getUuid());
 
         userDTO.setAddress(address);
         model.addAttribute("userInfo", userDTO);

@@ -100,34 +100,40 @@ public class AddressService {
         return address;
 
     }
-    public AddressDTO getByMemberUid(String uid) {
+
+    public AddressDTO getAddressByUid(String uid) {
         Users user = userRepository.findByUuid(uid)
                 .orElseThrow(() -> new RuntimeException("회원 정보 없음"));
-        Member member = memberRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("맴버 정보 없음"));
-        return entityToDto(addressRepository.findById(member.getAddress().getId())
-                .orElseThrow(() -> new RuntimeException("주소 없음")));
+
+        // 1) Member 타입
+        Optional<Member> memberOpt = memberRepository.findById(user.getId());
+        if (memberOpt.isPresent() && memberOpt.get().getAddress() != null) {
+            return entityToDto(addressRepository.findById(memberOpt.get().getAddress().getId())
+                    .orElse(null)); // 주소가 없으면 null 반환
+        }
+
+        // 2) Expert 타입
+        Optional<Expert> expertOpt = expertRepository.findById(user.getId());
+        if (expertOpt.isPresent() && expertOpt.get().getAddress() != null) {
+            return entityToDto(addressRepository.findById(expertOpt.get().getAddress().getId())
+                    .orElse(null));
+        }
+
+        // 3) Manager 타입 → Group → Address
+        Optional<Manager> managerOpt = managerRepository.findById(user.getId());
+        if (managerOpt.isPresent() && managerOpt.get().getGroup() != null) {
+            Group group = groupRepository.findById(managerOpt.get().getGroup().getId())
+                    .orElse(null);
+            if (group != null && group.getAddress() != null) {
+                return entityToDto(addressRepository.findById(group.getAddress().getId())
+                        .orElse(null));
+            }
+        }
+
+        // 모두 해당없으면 주소정보 없음
+        return null;
     }
 
-    public AddressDTO getByExpertUid(String uid) {
-        Users user = userRepository.findByUuid(uid)
-                .orElseThrow(() -> new RuntimeException("회원 정보 없음"));
-        Expert expert = expertRepository.findByUsersId(user.getId())
-                .orElseThrow(() -> new RuntimeException("전문가 정보 없음"));
-        return entityToDto(addressRepository.findById(expert.getAddress().getId())
-                .orElseThrow(() -> new RuntimeException("주소 없음")));
-    }
-
-    public AddressDTO getGroupIdByManagerUid(String uid) {
-        Users user = userRepository.findByUuid(uid)
-                .orElseThrow(() -> new RuntimeException("회원 정보 없음"));
-        Manager manager = managerRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("담당자 정보 없음"));
-        Group group = groupRepository.findById(manager.getGroup().getId())
-                .orElseThrow(() -> new RuntimeException("그룹 정보 없음"));
-        return entityToDto(addressRepository.findById(group.getAddress().getId())
-                .orElseThrow(() -> new RuntimeException("주소 없음")));
-    }
 
 
 }

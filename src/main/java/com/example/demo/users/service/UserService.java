@@ -164,7 +164,12 @@ public class UserService {
             // Join Logic
             userDTO.setRole(Role.ROLE_MEMBER.name());
 
-            userRepository.save(this.dtoToEntity(userDTO));
+            // 1. Users 생성
+            Users savedUser = userRepository.save(this.dtoToEntity(userDTO));
+            // 2. Member 엔티티 생성 (Users의 id를 FK로)
+            Member member = new Member();
+            member.setUsers(savedUser);
+            memberRepository.save(member);
 
 
             return UserStatus.JOIN_SUCCESS;

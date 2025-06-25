@@ -60,7 +60,7 @@ public class ManagerController {
         log.info("[GET] 👨‍💼 request manager Page");
 
         UserDTO loginUser = authService.getLoginUser(); // 유저 전체 정보
-        AddressDTO address = addressService.getGroupIdByManagerUid(loginUser.getUuid());
+        AddressDTO address = addressService.getAddressByUid(loginUser.getUuid());
         ManagerDTO  managerDTO = managerService.getManagerById(loginUser.getId());
         managerDTO.setAddress(address);
 

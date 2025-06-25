@@ -1,0 +1,214 @@
+<!-- /templates/fragments/terms-agree.html -->
+<th:block th:fragment="terms-agree(isExpertOrManager)">
+    <!-- 약관동의 박스 -->
+    <div class="border rounded-xl p-6 bg-gray-50 mb-8">
+        <div class="flex items-center mb-4">
+            <input type="checkbox" id="all-agree" class="mr-2" />
+            <label for="all-agree" class="font-bold">전체 약관 동의</label>
+        </div>
+        <div class="space-y-3">
+            <!-- 공통 약관들 -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <input type="checkbox" id="terms1" class="mr-2 required-agree" />
+                    <label for="terms1">[필수] 서비스 이용약관 동의</label>
+                </div>
+                <button type="button" onclick="openTermsModal('terms1')">
+                    <span>▼</span>
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <input type="checkbox" id="terms2" class="mr-2 required-agree" />
+                    <label for="terms2">[필수] 개인정보 수집 및 이용 동의</label>
+                </div>
+                <button type="button" onclick="openTermsModal('terms2')">
+                    <span>▼</span>
+                </button>
+            </div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <input type="checkbox" id="terms3" class="mr-2" />
+                    <label for="terms3">[선택] 마케팅 정보 수신 동의</label>
+                </div>
+                <button type="button" onclick="openTermsModal('terms3')">
+                    <span>▼</span>
+                </button>
+            </div>
+    <!-- 약관 전문 모달 -->
+    <div id="termsModal" class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 hidden">
+        <div class="bg-white rounded-xl w-full max-w-lg p-6 relative">
+            <button class="absolute top-4 right-4" onclick="closeTermsModal()">✕</button>
+            <div id="termsModalContent" class="max-h-80 overflow-y-auto text-sm">
+                <!-- 약관 전문 동적 출력 -->
+            </div>
+        </div>
+    </div>
+    <!-- Fragment 내부에 JS 포함 (inline JS로) -->
+    <script th:inline="javascript">
+        // 전체동의 체크
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('all-agree').addEventListener('change', function() {
+                const checked = this.checked;
+                document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+                    cb.checked = checked;
+                });
+                checkTerms();
+            });
+            document.querySelectorAll('.required-agree').forEach(cb => {
+                cb.addEventListener('change', checkTerms);
+            });
+            checkTerms();
+        });
+        // 필수 약관 체크 시 회원가입 버튼 활성화
+        function checkTerms() {
+            const required = document.querySelectorAll('.required-agree');
+            const allChecked = Array.from(required).every(cb => cb.checked);
+            const btn = document.getElementById('signupBtn');
+            if (btn) {
+                if (allChecked) {
+                    btn.disabled = false;
+                    btn.classList.remove('bg-gray-400');
+                    btn.classList.add('bg-blue-500');
+                } else {
+                    btn.disabled = true;
+                    btn.classList.remove('bg-blue-500');
+                    btn.classList.add('bg-gray-400');
+                }
+            }
+        }
+        // 약관 모달 띄우기
+window.openTermsModal = function(termsId) {
+    let content = '';
+    switch(termsId) {
+case 'terms1':
+    content = `
+<h2 class="text-lg font-bold mb-2">서비스 이용약관</h2>
+<p>
+<strong>제1조(목적)</strong><br>
+이 약관은 회사(이하 "회사"라 함)가 제공하는 서비스의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
+</p>
+<p>
+<strong>제2조(용어의 정의)</strong><br>
+1. "서비스"라 함은 회사가 제공하는 온라인 플랫폼 및 이에 부수하는 모든 서비스를 의미합니다.<br>
+2. "회원"이란 본 약관에 따라 이용계약을 체결하고 회사가 제공하는 서비스를 이용하는 자를 말합니다.<br>
+3. "아이디(ID)"란 회원 식별과 서비스 이용을 위하여 회원이 정하고 회사가 승인하는 문자와 숫자의 조합을 의미합니다.<br>
+4. 그 외 본 약관에서 사용하는 용어의 정의는 관계법령 및 서비스 별 안내에서 정하는 바에 따릅니다.
+</p>
+<p>
+<strong>제3조(약관의 게시와 개정)</strong><br>
+1. 회사는 본 약관의 내용을 회원이 알 수 있도록 서비스 초기화면 또는 연결화면에 게시합니다.<br>
+2. 회사는 관련 법령을 위배하지 않는 범위 내에서 약관을 개정할 수 있습니다.<br>
+3. 회사가 약관을 개정할 경우에는 적용일자 및 개정사유를 명시하여 현행 약관과 함께 그 적용일자 7일 전부터 서비스 내에 공지합니다.
+</p>
+<p>
+<strong>제4조(회원가입)</strong><br>
+1. 회원가입은 이용자가 약관에 동의하고, 회사가 정한 가입 양식에 따라 정보를 입력한 후 가입신청을 하고, 회사가 이를 승낙함으로써 성립합니다.<br>
+2. 회사는 다음 각 호에 해당하는 경우 회원가입을 거부할 수 있습니다.<br>
+    ① 실명이 아니거나 타인의 명의로 신청한 경우<br>
+    ② 허위 정보를 기재하거나, 회사가 요구하는 사항을 누락한 경우<br>
+    ③ 기타 가입신청자가 본 약관에 위배되는 행위를 한 경우<br>
+</p>
+<p>
+<strong>제5조(회원의 의무)</strong><br>
+1. 회원은 관계법령, 본 약관의 규정, 이용안내 및 주의사항 등 회사가 통지하는 사항을 준수하여야 하며, 기타 회사의 업무에 방해되는 행위를 하여서는 안 됩니다.<br>
+2. 회원은 서비스의 이용권한, 기타 이용계약상 지위를 타인에게 양도, 증여할 수 없으며, 이를 담보로 제공할 수 없습니다.<br>
+3. 회원은 자신의 아이디와 비밀번호를 직접 관리하여야 하며, 제3자에게 이를 이용하게 해서는 안 됩니다.
+</p>
+<p>
+<strong>제6조(서비스의 제공 및 변경)</strong><br>
+1. 회사는 회원에게 아래와 같은 서비스를 제공합니다.<br>
+    ① 정보 검색, 게시판 등 온라인 플랫폼 서비스<br>
+    ② 기타 회사가 정하는 서비스<br>
+2. 회사는 서비스 운영상, 기술상 필요에 따라 제공하고 있는 전부 또는 일부 서비스를 변경할 수 있습니다. 이 경우 회사는 사전에 공지합니다.
+</p>
+<p>
+<strong>제7조(서비스의 중단)</strong><br>
+1. 회사는 서비스용 설비의 점검, 보수, 교체 및 고장, 통신의 두절 등의 사유가 발생한 경우 서비스의 제공을 일시적으로 중단할 수 있습니다.<br>
+2. 회사는 불가항력적 사유로 인한 서비스 중단에 대해 책임을 지지 않습니다.
+</p>
+<p>
+<strong>제8조(계약해지 및 이용제한)</strong><br>
+1. 회원은 서비스 내 회원탈퇴 메뉴를 통해 언제든지 이용계약을 해지할 수 있습니다.<br>
+2. 회사는 회원이 본 약관을 위반하거나, 허위 정보 제공 등 부정한 행위가 있는 경우 사전 통지 없이 이용계약을 해지하거나 서비스 이용을 제한할 수 있습니다.
+</p>
+<p>
+<strong>제9조(면책조항)</strong><br>
+1. 회사는 천재지변, 불가항력 등 회사의 합리적 통제범위를 벗어난 사유로 인해 서비스를 제공할 수 없는 경우 책임을 지지 않습니다.<br>
+2. 회사는 회원의 귀책사유로 인한 서비스 이용 장애에 대하여 책임을 지지 않습니다.<br>
+3. 회사는 회원이 게재한 정보, 자료, 사실의 신뢰도 및 정확성에 대하여는 책임을 지지 않습니다.
+</p>
+<p>
+<strong>제10조(준거법 및 재판관할)</strong><br>
+1. 본 약관과 관련된 분쟁에 대하여는 대한민국 법을 적용하며, 분쟁으로 인한 소송은 회사의 본사 소재지를 관할하는 법원을 제1심 관할법원으로 합니다.
+</p>
+<p>
+부칙: 본 약관은 2024년 6월 1일부터 시행합니다.
+</p>
+    `;
+    break;
+case 'terms2':
+    content = `
+<h2 class="text-lg font-bold mb-2">개인정보 수집 및 이용 동의</h2>
+<p>
+<strong>1. 수집하는 개인정보 항목</strong><br>
+- 필수항목: 이름, 이메일, 비밀번호, 휴대전화번호<br>
+- 선택항목: 마케팅 정보 수신 동의 등
+</p>
+<p>
+<strong>2. 개인정보 수집 및 이용 목적</strong><br>
+- 회원 관리(본인 확인, 가입의사 확인, 회원자격 유지·관리, 각종 고지·통지 등)<br>
+- 서비스 제공 및 맞춤형 서비스 제공<br>
+- 부정 이용 방지 및 비인가 사용 방지
+</p>
+<p>
+<strong>3. 개인정보 보유 및 이용 기간</strong><br>
+- 회원 탈퇴 시까지(단, 관련 법령에 따라 일정 기간 보관 필요 시 해당 기간까지 보관)
+</p>
+<p>
+<strong>4. 개인정보의 제3자 제공</strong><br>
+회사는 원칙적으로 이용자의 개인정보를 외부에 제공하지 않습니다. 단, 다음의 경우에는 예외로 합니다.<br>
+- 이용자가 사전에 동의한 경우<br>
+- 법령의 규정에 의거하거나, 수사 목적으로 법령에 정해진 절차와 방법에 따라 수사기관의 요구가 있는 경우
+</p>
+<p>
+<strong>5. 동의 거부 권리 및 불이익</strong><br>
+이용자는 개인정보 수집 및 이용에 동의하지 않을 권리가 있습니다. 단, 필수정보의 수집 및 이용에 동의하지 않을 경우 회원가입 및 서비스 이용이 제한될 수 있습니다.
+</p>
+<p>
+본 방침은 2024년 6월 1일부터 시행됩니다.
+</p>
+    `;
+    break;
+case 'terms3':
+    content = `
+<h2 class="text-lg font-bold mb-2">마케팅 정보 수신 동의 (선택)</h2>
+<p>
+회사는 이벤트, 할인, 신상품 안내 등 다양한 정보를 이메일, 문자, 앱 알림 등으로 제공할 수 있습니다.<br>
+수신 동의를 하지 않으셔도 서비스 이용에는 영향이 없습니다.<br>
+동의를 한 이후에도 언제든지 수신을 거부(해지)할 수 있습니다.<br>
+<br>
+[수집·이용 항목]<br>
+- 이메일 주소, 휴대전화번호 등 연락처 정보<br>
+<br>
+[목적]<br>
+- 서비스 및 이벤트 안내, 신규 서비스 소개, 혜택 제공 등<br>
+<br>
+[보유 및 이용기간]<br>
+- 회원 탈퇴 또는 수신 거부 시까지 보관 및 이용합니다.<br>
+</p>
+<p>
+※ 마케팅 정보 수신 동의는 선택사항이며, 동의하지 않으셔도 기본 서비스 이용에는 제한이 없습니다.
+</p>
+    `;
+    break;
+    }
+    document.getElementById('termsModalContent').innerHTML = content;
+    document.getElementById('termsModal').classList.remove('hidden');
+}
+
+        window.closeTermsModal = function() {
+            document.getElementById('termsModal').classList.add('hidden');
+        }
+    </script>
+</th:block>

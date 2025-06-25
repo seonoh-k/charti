@@ -11,6 +11,7 @@ import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
 import com.example.demo.entity.LoginHistory;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.exception.JwtTokenFormatInvalidException;
 import com.example.demo.exception.JwtTokenNotFoundException;
 import com.example.demo.jwt.JwtUtil;
@@ -45,6 +46,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -524,6 +526,7 @@ public class AuthController {
             map.put("email", group.getGroupEmail());
             map.put("phoneNumber", group.getGroupPhoneNumber());
             map.put("addressId", group.getAddress().getId());
+            map.put("targetGroup",group.getTargetGroup());
             return map;
         }).collect(Collectors.toList());
     }
@@ -694,8 +697,13 @@ public class AuthController {
         return "expertJoin";
     }
     @GetMapping("/managerJoinForm")
-    public String showManagerJoinForm() {
+    public String showManagerJoinForm(Model model) {
         log.info("[GET] 🟢 담당자 회원가입 폼 요청");
+        // ALL을 제외한 3개를 그대로 내려주거나, values() 전체를 내려줘도 됩니다.
+        model.addAttribute("targetGroups",
+                Arrays.stream(TargetGroup.values())
+                        .filter(tg -> tg != TargetGroup.ALL)
+                        .toList());
         return "managerJoin";
     }
 
