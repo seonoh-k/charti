@@ -92,7 +92,7 @@ public class SpecialAnswerService {
 
             SpecialAnswer specialAnswer = new SpecialAnswer();
             specialAnswer.setChild(child);
-            specialAnswer.setSurvey(survey);
+//            specialAnswer.setSurvey(survey);
             specialAnswer.setAgeGroup(ageGroup);
             specialAnswer.setCategory(category);
             specialAnswer.setQuestion(survey.getQuestion());

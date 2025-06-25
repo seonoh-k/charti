@@ -13,7 +13,7 @@ public class GroupSurveyWithSetDto extends GroupSurveyRequestDto {
 
     public GroupSurveyWithSetDto(Long childId, String ageGroup, String targetGroup, List<Integer> answers, Long surveySetId) {
         // 1. 부모 클래스(GroupSurveyRequestDto)의 생성자를 명시적으로 호출
-        super(childId, ageGroup, targetGroup, answers);
+        super(childId, ageGroup, targetGroup, surveySetId,  answers);
 
         // 2. 자식 클래스(GroupSurveyWithSetDto) 자신의 필드를 초기화
         this.surveySetId = surveySetId;

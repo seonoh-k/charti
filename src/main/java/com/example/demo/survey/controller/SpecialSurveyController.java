@@ -81,23 +81,23 @@ public class SpecialSurveyController {
             @RequestBody SpecialSurveyRequestDto dto) {
 
         // [수정] 새로 만든 서비스 메소드를 호출하여 저장된 답변 목록을 받음
-        List<SpecialAnswer> savedAnswers = specialAnswerService.saveAndGetAnswers(
-                dto.getChildId(),
-                AgeGroup.fromValue(dto.getAgeGroup()),
-                SurveyCategory.fromValue(dto.getCategory()),
-                dto.getAnswers().stream().map(answer -> answer.get("answerValue")).collect(Collectors.toList()) // answerValue만 추출
-        );
+//        List<SpecialAnswer> savedAnswers = specialAnswerService.saveAndGetAnswers(
+//                dto.getChildId(),
+//                AgeGroup.fromValue(dto.getAgeGroup()),
+//                SurveyCategory.fromValue(dto.getCategory()),
+//                dto.getAnswers().stream().map(answer -> answer.get("answerValue")).collect(Collectors.toList()) // answerValue만 추출
+//        );
 
         // 평가
         Map<String,Object> result = specialSurveyService.evaluate(dto);
 
         // [수정] 매칭이 필요할 때, 저장된 답변들의 ID 목록을 결과에 추가
-        if ((boolean) result.get("needsMatching")) {
-            List<Long> answerIds = savedAnswers.stream()
-                    .map(SpecialAnswer::getId)
-                    .collect(Collectors.toList());
-            result.put("answerIds", answerIds);
-        }
+//        if ((boolean) result.get("needsMatching")) {
+//            List<Long> answerIds = savedAnswers.stream()
+//                    .map(SpecialAnswer::getId)
+//                    .collect(Collectors.toList());
+//            result.put("answerIds", answerIds);
+//        }
 
         return ResponseEntity.ok(result);
     }

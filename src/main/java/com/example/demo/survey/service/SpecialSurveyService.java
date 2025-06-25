@@ -54,17 +54,17 @@ public class SpecialSurveyService {
             SpecialSurvey survey = surveys.get(i);
 
             // [핵심 수정] DTO의 List<Map> 구조에 맞게 'answerValue' 키로 값을 가져오도록 변경
-            int answer = dto.getAnswers().get(i).get("answerValue");
+//            int answer = dto.getAnswers().get(i).get("answerValue");
 
             long totalOptions = Stream.of(survey.getAnswer1(), survey.getAnswer2(), survey.getAnswer3(), survey.getAnswer4(), survey.getAnswer5())
                     .filter(ans -> ans != null && !ans.isBlank())
                     .count();
-            double multiplier = getMultiplier(answer, (int)totalOptions);
+//            double multiplier = getMultiplier(answer, (int)totalOptions);
 
             SurveyCategory cat = survey.getCategory();
 
             // 카테고리별 답변 비율(multiplier)의 합과 문항 수를 기록
-            categoryMultiplierSum.merge(cat, multiplier, Double::sum);
+//            categoryMultiplierSum.merge(cat, multiplier, Double::sum);
             categoryQuestionCount.merge(cat, 1, Integer::sum);
         }
 
