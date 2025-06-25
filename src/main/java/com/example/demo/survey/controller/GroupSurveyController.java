@@ -22,6 +22,11 @@ public class GroupSurveyController {
     private final GroupSurveyService groupSurveyService;
     private final GroupAnswerService groupAnswerService;
 
+    @GetMapping("/{id}")
+    public GroupSurveyResponseDto getSurveyById(@PathVariable Long id) {
+        return groupSurveyService.getSurveyById(id);
+    }
+
     // 1. 연령대 기준 조회
     @GetMapping("/by-age/{ageGroup}")
     public List<GroupSurveyResponseDto> getSurveysByAgeGroup(@PathVariable String ageGroup) {
@@ -69,14 +74,14 @@ public class GroupSurveyController {
     @PostMapping("/submit")
     public ResponseEntity<Map<String,Object>> submitAndSave(
             @RequestBody GroupSurveyRequestDto dto) {
-        // 저장
+
+        // dto에 이제 setId 필드를 추가했다고 가정
         groupAnswerService.saveAnswers(
                 dto.getChildId(),
-                AgeGroup.fromValue(dto.getAgeGroup()),
-                TargetGroup.fromValue(dto.getTargetGroup()),
+                dto.getSetId(),
                 dto.getAnswers()
         );
-        // 평가
+
         Map<String,Object> result = groupSurveyService.evaluate(dto);
         return ResponseEntity.ok(result);
     }

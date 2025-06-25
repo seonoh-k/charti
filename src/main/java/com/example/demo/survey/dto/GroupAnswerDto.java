@@ -1,6 +1,7 @@
 package com.example.demo.survey.dto;
 
 import com.example.demo.survey.entity.GroupAnswer;
+import com.example.demo.survey.entity.GroupSurvey;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,8 +30,8 @@ public class GroupAnswerDto {
     public static GroupAnswerDto fromEntity(GroupAnswer a) {
         GroupAnswerDto d = new GroupAnswerDto();
         d.setId(a.getId());
-        // 자녀 표시: 이름(닉네임)-나이
-        var c = a.getChild();
+        // 자녀 표시
+        var c   = a.getChild();
         var age = c.getBirthday().toLocalDate()
                 .until(LocalDate.now()).getYears();
         d.setChildDisplay(c.getName()+"("+c.getNickname()+") - "+age+"세");
@@ -40,17 +41,22 @@ public class GroupAnswerDto {
         d.setTargetGroup(a.getTargetGroup().getDisplayName());
         d.setQuestion(a.getQuestion());
         d.setAnswer(a.getAnswer());
-//        d.setWeight(a.getWeight());
         d.setCreatedAt(a.getCreatedAt());
 
-        // survey 엔티티에서 옵션 꺼내기
-        var s = a.getSurvey();
+        // 1 SurveySet에서 question이 같은 GroupSurvey 객체 찾기
+        GroupSurvey s = a.getSurveySet().getGroupSurveys().stream()
+                .filter(gs -> gs.getQuestion().equals(a.getQuestion()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("문진 항목 없음: " + a.getQuestion()));
+
+        // 2 그 객체에서 옵션 꺼내기
         List<String> opts = List.of(
                 s.getAnswer1(), s.getAnswer2(),
                 s.getAnswer3(), s.getAnswer4(), s.getAnswer5()
         );
         d.setPossibleAnswers(opts);
-        d.setSelectedValue(opts.indexOf(a.getAnswer())+1);
+        d.setSelectedValue(opts.indexOf(a.getAnswer()) + 1);
+
         return d;
     }
 }

@@ -35,14 +35,14 @@ public class MainController {
         return "test-record-admin";
     }
 
-    @GetMapping("/test/group-survey")
-    public String showGroupSurveyTestPage() {
-        return "test-groupSurvey"; // templates/test-groupSurvey.html
+
+    @GetMapping("/admin/surveys/special")
+    public String manageSpecialSurveyPage() {
+        return "manage-specialSurvey";
     }
 
-    @GetMapping("test/special-survey")
-    public String showSpecialSurveyTestPage() {
-        return "test-specialSurvey";  // templates/test-specialSurvey.html
+    @GetMapping("/admin/surveys/group")
+    public String manageGroupSurveyPage() {
+        return "manage-groupSurvey"; // manage-groupSurvey.html 파일의 위치
     }
-
 }

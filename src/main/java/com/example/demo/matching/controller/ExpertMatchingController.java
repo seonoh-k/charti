@@ -1,5 +1,6 @@
 package com.example.demo.matching.controller;
 
+import com.example.demo.enums.MatchingStatus;
 import com.example.demo.matching.entity.Matching;
 import com.example.demo.matching.entity.MatchingAnswer;
 import com.example.demo.matching.service.MatchingAnswerService;
@@ -7,6 +8,9 @@ import com.example.demo.matching.service.MatchingService;
 import com.example.demo.users.entity.Expert;
 import com.example.demo.users.repository.ExpertRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +26,38 @@ public class ExpertMatchingController {
     private final MatchingService matchingService;
     private final ExpertRepository expertRepo;
     private final MatchingAnswerService answerService;
+
+    /** 전문가용 목록 + 페이징 + 상태필터 */
+    @GetMapping
+    public String listByStatus(
+            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(defaultValue = "0") int page,
+            Principal principal,
+            Model model
+    ) {
+        // 로그인한 전문가 정보
+        Expert me = expertRepo.findByUsersUuid(principal.getName())
+                .orElseThrow(() -> new IllegalArgumentException("전문가 정보가 없습니다."));
+        Long expertId = me.getId();
+
+        // 상태에 따라 조회
+        PageRequest pr = PageRequest.of(page, 10, Sort.by("createdAt").descending());
+        Page<Matching> matchings;
+        if ("ALL".equals(status)) {
+            matchings = matchingService.findByExpertId(expertId, pr);
+        } else {
+            MatchingStatus ms = MatchingStatus.valueOf(status);
+            matchings = matchingService.findByExpertIdAndStatus(expertId, ms, pr);
+        }
+
+        List<String> statuses = List.of("ALL", "MATCHED", "RESPONDED");
+
+        model.addAttribute("matchings", matchings);
+        model.addAttribute("statuses", statuses);
+        model.addAttribute("currentStatus", status);
+
+        return "expert/matchingList";
+    }
 
     /** 상세보기 + 답변 폼 */
     @GetMapping("/{matchId}")

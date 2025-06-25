@@ -58,5 +58,12 @@ public interface UserRepository extends JpaRepository<Users,Long> {
      */
     List<Users> findAllByManager_Group_Id(Long groupId);
 
-    
+    /**
+     * 특정 기관(Group) ID에 자녀가 한 명 이상 소속된 모든 부모(Users)를 중복 없이 조회합니다.
+     * @param groupId 기관(Group)의 ID
+     * @return 부모(Users) 목록
+     */
+    @Query("SELECT DISTINCT u FROM Users u JOIN u.member.children c WHERE c.group.id = :groupId AND u.deleted = false")
+    List<Users> findParentsWithChildrenInGroup(@Param("groupId") Long groupId);
+
 }
