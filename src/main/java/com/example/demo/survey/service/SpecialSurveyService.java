@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -51,8 +52,14 @@ public class SpecialSurveyService {
         // 4) 루프에서 weight 관련 계산 모두 제거
         for (int i = 0; i < surveys.size(); i++) {
             SpecialSurvey survey = surveys.get(i);
-            int answer = dto.getAnswers().get(i);
-            double multiplier = getMultiplier(answer);
+
+            // [핵심 수정] DTO의 List<Map> 구조에 맞게 'answerValue' 키로 값을 가져오도록 변경
+            int answer = dto.getAnswers().get(i).get("answerValue");
+
+            long totalOptions = Stream.of(survey.getAnswer1(), survey.getAnswer2(), survey.getAnswer3(), survey.getAnswer4(), survey.getAnswer5())
+                    .filter(ans -> ans != null && !ans.isBlank())
+                    .count();
+            double multiplier = getMultiplier(answer, (int)totalOptions);
 
             SurveyCategory cat = survey.getCategory();
 
@@ -90,27 +97,51 @@ public class SpecialSurveyService {
         // 매칭이 필요할 경우 관련 정보 추가 (추후 매칭 테이블 저장 시 사용)
         if (needsMatching) {
             result.put("childId", dto.getChildId());
-            result.put("ageGroup", dto.getAgeGroup());
-            result.put("category", dto.getCategory());
+            // [수정] category는 ENUM의 name()을 반환하도록 통일
+            result.put("category", sc.name());
         }
 
         return result;
     }
 
-    private double getMultiplier(int answer) {
-        return switch (answer) {
-            case 1 -> 1.0;
-            case 2 -> 0.75;
-            case 3 -> 0.5;
-            case 4 -> 0.25;
-            case 5 -> 0.0;
-            default -> 0.0;
-        };
+    private double getMultiplier(int answer, int totalOptions) {
+        switch (totalOptions) {
+            case 5: // 5지선다
+                return switch (answer) {
+                    case 1 -> 1.0;  // 100%
+                    case 2 -> 0.75; // 75%
+                    case 3 -> 0.5;  // 50%
+                    case 4 -> 0.25; // 25%
+                    case 5 -> 0.0;  // 0%
+                    default -> 0.0;
+                };
+            case 3: // 3지선다
+                return switch (answer) {
+                    case 1 -> 1.0; // 100%
+                    case 2 -> 0.5; // 50%
+                    case 3 -> 0.0; // 0%
+                    default -> 0.0;
+                };
+            case 2: // 2지선다 (역계산)
+                return switch (answer) {
+                    case 1 -> 0.0;  // 0%
+                    case 2 -> 1.0;  // 100%
+                    default -> 0.0;
+                };
+            default: // 그 외의 경우는 0점 처리
+                return 0.0;
+        }
     }
 
     // 신규 메소드 추가
     public boolean needsMatching(double categoryScore) {
         return categoryScore >= 60.0; // 60% 이상 시 매칭 필요
+    }
+
+    public SpecialSurveyResponseDto getSurveyById(Long id) {
+        return specialSurveyRepository.findById(id)
+                .map(SpecialSurveyResponseDto::fromEntity)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 문항을 찾을 수 없습니다: " + id));
     }
 
     // (이하 기존 코드 유지)

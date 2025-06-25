@@ -4,6 +4,7 @@ import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.dto.SpecialSurveyRequestDto;
 import com.example.demo.survey.dto.SpecialSurveyResponseDto;
+import com.example.demo.survey.entity.SpecialAnswer;
 import com.example.demo.survey.entity.SpecialSurvey;
 import com.example.demo.survey.service.SpecialAnswerService;
 import com.example.demo.survey.service.SpecialSurveyService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/special-surveys")
@@ -21,6 +23,11 @@ public class SpecialSurveyController {
 
     private final SpecialSurveyService specialSurveyService;
     private final SpecialAnswerService specialAnswerService;
+
+    @GetMapping("/{id}")
+    public SpecialSurveyResponseDto getSurveyById(@PathVariable Long id) {
+        return specialSurveyService.getSurveyById(id);
+    }
 
     // 1. 연령대 기준 조회
     @GetMapping("/by-age/{ageGroup}")
@@ -72,25 +79,28 @@ public class SpecialSurveyController {
     @PostMapping("/submit")
     public ResponseEntity<Map<String,Object>> submitAndSave(
             @RequestBody SpecialSurveyRequestDto dto) {
-        // 저장
-        specialAnswerService.saveAnswers(
+
+        // [수정] 새로 만든 서비스 메소드를 호출하여 저장된 답변 목록을 받음
+        List<SpecialAnswer> savedAnswers = specialAnswerService.saveAndGetAnswers(
                 dto.getChildId(),
                 AgeGroup.fromValue(dto.getAgeGroup()),
                 SurveyCategory.fromValue(dto.getCategory()),
-                dto.getAnswers()
+                dto.getAnswers().stream().map(answer -> answer.get("answerValue")).collect(Collectors.toList()) // answerValue만 추출
         );
+
         // 평가
         Map<String,Object> result = specialSurveyService.evaluate(dto);
+
+        // [수정] 매칭이 필요할 때, 저장된 답변들의 ID 목록을 결과에 추가
+        if ((boolean) result.get("needsMatching")) {
+            List<Long> answerIds = savedAnswers.stream()
+                    .map(SpecialAnswer::getId)
+                    .collect(Collectors.toList());
+            result.put("answerIds", answerIds);
+        }
+
         return ResponseEntity.ok(result);
     }
 
 
-     //[추가] 위험군 타겟 특별 문진 페이지를 보여주는 메소드
-     //groupSurveyResult.html에서 생성된 링크('/specialSurvey/by-risk?...') 요청을 처리
-     //@return "survey/specialSurveyByRisk" 뷰 경로
-    @GetMapping("/by-risk")
-    public String showTargetedSurveyPage() {
-        // templates/survey/specialSurveyByRisk.html 파일을 찾아 렌더링합니다.
-        return "survey/specialSurveyByRisk";
-    }
 }

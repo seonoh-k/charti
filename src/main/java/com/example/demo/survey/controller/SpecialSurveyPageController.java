@@ -36,8 +36,7 @@ public class SpecialSurveyPageController {
         model.addAttribute("ageGroups", AgeGroup.values());
         model.addAttribute("categories", SurveyCategory.values());
 
-        // [수정] 파일 위치에 맞춰 뷰 경로 수정
-        return "survey/specialSurvey";
+        return "specialSurvey";
     }
 
     /**
@@ -46,8 +45,7 @@ public class SpecialSurveyPageController {
      */
     @GetMapping("/result")
     public String showResultPage() {
-        // [수정] 파일 위치에 맞춰 뷰 경로 수정
-        return "survey/specialSurveyResult";
+        return "specialSurveyResult";
     }
 
     /**
@@ -63,9 +61,13 @@ public class SpecialSurveyPageController {
         return "survey/specialSurveyByRisk";
     }
 
-    /**
-     * [추가] 중복 코드를 줄이기 위한 현재 사용자 조회 헬퍼 메소드
-     */
+    // 위험군 특별 문진 '결과' 페이지
+    @GetMapping("/result/by-risk")
+    public String showTargetedSurveyResultPage() {
+        return "survey/specialAnswerByRisk"; // 2단계에서 만든 html 파일
+    }
+
+
     private Users findCurrentUser(Authentication auth) {
         try {
             return userService.findByUsernameEntity(auth.getName());

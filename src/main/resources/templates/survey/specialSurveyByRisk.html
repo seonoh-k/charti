@@ -49,7 +49,6 @@
                 return;
             }
 
-            // [핵심 수정] Java Enum의 displayName과 동일한 구조의 매핑 객체 생성
             const ageGroupMap = {
                 "AGE_0_12": "0~12개월",
                 "AGE_1_2": "1~2세",
@@ -57,13 +56,12 @@
                 "AGE_5": "5세"
             };
             const categoryMap = {
-                "COMMUNICATION": "의사소통/정서/심리", // Enum 이름에 맞춰 수정
+                "COMMUNICATION": "의사소통/정서/심리",
                 "MOTOR_COGNITIVE": "운동/인지 발달",
                 "SOCIAL_COGNITIVE": "사회성/인지/창의",
                 "LIFESTYLE": "생활습관"
             };
 
-            // [핵심 수정] URL에서 받은 ENUM 이름들을 한글 표시 이름으로 변환
             const ageGroupDisplayName = ageGroupMap[ageGroupEnum] || ageGroupEnum;
             const categoryDisplayName = categoryMap[categoryEnum] || categoryEnum;
 
@@ -78,12 +76,11 @@
                     <p><strong><i class="fas fa-tags mr-2 text-gray-500"></i>진단 카테고리:</strong> ${categoryDisplayName}</p>
                 `;
 
-                // [핵심 수정] API 호출 시, 백엔드가 기대하는 '한글 표시 이름'을 사용
+                // 2. 문항 조회
                 const surveyRes = await fetch(`/api/special-surveys/by-age/${encodeURIComponent(ageGroupDisplayName)}`);
                 if(!surveyRes.ok) throw new Error('Survey fetch failed');
                 const surveyData = await surveyRes.json();
 
-                // 받아온 전체 연령대 문항에서, 해당 카테고리 문항만 필터링
                 const filteredSurveys = surveyData.filter(s => s.category === categoryDisplayName);
 
                 if (filteredSurveys.length === 0) {
@@ -118,18 +115,16 @@
             form.addEventListener('submit', (event) => {
                 event.preventDefault();
 
-                const formData = new FormData(form);
                 const answers = [];
-                for (const [key, value] of formData.entries()) {
-                    if (key.startsWith('answer_')) {
-                        answers.push({
-                            surveyId: parseInt(key.split('_')[1], 10),
-                            answerValue: parseInt(value, 10)
-                        });
-                    }
-                }
+                // surveyId와 answerValue를 함께 수집
+                questionContainer.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                    answers.push({
+                        surveyId: parseInt(input.name.split('_')[1], 10),
+                        answerValue: parseInt(input.value, 10)
+                    });
+                });
 
-                const totalQuestions = document.querySelectorAll('input[type="radio"][name^="answer_"]').length / 5;
+                const totalQuestions = questionContainer.querySelectorAll('.p-4.border.bg-white.rounded-md.shadow-sm').length;
                 if (answers.length < totalQuestions) {
                     alert('모든 문항에 답변해주세요.');
                     return;
@@ -137,13 +132,12 @@
 
                 const submissionData = {
                     childId: Number(childId),
-                    // [핵심 수정] 제출 시에도 한글 표시 이름 사용
                     ageGroup: ageGroupDisplayName,
                     category: categoryDisplayName,
                     answers: answers
                 };
 
-                // 기존 제출 API인 /api/special-surveys/submit 으로 제출
+                // 제출 API(/api/special-surveys/submit) 호출
                 fetch('/api/special-surveys/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -155,9 +149,10 @@
                 })
                 .then(data => {
                     alert('문진이 성공적으로 제출되었습니다.');
-                    // 결과 페이지로 이동
+
+                    // [최종 수정] 새로운 위험군 '결과' 페이지로 이동
                     const payload = encodeURIComponent(JSON.stringify(data));
-                    window.location.href = `/specialSurvey/result?data=${payload}`;
+                    window.location.href = `/specialSurvey/result/by-risk?data=${payload}`;
                 })
                 .catch(err => {
                     console.error('Submission Error:', err);

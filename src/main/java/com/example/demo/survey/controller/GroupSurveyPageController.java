@@ -51,4 +51,6 @@ public class GroupSurveyPageController {
     public String showResultPage() {
         return "groupSurveyResult";  // templates/groupSurveyResult.html
     }
+
+
 }
