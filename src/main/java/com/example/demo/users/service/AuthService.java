@@ -8,7 +8,9 @@ import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
+import com.example.demo.entity.LoginHistory;
 import com.example.demo.repository.GroupRepository;
+import com.example.demo.repository.LoginHistoryRepository;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.*;
 import com.example.demo.users.exception.UserAlreadyExistsException;
@@ -18,6 +20,7 @@ import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.util.AuthStatus;
+import com.example.demo.util.StatusCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +47,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
     private final MemberRepository memberRepository;
+    private final LoginHistoryRepository loginHistoryRepository;
 
     private Users commonInfoToEntity(CommonInfo commonInfo){
         Users users = Users.builder()
@@ -267,6 +272,59 @@ public class AuthService {
     public Member getMemberEntityById(Long id) {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("ID " + id + "에 해당하는 멤버를 찾을 수 없습니다."));
+    }
+
+    public void createLoginSuccessHistory(String username,String clientIp){
+
+        boolean exists = userRepository.existsByUsername(username);
+        Long usersId = null;
+
+        if(exists){
+            usersId = userRepository.getIdByUsername(username);
+        }
+
+        loginHistoryRepository.save(LoginHistory.builder()
+                .userId(usersId)
+                .username(username)
+                .timestamp(LocalDateTime.now())
+                .ipAddress(clientIp)
+                .success(true)
+                .build());
+
+    }
+    public void createLoginFailHistory(String username,String clientIp){
+
+        if(username == null || username.isEmpty() || username.isBlank()){
+            loginHistoryRepository.save(LoginHistory.builder()
+                    .userId(null)
+                    .username(username)
+                    .timestamp(LocalDateTime.now())
+                    .ipAddress(clientIp)
+                    .success(false)
+                    .build());
+        }
+
+        boolean exists = userRepository.existsByUsername(username);
+        if(exists){
+            Long usersId = userRepository.getIdByUsername(username);
+            loginHistoryRepository.save(LoginHistory.builder()
+                    .userId(usersId)
+                    .username(username)
+                    .timestamp(LocalDateTime.now())
+                    .ipAddress(clientIp)
+                    .success(false)
+                    .build());
+        } else{
+            loginHistoryRepository.save(LoginHistory.builder()
+                    .userId(null)
+                    .username(username)
+                    .timestamp(LocalDateTime.now())
+                    .ipAddress(clientIp)
+                    .success(false)
+                    .build());
+        }
+
+
     }
 
 }

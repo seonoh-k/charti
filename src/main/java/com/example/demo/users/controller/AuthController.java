@@ -4,16 +4,19 @@ import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.info.AddressInfo;
 import com.example.demo.dto.info.CommonInfo;
 import com.example.demo.dto.request.ExpertJoinRequest;
+import com.example.demo.dto.request.LoginAttemptRequest;
 import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
+import com.example.demo.entity.LoginHistory;
 import com.example.demo.exception.JwtTokenFormatInvalidException;
 import com.example.demo.exception.JwtTokenNotFoundException;
 import com.example.demo.jwt.JwtUtil;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.GroupRepository;
+import com.example.demo.repository.LoginHistoryRepository;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
@@ -27,9 +30,11 @@ import com.example.demo.users.service.FirebaseService;
 import com.example.demo.users.service.UserService;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
+import com.example.demo.util.IpUtils;
 import com.example.demo.util.UserStatus;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -44,6 +49,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,6 +71,8 @@ public class AuthController {
     private final ManagerRepository managerRepository;  // 그룹중복 검사를  위해 임시사용
     private final UserRepository userRepository;  // 그룹중복 검사를  위해 임시사용
 
+
+
     /**
      * 로그인 Users 테이블에 있는 데이터로 검사를 진행한다.
      *
@@ -72,7 +80,7 @@ public class AuthController {
      * @return ApiResponse StatusCode : ["AF","AS"]
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> loginUser(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ApiResponse> loginUser(@RequestHeader("Authorization") String authHeader, HttpServletRequest httpServletRequest) {
         try {
             // JWT TOKEN FORMAT => "Bearer TokenValueIsRandomTextAndIncludingNumber"
             String idToken = jwtUtil.removeBearerPrefix(authHeader);
@@ -83,6 +91,10 @@ public class AuthController {
 
             String jwt = jwtUtil.createToken(decoded);
             ResponseCookie jwtCookie = jwtUtil.createCookie(jwt);
+
+            String clientIp = IpUtils.extractClientIp(httpServletRequest);
+
+            authService.createLoginSuccessHistory(email,clientIp);
 
             return ResponseEntity.status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
@@ -118,6 +130,17 @@ public class AuthController {
                     .body(new ApiResponse(AuthStatus.USER_NOT_REGISTRATION));
 
         }
+    }
+    @PostMapping("/auth/login/attempt")
+    public ResponseEntity<ApiResponse> recordLoginAttemptFail(@RequestBody LoginAttemptRequest req,
+                                                              HttpServletRequest request){
+        String clientIp = IpUtils.extractClientIp(request);
+
+        String username = req.getUsername();
+
+        authService.createLoginFailHistory(username,clientIp);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(GlobalStatus.OK));
     }
     @GetMapping("/findUsernameForm")
     public String findUsernameForm() {

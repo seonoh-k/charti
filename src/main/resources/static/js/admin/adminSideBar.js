@@ -10,7 +10,7 @@ function closeSidebar() {
 
 
 function toggleAccordion(openId) {
-    const allMenus = ['menu1', 'menu2', 'menu3', 'menu4', 'menu5', 'menu6'];
+    const allMenus = ['menu1', 'menu2', 'menu3', 'menu4', 'menu5'];
     allMenus.forEach(id => {
         const el = document.getElementById(id);
         if (id === openId) {

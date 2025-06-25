@@ -212,7 +212,35 @@ public class AdminController {
 
         return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
     }
+    @GetMapping("/admin/users/deleted/{id:[0-9]+}")
+    public String showAdminDeletedUserUpdatePage(@PathVariable Long id,
+                                                @ModelAttribute PagingRequest pagingRequest,
+                                               @RequestParam(required = false) String type,
+                                               @RequestParam(required = false) String keyword,
+                                               RedirectAttributes redirectAttribute,
+                                                 Model model){
+        UserDTO userDTO;
 
+        Pageable pageable = pagingRequest.toPageable();
+
+        try{
+            userDTO = userService.getUserDTOById(id);
+
+            log.info(userDTO.getCreatedAt());
+        } catch (UserNotFoundException userNotFoundException){
+
+            redirectAttribute.addAttribute("page",pagingRequest.getPage());
+            redirectAttribute.addAttribute("size",pagingRequest.getSize());
+            redirectAttribute.addAttribute("sort",pagingRequest.getSort());
+            redirectAttribute.addAttribute("direction",pagingRequest.getDirection());
+            return "redirect:/admin/users/all/deleted";
+        }
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("userDTO",userDTO);
+
+        return "admin/users/deletedUserUpdateForm"; // 뷰 파일
+    }
     @GetMapping("/admin/member/{id:[0-9]+}")
     public String showAdminMemberUpdatePage(@ModelAttribute PagingRequest pagingRequest,
                                             @PathVariable Long id,
@@ -495,4 +523,12 @@ public class AdminController {
 
         return "admin/manager/managerChildren";
     }
+
+    @PostMapping("/admin/users/deleted/restore/{id:[0-9]+}")
+    public ResponseEntity<ApiResponse> restoreDeletedUsers(){
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse(GlobalStatus.OK));
+    }
+
 }

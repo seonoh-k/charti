@@ -26,7 +26,7 @@ public class ManagerDTO {
     private String groupName; // 그룹 이름
     private String groupEmail; // 그룹 이메일
     private String groupPhoneNumber; // 그룹 전화번호
-    private TargetGroup targetGroup; // 그룹 분류 ex)유치원,어린이집....
+    private String targetGroup; // 그룹 분류 ex)유치원,어린이집....
     private Boolean isApproved;
     private Boolean deleted;
 
@@ -49,7 +49,7 @@ public class ManagerDTO {
                     .groupName(manager.getGroup().getGroupName())
                     .groupEmail(manager.getGroup().getGroupEmail())
                     .groupPhoneNumber(manager.getGroup().getGroupPhoneNumber())  // ✅ 추가
-                    .targetGroup(manager.getGroup().getTargetGroup())            // ✅ 추가
+                    .targetGroup(manager.getGroup().getTargetGroup().getDisplayName())            // ✅ 추가
                     .groupId(manager.getGroup().getId())
                     .isApproved(manager.getIsApproved())
                     .createdAt(manager.getUsers().getCreatedAt())
@@ -65,7 +65,7 @@ public class ManagerDTO {
                     .groupName(manager.getGroup().getGroupName())
                     .groupEmail(manager.getGroup().getGroupEmail())
                     .groupPhoneNumber(manager.getGroup().getGroupPhoneNumber())  // ✅ 추가
-                    .targetGroup(manager.getGroup().getTargetGroup())            // ✅ 추가
+                    .targetGroup(manager.getGroup().getTargetGroup().getDisplayName())            // ✅ 추가
                     .isApproved(manager.getIsApproved())
                     .createdAt(manager.getUsers().getCreatedAt())
                     .build();
@@ -85,14 +85,14 @@ public class ManagerDTO {
                 .groupName(user.getManager().getGroup().getGroupName())
                 .groupEmail(user.getManager().getGroup().getGroupEmail())
                 .groupPhoneNumber(user.getManager().getGroup().getGroupPhoneNumber())  // ✅ 추가
-                .targetGroup(user.getManager().getGroup().getTargetGroup())  // ✅ 추가
+                .targetGroup(user.getManager().getGroup().getTargetGroup().getDisplayName())  // ✅ 추가
                 .isApproved(user.getManager().getIsApproved())
                 .createdAt(user.getCreatedAt())
                 .build();
     }
     public ManagerDTO(Long id, String name, String username, String nickname,
                       String phoneNumber, Long groupId, String groupName, String groupEmail,
-                      String groupPhoneNumber,TargetGroup targetGroup, Boolean isApproved, LocalDateTime createdAt) {
+                      String groupPhoneNumber,String targetGroup, Boolean isApproved, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.username = username;
@@ -151,9 +151,6 @@ public class ManagerDTO {
         this.deleted = deleted;
     }
 
-    public String getTargetGroupDisplayName() {
-        return targetGroup != null ? targetGroup.getDisplayName() : "";
-    }
 
 
 }

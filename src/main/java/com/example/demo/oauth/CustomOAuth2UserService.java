@@ -1,6 +1,9 @@
 package com.example.demo.oauth;
 
 import com.example.demo.users.entity.Role;
+import com.example.demo.users.service.AuthService;
+import com.example.demo.util.IpUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +17,9 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import com.example.demo.users.repository.UserRepository;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,11 +31,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final List<OAuth2UserInfoFactory> userInfoFactories;
     private final UserRepository userRepository;
+    private final AuthService authService;
+    private final IpUtils ipUtils;
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 
         log.info("🔑 OAuth2 로그인 요청 성공: {}", userRequest.getClientRegistration().getRegistrationId());
-
+        String email = null;
         try {
             // "google", "naver", "kakao"
             String provider = userRequest.getClientRegistration().getRegistrationId();
@@ -52,7 +60,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             log.info("🍘 CustomOAuth2UserService.loadUser oAuth2UserInfo.getEmail() : {}",oAuth2UserInfo.getEmail());
             log.info("🍘 CustomOAuth2UserService.loadUser oAuth2UserInfo.getProviderId() : {}",oAuth2UserInfo.getProviderId());
             log.info("🍘 CustomOAuth2UserService.loadUser oAuth2UserInfo.getProvider() : {}",oAuth2UserInfo.getProvider());
-
+            email = oAuth2UserInfo.getEmail();
             List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
             grantedAuthorities.add(new SimpleGrantedAuthority(Role.ROLE_MEMBER.name()));
 
@@ -60,6 +68,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
 
         } catch (Exception e) {
+            // 1) HttpServletRequest 얻기
+            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            HttpServletRequest req = attrs.getRequest();
+            // 2) IP 추출
+            String clientIp = IpUtils.extractClientIp(req);
+            authService.createLoginFailHistory(email,clientIp);
+
             e.printStackTrace();
             throw e;
         }

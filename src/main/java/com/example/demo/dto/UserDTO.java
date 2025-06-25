@@ -69,4 +69,39 @@ public class UserDTO {
         this.provider = provider;
         this.phoneNumber = phoneNumber;
     }
+    // UserDTO 클래스에 아래 생성자를 추가
+    public UserDTO(Long id, String uuid, String name, String username,
+                   String nickname, String password, String role,
+                   String provider, String providerId,
+                   LocalDateTime createdAt, String phoneNumber) {
+        this.id = id;
+        this.uuid = uuid;
+        this.name = name;
+        this.username = username;
+        this.nickname = nickname;
+        this.password = password;
+        this.role = role;
+        this.provider = provider;
+        this.providerId = providerId;
+        this.createdAt = createdAt;
+        this.phoneNumber = phoneNumber;
+    }
+    public UserDTO(Long id, String uuid, String name, String username,
+                   String nickname, String password, String role,
+                   String provider,
+                   LocalDateTime createdAt, String phoneNumber) {
+        this.id = id;
+        this.uuid = uuid;
+        this.name = name;
+        this.username = username;
+        this.nickname = nickname;
+        this.password = password;
+        this.role = role;
+        this.provider = provider;
+        this.createdAt = createdAt;
+        this.phoneNumber = phoneNumber;
+    }
+
+
+
 }

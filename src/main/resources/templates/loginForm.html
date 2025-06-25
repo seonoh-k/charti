@@ -124,6 +124,16 @@ const firebaseConfig = {
             }
         } catch (error) {
             // 1) Error 타입 구분
+            const recordAttemptFailRes = await fetch('/auth/login/attempt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username,
+                    success: false,
+                    failureReason: error.message
+                })
+            });
+            const recordResult = await recordAttemptFailRes.json();
             console.group('❌ fetch 에러');
             console.log('error.name   :', error.name);      // 예: TypeError, HTTPError
             console.log('error.message:', error.message);   // 예: “Failed to fetch” 또는 “HTTP 401 Unauthorized: …”
