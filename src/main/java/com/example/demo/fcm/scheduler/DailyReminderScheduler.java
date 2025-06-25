@@ -7,6 +7,7 @@ import com.example.demo.users.entity.Users;
 import com.example.demo.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DailyReminderScheduler {
@@ -26,9 +28,10 @@ public class DailyReminderScheduler {
      * 매일 오후 9시(Asia/Seoul)마다 실행
      * 0 0 21 -> 초 분 시
      */
-    @Scheduled(cron = "0 0 21 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 51 14 * * *", zone = "Asia/Seoul")
     @Transactional
     public void remindMissedDailyPerChild() {
+        log.info("[DailyReminder] 스케줄러 실행 확인: {}", LocalDateTime.now());
         LocalDate today = LocalDate.now();
         LocalDateTime start = today.atStartOfDay();
         LocalDateTime end   = today.plusDays(1).atStartOfDay();

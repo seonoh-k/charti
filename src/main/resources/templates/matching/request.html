@@ -24,7 +24,8 @@
         <!-- 3) 상담 제목, 내용 입력 -->
         <form th:action="@{/matching}"
               th:object="${matchingRequest}"
-              method="post">
+              method="post"
+              enctype="multipart/form-data">
             <input type="hidden" th:field="*{childId}" />
             <input type="hidden" th:field="*{category}" />
 
@@ -57,6 +58,17 @@
                 <textarea id="content" th:field="*{content}"
                           class="w-full border p-2 rounded h-32"
                           placeholder="상담 내용을 상세히 입력하세요" required></textarea>
+            </div>
+
+            <!-- 이미지 업로드 -->
+            <div class="mb-4">
+                <label class="block font-semibold mb-1" for="images">이미지 첨부</label>
+                <input id="images"
+                       type="file"
+                       th:field="*{images}"
+                       multiple
+                       accept="image/*"
+                       class="w-full"/>
             </div>
 
             <button type="submit"

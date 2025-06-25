@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.example.demo.matching.entity.Matching;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,4 +22,8 @@ public class Photo extends BaseEntity {
     @ManyToOne // 앨범 테이블과 N:1 관계 설정
     @JoinColumn(name = "album_id")
     private Album album;
+
+    @ManyToOne(fetch = FetchType.LAZY)  // 매칭 테이블과 N:1 관계 설정
+    @JoinColumn(name = "matching_id")
+    private Matching matching;
 }

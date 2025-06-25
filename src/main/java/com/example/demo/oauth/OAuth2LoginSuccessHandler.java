@@ -4,8 +4,10 @@ package com.example.demo.oauth;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.jwt.JwtUtil;
 import com.example.demo.users.entity.Role;
+import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.FirebaseService;
 import com.example.demo.users.service.UserService;
+import com.example.demo.util.IpUtils;
 import com.google.firebase.auth.FirebaseAuthException;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
@@ -35,6 +37,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final FirebaseService firebaseService;
     private final JwtUtil jwtUtil;
     private final List<OAuth2UserInfoFactory> userInfoFactories;
+    private final AuthService authService;
+    private final IpUtils ipUtils;
 
     @Override
     @Transactional
@@ -44,6 +48,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         log.info("1️⃣ OAuth2LoginSuccessHandler.onAuthenticationSuccess Start ");
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+        String clientIp = IpUtils.extractClientIp(request);
         // ex : kakao, naver, google
         String provider = oauthToken.getAuthorizedClientRegistrationId();
         OAuth2User oauthUser = oauthToken.getPrincipal();
@@ -56,7 +61,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         OAuth2UserInfo oAuth2UserInfo = userInfoFactory.create(attributes);
 
-        UserDTO userDTO;
+        UserDTO userDTO = new UserDTO();
         // Firebase 사용자 생성 또는 확인
         // 추가 고려 사항 파이어베이스만 계정 정보가 등록되고 데이터베이스만 등록된경우
         // 파이어베이스 이상으로 파이어베이스는 저장되지않고 데이터베이스만 저장된 경우
@@ -90,6 +95,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 RequestDispatcher dispatcher = request.getRequestDispatcher("/oauth2/login");
                 HttpCookie cookie = jwtUtil.createCookie(customToken);
                 request.setAttribute("firebaseCustomCookie", cookie.getValue());
+
+
+                authService.createLoginSuccessHistory(userDTO.getUsername(),clientIp);
+
                 dispatcher.forward(request,response);
                 return;
 
@@ -102,13 +111,17 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 RequestDispatcher dispatcher = request.getRequestDispatcher("/oauth2/login");
                 HttpCookie cookie = jwtUtil.createCookie(customToken);
                 request.setAttribute("firebaseCustomCookie", cookie.getValue());
+
+                authService.createLoginSuccessHistory(userDTO.getUsername(),clientIp);
                 dispatcher.forward(request, response);
                 return;
             } else if(existsByEmailInFirebase && !existsByEmailInDB){
                 // 이메일이 파이어 베이스에 있지만 데이터베이스에 없는 경우
+                authService.createLoginFailHistory(userDTO.getUsername(),clientIp);
                 throw new RuntimeException("파이어베이스에 해당 계정을 삭제하고 다시시도 하세요 ");
             }
             else{
+                authService.createLoginFailHistory(userDTO.getUsername(),clientIp);
                 throw new RuntimeException("데이터베이스에 해당 계정을 삭제하고 다시시도 하세요 ");
             }
 

@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,6 +22,28 @@
             <p><strong>제목:</strong> <span th:text="${matching.title}"/></p>
             <p><strong>내용:</strong></p>
             <div class="mt-2 p-2 bg-gray-50 rounded" th:text="${matching.content}"/>
+
+            <!-- 첨부 이미지 -->
+            <div th:if="${matching.photos}">
+                <h2 class="font-semibold mb-2">첨부 이미지</h2>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div th:each="img : ${matching.photos}">
+                        <img
+                                th:src="@{/api/proxy/image(filename='thumbnail/' + ${img.fileName})}"
+                                th:data-full="@{/api/proxy/image(filename='original/' + ${img.fileName})}"
+                                class="w-full h-32 object-cover rounded cursor-pointer thumbnail"
+                                th:alt="${img.fileName}"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 모달 (한 번만 선언) -->
+            <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                <button id="image-modal-close"
+                        class="absolute top-4 right-4 text-white text-2xl font-bold focus:outline-none">&times;</button>
+                <img id="image-modal-img" src="" alt="원본 이미지"
+                     class="max-h-[90%] max-w-[90%] rounded shadow-lg"/>
+            </div>
         </section>
 
         <!-- 문진 질문/답변 아코디언 -->
@@ -67,5 +91,33 @@
         </div>
 
     </div>
+
+    <!-- 모달 스크립트 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const modal = document.getElementById('image-modal');
+          const modalImg = document.getElementById('image-modal-img');
+          const btnClose = document.getElementById('image-modal-close');
+
+          document.querySelectorAll('.thumbnail').forEach(el => {
+            el.addEventListener('click', () => {
+              modalImg.src = el.dataset.full;
+              modal.classList.remove('hidden');
+              modal.classList.add('flex');
+            });
+          });
+
+          btnClose.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modalImg.src = '';
+          });
+
+          modal.addEventListener('click', e => {
+            if (e.target === modal) btnClose.click();
+          });
+        });
+    </script>
+
 </th:block>
 </html>

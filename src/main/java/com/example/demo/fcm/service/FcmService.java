@@ -13,6 +13,7 @@ import com.example.demo.fcm.repository.UserFcmTokenRepository;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.service.SurveySetService;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.repository.ChildRepository;
 import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.entity.Child;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -38,6 +40,7 @@ public class FcmService {
     private final ManagerRepository managerRepository;
     private final SurveySetService surveySetService;
     private final FirebaseMessagingService firebaseMessagingService;
+    private final ChildRepository childRepository;
 
     /**
      * 조건에 맞는 사용자들에게 FCM 알림을 발송하고, 발송 이력을 기록한다.
@@ -245,73 +248,79 @@ public class FcmService {
     }
 
     /**
-     * [담당자 → 소속 그룹의 유저들에게 문진 세트 알림 전송]
+     * 담당자가 소속 그룹의 학부모들에게 '자녀별'로 '문진 세트' 알림을 발송합니다.
      *
-     * @param managerId 로그인한 담당자 ID
-     * @param setId     발송할 문진 세트 ID
+     * @param managerId 알림을 보내는 담당자의 ID
+     * @param setId     발송할 문진 세트의 ID
      */
-    @Transactional
     public void sendSurveySetToGroupMembers(Long managerId, Long setId) {
-        // 1. 문진 세트 및 관리자 정보 조회
-        SurveySet set = surveySetService.getById(setId);
-        String title = "[문진 요청] " + set.getSetTitle();
-        String link = "https://charti.site/survey/set/" + setId;
-
+        // 1. 필요한 정보 조회
         Manager manager = managerRepository.findById(managerId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저입니다."));
-        Group group = manager.getGroup();
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저입니다. ID: " + managerId));
+        SurveySet set = surveySetService.getById(setId);
 
-        // 2. 알림 대상자 조회 (해당 그룹 소속 유저 전체)
-        List<Users> users = userRepository.findAllByManager_Group_Id(group.getId());
+        // 2. 알림 대상 '자녀' 목록 조회
+        List<Child> targetChildren = childRepository.findByGroupId(manager.getGroup().getId());
+        if (targetChildren.isEmpty()) {
+            log.info("그룹 ID {} 에 해당하는 자녀가 없어 알림을 발송하지 않습니다.", manager.getGroup().getId());
+            return; // 대상자가 없으면 종료
+        }
 
-        // 3. 히스토리 엔티티 먼저 생성 (알림 1건 기준)
-        FcmSendHistory history = historyRepository.save(
-                FcmSendHistory.builder()
-                        .sender(manager.getUsers()) // 알림 보낸 사람 = 관리자
-                        .title(title)
-                        .body(set.getSetTitle())
-                        .category(FcmCategory.SPECIAL) // 또는 DAILY 등으로 상황에 맞게 지정
-                        .link(link)
-                        .sentAt(LocalDateTime.now())
-                        .targetCount(users.size()) // 전체 대상자 수
-                        .build()
-        );
-
-        // 4. 사용자별 FCM 전송 및 Notice 저장
+        LocalDateTime sentTime = LocalDateTime.now();
         int successCount = 0;
+        List<Notice> noticesToSave = new ArrayList<>();
+        String commonLink = "https://charti.site/surveySet/request/" + setId;
+        // 3. 자녀 한 명 한 명을 기준으로 반복
+        for (Child child : targetChildren) {
+            // Member를 통해 최종 Users 객체를 가져옵니다.
+            // child.getParent() -> Member, child.getParent().getUser() -> Users
+            Users parent = child.getParent().getUsers();
+            if (parent == null || parent.isDeleted()) continue;
+            // 4. 자녀별로 개별 메시지 생성
+            String title = String.format("[문진 요청] %s 어린이를 위한 새 문진이 도착했어요!", child.getName());
+            String body = String.format("'%s' 문진을 확인하고 답변을 부탁드립니다.", set.getSetTitle());
+            String link = "https://charti.site/surveySet/request/" + setId + "?childId=" + child.getId();
+            // 5. 학부모의 활성 토큰으로 FCM 발송
+            List<UserFcmToken> tokens = tokenRepository.findByUserAndIsActiveTrue(parent);
+            if (tokens.isEmpty()) continue;
 
-        for (Users user : users) {
-            List<UserFcmToken> tokens = tokenRepository.findByUserAndIsActiveTrue(user);
-            boolean sent = false;
-
+            boolean sentToUser = false;
             for (UserFcmToken token : tokens) {
                 try {
-                    firebaseMessagingService.sendMessageToToken(token.getFcmToken(), title, set.getSetTitle(), link);
-                    sent = true;
+                    firebaseMessagingService.sendMessageToToken(token.getFcmToken(), title, body, link);
+                    sentToUser = true;
                 } catch (Exception e) {
-                    log.warn("❌ FCM 발송 실패: userId={}, token={}", user.getId(), token.getFcmToken());
+                    log.warn("❌ FCM 발송 실패: userId={}, token={}", parent.getId(), token.getFcmToken(), e);
                 }
             }
-
-            if (sent) {
-                successCount++;
-            }
-
-            // Notice는 항상 저장 (알림함 확인용)
-            noticeRepository.save(
+            if (sentToUser) successCount++;
+            // 6. 생성된 개별 Notice를 리스트에 추가
+            noticesToSave.add(
                     Notice.builder()
-                            .user(user)
+                            .user(parent)
                             .title(title)
-                            .body(set.getSetTitle())
-                            .category(FcmCategory.SPECIAL)
+                            .body(body)
+                            .category(FcmCategory.GROUP)
                             .url(link)
-                            .sentAt(LocalDateTime.now())
+                            .sentAt(sentTime)
                             .build()
             );
         }
-
-        // 5. 성공 개수 반영
-        history.setSuccessCount(successCount);
+        // 7. 모든 Notice를 DB에 일괄 저장
+        noticeRepository.saveAll(noticesToSave);
+        // 8. 최종 결과로 발송 이력(History) 저장
+        historyRepository.save(
+                FcmSendHistory.builder()
+                        .sender(manager.getUsers())
+                        .title(set.getSetTitle())
+                        .body(String.format("%s 담당자가 그룹 문진을 발송했습니다.", manager.getUsers().getName()))
+                        .category(FcmCategory.GROUP)
+                        .targetCondition("groupId=" + manager.getGroup().getId())
+                        .link(commonLink)
+                        .targetCount(targetChildren.size())
+                        .successCount(successCount)
+                        .sentAt(sentTime)
+                        .build()
+        );
     }
-
 }

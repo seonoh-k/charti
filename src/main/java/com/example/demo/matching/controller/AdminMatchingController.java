@@ -9,6 +9,9 @@ import com.example.demo.users.entity.Users;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.matching.service.MatchingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,19 +28,31 @@ public class AdminMatchingController {
     private final FcmService fcmService;
 
     /**
-     * 0) 관리자용 목록 조회 (기본 REQUESTED)
+     * 0) 관리자용 목록 조회 (기본 ALL → 전체)
      */
     @GetMapping
     public String listByStatus(
-            @RequestParam(defaultValue = "REQUESTED") MatchingStatus status,
+            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(defaultValue = "0") int page,
             Model model
     ) {
-        List<Matching> matchings = matchingService.findByStatus(status);
+        PageRequest pr = PageRequest.of(page, 10, Sort.by("createdAt").descending());
+        Page<Matching> matchings;
+        if ("ALL".equals(status)) {
+            matchings = matchingService.findAll(pr);
+        } else {
+            MatchingStatus ms = MatchingStatus.valueOf(status);
+            matchings = matchingService.findByStatus(ms, pr);
+        }
+
+        List<String> statuses = List.of("ALL", "REQUESTED", "MATCHED", "RESPONDED");
+
         model.addAttribute("matchings", matchings);
-        model.addAttribute("statuses", MatchingStatus.values());
+        model.addAttribute("statuses", statuses);
         model.addAttribute("currentStatus", status);
         return "admin/matching/list";
     }
+
 
     /**
      * 3) 전문가 배정 처리 및 알림 발송

@@ -1,11 +1,13 @@
 package com.example.demo.survey.service;
 
 import com.example.demo.survey.entity.GroupAnswer;
+import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.GroupAnswerRepository;
 import com.example.demo.survey.entity.GroupSurvey;
 import com.example.demo.survey.repository.GroupSurveyRepository;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.TargetGroup;
+import com.example.demo.survey.repository.SurveySetRepository;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.service.ChildService;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,18 +22,17 @@ import java.util.List;
 public class GroupAnswerService {
     private final GroupAnswerRepository answerRepo;
     private final ChildService childService;
-    private final GroupSurveyRepository surveyRepo;
+    private final SurveySetRepository surveySetRepo;
 
     // 생성
     @Transactional
     public void saveAnswers(Long childId,
-                            AgeGroup ageGroup,
-                            TargetGroup targetGroup,
+                            Long setId,
                             List<Integer> answers) {
-        Child child = childService.findById(childId);
-        List<GroupSurvey> surveys = surveyRepo.findByAgeGroupAndDeletedFalse(ageGroup).stream()
-                .filter(gs -> gs.getTargetGroup().filter(t->t == targetGroup).isPresent())
-                .toList();
+                Child child = childService.findById(childId);
+                        SurveySet set = surveySetRepo.findById(setId)
+                                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 세트: " + setId));
+                List<GroupSurvey> surveys = set.getGroupSurveys();
         if (surveys.size() != answers.size()) {
             throw new IllegalArgumentException("문진 항목 수와 응답 수 불일치");
         }
@@ -47,10 +48,10 @@ public class GroupAnswerService {
                 default -> throw new IllegalArgumentException("1~5 사이 값 필요");
             };
             GroupAnswer a = new GroupAnswer();
-            a.setSurvey(s);
+            a.setSurveySet(set);
             a.setChild(child);
-            a.setAgeGroup(ageGroup);
-            a.setTargetGroup(targetGroup);
+            a.setAgeGroup(s.getAgeGroup());
+            a.setTargetGroup(s.getTargetGroup().orElseThrow());
             a.setCategory(s.getCategory());
             a.setQuestion(s.getQuestion());
             a.setAnswer(text);
@@ -68,9 +69,21 @@ public class GroupAnswerService {
     public void updateAnswer(Long id, int newValue) {
         GroupAnswer a = answerRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("답변 없음: " + id));
-        GroupSurvey s = surveyRepo.findById(a.getSurvey().getId())
-                .orElseThrow(() -> new EntityNotFoundException("문진 항목 없음"));
-        String newText = switch(newValue) {
+
+        // 1) 이 답변이 속한 SurveySet 로딩
+        SurveySet set = surveySetRepo.findById(a.getSurveySet().getSetId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "세트 없음: " + a.getSurveySet().getSetId()));
+
+        // 2) question 텍스트로 원본 GroupSurvey 객체 찾기
+        GroupSurvey s = set.getGroupSurveys().stream()
+                .filter(gs -> gs.getQuestion().equals(a.getQuestion()))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "문진 항목 없음: " + a.getQuestion()));
+
+        // 3) newValue에 맞는 answer 텍스트 선택
+        String newText = switch (newValue) {
             case 1 -> s.getAnswer1();
             case 2 -> s.getAnswer2();
             case 3 -> s.getAnswer3();
@@ -78,6 +91,8 @@ public class GroupAnswerService {
             case 5 -> s.getAnswer5();
             default -> throw new IllegalArgumentException("1~5 사이 값 필요");
         };
+
+        // 4) 저장
         a.setAnswer(newText);
         answerRepo.save(a);
     }
@@ -87,8 +102,20 @@ public class GroupAnswerService {
     public void updateAnswerValue(Long id, int newValue) {
         GroupAnswer a = answerRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("답변없음 "+id));
-        GroupSurvey s = surveyRepo.findById(a.getSurvey().getId())
-                .orElseThrow(() -> new EntityNotFoundException("설문없음 "+a.getSurvey().getId()));
+
+        // 1) 이 답변이 속한 SurveySet 로딩
+        SurveySet set = surveySetRepo.findById(a.getSurveySet().getSetId())
+                .orElseThrow(() -> new EntityNotFoundException("세트 없음: " + a.getSurveySet().getSetId()));
+
+        // 2) 기존 answer 엔티티에 저장된 question 텍스트로, 해당 문진 항목 객체를 찾음
+        GroupSurvey s = set.getGroupSurveys().stream()
+                .filter(gs -> gs.getQuestion().equals(a.getQuestion()))
+                .findFirst()
+                .orElseThrow(() ->
+                        new EntityNotFoundException("문진 항목 없음: " + a.getQuestion())
+                );
+
+        // 3) 선택된 숫자(newValue)에 따라 새 텍스트 매핑
         String newText = switch (newValue) {
             case 1 -> s.getAnswer1();
             case 2 -> s.getAnswer2();

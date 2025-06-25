@@ -11,5 +11,6 @@ public interface UserQueryRepository {
     Optional<UserAuthDTO> findAuthByUuid(String uuid);
     Page<UserDTO> searchDeletedUsers(String type, String keyword, Pageable pageable);
     Page<UserDTO> getDeletedUserList(Pageable pageable);
+    Optional<UserDTO> getDeletedUserDTOById(Long usersId);
 
 }

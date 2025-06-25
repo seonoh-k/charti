@@ -9,6 +9,7 @@ import com.example.demo.survey.entity.GroupSurvey;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.GroupSurveyRepository;
 import com.example.demo.survey.repository.SurveySetRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,12 @@ public class GroupSurveyService {
 
     private final GroupSurveyRepository groupSurveyRepository;
     private final SurveySetRepository surveySetRepository;
+
+    public GroupSurveyResponseDto getSurveyById(Long id) {
+        return groupSurveyRepository.findById(id)
+                .map(GroupSurveyResponseDto::fromEntity)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 문항을 찾을 수 없습니다: " + id));
+    }
 
 
     public List<GroupSurveyResponseDto> getByAgeGroup(String ageGroup) {

@@ -646,5 +646,17 @@ public class UserService {
         Page<UserDTO> result = userQueryRepository.getDeletedUserList(pageable);
         return new PagingResultDTO<>(result);
     }
+    public Long getUserIdByUsername(String username){
+        return userRepository.getIdByUsername(username);
+    }
+    public UserDTO getUserDTOById(Long userId) throws UserNotFoundException{
+        Optional<UserDTO> dtoById = userQueryRepository.getDeletedUserDTOById(userId);
+
+        if(dtoById.isEmpty()){
+            throw new UserNotFoundException();
+        }
+
+        return dtoById.get();
+    }
 
 }

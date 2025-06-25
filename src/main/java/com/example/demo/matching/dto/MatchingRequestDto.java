@@ -3,6 +3,7 @@ package com.example.demo.matching.dto;
 import com.example.demo.enums.SurveyCategory;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,4 +15,7 @@ public class MatchingRequestDto {
     private SurveyCategory category;
     private String title;
     private String content;
+
+    // 이미지 업로드
+    private List<MultipartFile> images = new ArrayList<>();
 }

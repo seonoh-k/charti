@@ -122,4 +122,27 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
 
         return new PageImpl<>(content, pageable, total);
     }
+
+    @Override
+    public Optional<UserDTO> getDeletedUserDTOById(Long id) {
+        QUsers u = QUsers.users;
+        UserDTO dto = queryFactory
+                .select(Projections.fields(UserDTO.class,
+                        u.id,
+                        u.uuid,
+                        u.name,
+                        u.username,
+                        u.nickname,
+                        u.password,
+                        u.role.stringValue().as("role"),  // ← Enum → String 변환
+                        u.provider,
+                        u.createdAt,
+                        u.phoneNumber
+                ))
+                .from(u)
+                .where(u.id.eq(id),
+                        u.deleted.eq(true))
+                .fetchOne();
+        return Optional.ofNullable(dto);
+    }
 }

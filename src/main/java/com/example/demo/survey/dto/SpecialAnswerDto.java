@@ -1,6 +1,7 @@
 package com.example.demo.survey.dto;
 
 import com.example.demo.survey.entity.SpecialAnswer;
+import com.example.demo.survey.entity.SpecialSurvey;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,7 +24,7 @@ public class SpecialAnswerDto {
     public static SpecialAnswerDto fromEntity(SpecialAnswer a) {
         SpecialAnswerDto d = new SpecialAnswerDto();
         d.setId(a.getId());
-        var c = a.getChild();
+        var c   = a.getChild();
         var age = c.getBirthday().toLocalDate()
                 .until(LocalDate.now()).getYears();
         d.setChildDisplay(c.getName()+"("+c.getNickname()+") - "+age+"세");
@@ -33,13 +34,20 @@ public class SpecialAnswerDto {
         d.setAnswer(a.getAnswer());
         d.setCreatedAt(a.getCreatedAt());
 
-        var s = a.getSurvey();
+        // 1 SurveySet에서 question이 같은 SpecialSurvey 객체 찾기
+        SpecialSurvey s = a.getSurveySet().getSpecialSurveys().stream()
+                .filter(ss -> ss.getQuestion().equals(a.getQuestion()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("문진 항목 없음: " + a.getQuestion()));
+
+        // 2 그 객체에서 옵션 꺼내기
         List<String> opts = List.of(
                 s.getAnswer1(), s.getAnswer2(),
                 s.getAnswer3(), s.getAnswer4(), s.getAnswer5()
         );
         d.setPossibleAnswers(opts);
-        d.setSelectedValue(opts.indexOf(a.getAnswer())+1);
+        d.setSelectedValue(opts.indexOf(a.getAnswer()) + 1);
+
         return d;
     }
 }
