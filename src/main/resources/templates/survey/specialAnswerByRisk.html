@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>특별 문진 결과</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-2xl mx-auto p-6 text-center">
+        <h1 class="text-3xl font-bold mb-4">특별 문진 결과</h1>
+        <div id="result-container" class="p-8 border rounded-lg shadow-lg bg-white">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('result-container');
+            const params = new URLSearchParams(window.location.search);
+            const dataParam = params.get('data');
+
+            if (!dataParam) {
+                container.innerHTML = `<p class="text-red-500">결과 데이터를 불러오는 데 실패했습니다.</p>`;
+                return;
+            }
+
+            try {
+                const result = JSON.parse(decodeURIComponent(dataParam));
+                const categoryDisplayName = Object.keys(result.categoryScores)[0];
+                const score = Object.values(result.categoryScores)[0];
+
+                let contentHtml = `
+                    <p class="text-lg text-gray-600 mb-2">'${categoryDisplayName}' 카테고리</p>
+                    <p class="text-6xl font-extrabold mb-4" style="color: ${score >= 60 ? '#D9534F' : '#5CB85C'};">
+                        ${score.toFixed(1)}<span class="text-3xl">%</span>
+                    </p>
+                `;
+
+                if (result.needsMatching) {
+                    // answerId 목록을 쿼리 스트링으로 변환 (e.g., &answerId=1&answerId=2)
+                    const answerIdQuery = result.answerIds.map(id => `answerId=${id}`).join('&');
+
+                    // 최종 매칭 요청 URL 생성
+                    const matchingUrl = `/matching/${result.category}/request?childId=${result.childId}&${answerIdQuery}`;
+
+                    contentHtml += `
+                        <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <p class="font-semibold text-red-800"><i class="fas fa-exclamation-triangle mr-2"></i>전문가의 상담이 권장됩니다.</p>
+                            <p class="text-sm text-gray-700 mt-2">아래 버튼을 눌러 전문가 상담을 신청할 수 있습니다.</p>
+                        </div>
+                        <a href="${matchingUrl}"
+                           class="mt-6 inline-block bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 text-lg font-bold shadow-lg transition-transform transform hover:scale-105">
+                           <i class="fas fa-user-md mr-2"></i>전문가 상담 신청하기
+                        </a>
+                    `;
+                } else {
+                    contentHtml += `
+                        <p class="font-semibold text-green-700">양호한 상태입니다.</p>
+                        <a href="/" class="mt-6 inline-block bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                           메인으로 돌아가기
+                        </a>
+                    `;
+                }
+                container.innerHTML = contentHtml;
+
+            } catch (e) {
+                console.error("결과 파싱 실패:", e);
+                container.innerHTML = `<p class="text-red-500">잘못된 결과 데이터 형식입니다.</p>`;
+            }
+        });
+    </script>
+</th:block>
+</html>

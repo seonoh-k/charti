@@ -35,6 +35,7 @@ public class Group extends BaseEntity {
     // 그룹 전화번호 회사전화기
     private String groupPhoneNumber;
     // 타겟 그룹(유치원, 어린이집, 보육원)
+    @Column(name = "target_group", nullable = false)
     private TargetGroup targetGroup;
 
     @OneToOne(mappedBy = "group")

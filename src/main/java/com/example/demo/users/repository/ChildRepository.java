@@ -29,4 +29,11 @@ public interface ChildRepository extends JpaRepository<Child, Long> {
     // child.parent.users.id = ? 인 자녀들을 모두 가져옴
     List<Child> findByParentUsersId(Long usersId);
 
+    /**
+     * 특정 기관(Group) ID에 속한 모든 자녀 목록을 조회합니다.
+     * @param groupId 기관(Group)의 ID
+     * @return 자녀(Child) 목록
+     */
+    List<Child> findByGroupId(Long groupId);
+
 }

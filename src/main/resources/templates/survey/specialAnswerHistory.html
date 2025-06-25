@@ -13,7 +13,6 @@
     <div class="max-w-4xl mx-auto p-6">
         <h1 class="text-2xl font-bold mb-6">특별 문진 이력</h1>
 
-        <!-- 1) 자녀 선택 -->
         <div class="mb-4">
             <label for="childSelect" class="font-semibold mr-2">자녀 선택:</label>
             <select id="childSelect" class="border p-2 rounded w-64">
@@ -25,7 +24,6 @@
             </select>
         </div>
 
-        <!-- 2) 자녀 정보 -->
         <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
             <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
             <p><strong>이름:</strong> <span id="infoName"></span></p>
@@ -35,11 +33,9 @@
             <p><strong>체중:</strong> <span id="infoWeight"></span></p>
         </div>
 
-        <!-- 3) 이력 리스트 -->
         <div id="answerList" class="space-y-4"></div>
     </div>
 
-    <!-- 4) 수정 모달 -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded shadow-xl w-full max-w-lg">
             <h2 class="text-xl font-bold mb-4">답변 수정</h2>
@@ -65,16 +61,39 @@
         let currentId   = null;
 
         /**
-         * 답변 값(1~5)에 따른 위험도 퍼센트를 반환하는 헬퍼 함수
+         * 답변 값과 '선택지 배열'에 따라 위험도 퍼센트를 반환하는 헬퍼 함수
          */
-        function getRiskPercentage(selectedValue) {
-            switch (selectedValue) {
-                case 1: return 100;
-                case 2: return 75;
-                case 3: return 50;
-                case 4: return 25;
-                case 5: return 0;
-                default: return 0;
+        function getRiskPercentage(selectedValue, possibleAnswers) {
+            if (!possibleAnswers || possibleAnswers.length === 0) {
+                return 0; // 안전 장치
+            }
+            const totalOptions = possibleAnswers.length;
+
+            switch (totalOptions) {
+                case 5: // 5지선다
+                    switch (selectedValue) {
+                        case 1: return 100;
+                        case 2: return 75;
+                        case 3: return 50;
+                        case 4: return 25;
+                        case 5: return 0;
+                        default: return 0;
+                    }
+                case 3: // 3지선다
+                    switch (selectedValue) {
+                        case 1: return 100;
+                        case 2: return 50;
+                        case 3: return 0;
+                        default: return 0;
+                    }
+                case 2: // 2지선다 (역계산)
+                    switch (selectedValue) {
+                        case 1: return 0;
+                        case 2: return 100;
+                        default: return 0;
+                    }
+                default: // 그 외
+                    return 0;
             }
         }
 
@@ -82,8 +101,9 @@
          * 위험도에 따라 다른 색상 클래스를 반환하는 헬퍼 함수
          */
         function getRiskColorClass(percentage) {
-            if (percentage >= 75) return 'text-red-600 font-semibold';
-            if (percentage >= 50) return 'text-orange-500 font-semibold';
+            // [수정] groupAnswerHistory와 기준 통일
+            if (percentage >= 60) return 'text-red-600 font-semibold';
+            if (percentage >= 40) return 'text-orange-500 font-semibold';
             return 'text-green-600';
         }
 
@@ -95,9 +115,19 @@
             return;
           }
 
-          // 자녀 정보 조회
+          // [수정] 자녀 정보 조회 후 화면에 표시하는 로직 추가
           fetch(`/api/child/info/${childId}`)
-            .then(r => r.ok ? r.json() : Promise.reject(r));
+            .then(r => r.ok ? r.json() : Promise.reject(r))
+            .then(data => {
+                childInfo.classList.remove('hidden');
+                infoName.textContent = data.name;
+                infoGender.textContent = data.gender;
+                infoAge.textContent = data.age + '세';
+                infoHeight.textContent = data.height;
+                infoWeight.textContent = data.weight;
+            }).catch(() => {
+                console.error('자녀 정보를 불러오는 데 실패했습니다.');
+            });
 
           // 이력 조회
           fetch(`/specialAnswer/api/history/${childId}`)
@@ -122,7 +152,8 @@
                   section.className = 'border rounded mb-4';
 
                   const dailyAnswers = byDate[date];
-                  const totalMultiplierSum = dailyAnswers.reduce((sum, ans) => sum + (getRiskPercentage(ans.selectedValue) / 100), 0);
+                  // [수정] getRiskPercentage 호출 시 두 번째 인자(ans.possibleAnswers) 추가
+                  const totalMultiplierSum = dailyAnswers.reduce((sum, ans) => sum + (getRiskPercentage(ans.selectedValue, ans.possibleAnswers) / 100), 0);
                   const averageRisk = dailyAnswers.length > 0 ? (totalMultiplierSum / dailyAnswers.length) * 100 : 0;
 
                   const header = document.createElement('button');
@@ -142,7 +173,8 @@
                     const card = document.createElement('div');
                     card.className = 'border p-3 rounded flex justify-between items-start';
 
-                    const riskPercentage = getRiskPercentage(ans.selectedValue);
+                    // [수정] getRiskPercentage 호출 시 두 번째 인자(ans.possibleAnswers) 추가
+                    const riskPercentage = getRiskPercentage(ans.selectedValue, ans.possibleAnswers);
                     const riskColorClass = getRiskColorClass(riskPercentage);
 
                     card.innerHTML = `
@@ -153,7 +185,6 @@
                         <p class="text-sm text-gray-700" id="answerText_${ans.id}">
                           ${ans.answer || ''}
                         </p>
-                        <!-- [수정] 가중치 표시를 제거하고 위험도만 표시 -->
                         <p class="text-xs mt-1">
                             위험도: <span class="${riskColorClass}">${riskPercentage}%</span>
                         </p>
