@@ -116,6 +116,77 @@
                 </button>
             </div>
 
+            <!-- 공통 약관 -->
+            <!-- <div th:insert="fragments/termsCheckboxes :: commonTerms"></div> -->
+             <!-- 약관 섹션 -->
+<div class="border rounded-lg bg-white text-gray-800 p-4 max-w-md mx-auto">
+  <div class="flex items-center mb-2">
+    <input id="agreeAll" type="checkbox" class="h-4 w-4 text-purple-600 border-gray-300 rounded" />
+    <label for="agreeAll" class="ml-2 font-medium">전체 동의</label>
+  </div>
+  <hr class="mb-2" />
+  <div class="space-y-3 pl-6">
+    <!-- 필수 약관 1 -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <input
+          id="agreeService"
+          name="agreeService"
+          type="checkbox"
+          required
+          class="individual h-4 w-4 text-purple-600 border-gray-300 rounded"
+        />
+        <label for="agreeService" class="ml-2">(필수) 서비스 이용약관 동의</label>
+      </div>
+      <a href="/terms/service" target="_blank" class="text-gray-400 hover:text-gray-600">&gt;</a>
+    </div>
+    <!-- 필수 약관 2 -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <input
+          id="agreePrivacy"
+          name="agreePrivacy"
+          type="checkbox"
+          required
+          class="individual h-4 w-4 text-purple-600 border-gray-300 rounded"
+        />
+        <label for="agreePrivacy" class="ml-2">(필수) 개인정보 수집·이용 동의</label>
+      </div>
+      <a href="/terms/privacy" target="_blank" class="text-gray-400 hover:text-gray-600">&gt;</a>
+    </div>
+    <!-- 선택 약관 1 -->
+    <div class="flex items-center">
+      <input
+        id="agreeLocation"
+        name="agreeLocation"
+        type="checkbox"
+        class="individual h-4 w-4 text-purple-600 border-gray-300 rounded"
+      />
+      <label for="agreeLocation" class="ml-2">(선택) 위치기반서비스 이용약관 동의</label>
+    </div>
+    <!-- 선택 약관 2 -->
+    <div class="flex items-center">
+      <input
+        id="agreeEmail"
+        name="agreeEmail"
+        type="checkbox"
+        class="individual h-4 w-4 text-purple-600 border-gray-300 rounded"
+      />
+      <label for="agreeEmail" class="ml-2">(선택) 마케팅 정보 수신 - 이메일</label>
+    </div>
+    <!-- 선택 약관 3 -->
+    <div class="flex items-center">
+      <input
+        id="agreeSms"
+        name="agreeSms"
+        type="checkbox"
+        class="individual h-4 w-4 text-purple-600 border-gray-300 rounded"
+      />
+      <label for="agreeSms" class="ml-2">(선택) 마케팅 정보 수신 - SMS/MMS</label>
+    </div>
+  </div>
+</div>
+
             <div class="mt-6">
                 <button type="submit"
                         class="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition">

@@ -8,6 +8,7 @@ import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.*;
@@ -71,11 +72,12 @@ public class AuthService {
     }
 
     private Group groupInfoToEntity(GroupInfo groupInfo){
+        TargetGroup tgEnum = TargetGroup.fromValue(groupInfo.getTargetGroup());
         Group group = Group.builder()
                 .groupName(groupInfo.getGroupName())
                 .groupPhoneNumber(groupInfo.getGroupPhoneNumber())
                 .groupEmail(groupInfo.getGroupEmail())
-                .targetGroup(groupInfo.getTargetGroup())
+                .targetGroup(tgEnum)
                 .build();
 
         return group;

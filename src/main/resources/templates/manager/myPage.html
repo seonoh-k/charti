@@ -105,7 +105,7 @@
             <div id="targetGroupDisplayBox">
             <label class="block text-sm font-semibold mb-1">그룹 분류</label>
             <input type="text" name="targetGroupDisplayName" id="targetGroupDisplayName"
-                    th:value="${userInfo.targetGroupDisplayName}"
+                    th:value="${userInfo.targetGroup}?:''"
                     class="w-full border p-2 rounded-md bg-gray-100" readonly />
             </div>
 
