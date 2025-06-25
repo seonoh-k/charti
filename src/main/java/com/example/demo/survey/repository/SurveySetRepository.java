@@ -37,5 +37,10 @@ public interface SurveySetRepository
 """)
     List<SurveySet> findAllByTargetGroupForManager(@Param("targetGroup") TargetGroup targetGroup);
 
+    /**
+     *  타입이 'GROUP'인 모든 문진 세트를 조회합니다.
+     * 담당자의 소속 그룹과 관계 없이, 모든 그룹 문진 세트를 가져옵니다.
+     */
+    List<SurveySet> findByType(String type);
 
 }
