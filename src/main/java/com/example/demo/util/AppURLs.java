@@ -34,7 +34,8 @@ public class AppURLs {
             "/findUsernameForm",
             "/resetPasswordForm",
             "/api/findUsername",
-            "/api/resetPassword"
+            "/api/resetPassword",
+            "/auth/login/attempt"
 
 
     };

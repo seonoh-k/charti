@@ -90,12 +90,13 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                 .groupId(groupId)
                 .groupName(managerTuple.get(g.groupName))
                 .groupEmail(managerTuple.get(g.groupEmail))
-                .targetGroup(TargetGroup.valueOf(managerTuple.get(g.targetGroup.stringValue())))
+                .targetGroup(managerTuple.get(g.targetGroup.stringValue()))
                 .isApproved(managerTuple.get(m.isApproved))
                 .createdAt(managerTuple.get(u.createdAt))
                 .deleted(managerTuple.get(u.deleted))
                 .children(childList)
                 .build();
+
         return Optional.of(managerDTO);
     }
 

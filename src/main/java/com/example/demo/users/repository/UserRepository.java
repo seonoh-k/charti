@@ -1,5 +1,6 @@
 package com.example.demo.users.repository;
 
+import com.example.demo.dto.UserDTO;
 import com.example.demo.users.entity.Expert;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Role;
@@ -46,6 +47,8 @@ public interface UserRepository extends JpaRepository<Users,Long> {
     @Query("SELECT u.uuid FROM Users u WHERE u.id = :id")
     String getUuidById(@Param("id") Long id);
 
+    @Query("SELECT u.id FROM Users u WHERE u.username = :username")
+    Long getIdByUsername(@Param("username") String username);
     /**
      * [그룹 ID로 소속 사용자 전체 조회]
      * 특정 그룹(group_id)에 속한 사용자들을 모두 조회한다.
@@ -54,4 +57,6 @@ public interface UserRepository extends JpaRepository<Users,Long> {
      * @return 해당 그룹 소속 사용자 리스트
      */
     List<Users> findAllByManager_Group_Id(Long groupId);
+
+    
 }

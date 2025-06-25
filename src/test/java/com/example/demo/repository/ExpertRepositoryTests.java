@@ -162,4 +162,19 @@ class ExpertRepositoryTests {
         dtoList.forEach(System.out::println);
 
     }
+
+    @Test
+    public void testUser(){
+        // Long idByUsername = userRepository.getIdByUsername("manager1@test.com");
+        // System.out.println(idByUsername);
+//        Long userId = 44L;
+//        Optional<UserDTO> dtoById = userQueryRepository.getDeletedUserDTOById(userId);
+        Optional<ManagerDTO> managerById = managerQueryRepository.getManagerById(519L);
+        if (managerById.isPresent()){
+            String targetGroup = managerById.get().getTargetGroup();
+            System.out.println("ExpertRepositoryTests.testUser : " + targetGroup);
+        }
+    }
+
+
 }
