@@ -28,9 +28,9 @@ public class Matching extends BaseEntity {
     @OneToMany(mappedBy = "matching", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SpecialAnswer> answers = new ArrayList<>();
 
-    // 사진
-    @OneToMany(mappedBy = "matching", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Photo> photos = new ArrayList<>();
+    // 첨부 이미지 파일명 (UUID_원본이름)
+    @Column(name = "filename")
+    private String filename;
 
     // 자녀(Child)
     @ManyToOne(fetch = FetchType.LAZY)
