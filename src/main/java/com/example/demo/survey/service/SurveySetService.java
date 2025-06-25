@@ -11,6 +11,7 @@ import com.example.demo.users.entity.Manager;
 import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class SurveySetService {
 
     private final SurveySetRepository     surveySetRepo;
@@ -142,13 +144,29 @@ public class SurveySetService {
      * @param managerId 현재 로그인한 담당자 ID
      * @return 문진 세트 목록
      */
+//    public List<SurveySet> getSetsForManager(Long managerId) {
+//        Manager manager = managerRepo.findById(managerId)
+//                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저입니다."));
+//        TargetGroup targetGroup = manager.getGroup().getTargetGroup();
+//
+//        return surveySetRepo.findAllByTargetGroupForManager(targetGroup);
+//    }
     public List<SurveySet> getSetsForManager(Long managerId) {
         Manager manager = managerRepo.findById(managerId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저입니다."));
-        TargetGroup targetGroup = manager.getGroup().getTargetGroup();
 
-        return surveySetRepo.findAllByTargetGroupForManager(targetGroup);
+        log.info("매니저 ID: {}", manager.getId());
+        log.info("소속 그룹 ID: {}", manager.getGroup() != null ? manager.getGroup().getId() : "null");
+
+        TargetGroup targetGroup = manager.getGroup() != null ? manager.getGroup().getTargetGroup() : null;
+        log.info("타겟 그룹: {}", targetGroup != null ? targetGroup.getDisplayName() : "null");
+
+        List<SurveySet> result = surveySetRepo.findByType("GROUP");
+        log.info("조회된 세트 수: {}", result.size());
+
+        return result;
     }
+
 
 
     /**
