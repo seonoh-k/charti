@@ -22,6 +22,11 @@ public class GroupSurveyController {
     private final GroupSurveyService groupSurveyService;
     private final GroupAnswerService groupAnswerService;
 
+    @GetMapping("/{id}")
+    public GroupSurveyResponseDto getSurveyById(@PathVariable Long id) {
+        return groupSurveyService.getSurveyById(id);
+    }
+
     // 1. 연령대 기준 조회
     @GetMapping("/by-age/{ageGroup}")
     public List<GroupSurveyResponseDto> getSurveysByAgeGroup(@PathVariable String ageGroup) {

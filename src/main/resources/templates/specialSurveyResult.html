@@ -38,7 +38,7 @@
           throw e;
         }
 
-        const { categoryScores, childId, ageGroup, needsMatching, category } = result;
+        const { categoryScores, needsMatching, childId, category, answerIds } = result;
         const container = document.getElementById("resultContainer");
         container.innerHTML = ''; // 컨테이너 초기화
 
@@ -56,9 +56,14 @@
                 </div>
             `;
 
-            // [수정] needsMatching 플래그가 true일 때만 '전문가 매칭하기' 버튼 추가
-            // 특별 문진은 카테고리가 하나이므로, isHighRisk와 needsMatching은 사실상 같은 조건
-            if (needsMatching) {
+            // [핵심 수정] 'needsMatching'이 true이고, answerIds가 있을 때만 버튼 생성
+            if (needsMatching && answerIds && answerIds.length > 0) {
+                // answerId 목록을 쿼리 스트링으로 변환 (e.g., &answerId=1&answerId=2)
+                const answerIdQuery = answerIds.map(id => `answerId=${id}`).join('&');
+
+                // 최종 매칭 요청 URL 생성 (category는 ENUM 이름이어야 함)
+                const matchingUrl = `/matching/${category}/request?childId=${childId}&${answerIdQuery}`;
+
                 contentHTML += `
                     <div class="mt-3 pt-3 border-t border-red-200">
                         <p class="text-sm text-red-800">
@@ -66,32 +71,15 @@
                             <strong>'${catDisplayName}'</strong> 항목에 대한 전문가의 심층 상담이 필요할 수 있습니다.
                         </p>
                         <p class="text-xs text-gray-600 mt-1">아래 버튼을 눌러 전문가 매칭을 요청하세요.</p>
-                        <button onclick="requestMatching('${childId}', '${ageGroup}', '${category}')" class="mt-2 inline-block bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 text-sm font-bold">
-                            전문가 매칭하기
-                        </button>
+                        <a href="${matchingUrl}" class="mt-2 inline-block bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 text-sm font-bold">
+                            전문가 상담 신청하기
+                        </a>
                     </div>
                 `;
             }
 
             wrapperDiv.innerHTML = contentHTML;
             container.appendChild(wrapperDiv);
-        }
-
-        // '전문가 매칭하기' 버튼 클릭 시 실행될 함수
-        function requestMatching(childId, ageGroup, category) {
-            // 여기에 추후 실제 매칭 정보를 저장하는 API를 호출하는 로직을 구현합니다.
-            // fetch('/api/matching', { method: 'POST', ... });
-
-            const message = `
-                전문가 매칭을 요청합니다.
-                - 자녀 ID: ${childId}
-                - 연령대: ${ageGroup}
-                - 카테고리: ${category}
-            `;
-            alert(message);
-
-            // 예시: 요청 후 매칭 페이지로 이동
-            // window.location.href = '/matching/request-complete';
         }
     </script>
 </th:block>
