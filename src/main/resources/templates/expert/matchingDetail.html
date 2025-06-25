@@ -29,15 +29,16 @@
                  th:text="${matching.content}"></div>
 
             <!-- 첨부 이미지 -->
-            <div th:if="${matching.photos}">
+            <div th:if="${photos != null and !photos.isEmpty()}">
                 <h2 class="font-semibold mb-2">첨부 이미지</h2>
                 <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div th:each="img : ${matching.photos}">
+                    <!-- photos 리스트에는 fileName 문자열이 들어있습니다 -->
+                    <div th:each="fileName : ${photos}">
                         <img
-                                th:src="@{/api/proxy/image(filename='thumbnail/' + ${img.fileName})}"
-                                th:data-full="@{/api/proxy/image(filename='original/' + ${img.fileName})}"
+                                th:src="@{/api/proxy/image(filename='thumbnail/' + ${fileName})}"
+                                th:data-full="@{/api/proxy/image(filename='original/'  + ${fileName})}"
                                 class="w-full h-32 object-cover rounded cursor-pointer thumbnail"
-                                th:alt="${img.fileName}"/>
+                                th:alt="${fileName}" />
                     </div>
                 </div>
             </div>

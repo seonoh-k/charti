@@ -10,6 +10,7 @@ import com.example.demo.survey.repository.*;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.MemberRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -178,6 +179,6 @@ public class SurveySetService {
      */
     public SurveySet getById(Long setId) {
         return surveySetRepo.findById(setId)
-                .orElseThrow(SurveySetNotFoundException::new);
+                .orElseThrow(() -> new EntityNotFoundException("설문 세트 없음: " + setId));
     }
 }
