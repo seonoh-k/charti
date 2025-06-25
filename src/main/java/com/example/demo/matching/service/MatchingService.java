@@ -4,6 +4,8 @@ import com.example.demo.enums.MatchingStatus;
 import com.example.demo.matching.entity.Matching;
 import com.example.demo.matching.repository.MatchingRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,8 +24,22 @@ public class MatchingService {
         return matchingRepository.save(matching);
     }
 
-    public List<Matching> findByStatus(MatchingStatus status) {
-        return matchingRepository.findByStatus(status);
+    public Page<Matching> findAll(Pageable pageable) {
+        return matchingRepository.findAll(pageable);
+    }
+
+    public Page<Matching> findByStatus(MatchingStatus status, Pageable pageable) {
+        return matchingRepository.findByStatus(status, pageable);
+    }
+
+    /** 전문가별 상담 조회 */
+    public Page<Matching> findByExpertId(Long expertId, Pageable pageable) {
+        return matchingRepository.findByExpertId(expertId, pageable);
+    }
+
+    /** 전문가별 + 상태별 상담 조회 */
+    public Page<Matching> findByExpertIdAndStatus(Long expertId, MatchingStatus status, Pageable pageable) {
+        return matchingRepository.findByExpertIdAndStatus(expertId, status, pageable);
     }
 
     /** 상세 조회*/

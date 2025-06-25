@@ -72,14 +72,13 @@ public class SpecialSurveyController {
     @PostMapping("/submit")
     public ResponseEntity<Map<String,Object>> submitAndSave(
             @RequestBody SpecialSurveyRequestDto dto) {
-        // 저장
+
         specialAnswerService.saveAnswers(
                 dto.getChildId(),
-                AgeGroup.fromValue(dto.getAgeGroup()),
-                SurveyCategory.fromValue(dto.getCategory()),
+                dto.getSetId(),
                 dto.getAnswers()
         );
-        // 평가
+
         Map<String,Object> result = specialSurveyService.evaluate(dto);
         return ResponseEntity.ok(result);
     }

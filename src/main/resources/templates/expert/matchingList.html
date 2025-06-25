@@ -1,27 +1,36 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상담 목록</title>
+    <title>내 상담 내역</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
-<h1 class="text-2xl font-bold mb-4">상담 내역</h1>
+    <h1 class="text-2xl font-bold mb-4">내 상담 내역</h1>
 
-<!-- 필터 폼 -->
-    <form th:action="@{/admin/matching}" method="get"
+    <!-- 상태 필터 -->
+    <form th:action="@{/expert/matching}" method="get"
           class="mb-6 flex items-center space-x-2">
         <label for="status" class="font-semibold">상태:</label>
-        <select id="status" name="status" class="border p-1 rounded">
-            <option th:each="s : ${statuses}"
-                    th:value="${s}"
-                    th:selected="${s == currentStatus}"
-                    th:text="|${s == 'ALL' ? '전체' : T(com.example.demo.enums.MatchingStatus).valueOf(s).displayName}|">
-            </option>
+        <select id="status" name="status"
+                class="border p-1 rounded">
+            <option th:value="'ALL'"
+                    th:text="'전체'"
+                    th:selected="${currentStatus=='ALL'}">전체</option>
+            <option th:value="MATCHED"
+                    th:text="${T(com.example.demo.enums.MatchingStatus).MATCHED.displayName}"
+                    th:selected="${currentStatus=='MATCHED'}">매칭완료</option>
+            <option th:value="RESPONDED"
+                    th:text="${T(com.example.demo.enums.MatchingStatus).RESPONDED.displayName}"
+                    th:selected="${currentStatus=='RESPONDED'}">답변완료</option>
         </select>
         <button type="submit"
                 class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
@@ -29,7 +38,6 @@
         </button>
     </form>
 
-    <!-- 결과 테이블 -->
     <table class="min-w-full border-collapse">
         <thead>
         <tr class="bg-gray-100">
@@ -42,13 +50,13 @@
         </thead>
         <tbody>
         <tr th:each="m : ${matchings}" class="odd:bg-white even:bg-gray-50">
-            <td class="border p-2" th:text="${m.id}">1</td>
-            <td class="border p-2" th:text="${m.child.name}">김철수</td>
-            <td class="border p-2" th:text="${m.category.displayName}">생활습관</td>
+            <td class="border p-2" th:text="${m.id}"></td>
+            <td class="border p-2" th:text="${m.child.name}"></td>
+            <td class="border p-2" th:text="${m.category.displayName}"></td>
             <td class="border p-2">
-                <a th:href="@{/matching/detail/{id}(id=${m.id})}"
+                <a th:href="@{/expert/matching/{id}(id=${m.id})}"
                    th:text="${m.title}"
-                   class="text-blue-600 hover:underline">제목</a>
+                   class="text-blue-600 hover:underline"></a>
             </td>
             <td class="border p-2" th:text="${m.status.displayName}"></td>
         </tr>
@@ -61,16 +69,16 @@
     <!-- 페이징 -->
     <div class="mt-4 flex justify-center space-x-2">
         <a th:if="${matchings.hasPrevious()}"
-           th:href="@{/admin/matching(status=${currentStatus},page=${matchings.number-1})}"
+           th:href="@{/expert/matching(status=${currentStatus},page=${matchings.number-1})}"
            class="px-2 py-1 border rounded">Prev</a>
         <span th:each="i : ${#numbers.sequence(0, matchings.totalPages-1)}">
-      <a th:href="@{/admin/matching(status=${currentStatus},page=${i})}"
+      <a th:href="@{/expert/matching(status=${currentStatus},page=${i})}"
          th:text="${i+1}"
          th:classappend="${i == matchings.number} ? ' font-bold underline' : ''"
          class="px-2 py-1 border rounded"></a>
     </span>
         <a th:if="${matchings.hasNext()}"
-           th:href="@{/admin/matching(status=${currentStatus},page=${matchings.number+1})}"
+           th:href="@{/expert/matching(status=${currentStatus},page=${matchings.number+1})}"
            class="px-2 py-1 border rounded">Next</a>
     </div>
 </th:block>

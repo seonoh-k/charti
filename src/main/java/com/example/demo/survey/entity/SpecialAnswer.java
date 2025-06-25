@@ -1,11 +1,9 @@
-// com.example.demo.survey.entity.GroupAnswer.java
 package com.example.demo.survey.entity;
 
 import com.example.demo.entity.BaseEntity;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.matching.entity.Matching;
 import com.example.demo.users.entity.Child;
-import com.example.demo.enums.TargetGroup;
 import com.example.demo.enums.SurveyCategory;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -26,10 +24,10 @@ public class SpecialAnswer extends BaseEntity {
     @JoinColumn(name = "matching_id")
     private Matching matching;
 
-    //  특별 문진 항목 (special_survey) 과 N:1
+    //  특별 문진 세트 (special_survey_set) 과 N:1
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "survey_id", nullable = false)
-    private SpecialSurvey survey;
+    @JoinColumn(name = "survey_set_id", nullable = false)
+    private SurveySet surveySet;
 
     // 자녀 (child) 과 N:1
     @ManyToOne(fetch = FetchType.LAZY)

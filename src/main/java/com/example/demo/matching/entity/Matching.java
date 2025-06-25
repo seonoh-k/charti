@@ -1,6 +1,7 @@
 package com.example.demo.matching.entity;
 
 import com.example.demo.entity.BaseEntity;
+import com.example.demo.entity.Photo;
 import com.example.demo.enums.MatchingStatus;
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.entity.SpecialAnswer;
@@ -26,6 +27,10 @@ public class Matching extends BaseEntity {
     // (특별 문진 답변) SpecialAnswer 와 N:1
     @OneToMany(mappedBy = "matching", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SpecialAnswer> answers = new ArrayList<>();
+
+    // 사진
+    @OneToMany(mappedBy = "matching", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Photo> photos = new ArrayList<>();
 
     // 자녀(Child)
     @ManyToOne(fetch = FetchType.LAZY)

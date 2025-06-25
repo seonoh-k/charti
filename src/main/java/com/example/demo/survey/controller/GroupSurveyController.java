@@ -69,14 +69,14 @@ public class GroupSurveyController {
     @PostMapping("/submit")
     public ResponseEntity<Map<String,Object>> submitAndSave(
             @RequestBody GroupSurveyRequestDto dto) {
-        // 저장
+
+        // dto에 이제 setId 필드를 추가했다고 가정
         groupAnswerService.saveAnswers(
                 dto.getChildId(),
-                AgeGroup.fromValue(dto.getAgeGroup()),
-                TargetGroup.fromValue(dto.getTargetGroup()),
+                dto.getSetId(),
                 dto.getAnswers()
         );
-        // 평가
+
         Map<String,Object> result = groupSurveyService.evaluate(dto);
         return ResponseEntity.ok(result);
     }
