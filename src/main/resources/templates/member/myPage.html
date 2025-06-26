@@ -93,19 +93,21 @@
                 주소 검색
             </button>
             <input type="text" id="zipNum"
-                    class="w-full mb-2 border p-2 bg-gray-100 rounded" readonly
-                    th:value="${userInfo.address.zipNum}" />
+                class="w-full mb-2 border p-2 bg-gray-100 rounded" readonly
+                th:value="${userInfo.address != null ? userInfo.address.zipNum : ''}" />
+
             <input type="text" id="addr1"
-                    class="w-full border p-2 bg-gray-100 rounded" readonly
-                    th:value="${userInfo.address.sido + ' ' 
-                            + userInfo.address.gugun + ' ' 
-                            + userInfo.address.dong 
-                            + (userInfo.address.bunji != null 
-                                && !#strings.isEmpty(userInfo.address.bunji) 
-                                ? ' ' + userInfo.address.bunji 
-                                : '')}" />
+                class="w-full border p-2 bg-gray-100 rounded" readonly
+                th:value="${userInfo.address != null ?
+                userInfo.address.sido + ' ' +
+                userInfo.address.gugun + ' ' +
+                userInfo.address.dong +
+                (userInfo.address.bunji != null and !#strings.isEmpty(userInfo.address.bunji)
+                    ? ' ' + userInfo.address.bunji : '')
+                : ''}" />
+
             <input type="hidden" id="addressId" name="addressId"
-                    th:value="${userInfo.address.id}" />
+                th:value="${userInfo.address != null ? userInfo.address.id : ''}" />
             </div>
 
             <!-- 수정/완료/취소 버튼 -->

@@ -49,7 +49,7 @@ public class MemberController {
         log.info("[GET] 👨‍💼 request member Page");
         UserDTO userDTO = authService.getLoginUser();
 
-        AddressDTO address =  addressService.getByMemberUid(userDTO.getUuid());
+        AddressDTO address =  addressService.getAddressByUid(userDTO.getUuid());
 
         userDTO.setAddress(address);
         model.addAttribute("userInfo", userDTO);
