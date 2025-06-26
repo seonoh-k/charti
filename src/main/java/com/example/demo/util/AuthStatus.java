@@ -17,6 +17,7 @@ public enum AuthStatus implements StatusCode {
 
     MEMBER_JOIN_REQUEST_SUCCESS("MJRS","일반 회원 회원가입 성공"),
     MEMBER_JOIN_REQUEST_FAIL("MJRF","일반 회원 회원가입 실패"),
+    ADMIN_JOIN_REQUEST_FAIL("AJRF","관리자 회원 회원생성 실패"),
 
     TOKEN_NOT_FOUND("TNF","토큰을 찾을 수 없습니다."),
     TOKEN_INVALID_FORMAT("TIF","토큰이 바른 형식이 아닙니다."),

@@ -68,7 +68,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         //
         try {
 
-            boolean existsByEmailInFirebase = firebaseService.existsByByEmail(oAuth2UserInfo.getEmail());
+            boolean existsByEmailInFirebase = firebaseService.existsByEmail(oAuth2UserInfo.getEmail());
             boolean existsByEmailInDB = userService.existsByEmail(oAuth2UserInfo.getEmail());
             // 존재하면 생성 X
             log.info("파이어베이스에 이메일이 중복인가? {}", existsByEmailInFirebase);

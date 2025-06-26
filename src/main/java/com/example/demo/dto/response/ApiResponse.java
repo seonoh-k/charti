@@ -1,7 +1,11 @@
 package com.example.demo.dto.response;
 
+import com.example.demo.dto.ErrorDetail;
 import lombok.Getter;
 import com.example.demo.util.StatusCode;
+
+import java.util.List;
+
 /**
  * Controller -> Response
  */
@@ -56,6 +60,10 @@ public class ApiResponse<U> {
         apiResponse.message = overrideMessage;
         return apiResponse;
     }
+    public static <T extends List<ErrorDetail>> ApiResponse<T> responseError(StatusCode statusCode, T data) {
+        return new ApiResponse<>(statusCode, data);
+    }
+
 
     /**
      * 성공시 + 데이터 반환
