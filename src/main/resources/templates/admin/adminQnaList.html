@@ -1,15 +1,25 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
-<th:block layout:fragment="content">
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Fontawesome 연결 Embed Code Start-->
+    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
+    <!-- Fontawesome 연결 Embed Code End-->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>관리자 페이지</title>
+</head>
+<body class="h-screen flex flex-col">
+
+<!-- 헤더 (햄버거 버튼) -->
+<div th:replace="fragments/adminFragments :: hamburger"></div>
+
+<div class="flex flex-1">
+    <div th:replace="fragments/adminFragments :: sideBar"></div>
     <div class="max-w-5xl mx-auto p-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">1:1 문의</h1>
-        <div class="relative p-4 mb-6">
-            <div class="absolute top-0 right-0 m-3 inline-flex items-center space-x-4">
-                <a href="/qna/create" class="text-blue-500 text-3xl hover:text-blue-600">
-                    문의하기
-                </a>
-            </div>
-        </div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">1:1 문의 관리</h1>
         <hr class="mb-8 border-gray-300">
 
         <div class="w-1/4 mb-8">
@@ -31,33 +41,38 @@
         <div class="overflow-x-auto bg-white rounded-lg shadow">
             <table class="min-w-full divide-y divide-gray-200 table-fixed">
                 <thead class="bg-gray-50">
-                    <tr>
-                        <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            번호
-                        </th>
-                        <th class="w-[60%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            제목
-                        </th>
-                        <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            작성자
-                        </th>
-                        <th class="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            작성일
-                        </th>
-                    </tr>
+                <tr>
+                    <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        번호
+                    </th>
+                    <th class="w-[50%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        제목
+                    </th>
+                    <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        상태
+                    </th>
+                    <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        작성자
+                    </th>
+                    <th class="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        작성일
+                    </th>
+                </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <tr th:each="qna : ${qnaList}">
-                        <td th:text="${qna.id}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <a th:href="@{/qna/{id}(id=${qna.id})}" th:text="${qna.title}"
-                               class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></a>
-                        </td>
-                        <td th:text="${qna.nickname != null ? qna.nickname : qna.name }"
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
-                        <td th:text="${qna.createdAt}"
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
-                    </tr>
+                <tr th:each="qna : ${qnaList}">
+                    <td th:text="${qna.id}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <a th:href="@{/admin/qna/{id}(id=${qna.id})}" th:text="|${qna.title}${qna.deleted ? ' (삭제됨)' : ''}|"
+                           class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></a>
+                    </td>
+                    <td th:text="${qna.isAnswered ? '답변 완료' : '답변 대기'}"
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                    <td th:text="${qna.nickname != null ? qna.nickname : qna.name }"
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                    <td th:text="${qna.createdAt}"
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -72,7 +87,6 @@
         </div>
     </div>
     <script>
-
         document.addEventListener("DOMContentLoaded", () => {
             const cat = document.querySelector("#category");
             const selectedCategory = cat.value;
@@ -105,9 +119,9 @@
                     a.classList.add("cursor-not-allowed", "opacity-50");
                 }else {
                     if(category) {
-                        a.href = `?category=${category}&page=${page}`;
+                        a.href = `/admin/qna?category=${category}&page=${page}`;
                     }else {
-                        a.href = `?page=${page}`;
+                        a.href = `/admin/qna?page=${page}`;
                     }
                 }
 
@@ -120,7 +134,7 @@
             cat.addEventListener("change", async (e) => {
                 const selected = e.target.value;
 
-                window.location.href = `/qna?category=${selected}&page=1`;
+                window.location.href = `/admin/qna?category=${selected}&page=1`;
             })
 
             nav.appendChild(pageBtn("left", current-1, {
@@ -143,5 +157,9 @@
             }));
         })
     </script>
-</th:block>
+</div>
+
+<!-- 스크립트 -->
+<script th:src="@{/js/admin/adminSideBar.js}"></script>
+</body>
 </html>
