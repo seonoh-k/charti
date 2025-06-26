@@ -1,0 +1,26 @@
+<div th:fragment="hamburger">
+    <header class="flex justify-start items-center bg-gray-100 h-8 px-4">
+        <button id="hamburgerBtn" onclick="openSidebar()" class="text-gray-700 text-2xl">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+</div>
+
+<div th:fragment="sideBar">
+    <nav id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4 space-y-2 z-40 overflow-y-auto hidden opacity-75">
+        <div class="flex justify-end mb-2">
+            <button onclick="closeSidebar()" class="text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="flex justify-center">
+            <img th:src="@{/images/logo.png}" alt="로고" class="mb-4 size-32" />
+        </div>
+        <ul class="space-y-2 text-sm">
+            <li><a th:href="@{/manager/myPage}" class="block hover:bg-gray-700 px-2 py-1 rounded">마이페이지</a></li>
+            <li><a th:href="@{/manager/groupManager}" class="block hover:bg-gray-700 px-2 py-1 rounded">그룹 관리</a></li>
+            <li><a th:href="@{/manager/questionnaire}" class="block hover:bg-gray-700 px-2 py-1 rounded">문진 관리</a></li>
+            <!-- 필요에 따라 추가 -->
+        </ul>
+    </nav>
+</div>

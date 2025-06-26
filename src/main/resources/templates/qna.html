@@ -70,7 +70,8 @@
         <hr class="mb-8 border-gray-100">
         <div>
             <p class="text-sm font-medium text-gray-700 mb-1">답변</p>
-            <p class="p-4 bg-gray-100 rounded-md whitespace-pre-wrap">답변이 등록되지 않았습니다.</p>
+            <p th:text="${ans != null and ans.content != null ? ans.content : '답변이 등록되지 않았습니다.'}"
+               class="p-4 bg-gray-100 rounded-md whitespace-pre-wrap"></p>
         </div>
 
         <div class="flex justify-center mt-6">

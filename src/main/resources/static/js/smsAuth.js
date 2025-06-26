@@ -97,6 +97,12 @@ async function verifySmsOtp(mode = 'signup') {
             ['phone1', 'phone2', 'phone3', 'otp'].forEach(id => document.getElementById(id).disabled = true);
             document.getElementById('send-otp-btn').disabled = true;
             document.getElementById('verify-otp-btn').disabled = true;
+            
+            // 인증 성공 후 newUid 값 전달
+            const newUidField = document.getElementById('newUid');
+            if (newUidField) {
+                newUidField.value = newUid;
+}
         }
     } catch (err) {
         console.error('인증 실패:', err);

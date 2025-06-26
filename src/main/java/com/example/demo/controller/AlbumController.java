@@ -7,11 +7,11 @@ import com.example.demo.entity.Album;
 import com.example.demo.entity.Photo;
 import com.example.demo.service.AlbumService;
 import com.example.demo.service.PhotoService;
-import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.ManagerService;
 import com.example.demo.users.service.MemberService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @Controller
@@ -39,16 +40,12 @@ public class AlbumController {
         UserDTO userDTO = authService.getLoginUser();
         Long targetId = id == null ? userDTO.getId() : id;
 
-        Member member;
-        Manager manager;
-        UserDTO owner;
-        if(userDTO.getRole().equals("MEMBER")) {
-            member = memberService.get(targetId);
-            // owner = new UserDTO(member.getUsers());
-        }else if(userDTO.getRole().equals("MANAGER")) {
-            manager = managerService.get(targetId);
-            // owner = new UserDTO(manager.getUsers());
-        }else { // 전문가 회원과 관리자는 앨범페이지를 가지지 않음
+        try {
+            Member member = memberService.get(targetId);
+            UserDTO owner = new UserDTO(member.getUsers());
+
+            model.addAttribute("owner", owner);
+        }catch (NoSuchElementException | EntityNotFoundException e) {
             return "redirect:/";
         }
 
@@ -69,7 +66,6 @@ public class AlbumController {
        log.info(albums.toString());
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("loginUser", userDTO);
-        // model.addAttribute("owner", owner);
         model.addAttribute("albumList", albumList);
         model.addAttribute("urlList", urlList);
         model.addAttribute("isLastPage", albums.isLast());

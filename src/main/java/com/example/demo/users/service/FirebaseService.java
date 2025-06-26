@@ -2,11 +2,15 @@ package com.example.demo.users.service;
 
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.info.CommonInfo;
+import com.example.demo.dto.request.AdminCreateRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.exception.FirebaseAuthenticationException;
+import com.example.demo.users.entity.Admin;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.exception.AdminNotFoundException;
 import com.example.demo.users.exception.UserNotFoundException;
+import com.example.demo.users.repository.AdminRepository;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
@@ -36,6 +40,7 @@ public class FirebaseService {
     private final FirebaseAuth firebaseAuth;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
 
     /**
      * 정상적으로 서명된 경우 이 메서드는 디코딩된 ID 토큰을 반환한다.
@@ -73,6 +78,18 @@ public class FirebaseService {
         commonInfo.setUuid(userRecord.getUid());
 
         return commonInfo;
+    }
+
+    @Transactional
+    public String createMember(AdminCreateRequest adminCreateRequest) throws FirebaseAuthException {
+//        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
+        UserRecord userRecord = firebaseAuth.createUser(new UserRecord.CreateRequest()
+                .setEmail(adminCreateRequest.getUsername())
+                .setPassword(adminCreateRequest.getPassword())
+                .setPhoneNumber(adminCreateRequest.getPhoneNumber())
+                .setDisplayName(adminCreateRequest.getName()));
+
+        return userRecord.getUid();
     }
     /**
      * 소셜 로그인 유저의 계정을 파이어베이스에 생성한다.
@@ -246,7 +263,7 @@ public class FirebaseService {
      * @throws FirebaseAuthException
      * @see <a href="https://firebase.google.com/docs/auth/admin/manage-users?hl=ko&_gl=1*1gg210o*_up*MQ..*_ga*MTczMzAzNTU3My4xNzQ5NTYyODkw*_ga_CW55HF8NVT*czE3NDk1NjI4ODkkbzEkZzAkdDE3NDk1NjI4ODkkajYwJGwwJGgw#java">Firebase SDK Document</a>
      */
-    public boolean existsByByEmail(String email){
+    public boolean existsByEmail(String email){
         try{
             UserRecord byEmail = firebaseAuth.getUserByEmail(email);
             return true;
@@ -367,6 +384,40 @@ public class FirebaseService {
         }
 
         return UserStatus.APPROVE_SUCCESS;
+
+    }
+
+    /**
+     *
+     * @param adminId admin Primary Key -> Id
+     * @throws FirebaseAuthenticationException 클레임 저장하다 오류 발생
+     */
+    public void setRoleToAdminInClaim(Long adminId) throws FirebaseAuthenticationException{
+
+        Optional<Admin> byId = adminRepository.findById(adminId);
+
+        if(byId.isEmpty()){
+            throw new AdminNotFoundException();
+        }
+
+        Optional<Admin> admin = adminRepository.existsByUuid(byId.get().getUuid());
+
+        if(admin.isEmpty()){
+            throw new AdminNotFoundException();
+        }
+
+        try{
+            String uuid = byId.get().getUuid();
+
+            Map<String,Object> claims = new HashMap<>();
+            claims.put("role", Role.ROLE_ADMIN.name());
+
+            firebaseAuth.setCustomUserClaims(uuid, claims);
+            firebaseAuth.revokeRefreshTokens(uuid);
+
+        } catch (FirebaseAuthException firebaseAuthException){
+            throw new FirebaseAuthenticationException();
+        }
 
     }
 

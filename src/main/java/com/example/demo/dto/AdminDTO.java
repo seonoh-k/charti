@@ -1,9 +1,45 @@
 package com.example.demo.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import com.example.demo.users.entity.Role;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class AdminDTO {
+
+    private Long id;
+    private String uuid;
+    private String name;
+    private String position;
+    private String username;
+
+    private String password;
+    private String phoneNumber;
+
+    private String role;
+
+    public AdminDTO(Long id, String name, String position, String username, String password, String phoneNumber) {
+        this.id = id;
+        this.name = name;
+        this.position = position;
+        this.username = username;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+    }
+
+
+    public AdminDTO(String name, String position, String username, String password, String phoneNumber) {
+        this.name = name;
+        this.position = position;
+        this.username = username;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+    }
+
+
 }

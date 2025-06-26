@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>담당자 대시보드</title>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- 햄버거 버튼 (프래그먼트 또는 공통) -->
+    <div th:replace="fragments/managerFragments :: hamburger"></div>
+
+    <div class="flex flex-1">
+        <!-- 사이드바 (프래그먼트 or 공통) -->
+        <div th:replace="fragments/managerFragments :: sideBar"></div>
+
+        <!-- 메인(콘텐츠) -->
+        <main class="flex-1 p-6 bg-gray-100">
+            <!-- 실제 콘텐츠: 마이페이지, 그룹관리, 문진관리 등 분기 -->
+            <th:block layout:fragment="content">
+
+                <div class="flex justify-center items-center py-20">
+                <div class="bg-white p-6 rounded shadow-md w-full max-w-5xl">
+                    <!-- 그룹 정보 -->
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">🏢 그룹 정보 관리</h2>
+
+                    <form id="groupEditForm" action="/manager/group/update" method="post" class="space-y-6" autocomplete="off">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- 그룹 이름 -->
+                            <div>
+                                <label class="block mb-1 text-sm font-medium">그룹 이름</label>
+                                <input type="text" name="groupName" id="groupName"
+                                    th:value="${groupInfo.groupName}" 
+                                    class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 focus:outline-none"
+                                    readonly />
+                            </div>
+                            <!-- 그룹 이메일 -->
+                            <div>
+                                <label class="block mb-1 text-sm font-medium">그룹 이메일</label>
+                                <input type="email" name="groupEmail" id="groupEmail"
+                                    th:value="${groupInfo.groupEmail}"
+                                    class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 focus:outline-none"
+                                    readonly />
+                            </div>
+                            <!-- 그룹 전화번호 -->
+                            <div>
+                                <label class="block mb-1 text-sm font-medium">그룹 전화번호</label>
+                                <input type="text" name="groupPhoneNumber" id="groupPhoneNumber"
+                                    th:value="${groupInfo.groupPhoneNumber}"
+                                    class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 focus:outline-none"
+                                    readonly />
+                            </div>
+                            <!-- 그룹 분류(보기용) -->
+                            <div id="targetGroupDisplayBox">
+                                <label class="block mb-1 text-sm font-medium">그룹 분류</label>
+                                <input type="text" id="targetGroupDisplayName" name="targetGroupDisplayName"
+                                    th:value="${groupInfo.targetGroup}" 
+                                    class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 focus:outline-none"
+                                    readonly />
+                            </div>
+                            <!-- 그룹 분류(수정모드용) -->
+                            <div id="targetGroupSelectBox" class="hidden">
+                                <label class="block mb-1 text-sm font-medium">그룹 분류</label>
+                                <select name="targetGroup" id="targetGroup"
+                                    class="w-full border border-gray-300 rounded px-3 py-2">
+                                    <option value="KINDERGARTEN" th:selected="${groupInfo.targetGroup == '유치원'}">유치원</option>
+                                    <option value="DAYCARE" th:selected="${groupInfo.targetGroup == '어린이집'}">어린이집</option>
+                                    <option value="CHILDRENS_HOME" th:selected="${groupInfo.targetGroup == '보육원'}">보육원</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 주소 -->
+                        <div>
+                            <label class="block mb-1 text-sm font-medium">주소</label>
+                            <button type="button" id="addressSearchBtn" onclick="openAddressModal()"
+                                class="hidden mb-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                                주소 검색
+                            </button>
+                            <input type="text" id="zipNum" class="w-full mb-2 border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" readonly th:value="${groupInfo.address.zipNum}" />
+                            <input type="text" id="addr1" class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" readonly th:value="${groupInfo.address.sido + ' ' + groupInfo.address.gugun + ' ' + groupInfo.address.dong + (groupInfo.address.bunji != null && !#strings.isEmpty(groupInfo.address.bunji) ? ' ' + groupInfo.address.bunji : '')}" />
+                            <input type="hidden" id="addressId" name="addressId" th:value="${groupInfo.address.id}" />
+                        </div>
+
+                        <!-- 버튼 -->
+                        <div id="groupEditButtonBox" class="flex flex-row justify-end gap-2 pt-4">
+                            <button type="button" onclick="enableGroupEditMode()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">수정하기</button>
+                        </div>
+                        <div id="groupActionButtonBox" class="flex flex-row justify-end gap-2 pt-4 hidden">
+                            <button type="button" onclick="submitGroupEdit()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">저장</button>
+                            <button type="button" onclick="cancelGroupEdit()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
+                        </div>
+                    </form>
+
+                    <!-- 확장영역(하단) -->
+                    <hr class="my-8">
+
+                    <div id="groupExtraSection" class="space-y-6">
+                        <!-- 나중에: 그룹원 리스트, 초대, 승인, 히스토리, 활동 로그 등 들어갈 자리 -->
+                        <div class="text-gray-400 text-center py-12">
+                            <i class="fa-solid fa-users fa-2x mb-3"></i>
+                            <p>이곳에 <span class="font-semibold">그룹원 관리</span>나<br>새로운 그룹 관련 기능이 추가될 예정입니다.</p>
+                            <!-- 그룹원/자녀 목록 섹션 -->
+                            <div id="childListSection" class="mt-8">
+                            <h3 class="text-lg font-bold mb-3 text-gray-700">소속 자녀 목록</h3>
+                                <div id="childListContainer" class="space-y-2">
+                                    <!-- 자녀 리스트(카드/테이블) JS로 채움 -->
+                                </div>
+                            </div>
+
+                                                            <!-- 그룹 자녀 목록 (카드형) -->
+                                <div id="childListSection" class="mt-8">
+                                <h3 class="text-lg font-bold mb-3 text-gray-700">소속 자녀 목록</h3>
+                                <div id="childListContainer" class="space-y-3">
+                                    <!-- JS로 카드 리스트가 들어감 -->
+                                </div>
+                                </div>
+
+                                <!-- 자녀 상세 모달 -->
+                                <div id="childDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                                <div class="bg-white rounded shadow-lg p-6 w-full max-w-md">
+                                    <h2 class="text-lg font-bold mb-4 text-gray-800">자녀 정보 상세</h2>
+                                    <div class="space-y-2 mb-4">
+                                    <div><strong>이름:</strong> <span id="detailChildName"></span></div>
+                                    <div><strong>성별:</strong> <span id="detailChildGender"></span></div>
+                                    <div><strong>생일:</strong> <span id="detailChildBirthday"></span></div>
+                                    <div><strong>태명:</strong> <span id="detailChildNickname"></span></div>
+                                    <div><strong>체중:</strong> <span id="detailChildWeight"></span></div>
+                                    <div><strong>신장:</strong> <span id="detailChildHeight"></span></div>
+                                    </div>
+                                    <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="closeChildDetailModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">닫기</button>
+                                    <button type="button" id="openEditFromDetailBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">수정</button>
+                                    </div>
+                                </div>
+                                </div>
+
+                                <!-- 자녀 수정 모달 (재활용) -->
+                                <div id="childEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                                <div class="bg-white rounded shadow-lg p-6 w-full max-w-md">
+                                    <h2 class="text-lg font-bold mb-4 text-gray-800">자녀 정보 수정</h2>
+                                    <form id="childEditForm" class="space-y-3">
+                                    <input type="hidden" id="editChildId" />
+                                    <div>
+                                        <label class="block text-sm mb-1">이름</label>
+                                        <input type="text" id="editChildName" class="w-full border border-gray-300 rounded px-3 py-2" required />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm mb-1">성별</label>
+                                        <select id="editChildGender" class="w-full border border-gray-300 rounded px-3 py-2">
+                                        <option value="남">남</option>
+                                        <option value="여">여</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm mb-1">태명</label>
+                                        <input type="text" id="editChildNickname" class="w-full border border-gray-300 rounded px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm mb-1">생일</label>
+                                        <input type="date" id="editChildBirthday" class="w-full border border-gray-300 rounded px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm mb-1">체중</label>
+                                        <input type="number" id="editChildWeight" class="w-full border border-gray-300 rounded px-3 py-2" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm mb-1">신장</label>
+                                        <input type="number" id="editChildHeight" class="w-full border border-gray-300 rounded px-3 py-2" />
+                                    </div>
+                                    <div class="flex gap-2 mt-4 justify-end">
+                                        <button type="button" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded" onclick="closeChildEditModal()">취소</button>
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">저장</button>
+                                    </div>
+                                    </form>
+                                </div>
+                                </div>
+
+
+                            
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+                            <!-- 📍 주소 검색 모달 -->
+            <div id="addressModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white rounded shadow-lg p-6 w-full max-w-xl animate-fade-in">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">주소 검색</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input id="dongInput" type="text" placeholder="동 이름 입력 (최소 2자 이상)"
+                            class="flex-1 border border-gray-300 text-gray-900 rounded px-4 py-2 focus:ring-2 focus:ring-purple-500" />
+                        <button onclick="searchAddress()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">검색</button>
+                    </div>
+                    <div id="addressResult" class="max-h-60 overflow-y-auto border-t border-gray-200 pt-2 space-y-2"></div>
+                    <div class="flex justify-end mt-4">
+                        <button onclick="closeAddressModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">닫기</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <script src="/js/addressSearch.js"></script>
+            <script src="/js/manager/groupManager.js"></script>
+            </th:block>
+        </main>
+    </div>
+
+    
+
+    <script th:src="@{/js/manager/managerSideBar.js}"></script>
+</body>
+</html>

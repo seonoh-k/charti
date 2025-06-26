@@ -32,43 +32,6 @@ async function submitPasswordChange() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-
-            const payload = {
-                name: document.getElementById('name').value,
-                nickname: document.getElementById('nickname').value,
-                addressId: parseInt(document.getElementById('addressId').value),
-                phoneNumber: document.getElementById('phoneNumber').value,
-                newUid: getNewUid()
-            };
-
-            try {
-                const res = await fetch('/api/users/update', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await res.json();
-
-                if (res.ok) {
-                    alert(result.message || "회원 정보가 수정되었습니다.");
-                    location.reload();
-                } else {
-                    alert(result.message || "수정에 실패했습니다.");
-                }
-            } catch (error) {
-                console.error("요청 중 에러 발생:", error);
-                alert("알 수 없는 오류가 발생했습니다.");
-            }
-        });
-    }
-});
-
 function confirmDelete() {
     if (!confirm("정말로 탈퇴하시겠습니까?")) return;
     fetch('/api/users/delete', { method: 'DELETE' })
