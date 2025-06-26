@@ -15,6 +15,7 @@ public class ManagerUpdateRequest {
     private String groupName;
     private String groupEmail;
     private String groupPhoneNumber;
-    private TargetGroup targetGroup;
+    private String targetGroup;
+    private String newUid;
 
 }
