@@ -29,28 +29,6 @@ public class GroupAnswerController {
     private final ChildService childService;
     private final GroupAnswerService answerService;
 
-//    /** 뷰: 이력 페이지 */
-//    @GetMapping("/history")
-//    public String historyPage(Authentication auth, Model model) {
-//        Users me;
-//        try {
-//            me = userService.findByUsernameEntity(auth.getName());
-//        } catch (UserNotFoundException e) {
-//            me = userService.findByUuidEntity(auth.getName());
-//        }
-//        model.addAttribute("children", childService.findByUsersId(me.getId()));
-//        return "survey/groupAnswerHistory";
-//    }
-//
-//    /** API: 특정 자녀의 답변 이력 조회 */
-//    @GetMapping("/api/history/{childId}")
-//    @ResponseBody
-//    public List<GroupAnswerDto> apiHistory(@PathVariable Long childId) {
-//        return answerService.findByChild(childId).stream()
-//                .map(GroupAnswerDto::fromEntity)
-//                .collect(Collectors.toList());
-//    }
-
     /**
      * 현재 인증된 사용자의 Users 엔티티를 조회한다.
      *
@@ -97,13 +75,13 @@ public class GroupAnswerController {
     }
 
     /** API: 특정 자녀의 답변 이력 조회 */
-//    @GetMapping("/api/history/{childId}")
-//    @ResponseBody
-//    public List<GroupAnswerDto> apiHistory(@PathVariable Long childId) {
-//        return answerService.findByChild(childId).stream()
-//                .map(GroupAnswerDto::fromEntity)
-//                .collect(Collectors.toList());
-//    }
+    @GetMapping("/api/history/{childId}")
+    @ResponseBody
+    public List<GroupAnswerDto> apiHistory(@PathVariable Long childId) {
+        return answerService.findByChild(childId).stream()
+                .map(GroupAnswerDto::fromEntity)
+                .collect(Collectors.toList());
+    }
 
     /** API: 답변 수정 */
     @PutMapping("/api/answer/{id}")

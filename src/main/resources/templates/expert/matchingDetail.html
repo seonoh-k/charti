@@ -29,27 +29,24 @@
                  th:text="${matching.content}"></div>
 
             <!-- 첨부 이미지 -->
-            <div th:if="${photos != null and !photos.isEmpty()}">
+            <div th:if="${photos.size()>0}" class="mb-6">
                 <h2 class="font-semibold mb-2">첨부 이미지</h2>
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <!-- photos 리스트에는 fileName 문자열이 들어있습니다 -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
                     <div th:each="fileName : ${photos}">
-                        <img
-                                th:src="@{/api/proxy/image(filename='thumbnail/' + ${fileName})}"
-                                th:data-full="@{/api/proxy/image(filename='original/'  + ${fileName})}"
-                                class="w-full h-32 object-cover rounded cursor-pointer thumbnail"
-                                th:alt="${fileName}" />
+                        <img th:src="@{/api/proxy/image(filename='thumbnail/' + ${fileName})}"
+                             th:data-full="@{/api/proxy/image(filename='original/' + ${fileName})}"
+                             class="w-full h-32 object-cover rounded cursor-pointer thumbnail"
+                             th:alt="${fileName}"/>
                     </div>
+                </div>
+                <div id="image-modal"
+                     class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                    <button id="image-modal-close"
+                            class="absolute top-4 right-4 text-white text-2xl font-bold">&times;</button>
+                    <img id="image-modal-img" class="max-h-[90%] max-w-[90%] rounded shadow-lg"/>
                 </div>
             </div>
 
-            <!-- 모달 -->
-            <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-                <button id="image-modal-close"
-                        class="absolute top-4 right-4 text-white text-2xl font-bold focus:outline-none">&times;</button>
-                <img id="image-modal-img" src="" alt="원본 이미지"
-                     class="max-h-[90%] max-w-[90%] rounded shadow-lg"/>
-            </div>
         </section>
 
         <!-- 2) 문진 질문/답변 -->
@@ -100,13 +97,12 @@
         </form>
     </div>
 
-    <!-- 모달 스크립트 -->
+    <!-- 이미지 모달 스크립트 -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
           const modal = document.getElementById('image-modal');
           const modalImg = document.getElementById('image-modal-img');
           const btnClose = document.getElementById('image-modal-close');
-
           document.querySelectorAll('.thumbnail').forEach(el => {
             el.addEventListener('click', () => {
               modalImg.src = el.dataset.full;
@@ -114,13 +110,10 @@
               modal.classList.add('flex');
             });
           });
-
           btnClose.addEventListener('click', () => {
             modal.classList.add('hidden');
-            modal.classList.remove('flex');
             modalImg.src = '';
           });
-
           modal.addEventListener('click', e => {
             if (e.target === modal) btnClose.click();
           });

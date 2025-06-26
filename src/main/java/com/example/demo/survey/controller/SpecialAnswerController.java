@@ -41,13 +41,13 @@ public class SpecialAnswerController {
     }
 
     /** API: 특정 자녀의 답변 이력 조회 */
-//    @GetMapping("/api/history/{childId}")
-//    @ResponseBody
-//    public List<SpecialAnswerDto> apiHistory(@PathVariable Long childId) {
-//        return answerService.findByChild(childId).stream()
-//                .map(SpecialAnswerDto::fromEntity)
-//                .collect(Collectors.toList());
-//    }
+    @GetMapping("/api/history/{childId}")
+    @ResponseBody
+    public List<SpecialAnswerDto> apiHistory(@PathVariable Long childId) {
+        return answerService.findByChild(childId).stream()
+                .map(SpecialAnswerDto::fromEntity)
+                .collect(Collectors.toList());
+    }
 
     /** API: 답변 수정 */
     @PutMapping("/api/answer/{id}")

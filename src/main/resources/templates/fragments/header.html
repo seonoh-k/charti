@@ -14,75 +14,70 @@
     </style>
 </head>
 <th:block th:fragment="headerFragment">
-    <!-- 헤더 전체 -->
-
     <header id="header" th:fragment="fragment-header" class="sticky top-0 bg-white z-50 shadow">
-
-        <!-- 상단: 로고 + 로그인 -->
-        <div class="container mx-auto flex justify-between items-center py-4 px-6">
-            <img id="homeLogo" th:src="@{/images/logo.png}" onclick="location.href='/'"
-                 class="w-[130px] h-auto cursor-pointer">
-            <nav id="hdNav">
-                <ul id="hdUl" class="flex gap-6">
+        <!-- 상단: 로고 + 로그인/회원가입 -->
+        <div class="container mx-auto flex justify-between items-center py-4 px-6 mb-3">
+            <img id="homeLogo" th:src="@{/images/logo02.png}" onclick="location.href='/'"
+                 class="w-[150px] h-auto cursor-pointer"/>
+            <nav id="hdNav" class="mt-6">
+                <ul id="hdUl" class="flex gap-6 items-center">
                     <th:block th:if="${session.userId == null}">
-                        <li><a id="joinBtn" href="/patientJoinForm" method="GET">회원가입</a></li>
-                        <li><a id="loginBtn" href="/patientLoginForm" method="POST">로그인</a></li>
+                        <li><a id="joinBtn" href="/patientJoinForm">회원가입</a></li>
+                        <li><a id="loginBtn" href="/patientLoginForm">로그인</a></li>
                     </th:block>
                     <th:block th:if="${session.userId != null}">
                         <li><a id="mypagenBtn" href="/mypage">마이페이지</a></li>
                         <li><a id="logoutBtn" href="/logout">로그아웃</a></li>
                     </th:block>
+                    <!-- 알림 아이콘 -->
+                    <div th:insert="fragments/notice :: noticeBell"></div>
                 </ul>
             </nav>
-          <!-- 알림 아이콘 & 배지 -->
-          <div th:insert="fragments/notice :: noticeBell"></div>
         </div>
 
-        <!-- 하단: 메뉴바 -->
-        <nav class="bg-[#3b5fb2] text-white">
+        <!-- 하단 메뉴바 -->
+        <nav class="bg-[#B78E68] text-white">
             <div class="container mx-auto flex justify-center items-center py-1 px-8">
                 <ul class="flex space-x-12">
-                    <button><a href="/" class="hover:text-blue-100 p-4 mx-3 text-md">홈</a></button>
-                    <button><a href="/about" class="hover:text-blue-100 p-4 mx-3 text-md">About</a></button>
-
+                    <button>
+                        <a href="/" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">홈</a>
+                    </button>
+                    <button>
+                        <a href="/about" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">About</a>
+                    </button>
                     <!-- 문진표 -->
                     <li class="relative group">
-                        <button class="hover:text-blue-100 p-4 text-md mx-3">문진표</button>
+                        <button class="p-4 text-md mx-3 hover:text-[#FEF9F3]">문진표</button>
                         <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-black bg-opacity-70 text-white shadow-lg mt-1 min-w-[180px] text-center z-50 py-2">
                             <li><a href="/survey/health" class="block px-4 py-2 hover:text-gray-300">건강검진 문진표</a></li>
                             <li><a href="/survey/disease" class="block px-4 py-2 hover:text-gray-300">주요질병 문진표</a></li>
                             <li><a href="/survey/history" class="block px-4 py-2 hover:text-gray-300">작성 이력 보기</a></li>
                         </ul>
                     </li>
-
                     <!-- 진단요청 -->
                     <li class="relative group">
-                        <button class="hover:text-blue-100 p-4 text-md mx-3">진단요청</button>
-
-                        <!-- 수정된 서브 메뉴 -->
+                        <button class="p-4 text-md mx-3 hover:text-[#FEF9F3]">진단요청</button>
                         <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-black bg-opacity-70 text-white shadow-lg mt-1 min-w-[180px] text-center z-50 py-2">
                             <li><a href="/request/list" class="block px-4 py-2 hover:text-gray-300">진단요청 목록</a></li>
-                            <li><a href="/request/new" class="block px-4 py-2 hover:text-gray-300">진단요청 작성</a></li>
+                            <li><a href="/request/new"  class="block px-4 py-2 hover:text-gray-300">진단요청 작성</a></li>
                         </ul>
                     </li>
-
-                    <button><a href="/board" class="hover:text-blue-100 p-4 text-md mx-3">건강 게시판</a></button>
-
+                    <button>
+                        <a href="/board" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">건강 게시판</a>
+                    </button>
                     <!-- 고객센터 -->
                     <li class="relative group">
-                        <button class="hover:text-blue-100 p-4 text-md mx-3">고객센터</button>
-
+                        <button class="p-4 text-md mx-3 hover:text-[#FEF9F3]">고객센터</button>
                         <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-black bg-opacity-70 text-white shadow-lg mt-1 min-w-[180px] text-center z-50 py-2">
-                            <li><a href="/announcement" class="hover:text-blue-100 p-4 text-md mx-3">공지사항</a></li>
-                            <li><a href="/faq" class="hover:text-blue-100 p-4 text-md mx-3">FAQ</a></li>
-                            <li><a href="/qna" class="hover:text-blue-100 p-4 text-md mx-3">1:1문의</a></li>
-                            <li><a href="/legal" class="hover:text-blue-100 p-4 text-md mx-3">약관 및 정책</a></li>
+                            <li><a href="/announcement" class="block px-4 py-2 hover:text-blue-100">공지사항</a></li>
+                            <li><a href="/faq"          class="block px-4 py-2 hover:text-blue-100">FAQ</a></li>
+                            <li><a href="/qna"          class="block px-4 py-2 hover:text-blue-100">1:1문의</a></li>
+                            <li><a href="/legal"        class="block px-4 py-2 hover:text-blue-100">약관 및 정책</a></li>
                         </ul>
                     </li>
                 </ul>
             </div>
         </nav>
-
     </header>
 </th:block>
 </html>

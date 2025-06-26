@@ -28,6 +28,7 @@
               enctype="multipart/form-data">
             <input type="hidden" th:field="*{childId}" />
             <input type="hidden" th:field="*{category}" />
+            <input type="hidden" th:field="*{type}" />
 
             <!-- 전체 질문/답변 아코디언 -->
             <details class="mb-6 border rounded-lg overflow-hidden">
@@ -65,7 +66,7 @@
                 <label class="block font-semibold mb-1" for="images">이미지 첨부</label>
                 <input id="images"
                        type="file"
-                       th:field="*{images}"
+                       th:field="*{image}"
                        multiple
                        accept="image/*"
                        class="w-full"/>

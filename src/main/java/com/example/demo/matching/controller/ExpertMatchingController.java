@@ -79,7 +79,17 @@ public class ExpertMatchingController {
         model.addAttribute("matching", m);
         model.addAttribute("answerForm", new MatchingAnswer());
 
-        // **전문가가 남긴 답변 리스트도** 반드시 넘겨줘야 thymeleaf 에서 출력됩니다.
+        // 3-1) 사진 리스트 추가
+        List<String> photos;
+        String csv = m.getFilename();
+        if (csv != null && !csv.isBlank()) {
+            photos = List.of(csv.split("\\s*,\\s*"));
+        } else {
+            photos = List.of();
+        }
+        model.addAttribute("photos", photos);
+
+        // 3-2) 전문가가 남긴 답변 리스트
         List<MatchingAnswer> answers = answerService.findByMatchingId(matchId);
         model.addAttribute("answers", answers);
 

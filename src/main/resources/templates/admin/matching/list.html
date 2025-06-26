@@ -46,7 +46,7 @@
             <td class="border p-2" th:text="${m.child.name}">김철수</td>
             <td class="border p-2" th:text="${m.category.displayName}">생활습관</td>
             <td class="border p-2">
-                <a th:href="@{/matching/detail/{id}(id=${m.id})}"
+                <a th:href="@{/admin/matching/{id}(id=${m.id})}"
                    th:text="${m.title}"
                    class="text-blue-600 hover:underline">제목</a>
             </td>
