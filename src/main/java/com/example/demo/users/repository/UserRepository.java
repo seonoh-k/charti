@@ -5,6 +5,7 @@ import com.example.demo.users.entity.Expert;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -66,4 +67,22 @@ public interface UserRepository extends JpaRepository<Users,Long> {
     @Query("SELECT DISTINCT u FROM Users u JOIN u.member.children c WHERE c.group.id = :groupId AND u.deleted = false")
     List<Users> findParentsWithChildrenInGroup(@Param("groupId") Long groupId);
 
+    /**
+     * Soft-Deleted 사용자를 복구합니다.
+     * <br/>- deleted = false
+     * <br/>- deletedAt = null
+     * @param usersId 복구할 Users 엔티티의 PK
+     * @return 업데이트된 행(row) 수
+     */
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("""
+        UPDATE Users u
+           SET u.deleted = false,
+               u.deletedAt = null
+         WHERE u.id = :usersId
+    """)
+    int restoreUserById(@Param("usersId") Long usersId);
+    @Query("SELECT u.deleted FROM Users u WHERE u.id = :usersId")
+    Optional<Boolean> checkIsDeletedById(@Param("usersId") Long usersId);
 }
