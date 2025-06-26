@@ -5,6 +5,7 @@ import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.ManagerUpdateRequest;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.users.entity.Manager;
@@ -29,6 +30,7 @@ import org.springframework.util.StringUtils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
@@ -105,54 +107,53 @@ public class ManagerService {
      */
     @Transactional
     public void updateManager(ManagerUpdateRequest req, String uid) throws FirebaseAuthException {
-        // 1. Firebase 동기화 (공통: 이름, 전화번호)
-        UserRecord.UpdateRequest firebaseReq = new UserRecord.UpdateRequest(uid)
-                .setDisplayName(req.getName())
-                .setPhoneNumber(req.getPhoneNumber());
-        // 프로필 이미지가 있으면 설정
-//        if (StringUtils.hasText(req.getProfileImage())) {
-//            firebaseReq.setPhotoUrl(req.getProfileImage());
-//        }
-        FirebaseAuth.getInstance().updateUser(firebaseReq);
-
-        // 2. DB 사용자 엔티티 조회
-        Users user = userRepository.findByUuid(uid)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("유효하지 않은 주소 ID: " + req.getAddressId())
-                );
-
-        // 3. 공통 필드 업데이트
-        user.setName(req.getName());
-        user.setNickname(req.getNickname());
-        user.setPhoneNumber(req.getPhoneNumber());
-//        if (StringUtils.hasText(req.getProfileImage())) {
-//            user.setProfileImage(req.getProfileImage());
-//        }
-
-        // 4. 주소 변경
-        if (req.getAddressId() != null) {
-            Address addr = addressRepository.findById(req.getAddressId())
-                    .orElseThrow(() ->
-                            new IllegalArgumentException("유효하지 않은 주소 ID: " + req.getAddressId())
-                    );
-            Manager manager = user.getManager();
-            if (manager != null && manager.getGroup() != null) {
-                Group grp = manager.getGroup();
-                grp.setAddress(addr);
-                // 그룹 전용 필드
-                grp.setGroupName(req.getGroupName());
-                grp.setGroupEmail(req.getGroupEmail());
-                grp.setGroupPhoneNumber(req.getGroupPhoneNumber());
-                grp.setTargetGroup(req.getTargetGroup());
-                groupRepository.save(grp);
+        // Firebase 임시계정 삭제
+        if (StringUtils.hasText(req.getNewUid())) {
+            try {
+                FirebaseAuth.getInstance().deleteUser(req.getNewUid());
+            } catch (FirebaseAuthException e) {
+                log.warn("임시 UID({}) 삭제 실패: {}", req.getNewUid(), e.getMessage());
             }
         }
 
-        // 5. 매니저 엔티티 저장
+        // Firebase 동기화 (공통)
+        UserRecord.UpdateRequest firebaseReq = new UserRecord.UpdateRequest(uid);
+        if (StringUtils.hasText(req.getName())) firebaseReq.setDisplayName(req.getName());
+        if (StringUtils.hasText(req.getPhoneNumber())) firebaseReq.setPhoneNumber(req.getPhoneNumber());
+        FirebaseAuth.getInstance().updateUser(firebaseReq);
+
+        Users user = userRepository.findByUuid(uid)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 UID: " + uid));
+
+        // 람다 도우미로 값 있는 것만 set
+        updateIfPresent(req.getName(), user::setName);
+        updateIfPresent(req.getNickname(), user::setNickname);
+        updateIfPresent(req.getPhoneNumber(), user::setPhoneNumber);
+
+        // 주소/그룹/매니저
         Manager manager = user.getManager();
-        if (manager != null) {
-            managerRepository.save(manager);
+        if (manager != null && manager.getGroup() != null) {
+            Group group = manager.getGroup();
+            updateIfPresent(req.getGroupName(), group::setGroupName);
+            updateIfPresent(req.getGroupEmail(), group::setGroupEmail);
+            updateIfPresent(req.getGroupPhoneNumber(), group::setGroupPhoneNumber);
+            if (StringUtils.hasText(req.getTargetGroup())) {
+                group.setTargetGroup(TargetGroup.fromValue(req.getTargetGroup()));
+            }
+            if (req.getAddressId() != null) {
+                Address addr = addressRepository.findById(req.getAddressId())
+                        .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 주소 ID: " + req.getAddressId()));
+                group.setAddress(addr);
+            }
+            groupRepository.save(group);
         }
+
+        managerRepository.save(manager);
+    }
+
+    // 람다 도우미
+    private void updateIfPresent(String newValue, Consumer<String> setter) {
+        if (StringUtils.hasText(newValue)) setter.accept(newValue);
     }
 
 }

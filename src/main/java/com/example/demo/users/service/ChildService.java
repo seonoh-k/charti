@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -92,5 +93,26 @@ public class ChildService extends BaseService<Child, ChildRepository> {
         Page<ChildDTO> result = childQueryRepository.getChildDTOsByGroupIdOrderByAgeAndName(groupId, pageable);
 
         return new PagingResultDTO<>(result);
+    }
+
+    /**
+     * [자녀를 그룹에서 제외]
+     *
+     * 특정 자녀(Child)를 현재 소속된 그룹(Group)에서 제외(연결 해제)합니다.
+     *
+     * ✅ 사용 예:
+     * - 담당자(관리자)가 그룹 소속 자녀를 그룹에서 내보내고 싶을 때
+     * - 자녀가 더 이상 해당 기관(그룹)에 소속되지 않아야 할 때
+     *
+     * @param childId 그룹에서 제외할 자녀의 고유 ID
+     * @throws RuntimeException 자녀 정보가 없을 경우
+     */
+    @Transactional
+    public void removeChildFromGroup(Long childId) {
+        Child child = repository.findById(childId)
+                .orElseThrow(() -> new RuntimeException("자녀 정보가 없습니다."));
+
+        child.setGroup(null); // 그룹과의 연관 해제!
+        repository.save(child); // 변경사항 저장 (JPA 변경감지라 생략해도 됨)
     }
 }
