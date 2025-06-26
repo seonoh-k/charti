@@ -57,12 +57,20 @@
                         <li><a th:href="@{/admin/users/all/deleted}" class="block px-2 py-1 hover:underline">탈퇴 회원</a></li>
                     </ul>
                 </li>
-
                 <li>
                     <button onclick="toggleAccordion('menu3')" class="w-full text-left hover:bg-gray-700 px-2 py-1 rounded flex justify-between items-center">
-                        문진 관리 <i class="fa-solid fa-sort-down"></i>
+                        관리자 <i class="fa-solid fa-sort-down"></i>
                     </button>
                     <ul id="menu3" class="hidden ml-4 mt-1 space-y-1">
+                        <li><a th:href="@{/admin/create/admin}" class="block px-2 py-1 hover:underline">관리자 생성</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <button onclick="toggleAccordion('menu4')" class="w-full text-left hover:bg-gray-700 px-2 py-1 rounded flex justify-between items-center">
+                        문진 관리 <i class="fa-solid fa-sort-down"></i>
+                    </button>
+                    <ul id="menu4" class="hidden ml-4 mt-1 space-y-1">
                         <li><a href="#" class="block px-2 py-1 hover:underline">데일리 문진 관리</a></li>
                         <li><a href="#" class="block px-2 py-1 hover:underline">데일리 문진 발송</a></li>
                         <li><a href="#" class="block px-2 py-1 hover:underline">기록 문진 관리</a></li>
@@ -74,16 +82,16 @@
                 </li>
 
                 <li>
-                    <button onclick="toggleAccordion('menu4')" class="w-full text-left hover:bg-gray-700 px-2 py-1 rounded flex justify-between items-center">
+                    <button onclick="toggleAccordion('menu5')" class="w-full text-left hover:bg-gray-700 px-2 py-1 rounded flex justify-between items-center">
                         포인트 관리 <i class="fa-solid fa-sort-down"></i>
                     </button>
-                    <ul id="menu4" class="hidden ml-4 mt-1 space-y-1">
+                    <ul id="menu5" class="hidden ml-4 mt-1 space-y-1">
                         <li><a th:href="@{/admin/point}" class="block px-2 py-1 hover:underline">회원 포인트 내역</a></li>
                     </ul>
                 </li>
 
                 <li>
-                    <button onclick="toggleAccordion('menu5')" class="w-full text-left hover:bg-gray-700 px-2 py-1 rounded flex justify-between items-center">
+                    <button onclick="toggleAccordion('menu6')" class="w-full text-left hover:bg-gray-700 px-2 py-1 rounded flex justify-between items-center">
                         고객 센터 <i class="fa-solid fa-sort-down"></i>
                     </button>
                     <ul id="menu5" class="hidden ml-4 mt-1 space-y-1">
