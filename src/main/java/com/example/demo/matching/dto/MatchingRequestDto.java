@@ -17,5 +17,5 @@ public class MatchingRequestDto {
     private String content;
 
     // 이미지 업로드
-    private List<MultipartFile> images = new ArrayList<>();
+    private MultipartFile image;
 }

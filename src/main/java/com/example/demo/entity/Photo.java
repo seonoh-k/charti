@@ -23,7 +23,4 @@ public class Photo extends BaseEntity {
     @JoinColumn(name = "album_id")
     private Album album;
 
-    @ManyToOne(fetch = FetchType.LAZY)  // 매칭 테이블과 N:1 관계 설정
-    @JoinColumn(name = "matching_id")
-    private Matching matching;
 }
