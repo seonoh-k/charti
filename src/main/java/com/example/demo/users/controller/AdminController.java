@@ -9,6 +9,7 @@ import com.example.demo.dto.request.MemberUpdateRequestByAdmin;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.users.entity.*;
+import com.example.demo.users.exception.UserIsNotDeletedException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.*;
 import com.example.demo.util.AuthStatus;
@@ -25,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -68,6 +70,41 @@ public class AdminController {
 
         return "admin/main";
     }
+    @GetMapping("/admin/loginForm")
+    public String showAdminLoginPage(Model model) {
+        log.info("[GET] 👨‍💼 request Admin Main Page");
+
+
+
+        return "admin/loginForm";
+    }
+    @PostMapping("/admin/login")
+    public ResponseEntity<ApiResponse> loginAdmin(@RequestParam AdminDTO adminDTO,
+                                             Model model) {
+        log.info("[POST] 👨‍💼 request Admin Login Page");
+
+
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
+    }
+
+    @GetMapping("/admin/create/admin")
+    public String showCreateAdminPage(Model model) {
+        log.info("[GET] 👨‍💼 request Create Admin Page");
+
+
+
+        return "admin/admin/createAdminForm";
+    }
+    @PostMapping("/admin/create/admin")
+    public ResponseEntity<ApiResponse> createAdmin(Model model) {
+        log.info("[POST] 👨‍💼 request Create Admin Page");
+
+
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse(GlobalStatus.OK));
+    }
+
     @GetMapping("/admin/users/all/deleted")
     public String showAdminDeletedUserListPage(@ModelAttribute PagingRequest pagingRequest,
                                           @RequestParam(required = false) String type,
@@ -224,8 +261,8 @@ public class AdminController {
         Pageable pageable = pagingRequest.toPageable();
 
         try{
-            userDTO = userService.getUserDTOById(id);
-
+            userDTO = userService.getDeletedUserDTOById(id);
+            model.addAttribute("activeUser",false);
             log.info(userDTO.getCreatedAt());
         } catch (UserNotFoundException userNotFoundException){
 
@@ -233,7 +270,9 @@ public class AdminController {
             redirectAttribute.addAttribute("size",pagingRequest.getSize());
             redirectAttribute.addAttribute("sort",pagingRequest.getSort());
             redirectAttribute.addAttribute("direction",pagingRequest.getDirection());
-            return "redirect:/admin/users/all/deleted";
+            model.addAttribute("activeUser",true);
+            return "admin/users/deletedUserUpdateForm"; // 뷰 파일
+            // return "redirect:/admin/users/all/deleted";
         }
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
@@ -269,8 +308,8 @@ public class AdminController {
 
 
     @GetMapping("/admin/expert/{id:[0-9]+}")
-    public String showAdminExpertUpdatePage(@ModelAttribute PagingRequest pagingRequest,
-                                            @PathVariable Long id,
+    public String showAdminExpertUpdatePage(@PathVariable Long id,
+                                            @ModelAttribute PagingRequest pagingRequest,
                                             RedirectAttributes redirectAttribute,
                                             Model model){
         ExpertDTO expertDTO;
@@ -329,7 +368,7 @@ public class AdminController {
             // 1) Path ID vs. payload ID 검증
             if (!id.equals(request.getId())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND, "잘못된 요청: ID 불일치"));
+                        .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND, "잘못된 요청"));
             }
 
             // 2) 수정 로직 호출
@@ -525,7 +564,28 @@ public class AdminController {
     }
 
     @PostMapping("/admin/users/deleted/restore/{id:[0-9]+}")
-    public ResponseEntity<ApiResponse> restoreDeletedUsers(){
+    public ResponseEntity<ApiResponse> restoreDeletedUsers(@PathVariable Long id,
+                                                           @ModelAttribute PagingRequest pagingRequest,
+                                                           @RequestParam(required = false) String type,
+                                                           @RequestParam(required = false) String keyword,
+                                                           RedirectAttributes redirectAttribute,
+                                                           Model model){
+
+        UserDTO userDTO = new UserDTO();
+        // 페이징·검색 파라미터 계속 보존
+        model.addAttribute("page",      pagingRequest.getPage());
+        model.addAttribute("size",      pagingRequest.getSize());
+        model.addAttribute("sort",      pagingRequest.getSort());
+        model.addAttribute("direction", pagingRequest.getDirection());
+
+        try{
+            userService.restoreUsersById(id);
+
+        } catch (UsernameNotFoundException | UserIsNotDeletedException unf){
+            model.addAttribute("activeUser", true);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND));
+        }
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse(GlobalStatus.OK));
