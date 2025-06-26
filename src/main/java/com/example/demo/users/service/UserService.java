@@ -12,6 +12,7 @@ import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.users.entity.*;
+import com.example.demo.users.exception.UserIsNotDeletedException;
 import com.example.demo.users.repository.*;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.UserStatus;
@@ -654,7 +655,7 @@ public class UserService {
     public Long getUserIdByUsername(String username){
         return userRepository.getIdByUsername(username);
     }
-    public UserDTO getUserDTOById(Long userId) throws UserNotFoundException{
+    public UserDTO getDeletedUserDTOById(Long userId) throws UserNotFoundException{
         Optional<UserDTO> dtoById = userQueryRepository.getDeletedUserDTOById(userId);
 
         if(dtoById.isEmpty()){
@@ -662,6 +663,28 @@ public class UserService {
         }
 
         return dtoById.get();
+    }
+
+    public void restoreUsersById(Long id) throws UserNotFoundException,UserIsNotDeletedException{
+        Optional<Boolean> isDeletedOpt = userRepository.checkIsDeletedById(id);
+
+        if (isDeletedOpt.isEmpty()){
+            throw new UserNotFoundException();
+        } else{
+            log.info("restoreUsersById Else Start");
+            Boolean isDeleted = isDeletedOpt.get();
+            log.info("restoreUsersById isDeletedOpt get execute");
+            if (isDeleted){
+                log.info("restoreUsersById isDeletedOpt true");
+                userRepository.restoreUserById(id);
+            } else{
+                log.info("restoreUsersById isDeletedOpt false");
+                throw new UserIsNotDeletedException();
+            }
+
+        }
+
+
     }
 
 }
