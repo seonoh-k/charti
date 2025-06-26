@@ -2,6 +2,7 @@ package com.example.demo.fcm.controller;
 
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.fcm.dto.FcmSendResultDto;
 import com.example.demo.fcm.service.FcmService;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.service.SurveySetService;
@@ -49,14 +50,15 @@ public class ManagerNotificationController {
         Long managerId = user.getId();
 
         try {
-            fcmService.sendSurveySetToGroupMembers(managerId, setId);
-            model.addAttribute("message", "✅ 문진 알림이 성공적으로 발송되었습니다.");
+            // 서비스로부터 발송 결과(DTO)를 받습니다.
+            FcmSendResultDto result = fcmService.sendSurveySetToGroupMembers(managerId, setId);
+            model.addAttribute("sendResult", result);
+            model.addAttribute("message", "✅ 문진 알림이 정상적으로 요청되었습니다. 아래에서 발송 결과를 확인하세요.");
         } catch (Exception e) {
             log.error("문진 알림 발송 실패", e);
             model.addAttribute("message", "❌ 문진 알림 발송 중 오류가 발생했습니다: " + e.getMessage());
         }
 
-        // 알림 발송 후에도 드롭다운 목록이 유지되도록 세트 목록을 다시 조회해서 모델에 추가
         List<SurveySet> surveySets = surveySetService.getSetsForManager(managerId);
         model.addAttribute("surveySets", surveySets);
 
