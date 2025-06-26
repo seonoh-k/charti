@@ -21,7 +21,7 @@ public interface ExpertRepository extends JpaRepository<Expert,Long> {
      * 전문가 major 컬럼에 카테고리 displayName(예: "생활습관")이 들어있으므로
      * 이 값을 이용해 조회
      */
-    List<Expert> findAllByMajor(String major);
+    List<Expert> findByMajor(String major);
 
     Optional<Expert> findByUsersUuid(String uuid);
 }

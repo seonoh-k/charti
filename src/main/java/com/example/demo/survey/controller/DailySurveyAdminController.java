@@ -5,6 +5,10 @@ import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.service.DailySurveyService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,27 +33,27 @@ public class DailySurveyAdminController {
     // 1. 설문 리스트 (연령대, 카테고리 필터링)
     @GetMapping({"", "/list"})
     public String list(
-            // defaultValue는 enum 이름을 사용합니다
             @RequestParam(defaultValue = "ALL") AgeGroup ageGroup,
             @RequestParam(defaultValue = "ALL") SurveyCategory category,
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
             Model model
     ) {
         // service 쪽에서 distinct 카테고리를 enum 리스트로 반환하도록 수정했다면
         List<SurveyCategory> categories = dailySurveyService.getDistinctCategories();
 
-        List<DailySurvey> surveys;
+        Page<DailySurvey> surveys;
         if (ageGroup == AgeGroup.ALL && category == SurveyCategory.ALL) {
             // 전체
-            surveys = dailySurveyService.findAllSurveys();
+            surveys = dailySurveyService.findAllSurveys(pageable);
         } else if (ageGroup != AgeGroup.ALL && category == SurveyCategory.ALL) {
             // 연령대만 필터
-            surveys = dailySurveyService.getSurveysByAgeGroup(ageGroup);
+            surveys = dailySurveyService.getSurveysByAgeGroup(ageGroup, pageable);
         } else if (ageGroup == AgeGroup.ALL && category != SurveyCategory.ALL) {
             // 카테고리만 필터
-            surveys = dailySurveyService.getSurveysByCategory(category);
+            surveys = dailySurveyService.getSurveysByCategory(category, pageable);
         } else {
             // 둘 다 필터
-            surveys = dailySurveyService.getSurveysByAgeAndCategory(ageGroup, category);
+            surveys = dailySurveyService.getSurveysByAgeAndCategory(ageGroup, category, pageable);
         }
 
         model.addAttribute("ageGroup", ageGroup);
@@ -73,7 +77,7 @@ public class DailySurveyAdminController {
     @PostMapping
     public String create(@ModelAttribute DailySurvey survey) {
         dailySurveyService.save(survey);
-        return "redirect:/admin/surveys";
+        return "redirect:/admin/surveys/daily";
     }
 
     // 3. 설문 수정 폼
@@ -104,13 +108,13 @@ public class DailySurveyAdminController {
         survey.setAnswer4(formData.getAnswer4());
         survey.setAnswer5(formData.getAnswer5());
         dailySurveyService.save(survey);
-        return "redirect:/admin/surveys";
+        return "redirect:/admin/surveys/daily";
     }
 
     // 3. 설문 삭제 처리
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id) {
         dailySurveyService.delete(id);
-        return "redirect:/admin/surveys";
+        return "redirect:/admin/surveys/daily";
     }
 }

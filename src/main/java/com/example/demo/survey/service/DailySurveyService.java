@@ -6,6 +6,8 @@ import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.repository.DailySurveyRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -19,23 +21,26 @@ public class DailySurveyService {
     private final DailySurveyRepository dailySurveyRepository;
 
     /** 전체(삭제되지 않은) 문진 */
-    public List<DailySurvey> findAllSurveys() {
-        return dailySurveyRepository.findAllByDeletedFalse();
+    public Page<DailySurvey> findAllSurveys(Pageable pageable) {
+        return dailySurveyRepository.findAllByDeletedFalse(pageable);
     }
 
     /** 연령대 필터만 */
     public List<DailySurvey> getSurveysByAgeGroup(AgeGroup ageGroup) {
         return dailySurveyRepository.findByAgeGroupAndDeletedFalse(ageGroup);
     }
-
-    /** 카테고리 필터만 */
-    public List<DailySurvey> getSurveysByCategory(SurveyCategory category) {
-        return dailySurveyRepository.findAllByCategoryAndDeletedFalse(category);
+    public Page<DailySurvey> getSurveysByAgeGroup(AgeGroup ageGroup, Pageable pageable) {
+        return dailySurveyRepository.findByAgeGroupAndDeletedFalse(ageGroup, pageable);
     }
 
+    /** 카테고리 필터만 */
+    public Page<DailySurvey> getSurveysByCategory(SurveyCategory category, Pageable pageable) {
+        return dailySurveyRepository.findAllByCategoryAndDeletedFalse(category, pageable);
+    }
 
-    public List<DailySurvey> getSurveysByAgeAndCategory(AgeGroup ageGroup, SurveyCategory category) {
-        return dailySurveyRepository.findByAgeGroupAndCategoryAndDeletedFalse(ageGroup, category);
+    /** 연령 + 카테고리 필터 */
+    public Page<DailySurvey> getSurveysByAgeAndCategory(AgeGroup ageGroup, SurveyCategory category, Pageable pageable) {
+        return dailySurveyRepository.findByAgeGroupAndCategoryAndDeletedFalse(ageGroup, category, pageable);
     }
 
     // 응답 기반 위험도 계산
@@ -123,5 +128,7 @@ public class DailySurveyService {
     public List<SurveyCategory> getDistinctCategories() {
         return dailySurveyRepository.findDistinctCategories();
     }
+
+
 
 }

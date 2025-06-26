@@ -44,14 +44,15 @@
         </label>
 
         <button type="submit" class="bg-blue-500 text-white py-1 px-4 rounded">
-            필터
+            검색
         </button>
-    </form>
 
-    <a th:href="@{/admin/surveys/daily/new}"
-       class="inline-block mb-4 text-green-600 hover:underline">
-        ➕ 문진 추가
-    </a>
+        <a th:href="@{/admin/surveys/daily/new}"
+           class="bg-green-600 text-white px-4 py-1 rounded">
+            데일리 문진 추가
+        </a>
+
+    </form>
 
     <table class="w-full table-auto border-collapse">
         <thead>
@@ -83,5 +84,33 @@
         </tr>
         </tbody>
     </table>
+
+    <!-- 페이징 내비 -->
+    <div class="mt-4 flex justify-center gap-2">
+        <a th:if="${surveys.hasPrevious()}"
+           th:href="@{/admin/surveys/daily(
+                 ageGroup=${ageGroup},
+                 category=${category},
+                 page=${surveys.number-1})}"
+           class="px-3 py-1 bg-gray-200 rounded">이전</a>
+
+        <span th:each="i : ${#numbers.sequence(0, surveys.totalPages-1)}"
+              class="px-2"
+              th:classappend="${i == surveys.number} ? 'font-bold underline'">
+    <a th:href="@{/admin/surveys/daily(
+                 ageGroup=${ageGroup},
+                 category=${category},
+                 page=${i})}"
+       th:text="${i+1}">1</a>
+  </span>
+
+        <a th:if="${surveys.hasNext()}"
+           th:href="@{/admin/surveys/daily(
+                 ageGroup=${ageGroup},
+                 category=${category},
+                 page=${surveys.number+1})}"
+           class="px-3 py-1 bg-gray-200 rounded">다음</a>
+    </div>
+
 </th:block>
 </html>

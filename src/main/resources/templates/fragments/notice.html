@@ -4,9 +4,9 @@
     <div class="relative">
         <!-- 벨 아이콘 + 배지 -->
         <button id="bellIcon" class="relative focus:outline-none">
-            <i class="fa fa-bell text-2xl text-gray-700"></i>
+            <i class="fa fa-bell text-2xl text-[#E3A67A]"></i>
             <span id="bellBadge"
-                  class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1"
+                  class="absolute top-0 right-0 bg-[#56846C] text-white text-xs rounded-full px-1"
                   th:classappend="${unreadCount > 0} ? '' : ' hidden'"
                   th:text="${unreadCount}"></span>
         </button>
@@ -77,7 +77,7 @@
 
                 const linkBtn = document.createElement("button");
                 linkBtn.textContent = "바로가기";
-                linkBtn.className = "bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm";
+                linkBtn.className = "bg-[#7CA48C] hover:bg-[#628C73] text-white px-2 py-1 rounded text-sm transition";
                 linkBtn.addEventListener("click", () => window.location.href = n.url);
 
                 const delBtn = document.createElement("button");
