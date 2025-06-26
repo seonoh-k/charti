@@ -80,4 +80,24 @@ public class NoticeApiController {
                     noticeRepo.save(n);
                 });
     }
+
+    /**
+     * [추가] 나의 모든 알림 삭제 (soft-delete)
+     * DELETE /api/notices/all
+     */
+    @DeleteMapping("/all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAll(Principal principal) {
+        Users me = userRepo.findByUuid(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+        // 삭제되지 않은 모든 알림을 조회
+        List<Notice> allNotices = noticeRepo.findByUserAndDeletedFalseOrderBySentAtDesc(me);
+
+        allNotices.forEach(notice -> {
+            notice.setDeleted(true);
+            notice.setDeletedAt(java.time.LocalDateTime.now());
+        });
+        noticeRepo.saveAll(allNotices);
+    }
 }

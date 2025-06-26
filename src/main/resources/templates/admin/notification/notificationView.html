@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>알림 발송 이력</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .modal-container {
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<th:block layout:fragment="content">
+    <div class="container mx-auto px-4 sm:px-8 max-w-7xl">
+        <div class="py-8">
+            <div>
+                <h2 class="text-2xl font-semibold leading-tight">알림 발송 이력</h2>
+            </div>
+
+            <!-- 검색 필터 폼 -->
+            <form th:action="@{/admin/notification/history}" method="get" class="my-4 flex flex-wrap items-end gap-4 p-4 border rounded-lg bg-gray-50">
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-700">발송일 (시작)</label>
+                    <input type="date" id="startDate" name="startDate" th:value="${search.startDate != null ? #temporals.format(search.startDate, 'yyyy-MM-dd') : ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-700">발송일 (종료)</label>
+                    <input type="date" id="endDate" name="endDate" th:value="${search.endDate != null ? #temporals.format(search.endDate, 'yyyy-MM-dd') : ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700">카테고리</label>
+                    <select id="category" name="category" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="">전체</option>
+                        <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat.label}" th:selected="${cat == search.category}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label for="senderName" class="block text-sm font-medium text-gray-700">발신자 이름</label>
+                    <input type="text" id="senderName" name="senderName" th:value="${search.senderName}" placeholder="발신자 이름 입력" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                </div>
+                <div>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        검색
+                    </button>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                    <span class="text-sm font-medium text-gray-700">빠른 조회:</span>
+                    <button type="button" class="quick-date-btn text-xs px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" data-days="7">최근 7일</button>
+                    <button type="button" class="quick-date-btn text-xs px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" data-days="30">최근 30일</button>
+                </div>
+            </form>
+
+            <!-- 이력 테이블 -->
+            <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
+                <div class="inline-block min-w-full shadow rounded-lg overflow-hidden">
+                    <table class="min-w-full leading-normal">
+                        <thead>
+                        <tr>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">발송일시</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">발신자</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">카테고리/제목</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">발송 대상</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">대상/성공</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="history : ${historyPage.content}" class="cursor-pointer hover:bg-gray-50 history-row">
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <input type="hidden" class="history-data" th:value="${history.body}">
+                                <p class="text-gray-900 whitespace-no-wrap" th:text="${#temporals.format(history.sentAt, 'yyyy-MM-dd HH:mm')}"></p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <th:block th:if="${history.sender == null}">
+                                    <span class="relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight">
+                                        <span aria-hidden class="absolute inset-0 bg-green-200 opacity-50 rounded-full"></span>
+                                        <span class="relative">시스템</span>
+                                    </span>
+                                </th:block>
+                                <th:block th:unless="${history.sender == null}">
+                                    <p class="text-gray-900 whitespace-no-wrap" th:text="${history.sender.name}"></p>
+                                </th:block>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap font-bold" th:text="${history.category.label}"></p>
+                                <p class="text-gray-600 whitespace-no-wrap" th:text="${history.title}"></p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <!-- targetCondition 파싱 후 읽기 쉬운 텍스트로 매핑 -->
+                                <th:block th:if="${history.targetCondition != null}" th:switch="${history.targetCondition.split('=')[0]}">
+                                    <span th:case="'riskGroup'" class="text-gray-800">위험군 자녀 대상</span>
+                                    <span th:case="'group'" class="text-gray-800">특정 그룹 대상</span>
+                                    <span th:case="'groupId'" class="text-gray-800">담당자 그룹 대상</span>
+                                    <span th:case="'ageGroup'" class="text-gray-800">연령대 필터</span>
+                                    <span th:case="'userId'" class="text-gray-800">특정 사용자</span>
+                                    <span th:case="*" class="text-gray-600 italic" th:text="${history.targetCondition}"></span>
+                                </th:block>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap" th:text="${history.targetCount + ' 명 중 ' + history.successCount + ' 명 성공'}"></p><br>
+                                <!-- 링크에 childId= 들어간 개인링크는 안보이고 공용 링크만 보이게했음 -->
+                                <a th:if="${history.link != null and !#strings.contains(history.link, 'childId=')}"
+                                   th:href="${history.link}"
+                                   target="_blank"
+                                   class="bg-blue-500 text-white p-1 rounded-lg w-[150px] text-center hover:bg-blue-600">
+                                    바로가기
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 페이지네이션 -->
+            <div th:if="${historyPage.totalPages > 1}" class="px-5 py-5 bg-white border-t flex flex-col xs:flex-row items-center xs:justify-between">
+                <div class="text-xs xs:text-sm text-gray-900">
+                    총 <b th:text="${historyPage.totalElements}"></b> 건
+                </div>
+                <div class="flex items-center">
+                    <a th:href="${historyPage.first} ? '#' : @{/admin/notification/history(page=0, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
+                       class="px-3 py-1 rounded-md text-sm" th:classappend="${historyPage.first} ? 'text-gray-400' : 'text-gray-700 hover:bg-gray-200'">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a th:href="${historyPage.first} ? '#' : @{/admin/notification/history(page=${historyPage.number-1}, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
+                       class="px-3 py-1 rounded-md text-sm" th:classappend="${historyPage.first} ? 'text-gray-400' : 'text-gray-700 hover:bg-gray-200'">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+
+                    <th:block th:each="i : ${#numbers.sequence(
+                    T(java.lang.Math).max(0, historyPage.number-4),
+                    T(java.lang.Math).min(historyPage.totalPages-1, historyPage.number+4)
+                )}">
+                        <a th:href="@{/admin/notification/history(page=${i}, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
+                           th:text="${i+1}"
+                           class="px-3 py-1 rounded-md text-sm"
+                           th:classappend="${i == historyPage.number} ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-200'"></a>
+                    </th:block>
+
+                    <a th:href="${historyPage.last} ? '#' : @{/admin/notification/history(page=${historyPage.number+1}, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
+                       class="px-3 py-1 rounded-md text-sm" th:classappend="${historyPage.last} ? 'text-gray-400' : 'text-gray-700 hover:bg-gray-200'">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a th:href="${historyPage.last} ? '#' : @{/admin/notification/history(page=${historyPage.totalPages-1}, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
+                       class="px-3 py-1 rounded-md text-sm" th:classappend="${historyPage.last} ? 'text-gray-400' : 'text-gray-700 hover:bg-gray-200'">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div id="historyModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full hidden modal-overlay flex items-center justify-center p-4">
+                <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white modal-container">
+                    <div class="flex justify-between items-center pb-3 border-b">
+                        <h3 class="text-lg font-bold">알림 상세 내용</h3>
+                        <button id="closeModal" class="text-black close-modal">×</button>
+                    </div>
+                    <div class="mt-3 text-sm">
+                        <div id="modalContent">
+                            <!-- 내용이 여기에 동적으로 채워집니다. -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // 빠른 날짜 선택 버튼
+            const today = new Date();
+            const startDateInput = document.getElementById("startDate");
+            const endDateInput = document.getElementById("endDate");
+
+            document.querySelectorAll(".quick-date-btn").forEach(button => {
+                button.addEventListener("click", () => {
+                    const days = parseInt(button.dataset.days);
+                    const startDate = new Date();
+                    startDate.setDate(today.getDate() - (days - 1));
+
+                    const format = (date) => date.toISOString().split('T')[0];
+
+                    startDateInput.value = format(startDate);
+                    endDateInput.value = format(today);
+                    document.getElementById("searchForm").submit();
+                });
+            });
+
+            // 상세 보기 모달
+            const modal = document.getElementById("historyModal");
+            const closeModalBtn = document.getElementById("closeModal");
+            const modalContent = document.getElementById("modalContent");
+            const historyRows = document.querySelectorAll(".history-row");
+
+            historyRows.forEach(row => {
+                row.addEventListener("click", () => {
+                    // row.querySelector가 아닌, row.cells[0]에서 직접 찾도록 변경
+                    const hiddenInput = row.cells[0].querySelector(".history-data");
+                    if (!hiddenInput) return; // 방어 코드
+
+                    const historyBody = hiddenInput.value;
+                    const cells = row.getElementsByTagName("td");
+
+                    const content = `
+                    <dl class="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2">
+                        <dt class="font-semibold text-gray-500">발송일시</dt>
+                        <dd class="md:col-span-2">${cells[0].innerText}</dd>
+
+                        <dt class="font-semibold text-gray-500">발신자</dt>
+                        <dd class="md:col-span-2">${cells[1].innerHTML}</dd>
+
+                        <dt class="font-semibold text-gray-500">카테고리</dt>
+                        <dd class="md:col-span-2">${cells[2].querySelector('p:first-child').innerText}</dd>
+
+                        <dt class="font-semibold text-gray-500">제목</dt>
+                        <dd class="md:col-span-2">${cells[2].querySelector('p:last-child').innerText}</dd>
+
+                        <dt class="font-semibold text-gray-500">내용</dt>
+                        <dd class="md:col-span-2 bg-gray-50 p-2 rounded">${historyBody}</dd>
+
+                        <dt class="font-semibold text-gray-500">발송 조건</dt>
+                        <dd class="md:col-span-2">${cells[3].innerHTML}</dd>
+
+                        <dt class="font-semibold text-gray-500">대상/성공</dt>
+                        <dd class="md-col-span-2">${cells[4].innerText}</dd>
+                    </dl>
+                `;
+                    modalContent.innerHTML = content;
+                    modal.classList.remove("hidden");
+                });
+            });
+
+            closeModalBtn.addEventListener("click", () => modal.classList.add("hidden"));
+            modal.addEventListener("click", (e) => {
+                if (e.target.classList.contains("modal-overlay")) {
+                    modal.classList.add("hidden");
+                }
+            });
+        });
+    </script>
+</th:block>
+</html>
