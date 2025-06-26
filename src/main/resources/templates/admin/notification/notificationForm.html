@@ -1,3 +1,139 @@
+<!--<!DOCTYPE html>-->
+<!--<html xmlns:th="http://www.thymeleaf.org"-->
+<!--      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"-->
+<!--      layout:decorate="~{layout/default_layout}">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Charti - 알림 발송</title>-->
+<!--    <script src="https://cdn.tailwindcss.com"></script>-->
+<!--    <link rel="stylesheet"-->
+<!--          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">-->
+<!--    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"-->
+<!--          rel="stylesheet">-->
+<!--    <style> body { font-family: 'Poppins', sans-serif; } </style>-->
+<!--</head>-->
+<!--<th:block layout:fragment="content">-->
+<!--    <div class="max-w-2xl mx-auto bg-white shadow p-6 mt-8 rounded">-->
+<!--        <h1 class="text-2xl font-bold mb-6">📢 알림 발송</h1>-->
+
+<!--        <form th:action="@{/admin/notification/send}" method="post">-->
+<!--            &lt;!&ndash; 1) 수신 대상 &ndash;&gt;-->
+<!--            <div class="mb-4">-->
+<!--                <label for="target" class="block font-semibold mb-1">수신 대상</label>-->
+<!--                <select name="target" id="target" class="w-full border p-2 rounded">-->
+<!--                    <option value="ALL">전체</option>-->
+<!--                    <option value="SPECIAL_RISK">위험군 속한 자녀 대상자</option>-->
+<!--                    &lt;!&ndash; ★ 그룹 대상자 옵션 &ndash;&gt;-->
+<!--                    <option th:each="g : ${groups}"-->
+<!--                            th:value="${'GROUP_' + g.targetGroup.name()}"-->
+<!--                            th:text="${g.targetGroup.displayName + ' 그룹 대상자'}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 2) 연령대 &ndash;&gt;-->
+<!--            <div class="mb-4" id="ageGroupWrapper">-->
+<!--                <label for="ageGroup" class="block font-semibold mb-1">연령대</label>-->
+<!--                <select name="ageGroup" id="ageGroup" class="w-full border p-2 rounded">-->
+<!--                    <option value="">전체</option>-->
+<!--                    <option th:each="a : ${ageGroups}"-->
+<!--                            th:value="${a}"-->
+<!--                            th:text="${a.displayName}"></option>-->
+<!--                </select>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 3) 카테고리 &ndash;&gt;-->
+<!--            <div class="mb-4" id="categoryWrapper">-->
+<!--                <label for="category" class="block font-semibold mb-1">카테고리</label>-->
+<!--                <select name="category" id="category" class="w-full border p-2 rounded">-->
+<!--                    <option value="">전체</option>-->
+<!--                    <option th:each="c : ${categories}"-->
+<!--                            th:value="${c.name()}"-->
+<!--                            th:text="${c.label}"></option>-->
+<!--                </select>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 4) 제목 &ndash;&gt;-->
+<!--            <div class="mb-4" id="titleWrapper">-->
+<!--                <label for="title" class="block font-semibold mb-1">제목</label>-->
+<!--                <input type="text" name="title" id="title"-->
+<!--                       class="w-full border p-2 rounded" required>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 5) 내용 &ndash;&gt;-->
+<!--            <div class="mb-6" id="bodyWrapper">-->
+<!--                <label for="body" class="block font-semibold mb-1">내용</label>-->
+<!--                <textarea name="body" id="body" rows="4"-->
+<!--                          class="w-full border p-2 rounded" required></textarea>-->
+<!--            </div>-->
+
+<!--            <button type="submit"-->
+<!--                    class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">-->
+<!--                알림 발송-->
+<!--            </button>-->
+<!--        </form>-->
+
+<!--        <p th:if="${message}"-->
+<!--           class="mt-6 text-green-600 font-semibold"-->
+<!--           th:text="${message}"></p>-->
+<!--    </div>-->
+
+<!--    <script>-->
+<!--        document.addEventListener("DOMContentLoaded", () => {-->
+<!--          const targetSelect    = document.getElementById("target");-->
+<!--          const ageGroupWrapper = document.getElementById("ageGroupWrapper");-->
+<!--          const categoryWrapper = document.getElementById("categoryWrapper");-->
+<!--          const titleWrapper    = document.getElementById("titleWrapper");-->
+<!--          const bodyWrapper     = document.getElementById("bodyWrapper");-->
+<!--          const ageGroupSelect  = document.getElementById("ageGroup");-->
+<!--          const categorySelect  = document.getElementById("category");-->
+<!--          const titleInput      = document.getElementById("title");-->
+<!--          const bodyTextarea    = document.getElementById("body");-->
+
+<!--          // 기존 자동 템플릿 (카테고리 선택 → 제목/본문 자동 입력)-->
+<!--          const titles = { DAILY:"오늘의 문진 안내", SPECIAL:"특별 문진 요청",-->
+<!--                           NOTICE:"공지사항 안내", SYSTEM:"시스템 알림" };-->
+<!--          const bodies = { DAILY:"오늘의 데일리 문진을 진행해주세요! 📋",-->
+<!--                           SPECIAL:"아이의 건강 상태가 평소와 다르다면 특별 문진을 작성해주세요.",-->
+<!--                           NOTICE:"Charti의 새로운 소식을 알려드립니다! 📢",-->
+<!--                           SYSTEM:"시스템 점검 안내: 서비스 이용에 참고 바랍니다." };-->
+<!--          categorySelect.addEventListener("change", () => {-->
+<!--            const sel = categorySelect.value;-->
+<!--            titleInput.value = titles[sel]||"";-->
+<!--            bodyTextarea.value = bodies[sel]||"";-->
+<!--          });-->
+
+<!--          // 수신 대상 변경 시 age/category/제목·본문 토글-->
+<!--          function onTargetChange() {-->
+<!--            const t = targetSelect.value;-->
+<!--            if (t === 'SPECIAL_RISK' || t.startsWith('GROUP_')) {-->
+<!--              ageGroupWrapper.style.display    = 'none';-->
+<!--              categoryWrapper.style.display    = 'none';-->
+<!--              titleWrapper.style.display       = 'none';-->
+<!--              bodyWrapper.style.display        = 'none';-->
+<!--              ageGroupSelect.disabled          = true;-->
+<!--              categorySelect.disabled          = true;-->
+<!--              titleInput.required             = false;-->
+<!--              bodyTextarea.required           = false;-->
+<!--            } else {-->
+<!--              ageGroupWrapper.style.display    = '';-->
+<!--              categoryWrapper.style.display    = '';-->
+<!--              titleWrapper.style.display       = '';-->
+<!--              bodyWrapper.style.display        = '';-->
+<!--              ageGroupSelect.disabled          = false;-->
+<!--              categorySelect.disabled          = false;-->
+<!--              titleInput.required             = true;-->
+<!--              bodyTextarea.required           = true;-->
+<!--            }-->
+<!--          }-->
+
+<!--          targetSelect.addEventListener("change", onTargetChange);-->
+<!--          onTargetChange();-->
+<!--        });-->
+<!--    </script>-->
+<!--</th:block>-->
+<!--</html>-->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -11,20 +147,41 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
           rel="stylesheet">
-    <style> body { font-family: 'Poppins', sans-serif; } </style>
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .content-area {
+            display: none; /* 기본적으로 내용을 숨김 */
+        }
+        .content-area.open {
+            display: block; /* 펼쳐질 때 보이도록 변경 */
+        }
+        .chevron-icon.rotate-180 {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease-in-out;
+        }
+        .chevron-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-2xl mx-auto bg-white shadow p-6 mt-8 rounded">
-        <h1 class="text-2xl font-bold mb-6">📢 알림 발송</h1>
+        <h1 class="text-2xl font-bold mb-6">📢 알림 발송 (관리자)</h1>
 
-        <form th:action="@{/admin/notification/send}" method="post">
+        <!-- 성공/실패 메시지 표시 영역 -->
+        <div th:if="${message}" class="mb-4 p-3 rounded text-sm"
+             th:classappend="${message.startsWith('❌')} ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'"
+             th:text="${message}">
+        </div>
+
+        <form th:action="@{/admin/notification/send}" method="post" id="notificationForm">
             <!-- 1) 수신 대상 -->
             <div class="mb-4">
                 <label for="target" class="block font-semibold mb-1">수신 대상</label>
                 <select name="target" id="target" class="w-full border p-2 rounded">
                     <option value="ALL">전체</option>
                     <option value="SPECIAL_RISK">위험군 속한 자녀 대상자</option>
-                    <!-- ★ 그룹 대상자 옵션 -->
+                    <!-- 그룹 대상자 옵션 -->
                     <option th:each="g : ${groups}"
                             th:value="${'GROUP_' + g.targetGroup.name()}"
                             th:text="${g.targetGroup.displayName + ' 그룹 대상자'}">
@@ -69,67 +226,186 @@
             </div>
 
             <button type="submit"
-                    class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                    class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                    onclick="this.disabled=true; this.innerText='발송 중...'; document.getElementById('notificationForm').submit();">
                 알림 발송
             </button>
         </form>
 
-        <p th:if="${message}"
-           class="mt-6 text-green-600 font-semibold"
-           th:text="${message}"></p>
+        <!-- 발송 결과 표시 영역 -->
+        <div th:if="${sendResult}" class="mt-8 border-t pt-6">
+            <h2 class="text-xl font-bold mb-4">🚀 발송 결과</h2>
+
+            <!-- 요약 카운트 (항상 표시) -->
+            <div class="p-4 border rounded bg-gray-50 mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p class="font-semibold text-gray-800">✅ 성공: <span class="text-green-600 font-bold" th:text="${sendResult.successCount}">0</span> 명</p>
+                <p class="font-semibold text-gray-800">❌ 실패: <span class="text-red-600 font-bold" th:text="${sendResult.failedRecipientNames.size()}">0</span> 명</p>
+            </div>
+
+            <!-- [조건부] 상세 명단 영역 (특정 그룹 대상일 때만 표시) -->
+            <div th:if="${sendResult.targetType == 'RISK' || sendResult.targetType == 'GROUP'}">
+                <!-- 성공 내역 아코디언 -->
+                <div id="success-accordion" class="border rounded mb-3">
+                    <div class="accordion-header cursor-pointer bg-gray-100 p-3 flex justify-between items-center hover:bg-gray-200 transition">
+                        <span class="font-semibold text-gray-700">성공 내역 확인하기</span>
+                        <i class="chevron-icon fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="content-area p-4 border-t">
+                        <ul class="data-list list-disc pl-5 space-y-2 text-gray-600"></ul>
+                        <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
+                        <div class="hidden-data" style="display:none;">
+                            <span th:each="name : ${sendResult.successfulRecipientNames}" th:text="${name}"></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 실패 내역 아코디언 -->
+                <div id="failure-accordion" class="border rounded border-red-200">
+                    <div class="accordion-header cursor-pointer bg-red-50 p-3 flex justify-between items-center hover:bg-red-100 transition">
+                        <span class="font-semibold text-red-700">실패 내역 확인하기</span>
+                        <i class="chevron-icon fa-solid fa-chevron-down text-red-700"></i>
+                    </div>
+                    <div class="content-area p-4 border-t border-red-200">
+                        <ul class="data-list list-disc pl-5 space-y-2 text-red-600"></ul>
+                        <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
+                        <div class="hidden-data" style="display:none;">
+                            <span th:each="name : ${sendResult.failedRecipientNames}" th:text="${name}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [조건부] 전체 대상 발송 시 안내 메시지 -->
+            <div th:if="${sendResult.targetType == 'ALL' || sendResult.targetType == 'FILTER'}">
+                <p class="p-3 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded">
+                    ※ '전체' 또는 '필터' 대상 발송의 경우, 시스템 부하를 고려하여 상세 명단은 제공되지 않습니다.
+                </p>
+            </div>
+        </div>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-          const targetSelect    = document.getElementById("target");
-          const ageGroupWrapper = document.getElementById("ageGroupWrapper");
-          const categoryWrapper = document.getElementById("categoryWrapper");
-          const titleWrapper    = document.getElementById("titleWrapper");
-          const bodyWrapper     = document.getElementById("bodyWrapper");
-          const ageGroupSelect  = document.getElementById("ageGroup");
-          const categorySelect  = document.getElementById("category");
-          const titleInput      = document.getElementById("title");
-          const bodyTextarea    = document.getElementById("body");
+        // 순수 자바스크립트로 아코디언과 페이지네이션 기능 구현
+        function setupAccordionAndPagination(containerId, suffix = '') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
 
-          // 기존 자동 템플릿 (카테고리 선택 → 제목/본문 자동 입력)
-          const titles = { DAILY:"오늘의 문진 안내", SPECIAL:"특별 문진 요청",
-                           NOTICE:"공지사항 안내", SYSTEM:"시스템 알림" };
-          const bodies = { DAILY:"오늘의 데일리 문진을 진행해주세요! 📋",
-                           SPECIAL:"아이의 건강 상태가 평소와 다르다면 특별 문진을 작성해주세요.",
-                           NOTICE:"Charti의 새로운 소식을 알려드립니다! 📢",
-                           SYSTEM:"시스템 점검 안내: 서비스 이용에 참고 바랍니다." };
-          categorySelect.addEventListener("change", () => {
-            const sel = categorySelect.value;
-            titleInput.value = titles[sel]||"";
-            bodyTextarea.value = bodies[sel]||"";
-          });
+            const header = container.querySelector('.accordion-header');
+            const contentArea = container.querySelector('.content-area');
+            const chevronIcon = container.querySelector('.chevron-icon');
+            const dataList = container.querySelector('.data-list');
+            const paginationControls = container.querySelector('.pagination-controls');
 
-          // 수신 대상 변경 시 age/category/제목·본문 토글
-          function onTargetChange() {
-            const t = targetSelect.value;
-            if (t === 'SPECIAL_RISK' || t.startsWith('GROUP_')) {
-              ageGroupWrapper.style.display    = 'none';
-              categoryWrapper.style.display    = 'none';
-              titleWrapper.style.display       = 'none';
-              bodyWrapper.style.display        = 'none';
-              ageGroupSelect.disabled          = true;
-              categorySelect.disabled          = true;
-              titleInput.required             = false;
-              bodyTextarea.required           = false;
-            } else {
-              ageGroupWrapper.style.display    = '';
-              categoryWrapper.style.display    = '';
-              titleWrapper.style.display       = '';
-              bodyWrapper.style.display        = '';
-              ageGroupSelect.disabled          = false;
-              categorySelect.disabled          = false;
-              titleInput.required             = true;
-              bodyTextarea.required           = true;
+            const hiddenDataContainer = container.querySelector('.hidden-data');
+            const dataSpans = hiddenDataContainer.querySelectorAll('span');
+            const data = Array.from(dataSpans).map(span => span.textContent);
+
+            if (data.length === 0) {
+                container.style.display = 'none';
+                return;
             }
-          }
 
-          targetSelect.addEventListener("change", onTargetChange);
-          onTargetChange();
+            let currentPage = 1;
+            const itemsPerPage = 10;
+            const totalPages = Math.ceil(data.length / itemsPerPage);
+
+            function render() {
+                dataList.innerHTML = '';
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                const pageData = data.slice(start, end);
+
+                pageData.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item + suffix;
+                    dataList.appendChild(li);
+                });
+
+                paginationControls.innerHTML = '';
+                if (totalPages > 1) {
+                    const prevButton = document.createElement('button');
+                    prevButton.innerHTML = '&laquo; 이전';
+                    prevButton.className = 'px-3 py-1 rounded bg-gray-200 disabled:opacity-50';
+                    prevButton.disabled = currentPage === 1;
+                    prevButton.onclick = (e) => { e.stopPropagation(); if (currentPage > 1) { currentPage--; render(); } };
+
+                    const pageInfo = document.createElement('span');
+                    pageInfo.textContent = `페이지 ${currentPage} / ${totalPages}`;
+
+                    const nextButton = document.createElement('button');
+                    nextButton.innerHTML = '다음 &raquo;';
+                    nextButton.className = 'px-3 py-1 rounded bg-gray-200 disabled:opacity-50';
+                    nextButton.disabled = currentPage === totalPages;
+                    nextButton.onclick = (e) => { e.stopPropagation(); if (currentPage < totalPages) { currentPage++; render(); } };
+
+                    paginationControls.appendChild(prevButton);
+                    paginationControls.appendChild(pageInfo);
+                    paginationControls.appendChild(nextButton);
+                }
+            }
+
+            header.addEventListener('click', () => {
+                contentArea.classList.toggle('open');
+                chevronIcon.classList.toggle('rotate-180');
+                if (contentArea.classList.contains('open') && dataList.children.length === 0) {
+                    render();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 관리자 알림 발송 폼 UI 제어 로직
+            const targetSelect    = document.getElementById("target");
+            const ageGroupWrapper = document.getElementById("ageGroupWrapper");
+            const categoryWrapper = document.getElementById("categoryWrapper");
+            const titleWrapper    = document.getElementById("titleWrapper");
+            const bodyWrapper     = document.getElementById("bodyWrapper");
+            const ageGroupSelect  = document.getElementById("ageGroup");
+            const categorySelect  = document.getElementById("category");
+            const titleInput      = document.getElementById("title");
+            const bodyTextarea    = document.getElementById("body");
+
+            const titles = { DAILY:"오늘의 문진 안내", SPECIAL:"특별 문진 요청", NOTICE:"공지사항 안내", SYSTEM:"시스템 알림" };
+            const bodies = { DAILY:"오늘의 데일리 문진을 진행해주세요! 📋", SPECIAL:"아이의 건강 상태가 평소와 다르다면 특별 문진을 작성해주세요.", NOTICE:"Charti의 새로운 소식을 알려드립니다! 📢", SYSTEM:"시스템 점검 안내: 서비스 이용에 참고 바랍니다." };
+
+            categorySelect.addEventListener("change", () => {
+                const sel = categorySelect.value;
+                titleInput.value = titles[sel]||"";
+                bodyTextarea.value = bodies[sel]||"";
+            });
+
+            function onTargetChange() {
+                const t = targetSelect.value;
+                if (t === 'SPECIAL_RISK' || t.startsWith('GROUP_')) {
+                  ageGroupWrapper.style.display    = 'none';
+                  categoryWrapper.style.display    = 'none';
+                  titleWrapper.style.display       = 'none';
+                  bodyWrapper.style.display        = 'none';
+                  ageGroupSelect.disabled          = true;
+                  categorySelect.disabled          = true;
+                  titleInput.required             = false;
+                  bodyTextarea.required           = false;
+                } else {
+                  ageGroupWrapper.style.display    = '';
+                  categoryWrapper.style.display    = '';
+                  titleWrapper.style.display       = '';
+                  bodyWrapper.style.display        = '';
+                  ageGroupSelect.disabled          = false;
+                  categorySelect.disabled          = false;
+                  titleInput.required             = true;
+                  bodyTextarea.required           = true;
+                }
+            }
+
+            targetSelect.addEventListener("change", onTargetChange);
+            onTargetChange();
+
+            // 결과 아코디언 설정
+            if (document.getElementById('success-accordion')) {
+                setupAccordionAndPagination('success-accordion', ' 님');
+            }
+            if (document.getElementById('failure-accordion')) {
+                setupAccordionAndPagination('failure-accordion');
+            }
         });
     </script>
 </th:block>
