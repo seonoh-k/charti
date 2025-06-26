@@ -29,9 +29,9 @@ public class QnaController {
         return "qnaList";
     }
 
-    @GetMapping("qns/create")
+    @GetMapping("qna/create")
     public String createQna(Model model) {
-        model.addAttribute("category", QnaCategory.values());
+        model.addAttribute("category", QnaCategory.formValues());
 
         return "qnaForm";
     }
@@ -44,10 +44,12 @@ public class QnaController {
         boolean isOwner = userDTO.getId().equals(qna.getUsers().getId());
 
         if(!isOwner && !qna.isPublic()) {
-            return "redirect:/qnaList";
+            return "redirect:/qna";
         }
 
-        model.addAttribute("qna", qna);
+        model.addAttribute("category", QnaCategory.formValues());
+        model.addAttribute("qna", new QnaDTO(qna));
+        model.addAttribute("isOwner", isOwner);
 
         return "qna";
     }
