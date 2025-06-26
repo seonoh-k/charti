@@ -3,26 +3,38 @@ package com.example.demo.users.controller;
 import com.example.demo.dto.*;
 import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResultDTO;
+import com.example.demo.dto.request.AdminCreateRequest;
 import com.example.demo.dto.request.ExpertUpdateRequestByAdmin;
 import com.example.demo.dto.request.ManagerUpdateRequestByAdmin;
 import com.example.demo.dto.request.MemberUpdateRequestByAdmin;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.exception.FirebaseAuthenticationException;
+import com.example.demo.exception.JwtTokenFormatInvalidException;
+import com.example.demo.exception.JwtTokenNotFoundException;
+import com.example.demo.jwt.JwtUtil;
 import com.example.demo.users.entity.*;
+import com.example.demo.users.exception.AdminAlreadyExistsException;
 import com.example.demo.users.exception.UserIsNotDeletedException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.*;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
+import com.example.demo.util.IpUtils;
 import com.example.demo.util.StatusCode;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.auth.AUTH;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -30,21 +42,29 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
 @Log4j2
 public class AdminController {
 
+    private final AdminService adminService;
     private final ExpertService expertService;
     private final MemberService memberService;
     private final ManagerService managerService;
     private final UserService userService;
     private final ChildService childService;
+    private final FirebaseService firebaseService;
+    private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
 
 
@@ -71,20 +91,63 @@ public class AdminController {
         return "admin/main";
     }
     @GetMapping("/admin/loginForm")
-    public String showAdminLoginPage(Model model) {
+    public String showAdminLoginPage() {
         log.info("[GET] 👨‍💼 request Admin Main Page");
-
-
-
         return "admin/loginForm";
     }
     @PostMapping("/admin/login")
-    public ResponseEntity<ApiResponse> loginAdmin(@RequestParam AdminDTO adminDTO,
-                                             Model model) {
-        log.info("[POST] 👨‍💼 request Admin Login Page");
+    public ResponseEntity<ApiResponse> loginAdmin(@RequestHeader("Authorization") String authHeader,
+                                                  HttpServletRequest httpServletRequest) {
+        try {
+            // JWT TOKEN FORMAT => "Bearer TokenValueIsRandomTextAndIncludingNumber"
+            String idToken = jwtUtil.removeBearerPrefix(authHeader);
+            FirebaseToken decoded = firebaseService.verifyIdToken(idToken);
+            String email = decoded.getEmail();
 
+            userService.getMemberByEmail(email);
 
-        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
+            String jwt = jwtUtil.createToken(decoded);
+            ResponseCookie jwtCookie = jwtUtil.createCookie(jwt);
+
+            String clientIp = IpUtils.extractClientIp(httpServletRequest);
+
+            authService.createLoginSuccessHistory(email,clientIp);
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                    .body(new ApiResponse(AuthStatus.AUTHENTICATION_SUCCESS));
+
+        } catch (IllegalStateException e) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse(AuthStatus.USER_DELETED));
+
+        }catch (JwtTokenNotFoundException jwtTokenNotFoundException){
+
+            jwtTokenNotFoundException.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(AuthStatus.TOKEN_NOT_FOUND));
+
+        } catch (JwtTokenFormatInvalidException jwtTokenFormatInvalidException){
+
+            jwtTokenFormatInvalidException.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.TOKEN_INVALID_FORMAT));
+
+        } catch (FirebaseAuthException firebaseAuthException) {
+
+            log.info("⚠️ [AuthController.loginMember] FirebaseAuthException : {}",
+                    firebaseAuthException.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(AuthStatus.AUTHENTICATION_FAIL));
+
+        } catch (UserNotFoundException userNotFoundException){
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.USER_NOT_REGISTRATION));
+
+        }
+
     }
 
     @GetMapping("/admin/create/admin")
@@ -95,11 +158,76 @@ public class AdminController {
 
         return "admin/admin/createAdminForm";
     }
-    @PostMapping("/admin/create/admin")
-    public ResponseEntity<ApiResponse> createAdmin(Model model) {
+    @PostMapping("/admin/check/admin")
+    public ResponseEntity<ApiResponse> checkAdminValidation(@Valid @RequestBody AdminCreateRequest request,
+                                                   BindingResult bindingResult,
+                                                   Model model) {
         log.info("[POST] 👨‍💼 request Create Admin Page");
+        // 중복검사
+        // 1. 암호화
+        // 2.
+        String email = request.getUsername();
+        log.info("전화번호 : {}",request.getPhoneNumber());
+        List<ErrorDetail> errors = new ArrayList<ErrorDetail>();
 
+        if (bindingResult.hasErrors()) {
+            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
 
+            errors = fieldErrors.stream()
+                    .map(fe -> new ErrorDetail(fe.getField(), fe.getDefaultMessage()))
+                    .collect(Collectors.toList());
+
+            // ⇒ 여러 개의 FieldError를 한꺼번에 가져옴 :contentReference[oaicite:2]{index=2}
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.responseError(GlobalStatus.VALIDATION_FAIL, errors));
+        }
+
+        boolean adminIsExistsInDatabase = adminService.existsAdminByUsername(email);
+        boolean adminIsExistsInFirebase = firebaseService.existsByEmail(email);
+
+        if (adminIsExistsInDatabase || adminIsExistsInFirebase){
+            errors.add(new ErrorDetail("username","사용할 수 없는 아이디에요"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.responseError(GlobalStatus.USERNAME_VALIDATION_FAILED,errors));
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse(GlobalStatus.OK));
+    }
+    @PostMapping("/admin/create/admin")
+    public ResponseEntity<ApiResponse> createAdmin(@RequestBody AdminCreateRequest request,
+                                                   Model model) {
+        try{
+            // 파이어 베이스 계정 생성
+            String uuid = firebaseService.createMember(request);
+            request.setUuid(uuid);
+
+            boolean isExistInDB = userService.existsByEmail(request.getUsername());
+
+            if (isExistInDB){
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse(GlobalStatus.USERNAME_VALIDATION_FAILED));
+            }
+
+            // Database 계정 생성
+            adminService.createAdmin(request);
+
+            // Claim에 Admin 생성
+            firebaseService.setRoleToAdminInClaim(request.getId());
+
+        } catch (AdminAlreadyExistsException aaee){
+            log.info("🔥🔥🔥🔥🔥 request.getUsername() : {}",request.getUsername());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(GlobalStatus.USERNAME_VALIDATION_FAILED));
+        } catch (FirebaseAuthException fe){
+            // Firebase에 계정 생성하다가 실패 시 발생
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(AuthStatus.ADMIN_JOIN_REQUEST_FAIL));
+        } catch (FirebaseAuthenticationException fae){
+            // Role Claims에 저장하다가 실패 시 발생
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(GlobalStatus.FIREBASE_ERROR));
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse(GlobalStatus.OK));
