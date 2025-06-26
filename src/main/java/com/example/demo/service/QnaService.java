@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.QnaDTO;
 import com.example.demo.entity.Qna;
 import com.example.demo.enums.QnaCategory;
 import com.example.demo.repository.QnaRepository;
@@ -10,9 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
 public class QnaService extends BaseService<Qna, QnaRepository> {
 
@@ -20,28 +16,22 @@ public class QnaService extends BaseService<Qna, QnaRepository> {
         super(repository);
     }
 
-    public List<QnaDTO> getPagedList(int page) {
-        Pageable pageable = PageRequest.of(page, 20, Sort.Direction.DESC, "createdAt");
-        Page<Qna> qnaPage = repository.findAllByDeletedFalse(pageable);
+    public Page<Qna> getPagedList(QnaCategory category, int page) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.Direction.DESC, "createdAt");
 
-        List<QnaDTO> qnaDTOList = new ArrayList<>();
-        for(Qna qna : qnaPage) {
-            qnaDTOList.add(new QnaDTO(qna));
+        if(category == null) {
+            return repository.findAllByDeletedFalse(pageable);
         }
-
-        return qnaDTOList;
+        return repository.findByCategoryAndDeletedFalse(category, pageable);
     }
 
-    public List<QnaDTO> getPagedCategoryList(QnaCategory category, int page) {
-        Pageable pageable = PageRequest.of(page, 20, Sort.Direction.DESC, "createdAt");
-        Page<Qna> qnaPage = repository.findByCategory(category, pageable);
-        List<QnaDTO> qnaDTOList = new ArrayList<>();
+    public Page<Qna> getAdminPagedList(QnaCategory category, int page) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.Direction.DESC, "createdAt");
 
-        for(Qna qna : qnaPage) {
-            qnaDTOList.add(new QnaDTO(qna));
+        if(category == null) {
+            return repository.findAll(pageable);
         }
-
-        return qnaDTOList;
+        return repository.findAllByCategory(category, pageable);
     }
 
     public Long createQna(Qna qna) {

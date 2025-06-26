@@ -182,9 +182,9 @@
                     <option value="ALL">전체</option>
                     <option value="SPECIAL_RISK">위험군 속한 자녀 대상자</option>
                     <!-- 그룹 대상자 옵션 -->
-                    <option th:each="g : ${groups}"
-                            th:value="${'GROUP_' + g.targetGroup.name()}"
-                            th:text="${g.targetGroup.displayName + ' 그룹 대상자'}">
+                    <option th:each="tg : ${targetGroups}"
+                            th:value="${'GROUP_' + tg.name()}"
+                            th:text="${tg.displayName + ' 그룹 대상자'}">
                     </option>
                 </select>
             </div>

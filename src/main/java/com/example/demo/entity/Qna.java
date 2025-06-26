@@ -6,9 +6,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Getter @Setter
 public class Qna extends BaseEntity {
@@ -28,12 +25,11 @@ public class Qna extends BaseEntity {
     private String title;
     private String content;
 
-    // 공개 여부 - 디폴트 true : 공개
-    private boolean isPublic = true;
+    private boolean isPublic;
 
     // 답변 여부 - 디폴트 false : 답변 대기
     private boolean isAnswered = false;
 
-    @OneToMany(mappedBy = "qna", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<QnaAnswer> answers = new ArrayList<>();
+    @OneToOne(mappedBy = "qna", cascade = CascadeType.ALL, orphanRemoval = true)
+    private QnaAnswer answer;
 }
