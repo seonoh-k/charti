@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,7 @@
 </head>
 <body>
 <th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 rounded">
     <h1 class="text-2xl font-bold mb-2" th:text="${set.setTitle}">세트명</h1>
 
     <div class="mb-4 space-x-4">
@@ -42,7 +43,7 @@
             문진 질문
         </li>
     </ul>
-
+</div>
     <div class="mt-6 space-x-2">
         <a th:href="@{|/admin/surveySet/${set.setId}/edit|}"
            class="bg-yellow-500 text-white px-4 py-1 rounded">수정</a>

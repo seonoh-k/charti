@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}">
+      layout:decorate="~{layout/admin_layout}">
 <head>
     <meta charset="UTF-8">
     <title>기록 문진 이력</title>
@@ -24,7 +24,15 @@
 </head>
 
 <th:block layout:fragment="content">
-    <div class="max-w-5xl mx-auto p-6" id="record-view-container" th:data-api-base-url="@{/admin/surveys/record/api}" th:data-user-search-url="@{/api/user/search}">
+    <div class="max-w-4xl mx-auto bg-white shadow p-6 mt-8 rounded" id="record-view-container" th:data-api-base-url="@{/admin/surveys/record/api}" th:data-user-search-url="@{/api/user/search}">
+        <div class="flex justify-center mt-3 mb-5 space-x-6">
+            <a href="/admin/surveys/record" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+                문진 목록
+            </a>
+            <a href="/admin/surveys/record/history" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+                문진 이력
+            </a>
+        </div>
         <h1 class="text-2xl font-bold mb-6">🗂 기록 문진 이력 조회 (관리자)</h1>
 
         <div class="mb-6">
@@ -314,7 +322,7 @@
 
                     const apiResponse = await res.json();
                     if(apiResponse.code !== 'SWD') throw new Error(apiResponse.message || '데이터 로드 실패');
-                    
+
                     answers = apiResponse.data;
                     dateAnswersCache.set(cacheKey, answers);
                 } catch (error) {
@@ -326,7 +334,7 @@
             }
             populateEditModal(answers);
         }
-        
+
         /**
          * API에서 받아온 답변 데이터로 수정 모달의 폼을 채웁니다.
          * @param {Array} answers
@@ -348,7 +356,7 @@
                 document.getElementById('saveEditButton').disabled = false;
             }
         }
-        
+
         /**
          * 수정 모달의 '저장' 버튼 클릭 시, 폼 데이터를 서버로 전송합니다.
          * @param {Event} event
@@ -432,7 +440,7 @@
         function createDateDetailsHtml(childId, dateStr) {
             return `<details class="mb-2 p-2 bg-gray-50 rounded" data-child-id="${childId}" data-record-date="${dateStr}"><summary class="cursor-pointer"><div class="summary-content"><span>📅 ${dateStr}</span><div class="flex items-center space-x-2"><button class="bg-yellow-500 text-white px-3 py-1 text-sm rounded hover:bg-yellow-600 edit-record-btn" data-child-id="${childId}" data-record-date="${dateStr}">수정</button><button class="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600 delete-record-btn" data-child-id="${childId}" data-record-date="${dateStr}">삭제</button><i class="fas fa-chevron-down"></i></div></div></summary><div class="mt-2 p-2" id="answers-${childId}-${dateStr}"></div></details>`;
         }
-        
+
         /**
          * 수정 모달 안의 질문-답변 폼 요소에 대한 HTML 문자열을 생성합니다.
          * @param {object} qa - 질문과 답변이 담긴 객체
@@ -442,7 +450,7 @@
         function createEditFormHtml(qa, index) {
             return `<div class="mb-4"><label for="edit_answer_${index}" class="block font-semibold mb-1">${index + 1}. ${qa.question}</label><textarea id="edit_answer_${index}" data-question-id="${qa.questionId}" class="w-full border p-2 rounded" rows="3" required>${qa.answer || ''}</textarea></div>`;
         }
-        
+
         /**
          * 페이징 데이터를 기반으로 페이지네이션 버튼 UI를 생성합니다.
          * @param {HTMLElement} container
@@ -467,7 +475,7 @@
             };
 
             container.appendChild(renderButton('이전', currentPage - 1, currentPage === 0));
-            
+
             const pageList = pageData.pageList;
             if(pageList) {
                 pageList.forEach(p => {

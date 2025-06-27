@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그룹 문진 관리</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-8">그룹 문진 관리</h1>
+
+        <!-- 1. 신규 문항 등록 -->
+        <section class="mb-10 p-6 bg-white border rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-4 border-b pb-2">
+                <i class="fas fa-plus-circle text-green-500 mr-2"></i>신규 문항 등록
+            </h2>
+            <form id="createForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-medium">연령대</label>
+                        <select name="ageGroup" class="border p-2 rounded w-full" required></select>
+                    </div>
+                    <div>
+                        <label class="block font-medium">카테고리</label>
+                        <select name="category" class="border p-2 rounded w-full" required></select>
+                    </div>
+                    <div>
+                        <label class="block font-medium">대상 그룹</label>
+                        <select name="targetGroup" class="border p-2 rounded w-full" required></select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-medium">문항 내용</label>
+                    <input name="question" placeholder="예: 아이가 '엄마', '아빠'와 같은 간단한 단어를 말하나요?" class="border p-2 rounded w-full" required>
+                </div>
+                <h3 class="font-semibold pt-2">답변 항목</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input name="answer1" placeholder="답변 1 (가장 부정적)" class="border p-2 rounded" required>
+                    <input name="answer2" placeholder="답변 2" class="border p-2 rounded" required>
+                    <input name="answer3" placeholder="답변 3 (보통)" class="border p-2 rounded">
+                    <input name="answer4" placeholder="답변 4" class="border p-2 rounded">
+                    <input name="answer5" placeholder="답변 5 (가장 긍정적)" class="border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block font-medium">문진 세트 ID (선택 사항)</label>
+                    <input type="number" name="surveySetId" placeholder="연결할 survey_set의 ID" class="border p-2 rounded w-full">
+                </div>
+                <div class="text-right">
+                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-bold">등록하기</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 2. 문항 조회 -->
+        <section class="mb-10 p-6 bg-white border rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-4 border-b pb-2">
+                <i class="fas fa-search text-blue-500 mr-2"></i>문항 조회
+            </h2>
+            <div class="space-y-6">
+                <div class="flex items-center gap-4">
+                    <select id="filterAge" class="border p-2 rounded w-64"></select>
+                    <button onclick="loadByAge()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">연령대로 조회</button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <select id="filterTarget" class="border p-2 rounded w-64"></select>
+                    <button onclick="loadByTargetGroup()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">대상 그룹으로 조회</button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <select id="filterCategory" class="border p-2 rounded w-64"></select>
+                    <button onclick="loadByCategory()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">카테고리로 조회</button>
+                </div>
+            </div>
+            <div id="surveyListContainer" class="mt-6 border-t pt-4"></div>
+        </section>
+
+        <!-- 3. 문항 수정/삭제 -->
+        <section class="p-6 bg-white border rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-4 border-b pb-2">
+                <i class="fas fa-edit text-yellow-500 mr-2"></i>문항 수정 및 삭제
+            </h2>
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-2">문항 수정</h3>
+                <form id="updateForm" class="space-y-4 p-4 border rounded bg-gray-50">
+                    <input type="number" name="id" placeholder="수정할 문항 ID" class="border p-2 rounded w-full" required>
+                    <p class="text-xs text-gray-500">ID 입력 후 엔터 혹은 포커스 아웃 시 기존 내용이 자동 입력됩니다.</p>
+
+                    <!-- [수정] 수정 폼에도 select 박스들 추가 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block font-medium">연령대</label>
+                            <select name="ageGroup" class="border p-2 rounded w-full" required></select>
+                        </div>
+                        <div>
+                            <label class="block font-medium">카테고리</label>
+                            <select name="category" class="border p-2 rounded w-full" required></select>
+                        </div>
+                        <div>
+                            <label class="block font-medium">대상 그룹</label>
+                            <select name="targetGroup" class="border p-2 rounded w-full" required></select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-medium">문항 내용</label>
+                        <input name="question" placeholder="새 문항 내용" class="border p-2 rounded w-full" required>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-2">
+                        <input name="answer1" placeholder="새 답변 1" class="border p-2 rounded">
+                        <input name="answer2" placeholder="새 답변 2" class="border p-2 rounded">
+                        <input name="answer3" placeholder="새 답변 3" class="border p-2 rounded">
+                        <input name="answer4" placeholder="새 답변 4" class="border p-2 rounded">
+                        <input name="answer5" placeholder="새 답변 5" class="border p-2 rounded">
+                    </div>
+                    <div class="text-right">
+                        <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 font-bold">수정하기</button>
+                    </div>
+                </form>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-2">문항 삭제</h3>
+                <div class="flex items-center gap-4 p-4 border rounded bg-gray-50">
+                    <input type="number" id="deleteId" placeholder="삭제할 문항 ID" class="border p-2 rounded w-64">
+                    <button onclick="deleteSurvey()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 font-bold">삭제하기</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const ageOptions = ["0~12개월", "1~2세", "3~4세", "5세"];
+        const categoryOptions = ["의사소통/정서/심리", "운동/인지 발달", "사회성/인지/창의", "생활습관"];
+        const targetOptions = ["유치원", "어린이집", "보육원", "all"];
+
+        function populateSelect(selectEl, options, hasAll = false) {
+            selectEl.innerHTML = '';
+            if(hasAll) {
+                const allOption = document.createElement('option');
+                allOption.value = 'all';
+                allOption.textContent = '전체';
+                selectEl.appendChild(allOption);
+            }
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                selectEl.appendChild(option);
+            });
+        }
+
+        // Form & Filter Select 초기화
+        const createForm = document.getElementById('createForm');
+        populateSelect(createForm.querySelector('select[name="ageGroup"]'), ageOptions);
+        populateSelect(createForm.querySelector('select[name="category"]'), categoryOptions);
+        populateSelect(createForm.querySelector('select[name="targetGroup"]'), targetOptions.filter(o => o !== 'all'));
+
+        // [수정] 업데이트 폼에도 Select 초기화
+        const updateForm = document.getElementById('updateForm');
+        populateSelect(updateForm.querySelector('select[name="ageGroup"]'), ageOptions);
+        populateSelect(updateForm.querySelector('select[name="category"]'), categoryOptions);
+        populateSelect(updateForm.querySelector('select[name="targetGroup"]'), targetOptions.filter(o => o !== 'all'));
+
+        populateSelect(document.getElementById('filterAge'), ageOptions);
+        populateSelect(document.getElementById('filterTarget'), targetOptions, true);
+        populateSelect(document.getElementById('filterCategory'), categoryOptions);
+
+        createForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(createForm);
+            const dto = Object.fromEntries(formData.entries());
+            const surveySetId = dto.surveySetId;
+            if (!surveySetId) delete dto.surveySetId;
+
+            const url = surveySetId ? `/api/group-surveys?surveySetId=${surveySetId}` : '/api/group-surveys';
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dto)
+                });
+                if (!res.ok) throw new Error('생성 실패');
+                alert('새 문항이 등록되었습니다.');
+                createForm.reset();
+            } catch (err) {
+                alert('등록 중 오류가 발생했습니다.');
+            }
+        });
+
+        function renderSurveyList(surveys, container) {
+            container.innerHTML = '<h3 class="text-lg font-semibold mb-2">조회 결과</h3>';
+            if (!surveys || surveys.length === 0) {
+                 container.innerHTML += `<p class="text-gray-500">조회된 문항이 없습니다.</p>`;
+                 return;
+            }
+            surveys.forEach((s) => {
+                container.innerHTML += `
+                    <div class="border-b py-2">
+                        <p><strong>ID ${s.id}:</strong> ${s.question}</p>
+                        <p class="text-sm text-gray-600">(${s.ageGroup} | ${s.category} | ${s.targetGroup})</p>
+                    </div>
+                `;
+            });
+        }
+
+        const listContainer = document.getElementById('surveyListContainer');
+        const loadByAge = async () => renderSurveyList(await (await fetch(`/api/group-surveys/by-age/${document.getElementById("filterAge").value}`)).json(), listContainer);
+        const loadByTargetGroup = async () => renderSurveyList(await (await fetch(`/api/group-surveys/by-target/${document.getElementById("filterTarget").value}`)).json(), listContainer);
+        const loadByCategory = async () => renderSurveyList(await (await fetch(`/api/group-surveys?category=${encodeURIComponent(document.getElementById("filterCategory").value)}`)).json(), listContainer);
+
+        const idInput = updateForm.querySelector('input[name="id"]');
+        idInput.addEventListener('change', async () => {
+            const id = idInput.value;
+            if(!id) return;
+            try {
+                const res = await fetch(`/api/group-surveys/${id}`);
+                if(!res.ok) throw new Error('ID에 해당하는 문항 없음');
+                const data = await res.json();
+
+                // [수정] 조회된 데이터로 수정 폼의 모든 필드를 채움
+                updateForm.querySelector('select[name="ageGroup"]').value = data.ageGroup;
+                updateForm.querySelector('select[name="category"]').value = data.category;
+                updateForm.querySelector('select[name="targetGroup"]').value = data.targetGroup;
+                updateForm.querySelector('input[name="question"]').value = data.question;
+                updateForm.querySelector('input[name="answer1"]').value = data.answer1;
+                updateForm.querySelector('input[name="answer2"]').value = data.answer2;
+                updateForm.querySelector('input[name="answer3"]').value = data.answer3 || '';
+                updateForm.querySelector('input[name="answer4"]').value = data.answer4 || '';
+                updateForm.querySelector('input[name="answer5"]').value = data.answer5 || '';
+            } catch(e) {
+                alert(e.message);
+                updateForm.reset();
+            }
+        });
+
+        updateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(updateForm);
+            const dto = Object.fromEntries(formData.entries());
+            const id = dto.id;
+
+            if(!id) {
+                alert('수정할 문항의 ID를 입력해주세요.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/group-surveys/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dto)
+                });
+                if (!res.ok) throw new Error('수정 실패');
+                alert(`ID ${id} 문항이 수정되었습니다.`);
+                updateForm.reset();
+            } catch (err) {
+                 alert('수정 중 오류가 발생했습니다.');
+            }
+        });
+
+        const deleteSurvey = async () => {
+            const id = document.getElementById("deleteId").value;
+            if (!id) return alert('삭제할 문항의 ID를 입력하세요.');
+            if (!confirm(`ID ${id} 문항을 정말 삭제하시겠습니까?`)) return;
+
+            try {
+                const res = await fetch(`/api/group-surveys/${id}`, { method: 'DELETE' });
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(errorText || '삭제 실패');
+                }
+                alert('삭제되었습니다.');
+                document.getElementById('deleteId').value = '';
+            } catch (err) {
+                alert(`삭제 중 오류 발생: ${err.message}`);
+            }
+        }
+    </script>
+</th:block>
+</html>

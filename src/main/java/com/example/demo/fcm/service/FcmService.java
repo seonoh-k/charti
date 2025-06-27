@@ -161,7 +161,7 @@ public class FcmService {
         }
 
         String title = "우리아이 돌봄 특별 문진 요청";
-        String link = "https://localhost:8080/specialSurvey";
+        String link = "http://localhost:8080/specialSurvey";
 
         for(Users user : targetUsers) {
             String childrenNames = user.getMember().getChildren().stream()
@@ -274,7 +274,7 @@ public class FcmService {
 
             String title = String.format("[문진 요청] %s 어린이를 위한 새 문진이 도착했어요!", child.getName());
             String body = String.format("'%s' 문진을 확인하고 답변을 부탁드립니다.", set.getSetTitle());
-            String link = "https://localhost:8080/surveySet/request/" + setId + "?childId=" + child.getId();
+            String link = "http://localhost:8080/surveySet/request/" + setId + "?childId=" + child.getId();
 
             noticesToSave.add(Notice.builder().user(parent).title(title).body(body)
                     .category(FcmCategory.GROUP).url(link).sentAt(LocalDateTime.now()).build());
@@ -297,7 +297,7 @@ public class FcmService {
                         .body(String.format("%s 담당자가 그룹 문진을 발송했습니다.", sender.getName()))
                         .category(FcmCategory.GROUP)
                         .targetCondition("groupId=" + manager.getGroup().getId())
-                        .link("https://localhost:8080/surveySet/request/" + setId)
+                        .link("http://localhost:8080/surveySet/request/" + setId)
                         .targetCount(targetChildren.size())
                         .successCount(successfulNames.size())
                         .sentAt(LocalDateTime.now())

@@ -1,24 +1,19 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Fontawesome 연결 Embed Code Start-->
-    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
-    <!-- Fontawesome 연결 Embed Code End-->
-    <script src="https://cdn.tailwindcss.com"></script>
     <title>관리자 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
 </head>
-<body class="h-screen flex flex-col">
-
-    <!-- 헤더 (햄버거 버튼) -->
-    <div th:replace="fragments/adminFragments :: hamburger"></div>
-
-    <div class="flex flex-1">
-        <div th:replace="fragments/adminFragments :: sideBar"></div>
-        <!-- 메인 콘텐츠 -->
-        <main class="flex-1 p-6 bg-gray-100">
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 rounded">
             <h1 class="text-2xl font-bold mb-4">탈퇴된 회원 정보</h1>
             <!-- activeUser 플래그가 있으면, 아이콘+메시지 표시 -->
             <div th:if="${activeUser}" class="flex flex-col items-center justify-center h-64">
@@ -183,6 +178,5 @@ function showToast(message, type = 'success', duration = 3000) {
 
 
 <div id="toast-container" class="fixed inset-x-0 top-0 z-50 space-y-3 text-center"></div>
-<script th:src="@{/js/admin/adminSideBar.js}"></script>
-</body>
+</th:block>
 </html>
