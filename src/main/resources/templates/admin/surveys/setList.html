@@ -14,7 +14,7 @@
     <h1 class="text-2xl font-bold mb-4">문진 세트</h1>
 
     <!-- 필터 & 검색 -->
-    <form th:action="@{/surveySets}" th:object="${search}" method="get"
+    <form th:action="@{/admin/surveySet}" th:object="${search}" method="get"
           class="flex flex-wrap gap-4 mb-6">
         <input type="text" th:field="*{keyword}"
                placeholder="제목 검색"
@@ -63,9 +63,9 @@
 
         <button type="submit"
                 class="bg-blue-600 text-white px-4 py-1 rounded">검색</button>
-        <a th:href="@{/surveySets/create(type=${search.type=='all'?'GROUP':search.type})}"
+        <a th:href="@{/admin/surveySet/create(type=${search.type=='all'?'GROUP':search.type})}"
            class="bg-green-600 text-white px-4 py-1 rounded">그룹문진 세트 생성</a>
-        <a th:href="@{/surveySets/create(type=${search.type=='all'?'SPECIAL':search.type})}"
+        <a th:href="@{/admin/surveySet/create(type=${search.type=='all'?'SPECIAL':search.type})}"
            class="bg-green-600 text-white px-4 py-1 rounded">특별문진 세트 생성</a>
     </form>
 
@@ -85,7 +85,7 @@
         <tr th:each="set, stat : ${page.content}" class="hover:bg-gray-50">
             <td class="px-2 py-1 border" th:text="${stat.index+1}">1</td>
             <td class="px-2 py-1 border">
-                <a th:href="@{|/surveySets/${set.setId}|}"
+                <a th:href="@{|/admin/surveySet/${set.setId}|}"
                    class="text-blue-600 hover:underline"
                    th:text="${set.setTitle}">제목</a>
             </td>
@@ -113,14 +113,14 @@
     <!-- 페이징 (변경 없음) -->
     <div class="mt-4 flex justify-center space-x-2">
         <a th:if="${page.hasPrevious()}"
-           th:href="@{/surveySets(page=${page.number-1},
+           th:href="@{/admin/surveySet(page=${page.number-1},
                               keyword=${search.keyword},
                               ageGroup=${search.ageGroup},
                               category=${search.category},
                               type=${search.type})}"
-           class="px-2 py-1 border rounded">Prev</a>
+           class="px-2 py-1 border rounded">이전</a>
         <span th:each="i : ${#numbers.sequence(0, page.totalPages-1)}">
-      <a th:href="@{/surveySets(page=${i},
+      <a th:href="@{/admin/surveySet(page=${i},
                                 keyword=${search.keyword},
                                 ageGroup=${search.ageGroup},
                                 category=${search.category},
@@ -130,12 +130,12 @@
          class="px-2 py-1 border rounded">1</a>
     </span>
         <a th:if="${page.hasNext()}"
-           th:href="@{/surveySets(page=${page.number+1},
+           th:href="@{/admin/surveySet(page=${page.number+1},
                               keyword=${search.keyword},
                               ageGroup=${search.ageGroup},
                               category=${search.category},
                               type=${search.type})}"
-           class="px-2 py-1 border rounded">Next</a>
+           class="px-2 py-1 border rounded">다음</a>
     </div>
 </th:block>
 </body>

@@ -16,7 +16,7 @@ public class Comment extends BaseEntity {
     @Column(nullable = false)
     private Long communityId;
 
-    @Column(nullable = true) // 아직 계정 구현 안된 관계로 임시 null값 허용
+    @Column(nullable = false)
     private Long usersId;
 
     @Column(columnDefinition = "TEXT", nullable = false)

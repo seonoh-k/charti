@@ -460,6 +460,14 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    // userID로 닉네임 조회
+    @Transactional(readOnly = true)
+    public String getNicknameByUsersId(Long usersId) {
+        Member m = getMemberEntityById(usersId);
+        // Member ↔ Users 연관관계가 있다면
+        return m.getUsers().getNickname();
+    }
+
 
 
     // Users → UserDTO → Member 로 안전하게 변환되므로 타입 충돌 없이 Member 엔티티 기반 기능(예: 문진, 자녀 조회 등)에 활용

@@ -9,7 +9,7 @@ public enum AgeGroup {
     AGE_3_4("3~4세"),
     AGE_5("5세"),
     // 검색용 전체(all)
-    ALL("all"),
+    ALL("전체"),
 
     // 세트 저장용 통합(various)
     VARIOUS("various");
