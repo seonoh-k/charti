@@ -31,6 +31,7 @@ public class ExpertMatchingController {
     @GetMapping
     public String listByStatus(
             @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             Principal principal,
             Model model
@@ -39,22 +40,26 @@ public class ExpertMatchingController {
         Expert me = expertRepo.findByUsersUuid(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("전문가 정보가 없습니다."));
         Long expertId = me.getId();
+        PageRequest pr = PageRequest.of(page, 10, Sort.by("createdAt").descending());
+
+        boolean hasKey = (keyword != null && !keyword.isBlank());
+        Page<Matching> matchings;
 
         // 상태에 따라 조회
-        PageRequest pr = PageRequest.of(page, 10, Sort.by("createdAt").descending());
-        Page<Matching> matchings;
         if ("ALL".equals(status)) {
-            matchings = matchingService.findByExpertId(expertId, pr);
+            matchings = hasKey
+                    ? matchingService.findByExpertIdAndTitle(expertId, keyword, pr)
+                    : matchingService.findByExpertId(expertId, pr);
         } else {
-            MatchingStatus ms = MatchingStatus.valueOf(status);
-            matchings = matchingService.findByExpertIdAndStatus(expertId, ms, pr);
+            matchings = hasKey
+                    ? matchingService.findByExpertIdStatusAndTitle(expertId, status, keyword, pr)
+                    : matchingService.findByExpertIdAndStatus(expertId, MatchingStatus.valueOf(status), pr);
         }
 
-        List<String> statuses = List.of("ALL", "MATCHED", "RESPONDED");
-
-        model.addAttribute("matchings", matchings);
-        model.addAttribute("statuses", statuses);
+        model.addAttribute("matchings",     matchings);
+        model.addAttribute("statuses",      List.of("ALL","MATCHED","RESPONDED"));
         model.addAttribute("currentStatus", status);
+        model.addAttribute("keyword",       keyword);
 
         return "expert/matchingList";
     }

@@ -1,43 +1,60 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>데일리 문진</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
 
     <h1 class="text-2xl font-bold mb-4">데일리 문진</h1>
 
+    <!-- 자녀 선택 -->
     <label for="childSelect" class="block mb-2 font-semibold">자녀 선택:</label>
-    <select id="childSelect" name="childId" class="border p-2 rounded mb-4">
+    <select id="childSelect"
+            name="childId"
+            class="border p-2 rounded mb-4"
+            th:disabled="${selectedChildId != null}">
         <option value="">-- 자녀를 선택하세요 --</option>
         <option th:each="c : ${children}"
                 th:value="${c.id}"
-                th:selected="${param.childId != null
-                              and param.childId[0] == c.id.toString()}"
-                th:text="${c.name + ' (' +
-                          T(java.time.Period)
-                            .between(c.birthday, T(java.time.LocalDate).now())
-                            .getYears() +
-                          '세)'}">
+                th:selected="${c.id == selectedChildId}"
+                th:text="${c.name + ' (' + c.ageDisplay + ')'}">
         </option>
+
     </select>
+    <!-- disabled 상태에서도 값이 넘어가도록 hidden input 추가 -->
+    <input type="hidden"
+           name="childId"
+           th:if="${selectedChildId != null}"
+           th:value="${selectedChildId}"/>
 
     <!-- 연령대 선택 -->
     <label for="ageGroup" class="block mb-2 font-semibold">연령대 선택:</label>
-    <select id="ageGroup" name="ageGroup" class="border p-2 rounded mb-4">
+    <select id="ageGroup"
+            name="ageGroup"
+            class="border p-2 rounded mb-4"
+            th:disabled="${selectedChildId != null}">
         <option value="">-- 연령대를 선택하세요 --</option>
         <option th:each="ag : ${T(com.example.demo.enums.AgeGroup).values()}"
                 th:if="${ag.name() != 'ALL' and ag.name() != 'VARIOUS'}"
                 th:value="${ag.name()}"
+                th:selected="${ag.name() == selectedAgeGroup}"
                 th:text="${ag.displayName}">
         </option>
     </select>
+    <input type="hidden"
+           name="ageGroup"
+           th:if="${selectedChildId != null}"
+           th:value="${selectedAgeGroup}"/>
 
     <!-- 질문 출력 영역 -->
     <div id="survey-container" class="mb-4"></div>
@@ -73,14 +90,13 @@
           surveys.forEach((s, idx) => {
             const div = document.createElement("div");
             div.className = "mb-4";
-            div.innerHTML = `
-              <p class="font-semibold mb-2">Q${idx+1}. ${s.question}</p>
-              <label><input type="radio" name="q${s.id}" value="1"> ${s.answer1}</label><br>
-              <label><input type="radio" name="q${s.id}" value="2"> ${s.answer2}</label><br>
-              <label><input type="radio" name="q${s.id}" value="3"> ${s.answer3}</label><br>
-              <label><input type="radio" name="q${s.id}" value="4"> ${s.answer4}</label><br>
-              <label><input type="radio" name="q${s.id}" value="5"> ${s.answer5}</label><br>
-            `;
+            div.innerHTML =
+              `<p class="font-semibold mb-2">Q${idx+1}. ${s.question}</p>
+               <label><input type="radio" name="q${s.id}" value="1"> ${s.answer1}</label><br>
+               <label><input type="radio" name="q${s.id}" value="2"> ${s.answer2}</label><br>
+               <label><input type="radio" name="q${s.id}" value="3"> ${s.answer3}</label><br>
+               <label><input type="radio" name="q${s.id}" value="4"> ${s.answer4}</label><br>
+               <label><input type="radio" name="q${s.id}" value="5"> ${s.answer5}</label><br>`;
             surveyContainer.appendChild(div);
           });
         }
@@ -112,15 +128,22 @@
               answers: answers
             })
           })
-          .then(res => res.ok ? res.json() : Promise.reject(res.status))
-          .then(data => {
-            const rs = encodeURIComponent(JSON.stringify(data));
-            const ans = encodeURIComponent(JSON.stringify(answers));
-            window.location.href =
-              `/dailySurvey/result?ageGroup=${encodeURIComponent(ageGroupSelect.value)}&riskScores=${rs}&answers=${ans}`;
-          })
-          .catch(() => alert("제출 중 오류가 발생했습니다."));
+            .then(res => res.ok ? res.json() : Promise.reject(res.status))
+            .then(data => {
+              const rs = encodeURIComponent(JSON.stringify(data));
+              const ans = encodeURIComponent(JSON.stringify(answers));
+              window.location.href =
+                `/dailySurvey/result?ageGroup=${encodeURIComponent(ageGroupSelect.value)}&riskScores=${rs}&answers=${ans}`;
+            })
+            .catch(() => alert("제출 중 오류가 발생했습니다."));
         }
+
+        // 페이지 로드 시, 이미 선택된 연령대가 있으면 fetch 트리거
+        document.addEventListener('DOMContentLoaded', () => {
+          if (ageGroupSelect.value) {
+            ageGroupSelect.dispatchEvent(new Event('change'));
+          }
+        });
     </script>
 
 </th:block>
