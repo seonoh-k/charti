@@ -16,13 +16,18 @@ public class QnaService extends BaseService<Qna, QnaRepository> {
         super(repository);
     }
 
-    public Page<Qna> getPagedList(QnaCategory category, int page) {
+    public Page<Qna> getPagedList(Long id, QnaCategory category, int page) {
         Pageable pageable = PageRequest.of(page, 10, Sort.Direction.DESC, "createdAt");
 
-        if(category == null) {
+        if(id != null && category == null) {
+            return repository.findAllById(id, pageable);
+        }else if(id != null && category != null) {
+            return repository.findAllByIdAndCategory(id, category, pageable);
+        }else if(id == null && category != null) {
+            return repository.findByCategoryAndDeletedFalse(category, pageable);
+        }else {
             return repository.findAllByDeletedFalse(pageable);
         }
-        return repository.findByCategoryAndDeletedFalse(category, pageable);
     }
 
     public Page<Qna> getAdminPagedList(QnaCategory category, int page) {

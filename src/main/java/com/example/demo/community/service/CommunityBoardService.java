@@ -73,4 +73,13 @@ public class CommunityBoardService {
     public void delete(Long id) {
         repo.deleteById(id);
     }
+
+    public Page<CommunityBoard> getPagedList(int page) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.Direction.DESC, "createdAt");
+
+        Specification<CommunityBoard> spec = Specification.where(null);
+        spec = spec.and((r, q, cb) -> cb.equal(r.get("category"), "announcement"));
+
+        return repo.findAll(spec, pageable);
+    }
 }
