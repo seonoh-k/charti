@@ -41,6 +41,12 @@ public class AdminDTO {
         this.password = password;
         this.phoneNumber = phoneNumber;
     }
+    public AdminDTO(Long id,String uuid, String name, Role role){
+        this.id = id;
+        this.uuid = uuid;
+        this.name = name;
+        this.role = role.name();
+    }
 
 
 }
