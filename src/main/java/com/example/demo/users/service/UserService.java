@@ -29,10 +29,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.users.exception.UserNotFoundException;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -488,91 +490,56 @@ public class UserService {
     }
 
     /**
-     * 서용자가 입력한 정보로파이어베이스와 db의 회원정보를 수정한다
-     *
-     * @param request : 사용자가 입력한 수정 데이터
-     * @param uid : 접속중인 사용자 uid
-     * @throws FirebaseAuthException 파이어베이스  예외
+     * 담당자 정보 업데이트 (Firebase + DB)
+     * @param req 수정 요청 DTO
+     * @param uid 인증된 사용자 UID
+     * @throws FirebaseAuthException Firebase 업데이트 실패 시
      */
     @Transactional
-    public void updateUser(UserUpdateRequest request, String uid) throws FirebaseAuthException {
-        log.info("🔄 회원정보 수정 요청:  getName={} ",  request.getName());
-        log.info("🔄 회원정보 수정 요청:  getNickname={}",request.getNickname());
-        log.info("🔄 회원정보 수정 요청:  getAddressId={}", request.getAddressId());
-        log.info("🔄 회원정보 수정 요청:  getPhoneNumber={}", request.getPhoneNumber());
-        log.info("🔄 회원정보 수정 요청:  getProfileImage={}", request.getProfileImage());
-        log.info("🔄 회원정보 수정 요청:  getNewUid={}", request.getNewUid());
-
-        String newUid = request.getNewUid();
-        // 휴대전화 인증을 통해 더미uid가 생겼을때만 삭제 시도
-        if (newUid != null && !newUid.isBlank()) {
-            log.info("🗑️ Firebase 임시 UID 삭제 시도: {}", newUid);
-            FirebaseAuth.getInstance().deleteUser(newUid);
-        }
-        // 1. Firebase 업데이트
-        UserRecord.UpdateRequest firebaseReq = new UserRecord.UpdateRequest(uid)
-                .setDisplayName(request.getName())
-                .setPhoneNumber(request.getPhoneNumber());
-
-        FirebaseAuth.getInstance().updateUser(firebaseReq);
-        log.info("✅ Firebase 사용자 정보 업데이트 완료: name={}, phone={}", request.getName(), request.getPhoneNumber());
-
-        // 2. DB 업데이트
-        Users user = userRepository.findByUuid(uid).orElseThrow(() -> new IllegalArgumentException("유저 없음: " + uid));
-        log.info("🧩 DB 사용자 정보 조회 완료: userId={}, role={}", user.getId(), user.getRole());
-
-        user.setName(request.getName());
-        user.setNickname(request.getNickname());
-        user.setPhoneNumber(request.getPhoneNumber());
-
-        // ✅ 주소 분기 업데이트
-        if (request.getAddressId() != null) {
-            log.info("📌 주소 ID 수신됨: {}", request.getAddressId());
-
-            Address newAddress = addressRepository.findById(request.getAddressId())
-                    .orElseThrow(() -> new IllegalArgumentException("주소 정보 없음: ID=" + request.getAddressId()));
-            log.info("📍 새로운 주소 조회 완료: {}", newAddress.getId());
-
-            Role role = user.getRole();
-
-            switch (role) {
-                case ROLE_MEMBER -> {
-                    Member member = user.getMember();
-                    log.info("🔍 MEMBER 객체: {}", (member != null ? member.getId() : "null"));
-                    if (member != null) {
-                        member.setAddress(newAddress);
-                        memberRepository.save(member);
-                        log.info("✅ Member 주소 업데이트 완료");
-                    }
-                }
-                case ROLE_EXPERT -> {
-                    Expert expert = user.getExpert();
-                    log.info("🔍 EXPERT 객체: {}", (expert != null ? expert.getId() : "null"));
-                    if (expert != null) {
-                        expert.setAddress(newAddress);
-                        expertRepository.save(expert);
-                        log.info("✅ Expert 주소 업데이트 완료");
-                    }
-                }
-                case ROLE_MANAGER -> {
-                    Manager manager = user.getManager();
-                    log.info("🔍 MANAGER 객체: {}", (manager != null ? manager.getId() : "null"));
-                    if (manager != null && manager.getGroup() != null) {
-                        Group group = manager.getGroup();
-                        log.info("🔍 GROUP 객체: {}", group.getId());
-                        group.setAddress(newAddress);
-                        groupRepository.save(group);
-                        log.info("✅ Group 주소 업데이트 완료");
-                    }
-                }
-                default -> throw new IllegalStateException("알 수 없는 역할: " + role);
+    public void updateMember(UserUpdateRequest req, String uid) throws FirebaseAuthException {
+        // Firebase 임시계정 삭제
+        if (StringUtils.hasText(req.getNewUid())) {
+            try {
+                FirebaseAuth.getInstance().deleteUser(req.getNewUid());
+            } catch (FirebaseAuthException e) {
+                log.warn("임시 UID({}) 삭제 실패: {}", req.getNewUid(), e.getMessage());
             }
         }
+        // 1. Firebase 동기화
+        UserRecord.UpdateRequest firebaseReq = new UserRecord.UpdateRequest(uid);
+        if (StringUtils.hasText(req.getName())) firebaseReq.setDisplayName(req.getName());
+        if (StringUtils.hasText(req.getPhoneNumber())) firebaseReq.setPhoneNumber(req.getPhoneNumber());
+        FirebaseAuth.getInstance().updateUser(firebaseReq);
 
+        // 2. DB 동기화
+        Users user = userRepository.findByUuid(uid)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 UID: " + uid));
+
+        // 값이 있는 것만 수정
+        updateIfPresent(req.getName(), user::setName);
+        updateIfPresent(req.getNickname(), user::setNickname);
+        updateIfPresent(req.getPhoneNumber(), user::setPhoneNumber);
+
+        // Member 엔티티(주소 등)
+        Member member = memberRepository.findWithUsersById(user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Member 정보 없음: " + user.getId()));
+
+        // 주소 업데이트 (필요 시)
+        if (req.getAddressId() != null) {
+            Address addr = addressRepository.findById(req.getAddressId())
+                    .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 주소 ID: " + req.getAddressId()));
+            member.setAddress(addr);
+        }
+
+        // 저장
+        memberRepository.save(member);
         userRepository.save(user);
-        log.info("✅ 사용자 정보 DB 업데이트 완료");
     }
 
+    // 람다 도우미는 그대로 사용 가능!
+    private void updateIfPresent(String newValue, Consumer<String> setter) {
+        if (StringUtils.hasText(newValue)) setter.accept(newValue);
+    }
 
     /**
      * 사용자가 입력한 정보로 파이어베이스와 db의 패스워드를 수정한다
