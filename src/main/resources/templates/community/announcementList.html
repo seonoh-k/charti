@@ -1,86 +1,135 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}"
+      th:with="userService=${@userService}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>공지사항</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
-          rel="stylesheet">
-    <style>
-        body { font-family: 'Poppins', sans-serif; }
-    </style>
+          rel="stylesheet"/>
+    <style>body { font-family: 'Poppins', sans-serif; }</style>
 </head>
 <th:block layout:fragment="content">
-<h1>공지사항</h1>
+    <div class="container mx-auto p-6 bg-white shadow rounded-lg">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">공지사항</h1>
 
-<form th:action="@{/community/announcement/list}" method="get">
-    하위카테고리:
-    <select name="subCategory">
-        <option value="전체" th:selected="${subCategory=='전체'}">전체</option>
-        <option th:each="c: ${subCategories}"
-                th:value="${c}"
-                th:text="${c}"
-                th:selected="${c==subCategory}"></option>
-    </select>
-    제목:
-    <input type="text" name="keyword" th:value="${keyword}" />
-    <button type="submit">검색</button>
-</form>
+        <form th:action="@{/community/announcement/list}" method="get"
+              class="flex flex-wrap items-end gap-4 mb-6">
+            <!-- 하위카테고리 -->
+            <div class="flex flex-col">
+                <label class="text-gray-700 font-medium mb-1">하위카테고리</label>
+                <select name="subCategory"
+                        class="w-32 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="전체" th:selected="${subCategory=='전체'}">전체</option>
+                    <option th:each="c: ${subCategories}"
+                            th:value="${c}"
+                            th:text="${c}"
+                            th:selected="${c==subCategory}"/>
+                </select>
+            </div>
 
-<a th:href="@{/community/announcement/new}">새 공지 작성</a>
+            <!-- 제목 키워드 검색 -->
+            <div class="flex flex-col flex-1 min-w-[200px]">
+                <label class="text-gray-700 font-medium mb-1">제목</label>
+                <input type="text" name="keyword"
+                       th:value="${keyword}"
+                       placeholder="검색할 키워드"
+                       class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+            </div>
 
-<table border="1">
-    <thead>
-    <tr>
-        <th>번호</th>
-        <th>제목</th>
-        <th>조회수</th>
-        <th>작성자</th>
-        <th>작성일</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="b, stat: ${boards}">
-        <td th:text="${stat.index + 1 + pageData.number*pageData.size}"></td>
-        <td>
-            <a th:href="@{/community/announcement/{id}(id=${b.communityId})}"
-               th:text="${b.title}"></a>
-        </td>
-        <td th:text="${b.views}"></td>
-        <td th:text="${b.usersId}"></td>
-        <td th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}"></td>
-    </tr>
-    </tbody>
-</table>
+            <!-- 정렬 -->
+            <div class="flex flex-col">
+                <label class="text-gray-700 font-medium mb-1">정렬</label>
+                <select name="sort"
+                        class="w-32 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="popular" th:selected="${sort=='popular'}">인기순</option>
+                    <option value="new"     th:selected="${sort=='new'}">최신순</option>
+                </select>
+            </div>
 
-<!-- 페이징 -->
-<div>
-  <span th:if="${pageData.hasPrevious()}">
-    <a th:href="@{/community/announcement/list(
-                  page=${pageData.number-1},
-                  subCategory=${subCategory},
-                  ageGroup=${ageGroup},
-                  keyword=${keyword})}">&lt; 이전</a>
-  </span>
-    <span th:each="i: ${#numbers.sequence(0,pageData.totalPages-1)}">
-    <a th:href="@{/community/announcement/list(
-                  page=${i},
-                  subCategory=${subCategory},
-                  ageGroup=${ageGroup},
-                  keyword=${keyword})}"
-       th:text="${i+1}"
-       th:classappend="${i==pageData.number}?'current':''"></a>
-  </span>
-    <span th:if="${pageData.hasNext()}">
-    <a th:href="@{/community/announcement/list(
-                  page=${pageData.number+1},
-                  subCategory=${subCategory},
-                  ageGroup=${ageGroup},
-                  keyword=${keyword})}">다음 &gt;</a>
-  </span>
-</div>
-</th:block>>
+            <!-- 검색 버튼 -->
+            <button type="submit"
+                    class="bg-[#E3A67A] text-white font-semibold px-6 py-2 rounded hover:opacity-90 transition">
+                검색
+            </button>
+
+            <!-- 새 공지 작성 -->
+            <a th:href="@{/community/announcement/new}"
+               class="inline-flex items-center bg-[#7CA48C] active:bg-[#628C73] text-white font-semibold px-6 py-2 rounded hover:opacity-90 transition">
+                <i class="fas fa-plus mr-2"></i>새 공지 작성
+            </a>
+        </form>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto bg-white rounded-lg overflow-hidden">
+                <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">번호</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">카테고리</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">제목</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">조회수</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">작성자</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">작성일</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b,stat : ${boards}" class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-3 text-gray-800"
+                        th:text="${stat.index + 1 + pageData.number*pageData.size}"/>
+                    <td class="px-4 py-3 text-gray-800"
+                        th:text="${b.category2}"/>
+                    <td class="px-4 py-3 text-[#628C73] hover:underline">
+                        <a th:href="@{/community/announcement/{id}(id=${b.communityId})}"
+                           th:text="${b.title}"/>
+                    </td>
+                    <td class="px-4 py-3 text-gray-800"
+                        th:text="${b.views}"/>
+                    <td class="px-4 py-3 text-gray-800"
+                        th:text="${userService.getNicknameByUsersId(b.usersId)}"/>
+                    <td class="px-4 py-3 text-gray-800"
+                        th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}"/>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <nav class="mt-6 flex justify-center space-x-2">
+      <span th:if="${pageData.hasPrevious()}">
+        <a th:href="@{/community/announcement/list(
+            page=${pageData.number-1},
+            subCategory=${subCategory},
+            keyword=${keyword},
+            sort=${sort})}"
+           class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-gray-300 transition">
+          &lt; 이전
+        </a>
+      </span>
+            <span th:each="i : ${#numbers.sequence(0,pageData.totalPages-1)}">
+        <a th:href="@{/community/announcement/list(
+            page=${i},
+            subCategory=${subCategory},
+            keyword=${keyword},
+            sort=${sort})}"
+           th:text="${i+1}"
+           th:classappend="${i==pageData.number} ? ' bg-[#E3A67A] text-white' : ' bg-gray-200 text-[#E3A67A]'"
+           class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"/>
+      </span>
+            <span th:if="${pageData.hasNext()}">
+        <a th:href="@{/community/announcement/list(
+            page=${pageData.number+1},
+            subCategory=${subCategory},
+            keyword=${keyword},
+            sort=${sort})}"
+           class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-gray-300 transition">
+          다음 &gt;
+        </a>
+      </span>
+        </nav>
+    </div>
+</th:block>
 </html>

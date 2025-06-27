@@ -10,11 +10,19 @@ import com.example.demo.survey.entity.SpecialAnswer;
 import com.example.demo.survey.repository.SpecialAnswerRepository;
 import com.example.demo.survey.repository.GroupAnswerRepository;
 import com.example.demo.users.entity.Child;
+import com.example.demo.users.entity.Member;
+import com.example.demo.users.entity.Users;
 import com.example.demo.users.repository.ChildRepository;
 import com.example.demo.service.PresignedUrlService;
 import com.example.demo.users.repository.ExpertRepository;
+import com.example.demo.users.repository.MemberRepository;
+import com.example.demo.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -36,8 +44,8 @@ public class MatchingController {
     private final SpecialAnswerRepository specialAnswerRepository;
     private final GroupAnswerRepository   groupAnswerRepository;
     private final PresignedUrlService     urlService;
-    private final ExpertRepository expertRepository;
     private final MatchingAnswerService answerService;
+    private final MemberRepository memberRepository;
 
 
     /** 1) SurveyCategory별 상담 신청 폼 */
@@ -167,7 +175,43 @@ public class MatchingController {
         return "redirect:/";
     }
 
-    /** 3) 부모용 상세보기 */
+    /** 4) 부모용 상담 리스트 */
+    @GetMapping
+    public String parentList(
+            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(required = false) Long childId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            Authentication auth,
+            Model model
+    ) {
+        // 1) 로그인한 부모(Member) 조회
+        Member parent = memberRepository.findByUsersUuid(auth.getName())
+                .orElseThrow(() -> new IllegalArgumentException("부모 정보가 없습니다."));
+        Long parentId = parent.getId();
+
+        // 2) 페이지 요청
+        PageRequest pr = PageRequest.of(page, 10, Sort.by("createdAt").descending());
+
+        // 3) 상담 조회
+        Page<Matching> matchings =
+                matchingService.findForParent(parentId, status, childId, keyword, pr);
+
+        // 4) 자녀 목록 (필터용)
+        List<Child> children = childRepository.findByParent_Id(parentId);
+
+        model.addAttribute("matchings",      matchings);
+        model.addAttribute("statuses",       List.of("ALL","REQUESTED","MATCHED","RESPONDED"));
+        model.addAttribute("currentStatus",  status);
+        model.addAttribute("children",       children);
+        model.addAttribute("currentChildId", childId);
+        model.addAttribute("keyword",        keyword);
+
+        return "matching/list";
+    }
+
+
+    /** 4) 부모용 상세보기 */
     @GetMapping("/detail/{id}")
     public String parentDetail(
             @PathVariable Long id,

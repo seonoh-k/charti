@@ -1,34 +1,76 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>정책정보 작성/수정</title>
+    <title th:text="${board.communityId} == null ? '작성' : '수정'">작성/수정</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
           rel="stylesheet">
-    <style>
-        body { font-family: 'Poppins', sans-serif; }
-    </style>
+    <style>body { font-family: 'Poppins', sans-serif; }</style>
 </head>
 <th:block layout:fragment="content">
-<h1 th:text="${board.communityId}==null?'작성':'수정'"></h1>
-<form th:action="${board.communityId}==null?@{/community/policy/new}:@{/community/policy/{id}/edit(id=${board.communityId})}" method="post">
-    <label>하위 카테고리:
-        <select name="category2">
-            <option th:each="cat: ${subCategories}" th:value="${cat}" th:text="${cat}" th:selected="${cat==board.category2}"></option>
-        </select>
-    </label><br/>
-    <label>연령대:
-        <select name="ageGroup">
-            <option th:each="age: ${ageGroups}" th:value="${age}" th:text="${age}" th:selected="${age==board.ageGroup}"></option>
-        </select>
-    </label><br/>
-    <label>제목: <input type="text" name="title" th:value="${board.title}" required/></label><br/>
-    <label>내용: <textarea name="content" th:text="${board.content}" required></textarea></label><br/>
-    <button type="submit">저장</button>
-</form>
-</th:block>>
+    <div class="container mx-auto p-6 bg-white shadow rounded-lg max-w-3xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6"
+            th:text="${board.communityId} == null ? '작성' : '수정'">작성/수정</h1>
+
+        <form th:action="${board.communityId} == null
+                      ? @{/community/policy}
+                      : @{/community/policy/{id}(id=${board.communityId})}"
+              th:object="${board}"
+              method="post"
+              class="space-y-6">
+
+            <!-- 하위 카테고리 -->
+            <div class="flex flex-col">
+                <label class="mb-1 font-medium text-gray-700">하위 카테고리</label>
+                <select th:field="*{category2}" required
+                        class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option th:each="cat : ${subCategories}"
+                            th:value="${cat}"
+                            th:text="${cat}"/>
+                </select>
+            </div>
+
+            <!-- 연령대 -->
+            <div class="flex flex-col">
+                <label class="mb-1 font-medium text-gray-700">연령대</label>
+                <select th:field="*{ageGroup}" required
+                        class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option th:value="${T(com.example.demo.enums.AgeGroup).ALL}"
+                            th:text="'전체'"/>
+                    <option th:each="age : ${ageGroups}"
+                            th:value="${age}"
+                            th:text="${age.displayName}"/>
+                </select>
+            </div>
+
+            <!-- 제목 -->
+            <div class="flex flex-col">
+                <label class="mb-1 font-medium text-gray-700">제목</label>
+                <input type="text" th:field="*{title}" required
+                       class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+            </div>
+
+            <!-- 내용 -->
+            <div class="flex flex-col">
+                <label class="mb-1 font-medium text-gray-700">내용</label>
+                <textarea th:field="*{content}" rows="8" required
+                          class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-vertical"></textarea>
+            </div>
+
+            <!-- 저장 버튼 -->
+            <div class="flex justify-end">
+                <button type="submit"
+                        class="bg-[#7CA48C] active:bg-[#628C73] text-white font-semibold px-6 py-2 rounded hover:opacity-90 transition">
+                    저장
+                </button>
+            </div>
+        </form>
+    </div>
+</th:block>
 </html>
