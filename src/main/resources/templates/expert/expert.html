@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Fontawesome 연결 Embed Code Start-->
+    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
+    <!-- Fontawesome 연결 Embed Code End-->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>관리자 페이지</title>
+</head>
+<body class="h-screen flex flex-col">
+    <!-- 헤더 (햄버거 버튼) -->
+    <div th:replace="fragments/expertFragments :: hamburger"></div>
+
+    <div class="flex flex-1">
+        <div th:replace="fragments/expertFragments :: sideBar"></div>
+        <div class="flex-1 justify-center items-center p-20">
+            <h1 class="text-3xl font-bold mb-4">상담 현황</h1>
+            <hr class="mb-8 border-gray-300">
+
+            <section class="mb-10">
+                <h2 class="text-2xl font-bold mb-4">신규 상담</h2>
+                <div class="space-y-4">
+                    <div th:each="matching : ${matchingList}" class="block p-4 bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+                        <a th:href="@{/expert/matching/${matching.id}}" th:text="${matching.title}" class="text-lg font-medium text-gray-800">상담 제목</a>
+                        <p class="text-sm text-gray-500 mt-1" th:text="${#dates.format(matching.createdAt, 'yyyy-MM-dd HH:mm')}">상담 신청 일자</p>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <h2 class="text-2xl font-semibold mb-4 text-gray-700">상담 통계</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="p-6 bg-white rounded-lg shadow text-center">
+                        <p class="text-sm text-gray-500">총 상담 수</p>
+                        <p class="text-3xl font-bold text-gray-800 mt-2" th:text="${totalCount}">0</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-lg shadow text-center">
+                        <p class="text-sm text-gray-500">현재 진행 중인 상담</p>
+                        <p class="text-3xl font-bold text-gray-800 mt-2" th:text="${matchingCount}">0</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-lg shadow text-center">
+                        <p class="text-sm text-gray-500">종료된 상담</p>
+                        <p class="text-3xl font-bold text-gray-800 mt-2" th:text="${endCount}">0</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+<script th:src="@{/js/admin/adminSideBar.js}"></script>
+</html>
+

@@ -24,7 +24,7 @@
             <th:block layout:fragment="content">
 
                 <div class="flex justify-center items-center py-20">
-                    <div class="bg-white p-6 rounded shadow-md w-full max-w-5xl">
+                    <div class="bg-white p-6 rounded shadow-md w-full max-w-7xl">
                         <!-- 그룹 정보 -->
                         <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">🏢 그룹 정보 관리</h2>
 
@@ -101,54 +101,15 @@
 
                         <div id="groupExtraSection" class="space-y-6">
 
-                            <!-- 그룹에 속한 자녀가 없는 경우 -->
-                            <div th:if="${parentCards == null or #lists.size(parentCards) == 0}" class="text-gray-400 text-center py-10">
-                                <i class="fa-regular fa-face-frown fa-2x mb-2"></i>
-                                <div>그룹에 속한 자녀가 없습니다.</div>
-                            </div>
+                            <!-- 부모-자녀 카드 목록 -->
+                            <div id="parentCardList"></div>
 
-                            <!-- 자녀가 하나라도 있는 경우 -->
-                            <div th:if="${parentCards != null and #lists.size(parentCards) > 0}">
-                                <!-- 섹션 타이틀 -->
-                                <div class="flex mb-4 items-end gap-6">
-                                    <span class="text-lg font-semibold w-40 text-center">보호자</span>
-                                    <span class="text-lg font-semibold ml-6">자녀</span>
-                                </div>
-
-                                <!-- 카드 반복 -->
-                                <div class="space-y-8">
-                                    <div th:each="parent : ${parentCards}" class="flex items-start space-x-6">
-                                        <!-- 부모 카드 -->
-                                        <div class="w-40 flex-shrink-0 p-4 bg-gray-50 rounded-xl shadow text-sm">
-                                            <div class="font-bold text-base mb-2" th:text="${parent.parentName}"></div>
-                                            <div class="text-gray-600 text-xs" th:text="${parent.parentPhone}"></div>
-                                        </div>
-                                        <!-- 자녀 카드들 -->
-                                        <div class="flex space-x-4">
-                                            <div
-                                                th:each="child : ${parent.children}"
-                                                class="bg-white shadow rounded-xl p-4 min-w-[140px] cursor-pointer hover:bg-gray-50 transition"
-                                                th:attr="data-child-id=${child.childId},
-                                                        data-child-name=${child.childName},
-                                                        data-gender=${child.gender},
-                                                        data-birthday=${#strings.substring(child.birthday,0,10)},
-                                                        data-nickname=${child.nickname},
-                                                        data-height=${child.height},
-                                                        data-weight=${child.weight},
-                                                        data-birth-order=${child.birthOrder},
-                                                        data-risk-group=${child.riskGroup}"
-                                                onclick="openChildDetailModal(this)"
-                                            >
-                                                <div class="font-semibold mb-1" th:text="${child.childName}"></div>
-                                                <div th:text="${child.gender} + ' / ' + ${#strings.substring(child.birthday, 0, 10)}"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- 페이지네이션 -->
+                            <div id="pagination" class="flex gap-2 justify-center mt-8"></div>
 
                         </div>
                     </div>
+                    
                 </div>
                 <!-- 자녀 상세정보 모달 (hidden: 기본 숨김) -->
                 <div id="childDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
@@ -187,10 +148,14 @@
                     </div>
                 </div>
             </div>
-
+<script>
+  const groupId = [[${groupInfo.groupId}]];
+</script>
 
             <script src="/js/addressSearch.js"></script>
             <script src="/js/manager/groupManager.js"></script>
+            <script src="/js/manager/paging.js"></script>
+        
             </th:block>
         </main>
     </div>

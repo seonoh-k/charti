@@ -37,17 +37,30 @@ public class AdminMatchingController {
     @GetMapping
     public String listByStatus(
             @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             Model model
     ) {
         PageRequest pr = PageRequest.of(page, 10, Sort.by("createdAt").descending());
-        Page<Matching> matchings = "ALL".equals(status)
-                ? matchingService.findAll(pr)
-                : matchingService.findByStatus(MatchingStatus.valueOf(status), pr);
+        Page<Matching> matchings;
 
-        model.addAttribute("matchings", matchings);
-        model.addAttribute("statuses", List.of("ALL","REQUESTED","MATCHED","RESPONDED"));
-        model.addAttribute("currentStatus", status);
+        boolean hasKey = (keyword != null && !keyword.isBlank());
+
+        if ("ALL".equals(status)) {
+            matchings = hasKey
+                    ? matchingService.findByTitle(keyword, pr)
+                    : matchingService.findAll(pr);
+        } else {
+            matchings = hasKey
+                    ? matchingService.findByStatusAndTitle(status, keyword, pr)
+                    : matchingService.findByStatus(MatchingStatus.valueOf(status), pr);
+        }
+
+        model.addAttribute("matchings",    matchings);
+        model.addAttribute("statuses",     List.of("ALL","REQUESTED","MATCHED","RESPONDED"));
+        model.addAttribute("currentStatus",status);
+        model.addAttribute("keyword",      keyword);
+
         return "admin/matching/list";
     }
 

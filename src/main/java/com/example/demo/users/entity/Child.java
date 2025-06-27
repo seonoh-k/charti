@@ -55,15 +55,15 @@ public class Child {
         // 생일 정보가 없으면 연령대 계산 불가
         if (this.birthday == null) return null;
 
-        // 생일부터 현재까지의 개월 수를 계산
-        long months = ChronoUnit.MONTHS.between(this.birthday, LocalDateTime.now());
+        // 만 나이(년) 계산
+        int years = Period.between(this.birthday.toLocalDate(), LocalDate.now()).getYears();
 
-        // 개월 수를 기준으로 AgeGroup enum 값 반환
-        if (months <= 12) {
+        // 연 단위로 분류
+        if (years < 1) {
             return AgeGroup.AGE_0_12;       // 0~12개월
-        } else if (months <= 24) {
+        } else if (years <= 2) {
             return AgeGroup.AGE_1_2;        // 1~2세
-        } else if (months <= 48) {
+        } else if (years <= 4) {
             return AgeGroup.AGE_3_4;        // 3~4세
         } else {
             return AgeGroup.AGE_5;          // 5세 이상
@@ -79,6 +79,20 @@ public class Child {
         return Period.between(this.birthday.toLocalDate(), today).getYears();
     }
 
+
+    /**
+     * 몇 개월·몇 세인지 문자열로 보여주는 헬퍼
+     * 템플릿에서 ${c.ageDisplay} 로 사용
+     */
+    @Transient
+    public String getAgeDisplay() {
+        if (birthday == null) return "";
+        Period p = Period.between(birthday.toLocalDate(), LocalDate.now());
+        if (p.getYears() == 0) {
+            return p.getMonths() + "개월";   // ex. "7개월"
+        }
+        return p.getYears() + "세";         // ex. "2세"
+    }
 
 
 }

@@ -1,100 +1,106 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전문가 답변</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Fontawesome 연결 Embed Code Start-->
+    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
+    <!-- Fontawesome 연결 Embed Code End-->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Poppins', sans-serif; } </style>
+    <title>관리자 페이지</title>
 </head>
-<th:block layout:fragment="content">
-    <div class="max-w-2xl mx-auto">
-        <h1 class="text-2xl font-bold mb-4">상담 상세 및 답변</h1>
+<body class="h-screen flex flex-col">
+    <!-- 헤더 (햄버거 버튼) -->
+    <div th:replace="fragments/expertFragments :: hamburger"></div>
 
-        <!-- 1) 기본 정보 -->
-        <section class="mb-6 border p-4 rounded">
-            <p><strong>카테고리:</strong>
-                <span th:text="${matching.category.displayName}"></span></p>
-            <p><strong>자녀:</strong>
-                <span th:text="${matching.child.name}"></span>
-                (<span th:text="${matching.child.age}"></span>세)</p>
-            <p><strong>제목:</strong>
-                <span th:text="${matching.title}"></span></p>
-            <p><strong>내용:</strong></p>
-            <div class="p-2 bg-gray-50 rounded"
-                 th:text="${matching.content}"></div>
+    <div class="flex flex-1">
+        <div th:replace="fragments/expertFragments :: sideBar"></div>
+        <div class="flex-1 justify-center items-center p-20">
+            <h1 class="text-2xl font-bold mb-4">상담 상세 및 답변</h1>
 
-            <!-- 첨부 이미지 -->
-            <div th:if="${photos.size()>0}" class="mb-6">
-                <h2 class="font-semibold mb-2">첨부 이미지</h2>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div th:each="fileName : ${photos}">
-                        <img th:src="@{/api/proxy/image(filename='thumbnail/' + ${fileName})}"
-                             th:data-full="@{/api/proxy/image(filename='original/' + ${fileName})}"
-                             class="w-full h-32 object-cover rounded cursor-pointer thumbnail"
-                             th:alt="${fileName}"/>
+            <!-- 1) 기본 정보 -->
+            <section class="mb-6 border p-4 rounded">
+                <p><strong>카테고리:</strong>
+                    <span th:text="${matching.category.displayName}"></span></p>
+                <p><strong>자녀:</strong>
+                    <span th:text="${matching.child.name}"></span>
+                    (<span th:text="${matching.child.age}"></span>세)</p>
+                <p><strong>제목:</strong>
+                    <span th:text="${matching.title}"></span></p>
+                <p><strong>내용:</strong></p>
+                <div class="p-2 bg-gray-50 rounded"
+                     th:text="${matching.content}"></div>
+
+                <!-- 첨부 이미지 -->
+                <div th:if="${photos.size()>0}" class="mb-6">
+                    <h2 class="font-semibold mb-2">첨부 이미지</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div th:each="fileName : ${photos}">
+                            <img th:src="@{/api/proxy/image(filename='thumbnail/' + ${fileName})}"
+                                 th:data-full="@{/api/proxy/image(filename='original/' + ${fileName})}"
+                                 class="w-full h-32 object-cover rounded cursor-pointer thumbnail"
+                                 th:alt="${fileName}"/>
+                        </div>
+                    </div>
+                    <div id="image-modal"
+                         class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                        <button id="image-modal-close"
+                                class="absolute top-4 right-4 text-white text-2xl font-bold">&times;</button>
+                        <img id="image-modal-img" class="max-h-[90%] max-w-[90%] rounded shadow-lg"/>
                     </div>
                 </div>
-                <div id="image-modal"
-                     class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-                    <button id="image-modal-close"
-                            class="absolute top-4 right-4 text-white text-2xl font-bold">&times;</button>
-                    <img id="image-modal-img" class="max-h-[90%] max-w-[90%] rounded shadow-lg"/>
+
+            </section>
+
+            <!-- 2) 문진 질문/답변 -->
+            <details class="mb-6 border rounded">
+                <summary class="px-4 py-2 bg-gray-100 cursor-pointer">
+                    문진 질문/답변
+                </summary>
+                <div class="p-4 space-y-4">
+                    <div th:each="ans : ${matching.answers}">
+                        <p class="font-semibold" th:text="${ans.question}"></p>
+                        <p th:text="${ans.answer}"></p>
+                        <hr/>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 3) 이미 답변 완료된 경우 -->
+            <div th:if="${matching.status == T(com.example.demo.enums.MatchingStatus).RESPONDED}"
+                 class="mb-6 p-4 border rounded bg-green-50">
+                <h2 class="font-semibold mb-2">전문가 답변</h2>
+                <div th:each="a : ${answers}">
+                    <p th:text="${a.content}"></p>
+                    <p class="text-sm text-gray-500 mt-1"
+                       th:text="${#temporals.format(a.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
+                    <hr class="my-2"/>
                 </div>
             </div>
 
-        </section>
-
-        <!-- 2) 문진 질문/답변 -->
-        <details class="mb-6 border rounded">
-            <summary class="px-4 py-2 bg-gray-100 cursor-pointer">
-                문진 질문/답변
-            </summary>
-            <div class="p-4 space-y-4">
-                <div th:each="ans : ${matching.answers}">
-                    <p class="font-semibold" th:text="${ans.question}"></p>
-                    <p th:text="${ans.answer}"></p>
-                    <hr/>
+            <!-- 4) 아직 답변 전일 때만 폼 보이기 -->
+            <form th:if="${matching.status != T(com.example.demo.enums.MatchingStatus).RESPONDED}"
+                  th:action="@{/expert/matching/{id}/respond(id=${matching.id})}"
+                  th:object="${answerForm}"
+                  method="post">
+                <div class="mb-4">
+                    <label class="block font-semibold mb-1" for="content">답변 내용</label>
+                    <textarea id="content"
+                              th:field="*{content}"
+                              class="w-full border p-2 rounded h-40"
+                              placeholder="답변을 입력하세요" required></textarea>
                 </div>
-            </div>
-        </details>
-
-        <!-- 3) 이미 답변 완료된 경우 -->
-        <div th:if="${matching.status == T(com.example.demo.enums.MatchingStatus).RESPONDED}"
-             class="mb-6 p-4 border rounded bg-green-50">
-            <h2 class="font-semibold mb-2">전문가 답변</h2>
-            <div th:each="a : ${answers}">
-                <p th:text="${a.content}"></p>
-                <p class="text-sm text-gray-500 mt-1"
-                   th:text="${#temporals.format(a.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
-                <hr class="my-2"/>
-            </div>
+                <button type="submit"
+                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    답변 완료
+                </button>
+                <div th:if="${param.submitted}">
+                    <p class="mt-2 text-green-600">답변이 저장되었습니다.</p>
+                </div>
+            </form>
         </div>
-
-        <!-- 4) 아직 답변 전일 때만 폼 보이기 -->
-        <form th:if="${matching.status != T(com.example.demo.enums.MatchingStatus).RESPONDED}"
-              th:action="@{/expert/matching/{id}/respond(id=${matching.id})}"
-              th:object="${answerForm}"
-              method="post">
-            <div class="mb-4">
-                <label class="block font-semibold mb-1" for="content">답변 내용</label>
-                <textarea id="content"
-                          th:field="*{content}"
-                          class="w-full border p-2 rounded h-40"
-                          placeholder="답변을 입력하세요" required></textarea>
-            </div>
-            <button type="submit"
-                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                답변 완료
-            </button>
-            <div th:if="${param.submitted}">
-                <p class="mt-2 text-green-600">답변이 저장되었습니다.</p>
-            </div>
-        </form>
     </div>
 
     <!-- 이미지 모달 스크립트 -->
@@ -119,6 +125,6 @@
           });
         });
     </script>
-
-</th:block>
+</body>
+<script th:src="@{/js/admin/adminSideBar.js}"></script>
 </html>

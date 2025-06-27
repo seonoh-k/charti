@@ -13,11 +13,11 @@
     <h1 class="text-2xl font-bold mb-4"
         th:text="${form.id==null?'새 문진 세트 생성':'문진 세트 수정'}">제목</h1>
 
-    <form th:action="@{/surveySets/save}" th:object="${form}" method="post" class="space-y-4">
+    <form th:action="@{/admin/surveySet/save}" th:object="${form}" method="post" class="space-y-4">
         <input type="hidden" th:field="*{id}"/>
         <input type="hidden" th:field="*{type}"/>
 
-        <!-- 세트명, 에러처리 등 (변경 없음) -->
+        <!-- 세트명, 에러처리 -->
         <div>
             <label class="block mb-1">세트명</label>
             <input th:field="*{setTitle}" class="w-full border rounded px-2 py-1"/>
@@ -79,7 +79,7 @@
         </div>
         <div class="flex gap-2">
             <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">저장</button>
-            <a th:href="@{/surveySets}" class="bg-gray-500 text-white px-2 py-1 rounded">취소</a>
+            <a th:href="@{/admin/surveySet}" class="bg-gray-500 text-white px-2 py-1 rounded">취소</a>
         </div>
     </form>
 

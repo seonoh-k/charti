@@ -2,6 +2,7 @@ package com.example.demo.community.service;
 
 import com.example.demo.community.entity.CommunityBoard;
 import com.example.demo.community.repository.CommunityBoardRepository;
+import com.example.demo.enums.AgeGroup;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class CommunityBoardService {
       public Page<CommunityBoard> getList(
             String mainCategory,
             String subCategory,
-            String ageGroup,
+            AgeGroup ageGroup,
             String keyword,
             String sortOrder,
             int page
@@ -35,14 +36,16 @@ public class CommunityBoardService {
 
         Specification<CommunityBoard> spec = Specification.where(null);
 
-        spec = spec.and((r, q, cb) -> cb.equal(r.get("category"), mainCategory));
+          if (mainCategory != null && !mainCategory.isBlank() && !"전체".equals(mainCategory)) {
+              spec = spec.and((r, q, cb) -> cb.equal(r.get("category"), mainCategory));
+          }
 
         if (!"전체".equals(subCategory)) {
             spec = spec.and((r, q, cb) -> cb.equal(r.get("category2"), subCategory));
         }
-        if (!"상관없음".equals(ageGroup)) {
-            spec = spec.and((r, q, cb) -> cb.equal(r.get("ageGroup"), ageGroup));
-        }
+          if (ageGroup != null && ageGroup != AgeGroup.ALL) {
+              spec = spec.and((r, q, cb) -> cb.equal(r.get("ageGroup"), ageGroup));
+          }
         if (keyword != null && !keyword.isEmpty()) {
             spec = spec.and((r, q, cb) -> cb.like(r.get("title"), "%" + keyword + "%"));
         }
@@ -72,5 +75,14 @@ public class CommunityBoardService {
     @Transactional
     public void delete(Long id) {
         repo.deleteById(id);
+    }
+
+    public Page<CommunityBoard> getPagedList(int page) {
+        Pageable pageable = PageRequest.of(page, 10, Sort.Direction.DESC, "createdAt");
+
+        Specification<CommunityBoard> spec = Specification.where(null);
+        spec = spec.and((r, q, cb) -> cb.equal(r.get("category"), "announcement"));
+
+        return repo.findAll(spec, pageable);
     }
 }
