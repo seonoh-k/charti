@@ -13,5 +13,4 @@ public interface GroupQueryRepository {
     Optional<GroupDTO> getGroupWithChildrenByGroupId(Long groupId);
 
 
-    List<ChildWithParentDTO> findChildrenWithParentByGroupId(Long groupId);
 }

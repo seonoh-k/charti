@@ -1,6 +1,7 @@
 package com.example.demo.users.service;
 
 import com.example.demo.dto.ManagerDTO;
+import com.example.demo.dto.ManagerDashboardDto;
 import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.ManagerUpdateRequest;
 import com.example.demo.entity.Address;
@@ -12,6 +13,7 @@ import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
+import com.example.demo.users.repository.ChildRepository;
 import com.example.demo.users.repository.ManagerQueryRepository;
 import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.UserRepository;
@@ -42,6 +44,7 @@ public class ManagerService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final GroupRepository groupRepository;
+    private final ChildRepository childRepository;
 
     public ManagerDTO getManagerById(Long id) throws UserNotFoundException {
         Optional<ManagerDTO> byId = managerQueryRepository.getManagerById(id);
@@ -98,6 +101,27 @@ public class ManagerService {
         return managerRepository.findById(id).get();
     }
 
+    /**
+     * 담당자 정보 가져오기
+     * @param managerId 로그인한 담당자 id
+     */
+    public ManagerDashboardDto getDashboardInfo(Long managerId) {
+        Manager manager = managerRepository.findById(managerId)
+                .orElseThrow(() -> new RuntimeException("해당 담당자 없음!"));
+
+        Group group = manager.getGroup();
+        long childCount = childRepository.countByGroup(group);
+
+        ManagerDashboardDto dto = new ManagerDashboardDto();
+        dto.setManagerName(manager.getUsers().getName());
+        dto.setManagerEmail(manager.getUsers().getUsername());
+        dto.setManagerPhone(manager.getUsers().getPhoneNumber());
+        dto.setGroupName(group.getGroupName());
+        dto.setGroupEmail(group.getGroupEmail());
+        dto.setChildCount(childCount);
+
+        return dto;
+    }
 
     /**
      * 담당자 정보 업데이트 (Firebase + DB)

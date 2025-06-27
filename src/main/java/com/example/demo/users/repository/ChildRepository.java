@@ -1,5 +1,6 @@
 package com.example.demo.users.repository;
 
+import com.example.demo.entity.Group;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,5 +37,7 @@ public interface ChildRepository extends JpaRepository<Child, Long> {
      */
     List<Child> findByGroupId(Long id);
 
+    long countByGroup(Group group);
+  
     List<Child> findByParent_Id(Long parentId);
 }

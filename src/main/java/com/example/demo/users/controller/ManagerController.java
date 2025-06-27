@@ -7,6 +7,9 @@ import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.IdsRequest;
 import com.example.demo.dto.request.ManagerUpdateRequest;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.fcm.dto.FcmHistorySearchDto;
+import com.example.demo.fcm.entity.FcmSendHistory;
+import com.example.demo.fcm.service.FcmHistoryService;
 import com.example.demo.service.AddressService;
 import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.service.GroupService;
@@ -23,7 +26,9 @@ import com.google.firebase.auth.FirebaseAuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -50,11 +55,33 @@ public class ManagerController {
     private final FirebaseService firebaseService;
     private final ChildService childService;
     private final GroupService groupService;
+    private final FcmHistoryService historyService;
 
     @GetMapping("/manager")
     public String showMangerPage() {
         log.info("[GET] 👨‍💼 request manager Page");
         return "manager";
+    }
+    @GetMapping("/manager/home")
+    public String showMangerHome(Model model) {
+        log.info("[GET] 👨‍💼 request managerHome");
+        // 현재 로그인한 담당자 id
+        UserDTO loginUser = authService.getLoginUser();
+        // 담당자 관련 요약정보
+        ManagerDashboardDto dashboardInfo = managerService.getDashboardInfo(loginUser.getId());
+        // 문진이력 검색조건 ,        5개까지만
+        Pageable pageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "sentAt"));
+        FcmHistorySearchDto searchDto = new FcmHistorySearchDto();
+        searchDto.setSenderName(loginUser.getName());
+
+        List<FcmSendHistory> recentNotices = historyService.getRecentGroupNotices(loginUser.getName(), 5);
+
+
+        // Model에 정보 담기
+        model.addAttribute("dashboardInfo", dashboardInfo);
+        model.addAttribute("recentNotices", recentNotices);
+
+        return "manager/managerHome";
     }
 
     @GetMapping("/manager/myPage")
@@ -74,26 +101,27 @@ public class ManagerController {
 
         return "manager/myPage";
     }
+
+    @GetMapping("/api/group/{groupId}/parent-cards")
+    public ResponseEntity<Page<ParentWithChildrenDTO>> getParentCards(
+            @PathVariable Long groupId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Page<ParentWithChildrenDTO> parentCards = groupService.getParentCardsByGroup(groupId, page, size);
+        return ResponseEntity.ok(parentCards);
+    }
     @GetMapping("/manager/groupManager")
     public String showGroupManagerPage(Model model) {
         log.info("[GET] 👨‍💼 request groupManager Page");
 
-        // 1. 로그인 유저, 그룹, 담당자 등 기존 정보 세팅
+        //  로그인 유저, 그룹, 담당자 등 기존 정보 세팅
         UserDTO loginUser = authService.getLoginUser();
         AddressDTO address = addressService.getAddressByUid(loginUser.getUuid());
         ManagerDTO managerDTO = managerService.getManagerById(loginUser.getId());
         managerDTO.setAddress(address);
 
-        // 2. 그룹 아이디 뽑기
-        Long groupId = managerDTO.getGroupId();
-        // 3. 자녀+부모 정보 DTO 리스트로 조회 (새 쿼리/DTO 사용)
-        List<ParentWithChildrenDTO> parentCards = groupService.getChildrenWithParentByGroupId(groupId);
-
-        // 4. 모델에 정보 추가
         model.addAttribute("groupInfo", managerDTO);
-        model.addAttribute("parentCards", parentCards); // 뷰에서 반복문 돌릴 데이터
 
-        // 5. 화면 이동
         return "manager/groupManager";
     }
     @PostMapping("/manager/update")
