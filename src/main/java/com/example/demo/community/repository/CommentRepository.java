@@ -9,4 +9,6 @@ import java.util.List;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByCommunityIdOrderByCreatedAtAsc(Long communityId);
     Page<Comment> findByCommunityId(Long communityId, Pageable pageable);
+
+    Page<Comment> findAllByCommunityIdAndDeletedFalse(Long communityId, Pageable pageable);
 }

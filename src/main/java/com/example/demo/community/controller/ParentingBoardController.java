@@ -32,9 +32,9 @@ public class ParentingBoardController {
             CommentService commentService,
             UserService userService
     ) {
-        this.boardService = boardService;
+        this.boardService   = boardService;
         this.commentService = commentService;
-        this.userService = userService;
+        this.userService    = userService;
     }
 
     private final List<String> subCategories = Arrays.asList(
@@ -44,63 +44,56 @@ public class ParentingBoardController {
             .filter(age -> age != AgeGroup.ALL && age != AgeGroup.VARIOUS)
             .collect(Collectors.toList());
 
-    /** 게시글 리스트 페이지를 보여줍니다. */
-    @GetMapping({"/list", "/list/"})
+    @GetMapping({"/list","/list/"})
     public String list(
             Model model,
-            @RequestParam(defaultValue = "전체") String subCategory,
-            @RequestParam(defaultValue = "ALL") AgeGroup ageGroup,
-            @RequestParam(defaultValue = "") String keyword,
-            @RequestParam(name = "sort", defaultValue = "popular") String sortOrder,
-            @RequestParam(defaultValue = "0") int page
+            @RequestParam(defaultValue="전체") String subCategory,
+            @RequestParam(defaultValue="ALL") AgeGroup ageGroup,
+            @RequestParam(defaultValue="") String keyword,
+            @RequestParam(name="sort", defaultValue="popular") String sortOrder,
+            @RequestParam(defaultValue="0") int page
     ) {
         Page<CommunityBoard> result = boardService.getList(
-                "parentingInformation",
-                subCategory,
-                ageGroup,
-                keyword,
-                sortOrder,
-                page);
-
-        model.addAttribute("boards", result.getContent());
-        model.addAttribute("pageData", result);
-        model.addAttribute("subCategory", subCategory);
-        model.addAttribute("ageGroup", ageGroup);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("sort", sortOrder);
+                "parentingInformation", subCategory, ageGroup, keyword, sortOrder, page
+        );
+        model.addAttribute("boards",        result.getContent());
+        model.addAttribute("pageData",      result);
+        model.addAttribute("subCategory",   subCategory);
+        model.addAttribute("ageGroup",      ageGroup);
+        model.addAttribute("keyword",       keyword);
+        model.addAttribute("sort",          sortOrder);
         model.addAttribute("subCategories", subCategories);
-        model.addAttribute("ageGroups", ageGroups);
+        model.addAttribute("ageGroups",     ageGroups);
         return "community/parentingList";
     }
 
-    /** 새 게시글 작성 폼 화면으로 이동합니다. */
     @GetMapping("/new")
-    public String form(Model model, Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+    public String form(Model model, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
             return "redirect:/loginForm";
         }
-        model.addAttribute("board", new CommunityBoard());
+        model.addAttribute("board",         new CommunityBoard());
         model.addAttribute("subCategories", subCategories);
-        model.addAttribute("ageGroups", ageGroups);
+        model.addAttribute("ageGroups",     ageGroups);
         return "community/parentingForm";
     }
 
-    /** 새 게시글을 생성하고 리스트 페이지로 리다이렉트합니다. */
     @PostMapping("")
     public String create(
             @ModelAttribute CommunityBoard board,
-            Authentication authentication
+            Authentication auth
     ) {
-        // 1) principal name 으로 Users 조회
-        String username = authentication.getName();
-        Users currentUser;
-        try {
-            currentUser = userService.findByUsernameEntity(username);
-        } catch (UserNotFoundException e) {
-            currentUser = userService.findByUuidEntity(username);
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/loginForm";
         }
-
-        board.setUsersId(currentUser.getId());
+        String principal = auth.getName();
+        Users me;
+        try {
+            me = userService.findByUsernameEntity(principal);
+        } catch (UserNotFoundException e) {
+            me = userService.findByUuidEntity(principal);
+        }
+        board.setUsersId(me.getId());
         board.setCategory("parentingInformation");
         board.setStatus("Y");
         board.setCreatedAt(LocalDateTime.now());
@@ -108,66 +101,84 @@ public class ParentingBoardController {
         return "redirect:/community/parenting/list";
     }
 
-    /** 단일 게시글 상세 페이지를 보여줍니다. */
     @GetMapping("/{id:[0-9]+}")
     public String detail(
             @PathVariable Long id,
             @RequestParam(defaultValue = "0") int commentPage,
-            Model model
+            Model model,
+            Authentication auth
     ) {
+        // 1) 게시글 + 조회수
         CommunityBoard board = boardService.findById(id);
         board.setViews(board.getViews() + 1);
         boardService.save(board);
 
+        // 2) 댓글 페이징
         Page<Comment> commentsPage = commentService.getCommentsPage(id, commentPage);
 
-        model.addAttribute("board", board);
-        model.addAttribute("commentsPage", commentsPage);
+        // 3) 글 작성자 닉네임
+        String authorNickname = userService.findNicknameOrDefault(board.getUsersId());
+
+        // 4) 댓글 작성자 닉네임 리스트
+        List<String> commentNicknames = commentsPage.getContent().stream()
+                .map(c -> userService.findNicknameOrDefault(c.getUsersId()))
+                .collect(Collectors.toList());
+
+        // 5) 로그인한 사용자 ID (수정/삭제 버튼용)
+        Long currentUserId = null;
+        if (auth != null && auth.isAuthenticated()) {
+            try {
+                Users u = userService.findByUsernameEntity(auth.getName());
+                currentUserId = u.getId();
+            } catch (UserNotFoundException e) {
+                currentUserId = userService.findByUuidEntity(auth.getName()).getId();
+            }
+        }
+
+        model.addAttribute("board",            board);
+        model.addAttribute("commentsPage",     commentsPage);
+        model.addAttribute("authorNickname",   authorNickname);
+        model.addAttribute("commentNicknames", commentNicknames);
+        model.addAttribute("currentUserId",    currentUserId);
         return "community/parentingDetail";
     }
 
-    /** 댓글을 저장하고 상세 페이지로 리다이렉트합니다. */
     @PostMapping("/{id:[0-9]+}/comments")
     public String addComment(
             @PathVariable Long id,
             @RequestParam String content,
-            Authentication authentication
+            Authentication auth
     ) {
-        // principal → Users
-        String username = authentication.getName();
-        Users currentUser;
+        String principal = auth.getName();
+        Users me;
         try {
-            currentUser = userService.findByUsernameEntity(username);
+            me = userService.findByUsernameEntity(principal);
         } catch (UserNotFoundException e) {
-            currentUser = userService.findByUuidEntity(username);
+            me = userService.findByUuidEntity(principal);
         }
-
         Comment comment = new Comment();
         comment.setCommunityId(id);
-        comment.setUsersId(currentUser.getId());
+        comment.setUsersId(me.getId());
         comment.setContent(content);
         commentService.save(comment);
         return "redirect:/community/parenting/" + id;
     }
 
-    /** 게시글 수정 폼을 보여줍니다. */
     @GetMapping("/{id:[0-9]+}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         CommunityBoard board = boardService.findById(id);
-        model.addAttribute("board", board);
+        model.addAttribute("board",         board);
         model.addAttribute("subCategories", subCategories);
-        model.addAttribute("ageGroups", ageGroups);
+        model.addAttribute("ageGroups",     ageGroups);
         return "community/parentingForm";
     }
 
-    /** 게시글 수정을 처리하고 상세 페이지로 리다이렉트합니다. */
     @PostMapping("/{id:[0-9]+}")
     public String update(
             @PathVariable Long id,
             @ModelAttribute CommunityBoard board
     ) {
         CommunityBoard old = boardService.findById(id);
-        // usersId 는 기존 작성자 유지
         board.setUsersId(old.getUsersId());
         old.setCategory2(board.getCategory2());
         old.setAgeGroup(board.getAgeGroup());
@@ -177,7 +188,6 @@ public class ParentingBoardController {
         return "redirect:/community/parenting/" + id;
     }
 
-    /** 게시글 삭제를 처리하고 리스트 페이지로 리다이렉트합니다. */
     @PostMapping("/{id:[0-9]+}/delete")
     public String delete(@PathVariable Long id) {
         boardService.delete(id);

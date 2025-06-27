@@ -662,4 +662,16 @@ public class UserService {
 
     }
 
+    /**
+     * 주어진 userId 로 회원을 찾고,
+     * 닉네임을 반환합니다. 존재하지 않으면 "손님"으로 대체.
+     */
+    public String findNicknameOrDefault(Long userId) {
+        if (userId == null) {
+            return "손님";
+        }
+        return userRepository.findById(userId)
+                .map(Users::getNickname)
+                .orElse("손님");
+    }
 }
