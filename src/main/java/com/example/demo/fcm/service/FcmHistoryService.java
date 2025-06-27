@@ -8,7 +8,9 @@ import com.example.demo.users.entity.Users;
 import jakarta.persistence.criteria.JoinType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -55,5 +57,10 @@ public class FcmHistoryService {
         };
 
         return historyRepository.findAll(spec, pageable);
+    }
+
+    public List<FcmSendHistory> getRecentGroupNotices(String senderName, int limit) {
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "sentAt"));
+        return historyRepository.findGroupNoticesBySenderName(senderName, pageable);
     }
 }
