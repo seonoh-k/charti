@@ -17,9 +17,11 @@
             <img th:src="@{/images/logo.png}" alt="로고" class="mb-4 size-32" />
         </div>
         <ul class="space-y-2 text-sm">
+            <li><a th:href="@{/manager/home}" class="block hover:bg-gray-700 px-2 py-1 rounded">홈</a></li>
             <li><a th:href="@{/manager/myPage}" class="block hover:bg-gray-700 px-2 py-1 rounded">회원정보 관리</a></li>
             <li><a th:href="@{/manager/groupManager}" class="block hover:bg-gray-700 px-2 py-1 rounded">그룹 관리</a></li>
             <li><a th:href="@{/manager/questionnaire}" class="block hover:bg-gray-700 px-2 py-1 rounded">문진 관리</a></li>
+            <li><a th:href="@{/manager/questionnaire}" class="block hover:bg-gray-700 px-2 py-1 rounded">문의 내역</a></li>
             <!-- 필요에 따라 추가 -->
         </ul>
     </nav>
