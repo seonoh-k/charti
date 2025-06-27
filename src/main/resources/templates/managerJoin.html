@@ -43,33 +43,33 @@
 
     <h2 class="text-2xl font-bold mb-6 text-center">담당자 회원가입</h2>
     <!-- id="signupForm" 추가, th:action/@{...}은 제거 -->
-    <form id="signupForm" class="space-y-4"  enctype="multipart/form-data">
+    <form id="signupForm" class="space-y-4"  enctype="multipart/form-data" novalidate>
             <!-- ① 사용자 실제 이름(name) 입력란 -->
             <div>
                 <label for="name" class="block mb-1">이름</label>
                 <input type="text" name="name" id="name"
-                        class="w-full p-2 rounded border border-gray-300" required>
+                        class="w-full p-2 rounded border border-gray-300" >
             </div>
 
             <!-- ① nickname 입력란 -->
             <div>
                 <label for="nickname" class="block mb-1">닉네임</label>
                 <input type="text" name="nickname" id="nickname"
-                        class="w-full p-2 rounded border border-gray-300" placeholder="2~10자: 한글·영문·숫자·_,- 만 가능합니다." required>
+                        class="w-full p-2 rounded border border-gray-300" placeholder="2~10자: 한글·영문·숫자·_,- 만 가능합니다." >
             </div>
 
             <!-- ② username 입력란(이메일) -->
             <div>
                 <label for="username" class="block mb-1">아이디(이메일)</label>
                 <input type="email" name="username" id="username"
-                        class="w-full p-2 rounded border border-gray-300" required>
+                        class="w-full p-2 rounded border border-gray-300" >
             </div>
 
             <!-- ③ password 입력란 -->
             <div>
                 <label for="password" class="block mb-1">비밀번호</label>
                 <input type="password" name="password" id="password"
-                        class="w-full p-2 rounded border border-gray-300" required>
+                        class="w-full p-2 rounded border border-gray-300" >
             </div>
 
             <!-- sms 인증 부분-->
@@ -118,7 +118,7 @@
         <div>
             <label for="groupName" class="block mb-1">기관이름</label> 
             <input type="text" name="groupName" id="groupName"
-                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
+                class="w-full p-2 rounded border bg-gray-100 border-gray-300" >
         </div>
 
         <!-- ③ 그룹 주소 검색  -->
@@ -135,7 +135,7 @@
         <!-- ③ targetGroup 입력란 -->
         <div>
             <label for="targetGroup" class="block mb-1">기관 분류</label>
-            <select name="targetGroup" id="targetGroup" required
+            <select name="targetGroup" id="targetGroup" 
                     class="w-full p-2 rounded border" disabled>
                 <option value="">선택하세요</option>
                 <option th:each="tg : ${targetGroups}"
@@ -149,21 +149,21 @@
         <div>
             <label for="groupPhone" class="block mb-1">기관 전화번호</label>
             <input type="text" name="groupPhone" id="groupPhone" readonly
-                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
+                class="w-full p-2 rounded border bg-gray-100 border-gray-300" >
         </div>
 
         <!-- ③ groupEmail 입력란 -->
         <div>
             <label for="groupEmail" class="block mb-1">기관 이메일</label>
             <input type="email" name="groupEmail" id="groupEmail" readonly
-                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
+                class="w-full p-2 rounded border bg-gray-100 border-gray-300" >
         </div>
 
         <!-- ③ position 입력란 -->
         <div>
             <label for="position" class="block mb-1">담당 직무</label> 
             <input type="text" name="position" id="position" 
-                class="w-full p-2 rounded border bg-gray-100 border-gray-300" required>
+                class="w-full p-2 rounded border bg-gray-100 border-gray-300" >
         </div>
         <!-- 그룹 id // 검색으로 찾으면 값이 있고 못찾으면 null -->
         <input type="hidden" id="groupId" name="groupId" />

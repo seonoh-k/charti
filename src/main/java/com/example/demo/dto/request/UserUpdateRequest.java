@@ -1,8 +1,12 @@
 package com.example.demo.dto.request;
 
-import lombok.Getter;
+import lombok.*;
 
 @Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserUpdateRequest {
 
     private String name;         // Firebase displayName

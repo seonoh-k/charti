@@ -42,7 +42,7 @@
                     메인으로
                     </a>
 
-                    <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">👤 담당자 마이페이지</h1>
+                    <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">👤 회원 정보 관리</h1>
 
                     <form id="userEditForm" action="/manager/update" method="post" class="space-y-4" autocomplete="off">
                         <!-- 이름 -->
@@ -130,7 +130,6 @@
 
                         <div class="flex items-center gap-2 mt-3">
                             <span class="text-sm text-gray-600">총 자녀 수: <span th:text="${#lists.size(userInfo.children)}"></span>명</span>
-                            <button type="button" onclick="openChildModal()" class="text-blue-600 hover:underline text-sm">자세히 보기</button>
                         </div>
 
                         <!-- 수정/완료/취소 버튼 -->
@@ -148,60 +147,6 @@
                         <div id="actionButtonBox" class="flex flex-row justify-end gap-2 pt-4 hidden">
                             <button type="button" onclick="submitEdit()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">완료</button>
                             <button type="button" onclick="cancelEdit()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- 자녀 모달 -->
-            <div id="childModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-                <div class="bg-white rounded shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-                    <h2 class="text-xl font-bold mb-4 text-gray-800">소속 자녀 목록</h2>
-                    <!-- 목록 출력 영역 -->
-                    <div id="childListContainer" class="space-y-3"></div>
-                    <!-- 닫기 버튼 -->
-                    <div class="text-right mt-6">
-                        <button onclick="closeChildModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">닫기</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 자녀수정모달 -->
-            <div id="childEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-                <div class="bg-white rounded shadow-lg p-6 w-full max-w-md">
-                    <h2 class="text-lg font-bold mb-4 text-gray-800">자녀 정보 수정</h2>
-                    <form id="childEditForm" class="space-y-3">
-                        <input type="hidden" id="editChildId" />
-                        <div>
-                            <label class="block text-sm mb-1">이름</label>
-                            <input type="text" id="editChildName" class="w-full border border-gray-300 rounded px-3 py-2" required />
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-1">성별</label>
-                            <select id="editChildGender" class="w-full border border-gray-300 rounded px-3 py-2">
-                                <option value="남">남</option>
-                                <option value="여">여</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-1">태명</label>
-                            <input type="text" id="editChildNickname" class="w-full border border-gray-300 rounded px-3 py-2" />
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-1">생일</label>
-                            <input type="date" id="editChildBirthday" class="w-full border border-gray-300 rounded px-3 py-2" />
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-1">체중</label>
-                            <input type="number" id="editChildWeight" class="w-full border border-gray-300 rounded px-3 py-2" />
-                        </div>
-                        <div>
-                            <label class="block text-sm mb-1">신장</label>
-                            <input type="number" id="editChildHeight" class="w-full border border-gray-300 rounded px-3 py-2" />
-                        </div>
-                        <div class="flex gap-2 mt-4 justify-end">
-                            <button type="button" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded" onclick="closeChildEditModal()">취소</button>
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">저장</button>
                         </div>
                     </form>
                 </div>

@@ -25,6 +25,9 @@ public class MatchingService {
         return matchingRepository.save(matching);
     }
 
+    // 전문가별 단순 조회
+    public List<Matching> findAllById(Long id) { return matchingRepository.findAllById(id); }
+
     public Page<Matching> findAll(Pageable pageable) {
         return matchingRepository.findAll(pageable);
     }

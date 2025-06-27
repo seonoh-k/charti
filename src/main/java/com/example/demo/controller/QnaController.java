@@ -31,7 +31,7 @@ public class QnaController {
                       @RequestParam(value = "category", required=false) QnaCategory category,
                       Model model) {
 
-        Page<Qna> qnaPage = qnaService.getPagedList(category, page-1);
+        Page<Qna> qnaPage = qnaService.getPagedList(null, category, page-1);
 
         List<QnaDTO> qnaList = getQnaList(qnaPage);
 
@@ -120,6 +120,55 @@ public class QnaController {
         model.addAttribute("qna", new QnaDTO(qna));
 
         return "admin/adminQna";
+    }
+
+    @GetMapping("/qnaList")
+    public String getQnaList(@RequestParam(value = "page", defaultValue = "1", required=false) int page,
+                             @RequestParam(value = "category", required=false) QnaCategory category,
+                             Model model) {
+        UserDTO user = authService.getLoginUser();
+        Page<Qna> qnaPage = qnaService.getPagedList(user.getId(), null, page-1);
+
+        List<QnaDTO> qnaList = getQnaList(qnaPage);
+
+        if(category != null) {
+            model.addAttribute("category", QnaCategory.values());
+        }
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", qnaPage.getTotalPages());
+        model.addAttribute("selectedCategory", category);
+        model.addAttribute("qnaList", qnaList);
+
+        if(user.getRole().equals(Role.ROLE_MEMBER.getKey())) {
+            return "personalQnaList";
+        }else if(user.getRole().equals(Role.ROLE_EXPERT.getKey())) {
+            return "/admin/expert/expertPersonalQnaList";
+        }else {
+            return "/admin/manager/managerPersonalQnaList";
+        }
+    }
+
+    @GetMapping("/qnaList/{id}")
+    public String getPersonalQnaDetail(@PathVariable Long id, Model model) {
+        UserDTO user = authService.getLoginUser();
+        Qna qna = qnaService.get(id);
+
+        if(qna.getAnswer() != null) {
+            QnaAnswer ans = qna.getAnswer();
+            model.addAttribute("ans", ans);
+        }
+
+        model.addAttribute("category", QnaCategory.values());
+        model.addAttribute("qna", new QnaDTO(qna));
+
+        if(user.getRole().equals(Role.ROLE_MEMBER.getKey())) {
+            return "personalQna";
+        }else if(user.getRole().equals(Role.ROLE_EXPERT.getKey())) {
+            return "/admin/expert/expertPersonalQna";
+        }else {
+            return "/admin/manager/managerPersonalQna";
+        }
+
     }
 
 }

@@ -2,16 +2,17 @@ package com.example.demo.users.controller;
 
 import com.example.demo.dto.AddressDTO;
 import com.example.demo.dto.ExpertDTO;
-import com.example.demo.dto.ManagerDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.IdsRequest;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.enums.MatchingStatus;
+import com.example.demo.matching.entity.Matching;
+import com.example.demo.matching.service.MatchingService;
 import com.example.demo.service.AddressService;
 import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.users.entity.Expert;
-import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ExpertRepository;
@@ -19,11 +20,13 @@ import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.*;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
-import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -48,28 +51,37 @@ public class ExpertController {
     private final UserRepository usersRepository;
     private final AuthService authService;
     private final AddressService addressService;
+    private final MatchingService matchingService;
 
-    @GetMapping("/expert")
+    @GetMapping("/expert/main")
     public String showExpertPage(Model model) {
-        String uuid = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
-        log.info("===============================uuid : " + uuid);
+        UserDTO user = authService.getLoginUser();
+        List<Matching> totalMatching = matchingService.findAllById(user.getId());
 
-        Users user = usersRepository.findByUuid(uuid)
-                .orElseThrow(() -> new RuntimeException("해당 사용자 없음"));
+        int matchingCount = 0;
+        int endCount = 0;
 
-        Optional<Expert> optionalExpert = expertRepository.findByUsersId(user.getId());
-
-        if (optionalExpert.isPresent()) {
-            Expert expert = optionalExpert.get();
-            String licenseUrl = "/api/proxy/image?filename=" + URLEncoder.encode(expert.getLicense(), StandardCharsets.UTF_8);
-            model.addAttribute("licenseImageUrl", licenseUrl);
-            log.info("===============================licenseUrl : " + licenseUrl);
-        } else {
-            model.addAttribute("licenseImageUrl", null); // 또는 기본 이미지 경로 등
-            log.info("===============================전문가 정보 없음, 기본 이미지 적용");
+        for(Matching matching : totalMatching) {
+            if(matching.getStatus().equals(MatchingStatus.MATCHED)) {
+                matchingCount++;
+            }
+            if(matching.getStatus().equals(MatchingStatus.RESPONDED)) {
+                endCount++;
+            }
         }
 
-        return "expert";
+        int totalCount = totalMatching.size();
+
+        Pageable pageable = PageRequest.of(0, 5, Sort.Direction.DESC, "createdAt");
+        Page<Matching> matching = matchingService.findByExpertIdAndStatus(user.getId(), MatchingStatus.MATCHED, pageable);
+
+        List<Matching> matchingList = matching.getContent();
+        model.addAttribute("matchingList", matchingList);
+        model.addAttribute("totalCount", totalCount);
+        model.addAttribute("matchingCount", matchingCount);
+        model.addAttribute("endCount", endCount);
+
+        return "/expert/expert";
     }
 
     @GetMapping("/expert/myPage")
@@ -162,8 +174,5 @@ public class ExpertController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse(GlobalStatus.OK));
     }
-
-
-
 
 }
