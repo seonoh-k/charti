@@ -1,10 +1,13 @@
 package com.example.demo.repository;
 
 import com.example.demo.dto.ChildDTO;
+import com.example.demo.dto.ChildWithParentDTO;
 import com.example.demo.dto.GroupDTO;
 import com.example.demo.entity.QGroup;
 import com.example.demo.users.entity.QChild;
+import com.example.demo.users.entity.QMember;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -69,6 +72,32 @@ public class GroupQueryRepositoryImpl implements GroupQueryRepository{
         }
 
         return Optional.ofNullable(groupDTO);
+    }
+
+    public List<ChildWithParentDTO> findChildrenWithParentByGroupId(Long groupId) {
+        QChild c = QChild.child;
+        QMember m = QMember.member; // QUsers.users; 도 가능하지만 실제 Member라면 QMember가 더 맞음
+
+        return queryFactory
+                .select(Projections.constructor(
+                        ChildWithParentDTO.class,
+                        c.id,
+                        c.name,
+                        c.gender,
+                        c.birthday.stringValue(),
+                        c.nickname,
+                        c.height,
+                        c.weight,
+                        c.birthOrder,
+                        c.riskGroup,
+                        c.parent.id,
+                        c.parent.users.name,
+                        c.parent.users.phoneNumber
+                ))
+                .from(c)
+                .join(c.parent, m)  // 여기!
+                .where(c.group.id.eq(groupId))
+                .fetch();
     }
 
 }

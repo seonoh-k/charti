@@ -1,14 +1,18 @@
 package com.example.demo.users.service;
 
+import com.example.demo.dto.AdminDTO;
 import com.example.demo.dto.request.AdminCreateRequest;
 import com.example.demo.users.entity.Admin;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.exception.AdminAlreadyExistsException;
+import com.example.demo.users.exception.AdminNotFoundException;
 import com.example.demo.users.repository.AdminRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,10 +23,16 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
 
 
-    // userService.getMemberByEmail(email);
-//    public AdminDTO getAdminByEmail(String email){
-//        adminRepository.find
-//    }
+    public AdminDTO getAdminByEmail(String email) throws AdminNotFoundException{
+        Optional<AdminDTO> admin = adminRepository.getAdminDTOByUsername(email);
+        if (admin.isEmpty()){
+            throw new AdminNotFoundException();
+        } else {
+            AdminDTO adminDTO = admin.get();
+            return adminDTO;
+        }
+
+    };
 
     public boolean existsAdminByUsername(String username){
         return adminRepository.existsByUsername(username);

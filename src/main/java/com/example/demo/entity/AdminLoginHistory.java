@@ -2,22 +2,20 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "login_history")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginHistory {
+public class AdminLoginHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String username;          // Email
-    private Long userId;              // 로그인한 사용자 PK
+    private Long adminId;             // 로그인한 사용자 PK
     private LocalDateTime loginTime;  // 시각
     private String ipAddress;         // 요청 IP
     private boolean success;          // 성공 여부

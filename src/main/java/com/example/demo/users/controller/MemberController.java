@@ -2,11 +2,13 @@ package com.example.demo.users.controller;
 
 import com.example.demo.dto.AddressDTO;
 import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.request.UserUpdateRequest;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.AuthService;
+import com.example.demo.users.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.Authentication;
@@ -15,6 +17,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import com.example.demo.users.service.UserService;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 @Controller
 @RequiredArgsConstructor
 @Log4j2
@@ -55,6 +61,35 @@ public class MemberController {
         model.addAttribute("userInfo", userDTO);
 
         return "member/myPage";
+    }
+    @PostMapping("/member/update")
+    public String updateMemberInfo(
+            @ModelAttribute UserUpdateRequest req,
+            Authentication authentication,
+            RedirectAttributes rttr) {
+
+        // 1. 인증된 유저 정보 확인
+        String uid = authentication.getPrincipal().toString();
+
+        // 2. 유효성 검사 (빈 값 체크 등)
+        if (req.getName() == null || req.getName().isBlank() ||
+                req.getNickname() == null || req.getNickname().isBlank() ||
+                req.getPhoneNumber() == null || req.getPhoneNumber().isBlank() ||
+                req.getAddressId() == null) {
+            rttr.addFlashAttribute("msg", "입력값을 모두 입력해주세요.");
+            return "redirect:/member/myPage";  // 다시 마이페이지로
+        }
+
+        // 3. 서비스 호출 (실제 정보 수정)
+        try {
+            userService.updateMember(req, uid);
+            rttr.addFlashAttribute("msg", "정보가 수정되었습니다.");
+        } catch (Exception e) {
+            rttr.addFlashAttribute("msg", "수정 중 오류 발생: " + e.getMessage());
+        }
+
+        // 4. 리다이렉트(페이지 새로고침)
+        return "redirect:/member/myPage";
     }
 
     @GetMapping("/main")

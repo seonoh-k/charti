@@ -1,5 +1,6 @@
 package com.example.demo.users.controller;
 
+import com.example.demo.dto.AdminDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.info.AddressInfo;
 import com.example.demo.dto.info.CommonInfo;
@@ -21,11 +22,13 @@ import com.example.demo.repository.LoginHistoryRepository;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.exception.AdminNotFoundException;
 import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.repository.UserRepository;
+import com.example.demo.users.service.AdminService;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.FirebaseService;
 import com.example.demo.users.service.UserService;
@@ -72,6 +75,7 @@ public class AuthController {
     private final GroupRepository groupRepository;  // 그룹 검색 을 위해 임시사용
     private final ManagerRepository managerRepository;  // 그룹중복 검사를  위해 임시사용
     private final UserRepository userRepository;  // 그룹중복 검사를  위해 임시사용
+    private final AdminService adminService;
 
 
 
@@ -96,7 +100,8 @@ public class AuthController {
 
             String clientIp = IpUtils.extractClientIp(httpServletRequest);
 
-            authService.createLoginSuccessHistory(email,clientIp);
+            LoginAttemptRequest req = new LoginAttemptRequest(email, true, null);
+            authService.createUserLoginSuccessHistory(req,clientIp);
 
             return ResponseEntity.status(HttpStatus.OK)
                     .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
@@ -133,14 +138,73 @@ public class AuthController {
 
         }
     }
+    @PostMapping("/admin/login")
+    public ResponseEntity<ApiResponse> loginAdmin(@RequestHeader("Authorization") String authHeader,
+                                                  HttpServletRequest httpServletRequest) {
+        try {
+            // JWT TOKEN FORMAT => "Bearer TokenValueIsRandomTextAndIncludingNumber"
+            String idToken = jwtUtil.removeBearerPrefix(authHeader);
+            FirebaseToken decoded = firebaseService.verifyIdToken(idToken);
+            String email = decoded.getEmail();
+
+            AdminDTO adminByEmail = adminService.getAdminByEmail(email);
+
+            String jwt = jwtUtil.createToken(decoded);
+            ResponseCookie jwtCookie = jwtUtil.createCookie(jwt);
+
+            String clientIp = IpUtils.extractClientIp(httpServletRequest);
+            LoginAttemptRequest req = new LoginAttemptRequest(email, true, null);
+            authService.createAdminLoginSuccessHistory(req,clientIp);
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                    .body(new ApiResponse(AuthStatus.AUTHENTICATION_SUCCESS));
+
+        } catch (IllegalStateException e) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse(AuthStatus.USER_DELETED));
+
+        }catch (JwtTokenNotFoundException jwtTokenNotFoundException){
+
+            jwtTokenNotFoundException.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(AuthStatus.TOKEN_NOT_FOUND));
+
+        } catch (JwtTokenFormatInvalidException jwtTokenFormatInvalidException){
+
+            jwtTokenFormatInvalidException.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.TOKEN_INVALID_FORMAT));
+
+        } catch (FirebaseAuthException firebaseAuthException) {
+
+            log.info("⚠️ [AuthController.loginMember] FirebaseAuthException : {}",
+                    firebaseAuthException.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(AuthStatus.AUTHENTICATION_FAIL));
+
+        } catch (AdminNotFoundException adminNotFoundException){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.ADMIN_NOT_FOUND));
+        }
+
+    }
     @PostMapping("/auth/login/attempt")
-    public ResponseEntity<ApiResponse> recordLoginAttemptFail(@RequestBody LoginAttemptRequest req,
+    public ResponseEntity<ApiResponse> recordUserLoginAttemptFail(@RequestBody LoginAttemptRequest req,
                                                               HttpServletRequest request){
         String clientIp = IpUtils.extractClientIp(request);
 
-        String username = req.getUsername();
+        authService.createUserLoginFailHistory(req,clientIp);
 
-        authService.createLoginFailHistory(username,clientIp);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(GlobalStatus.OK));
+    }
+    @PostMapping("/admin/login/attempt")
+    public ResponseEntity<ApiResponse> recordAdminLoginAttemptFail(@RequestBody LoginAttemptRequest req,
+                                                              HttpServletRequest request){
+        String clientIp = IpUtils.extractClientIp(request);
+
+        authService.createAdminLoginFailHistory(req,clientIp);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(GlobalStatus.OK));
     }

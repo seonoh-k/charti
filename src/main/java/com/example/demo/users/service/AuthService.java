@@ -4,22 +4,22 @@ import com.example.demo.dto.AddressDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.info.*;
 import com.example.demo.dto.request.ExpertJoinRequest;
+import com.example.demo.dto.request.LoginAttemptRequest;
 import com.example.demo.dto.request.ManagerJoinRequest;
 import com.example.demo.dto.request.MemberJoinRequest;
 import com.example.demo.entity.Address;
+import com.example.demo.entity.AdminLoginHistory;
 import com.example.demo.entity.Group;
 import com.example.demo.enums.TargetGroup;
 import com.example.demo.entity.LoginHistory;
+import com.example.demo.repository.AdminLoginHistoryRepository;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.LoginHistoryRepository;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.*;
 import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
-import com.example.demo.users.repository.ExpertRepository;
-import com.example.demo.users.repository.ManagerRepository;
-import com.example.demo.users.repository.MemberRepository;
-import com.example.demo.users.repository.UserRepository;
+import com.example.demo.users.repository.*;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.StatusCode;
 import jakarta.transaction.Transactional;
@@ -49,6 +49,9 @@ public class AuthService {
     private final GroupRepository groupRepository;
     private final MemberRepository memberRepository;
     private final LoginHistoryRepository loginHistoryRepository;
+    private final AdminRepository adminRepository;
+    private final AdminQueryRepository adminQueryRepository;
+    private final AdminLoginHistoryRepository adminLoginHistoryRepository;
 
     private Users commonInfoToEntity(CommonInfo commonInfo){
         Users users = Users.builder()
@@ -276,7 +279,8 @@ public class AuthService {
                 .orElseThrow(() -> new UserNotFoundException("ID " + id + "에 해당하는 멤버를 찾을 수 없습니다."));
     }
 
-    public void createLoginSuccessHistory(String username,String clientIp){
+    public void createUserLoginSuccessHistory(LoginAttemptRequest r,String clientIp){
+        String username = r.getUsername();
 
         boolean exists = userRepository.existsByUsername(username);
         Long usersId = null;
@@ -288,41 +292,105 @@ public class AuthService {
         loginHistoryRepository.save(LoginHistory.builder()
                 .userId(usersId)
                 .username(username)
-                .timestamp(LocalDateTime.now())
+                .loginTime(LocalDateTime.now())
                 .ipAddress(clientIp)
                 .success(true)
                 .build());
 
     }
-    public void createLoginFailHistory(String username,String clientIp){
+    public void createUserLoginFailHistory(LoginAttemptRequest r,String clientIp){
+        String username = r.getUsername();
 
         if(username == null || username.isEmpty() || username.isBlank()){
             loginHistoryRepository.save(LoginHistory.builder()
                     .userId(null)
                     .username(username)
-                    .timestamp(LocalDateTime.now())
+                    .loginTime(LocalDateTime.now())
                     .ipAddress(clientIp)
                     .success(false)
+                    .failureReason(r.getFailureReason())
                     .build());
         }
 
         boolean exists = userRepository.existsByUsername(username);
+
         if(exists){
             Long usersId = userRepository.getIdByUsername(username);
             loginHistoryRepository.save(LoginHistory.builder()
                     .userId(usersId)
                     .username(username)
-                    .timestamp(LocalDateTime.now())
+                    .loginTime(LocalDateTime.now())
                     .ipAddress(clientIp)
                     .success(false)
+                    .failureReason(r.getFailureReason())
                     .build());
         } else{
             loginHistoryRepository.save(LoginHistory.builder()
                     .userId(null)
                     .username(username)
-                    .timestamp(LocalDateTime.now())
+                    .loginTime(LocalDateTime.now())
                     .ipAddress(clientIp)
                     .success(false)
+                    .failureReason(r.getFailureReason())
+                    .build());
+        }
+
+
+    }
+    public void createAdminLoginSuccessHistory(LoginAttemptRequest r,String clientIp){
+
+        String username = r.getUsername();
+        boolean exists = adminRepository.existsByUsername(username);
+        Long adminId = null;
+
+        if(exists){
+            adminId = adminRepository.getIdByUsername(username);
+        }
+
+        adminLoginHistoryRepository.save(AdminLoginHistory.builder()
+                .adminId(adminId)
+                .username(username)
+                .loginTime(LocalDateTime.now())
+                .ipAddress(clientIp)
+                .success(true)
+                .build());
+
+    }
+    public void createAdminLoginFailHistory(LoginAttemptRequest r, String clientIp){
+
+        String username = r.getUsername();
+
+        if(username == null || username.isEmpty() || username.isBlank()){
+            adminLoginHistoryRepository.save(AdminLoginHistory.builder()
+                    .adminId(null)
+                    .username(username)
+                    .loginTime(LocalDateTime.now())
+                    .ipAddress(clientIp)
+                    .success(false)
+                    .failureReason(r.getFailureReason())
+                    .build());
+        }
+
+        boolean exists = adminRepository.existsByUsername(username);
+
+        if(exists){
+            Long adminId = adminRepository.getIdByUsername(username);
+            adminLoginHistoryRepository.save(AdminLoginHistory.builder()
+                    .adminId(adminId)
+                    .username(username)
+                    .loginTime(LocalDateTime.now())
+                    .ipAddress(clientIp)
+                    .success(false)
+                    .failureReason(r.getFailureReason())
+                    .build());
+        } else{
+            adminLoginHistoryRepository.save(AdminLoginHistory.builder()
+                    .adminId(null)
+                    .username(username)
+                    .loginTime(LocalDateTime.now())
+                    .ipAddress(clientIp)
+                    .success(false)
+                    .failureReason(r.getFailureReason())
                     .build());
         }
 

@@ -5,7 +5,7 @@ let originalData = {};
 
 // 수정 모드 활성화
 window.enableEditMode = function () {
-    const editableFields = ['name', 'nickname', 'phoneNumber'];
+    const editableFields = ['name', 'nickname'];
     originalData = {};
 
     editableFields.forEach(id => {
