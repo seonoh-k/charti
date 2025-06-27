@@ -5,6 +5,7 @@ public enum AuthStatus implements StatusCode {
     SERVER_ERROR("SE","서버 에러"),
     AUTHENTICATION_FAIL("AF","인증 실패"),
     AUTHENTICATION_SUCCESS("AS","인증 성공"),
+    ADMIN_NOT_FOUND("ANF","사용할 수 없는 아이디"),
 
     PHONE_AUTH_FAIL("PAF","sms 인증 실패"),
     REGISTRATION_INCOMPLETE("RI","회원가입 미완료"),
@@ -23,6 +24,7 @@ public enum AuthStatus implements StatusCode {
     TOKEN_INVALID_FORMAT("TIF","토큰이 바른 형식이 아닙니다."),
 
     USER_NOT_FOUND("UNF","유저를 찾을 수 없어요."),
+
     USER_NOT_REGISTRATION("UNR","회원가입 절차 미진행"),
     USER_DUPLICATE("UD","중복 이메일 회원가입 불가"),
 

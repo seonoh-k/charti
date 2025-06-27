@@ -23,13 +23,14 @@ public class AdminDTO {
 
     private String role;
 
-    public AdminDTO(Long id, String name, String position, String username, String password, String phoneNumber) {
+    public AdminDTO(Long id, String name, String position, String username, String password, String phoneNumber,Role role) {
         this.id = id;
         this.name = name;
         this.position = position;
         this.username = username;
         this.password = password;
         this.phoneNumber = phoneNumber;
+        this.role = role.name();
     }
 
 

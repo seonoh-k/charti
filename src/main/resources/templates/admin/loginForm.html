@@ -49,7 +49,9 @@
                             class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-gray-500 transition" />
                     </div>
         
-                    <button type="submit"
+                    <button id="loginBtn"
+                            type="button"
+                            onclick="login()"
                             class="w-full bg-gray-600 hover:bg-gray-400 text-white font-semibold py-2 rounded-lg transition">
                         로그인
                     </button>
@@ -60,23 +62,25 @@
     
     </div>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-        const loginURL = '/login';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    const loginURL = '/admin/login';
     
     const firebaseConfig = {
-      apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
-      authDomain: "charti-5da7d.firebaseapp.com",
-      projectId: "charti-5da7d",
-      storageBucket: "charti-5da7d.firebasestorage.app",
-      messagingSenderId: "308166362794",
-      appId: "1:308166362794:web:00035f97aca288228972d3",
-      measurementId: "G-TYBBZC80J9"
+        apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
+        authDomain: "charti-5da7d.firebaseapp.com",
+        projectId: "charti-5da7d",
+        storageBucket: "charti-5da7d.firebasestorage.app",
+        messagingSenderId: "308166362794",
+        appId: "1:308166362794:web:00035f97aca288228972d3",
+        measurementId: "G-TYBBZC80J9"
     };
-    
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-    
+
+        document.getElementById('loginBtn').addEventListener('click', login);
+
         async function login() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
@@ -84,9 +88,9 @@
             try {
                 // Firebase Auth 로그인 시도
                 const userCredential = await signInWithEmailAndPassword(auth, username, password);
-                console.log("signInWithEmailAndPassword Execute");
+                
                 const idToken = await userCredential.user.getIdToken();
-                console.log("userCredential.user.getIdToken Execute");
+                
     
                 // 서버로 ID 토큰 전송
                 const response = await fetch(loginURL, {
@@ -97,51 +101,101 @@
                     },
                     body: JSON.stringify({ username: username })
                 });
-                console.log("login Fetch Execute");
-    
+                
                 // 원본 HTML 전체 출력
                 // const html = await response.text();
                 // console.log(html);    // 개발자 콘솔에 뷰 전체가 뜹니다
-    
                 // 서버 응답(JSON) 파싱
                 const result = await response.json();
-                console.log("get Result Execute");
-    
+
                 if (response.status === 200 && result.code === 'AS') {
-    
-                    window.location.href = '/main';
+                    
+                    showToast(result.message, 'success',3000);
+
+                    setTimeout(() => {
+                        window.location.href = '/admin/main';
+                    }, 1500);
+                
                 } else {
-                    console.log(result.code);
-                    console.log(result.message);
-                    alert('로그인 실패: ' + result.message);
+
+                    showToast(result.message, 'error',3000);
+                    
+                    const recordAttemptFailRes = await fetch('/admin/login/attempt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username,
+                            success: false,
+                            failureReason: result.message
+                        })
+                    });
+
+                    const recordResult = await recordAttemptFailRes.json();
+
+                    setTimeout(() => {
+                        window.location.href = '/admin/loginForm';
+                    }, 1500);
                 }
             } catch (error) {
-                // 1) Error 타입 구분
-                const recordAttemptFailRes = await fetch('/auth/login/attempt', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username,
-                        success: false,
-                        failureReason: error.message
-                    })
-                });
+                
+                showToast("아이디 비밀번호를 확인해주세요.", 'error',3000);
+                console.log(error.message);
+                const recordAttemptFailRes = await fetch('/admin/login/attempt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username,
+                            success: false,
+                            failureReason: error.message
+                        })
+                    });
+                
                 const recordResult = await recordAttemptFailRes.json();
-                alert('Firebase 로그인 오류: ' + error.message);
-    
+
+                setTimeout(() => {
+                    window.location.href = '/admin/loginForm';
+                }, 1500);
+
             }
         }
     
-        const form = document.getElementById('adminLoginForm');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                login();
-            });
-        } else {
-            console.error("로그인 폼 (id='adminLoginForm')을 찾을 수 없습니다.");
-        }
+    function showToast(message, type = 'success', duration = 3000) {
+    
+        const container = document.getElementById("toast-container");
+    
+        const colors = {
+            success: {
+                bg: "bg-green-500",
+                icon: "✅"
+            },
+            error: {
+                bg: "bg-red-500",
+                icon: "❌"
+            }
+        };
+        console.log(type);
+        const toast = document.createElement("div");
+        toast.className = `flex items-center text-white px-4 py-2 rounded shadow-lg ${colors[type].bg} animate-slide-in-right`;
+        toast.innerHTML = 
+        `<span class="mr-2">${colors[type].icon}</span>
+        <span>${message}</span>`;
+    
+        container.appendChild(toast);
+    
+        setTimeout(() => {
+            toast.classList.remove("animate-slide-in-right");
+            toast.classList.add("animate-fade-out");
+    
+            setTimeout(() => container.removeChild(toast), 5000);
+            
+        }, duration);
+    }
     </script>
+    
+    
+    
+
+<div id="toast-container" class="fixed inset-x-0 top-0 z-50 space-y-3 text-center"></div>
 <!-- 스크립트 -->
 <script th:src="@{/js/admin/adminSideBar.js}"></script>
 </body>

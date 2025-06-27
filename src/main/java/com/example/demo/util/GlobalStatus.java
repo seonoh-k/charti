@@ -34,6 +34,7 @@ public enum GlobalStatus implements StatusCode{
     USERNAME_VALIDATION_FAILED("UVF","사용할 수 없는 아이디");
 
 
+
     private String code;
     private String message;
 

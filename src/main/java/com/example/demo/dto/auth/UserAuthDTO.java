@@ -1,6 +1,6 @@
-package com.example.demo.dto;
+package com.example.demo.dto.auth;
 
-public class UserAuthDTO {
+public class UserAuthDTO implements AuthDTO{
     private final String uuid;
     private final boolean deleted;
 

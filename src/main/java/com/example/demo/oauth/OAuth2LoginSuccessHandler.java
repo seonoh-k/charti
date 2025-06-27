@@ -2,6 +2,7 @@ package com.example.demo.oauth;
 
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.request.LoginAttemptRequest;
 import com.example.demo.jwt.JwtUtil;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.service.AuthService;
@@ -96,8 +97,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 HttpCookie cookie = jwtUtil.createCookie(customToken);
                 request.setAttribute("firebaseCustomCookie", cookie.getValue());
 
-
-                authService.createLoginSuccessHistory(userDTO.getUsername(),clientIp);
+                LoginAttemptRequest req = new LoginAttemptRequest(userDTO.getUsername(), true,null);
+                authService.createUserLoginSuccessHistory(req,clientIp);
 
                 dispatcher.forward(request,response);
                 return;
@@ -112,16 +113,20 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 HttpCookie cookie = jwtUtil.createCookie(customToken);
                 request.setAttribute("firebaseCustomCookie", cookie.getValue());
 
-                authService.createLoginSuccessHistory(userDTO.getUsername(),clientIp);
+                LoginAttemptRequest req = new LoginAttemptRequest(userDTO.getUsername(), true,null);
+
+                authService.createUserLoginSuccessHistory(req,clientIp);
                 dispatcher.forward(request, response);
                 return;
             } else if(existsByEmailInFirebase && !existsByEmailInDB){
                 // 이메일이 파이어 베이스에 있지만 데이터베이스에 없는 경우
-                authService.createLoginFailHistory(userDTO.getUsername(),clientIp);
+                LoginAttemptRequest req = new LoginAttemptRequest(userDTO.getUsername(), false, "인증 서버 계정 상태 불일치");
+                authService.createUserLoginFailHistory(req, clientIp);
                 throw new RuntimeException("파이어베이스에 해당 계정을 삭제하고 다시시도 하세요 ");
             }
             else{
-                authService.createLoginFailHistory(userDTO.getUsername(),clientIp);
+                LoginAttemptRequest req = new LoginAttemptRequest(userDTO.getUsername(), false, "인증 서버 계정 상태 불일치");
+                authService.createUserLoginFailHistory(req, clientIp);
                 throw new RuntimeException("데이터베이스에 해당 계정을 삭제하고 다시시도 하세요 ");
             }
 
