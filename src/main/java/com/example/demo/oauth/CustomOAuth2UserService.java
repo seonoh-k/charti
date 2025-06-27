@@ -1,5 +1,6 @@
 package com.example.demo.oauth;
 
+import com.example.demo.dto.request.LoginAttemptRequest;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.util.IpUtils;
@@ -73,7 +74,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             HttpServletRequest req = attrs.getRequest();
             // 2) IP 추출
             String clientIp = IpUtils.extractClientIp(req);
-            authService.createLoginFailHistory(email,clientIp);
+            LoginAttemptRequest attemptRequest = new LoginAttemptRequest(email, false, "소셜 로그인 실패");
+            authService.createUserLoginFailHistory(attemptRequest,clientIp);
 
             e.printStackTrace();
             throw e;

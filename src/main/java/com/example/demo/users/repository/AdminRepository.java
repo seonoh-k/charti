@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface AdminRepository extends JpaRepository<Admin,Long> {
@@ -16,7 +15,7 @@ public interface AdminRepository extends JpaRepository<Admin,Long> {
 
 
     // 단일 관리자(ID 기준)를 DTO로 조회
-    @Query(value = """
+    @Query("""
         SELECT new com.example.demo.dto.AdminDTO(
             a.id,
             a.name,
@@ -24,12 +23,12 @@ public interface AdminRepository extends JpaRepository<Admin,Long> {
             a.username,
             a.password,
             a.phoneNumber,
-            a.role.name()
+            a.role         
         )
         FROM Admin a
         WHERE a.id = :id
-        """, nativeQuery = true)
-    Optional<AdminDTO> findAdminDTOById(@Param("id") Long id);
+        """)
+    Optional<AdminDTO> getAdminDTOById(@Param("id") Long id);
 
     /**
      * username으로 단일 AdminDTO 조회
@@ -42,12 +41,16 @@ public interface AdminRepository extends JpaRepository<Admin,Long> {
             a.username,
             a.password,
             a.phoneNumber,
-            a.role.name()
+            a.role
         )
         FROM Admin a
         WHERE a.username = :username
-        """,nativeQuery = true)
-    Optional<AdminDTO> findAdminDTOByUsername(@Param("username") String username);
+        """)
+    Optional<AdminDTO> getAdminDTOByUsername(@Param("username") String username);
+
 
     Optional<Admin> existsByUuid(String uuid);
+
+    @Query("SELECT a.id FROM Admin a WHERE a.username = :username")
+    Long getIdByUsername(@Param("username") String username);
 }

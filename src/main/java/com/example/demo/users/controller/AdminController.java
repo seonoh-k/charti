@@ -14,6 +14,7 @@ import com.example.demo.exception.JwtTokenNotFoundException;
 import com.example.demo.jwt.JwtUtil;
 import com.example.demo.users.entity.*;
 import com.example.demo.users.exception.AdminAlreadyExistsException;
+import com.example.demo.users.exception.AdminNotFoundException;
 import com.example.demo.users.exception.UserIsNotDeletedException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.*;
@@ -95,66 +96,10 @@ public class AdminController {
         log.info("[GET] 👨‍💼 request Admin Main Page");
         return "admin/loginForm";
     }
-    @PostMapping("/admin/login")
-    public ResponseEntity<ApiResponse> loginAdmin(@RequestHeader("Authorization") String authHeader,
-                                                  HttpServletRequest httpServletRequest) {
-        try {
-            // JWT TOKEN FORMAT => "Bearer TokenValueIsRandomTextAndIncludingNumber"
-            String idToken = jwtUtil.removeBearerPrefix(authHeader);
-            FirebaseToken decoded = firebaseService.verifyIdToken(idToken);
-            String email = decoded.getEmail();
-
-            userService.getMemberByEmail(email);
-
-            String jwt = jwtUtil.createToken(decoded);
-            ResponseCookie jwtCookie = jwtUtil.createCookie(jwt);
-
-            String clientIp = IpUtils.extractClientIp(httpServletRequest);
-
-            authService.createLoginSuccessHistory(email,clientIp);
-
-            return ResponseEntity.status(HttpStatus.OK)
-                    .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                    .body(new ApiResponse(AuthStatus.AUTHENTICATION_SUCCESS));
-
-        } catch (IllegalStateException e) {
-
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ApiResponse(AuthStatus.USER_DELETED));
-
-        }catch (JwtTokenNotFoundException jwtTokenNotFoundException){
-
-            jwtTokenNotFoundException.printStackTrace();
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse(AuthStatus.TOKEN_NOT_FOUND));
-
-        } catch (JwtTokenFormatInvalidException jwtTokenFormatInvalidException){
-
-            jwtTokenFormatInvalidException.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse(AuthStatus.TOKEN_INVALID_FORMAT));
-
-        } catch (FirebaseAuthException firebaseAuthException) {
-
-            log.info("⚠️ [AuthController.loginMember] FirebaseAuthException : {}",
-                    firebaseAuthException.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse(AuthStatus.AUTHENTICATION_FAIL));
-
-        } catch (UserNotFoundException userNotFoundException){
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse(AuthStatus.USER_NOT_REGISTRATION));
-
-        }
-
-    }
 
     @GetMapping("/admin/create/admin")
     public String showCreateAdminPage(Model model) {
         log.info("[GET] 👨‍💼 request Create Admin Page");
-
-
 
         return "admin/admin/createAdminForm";
     }
