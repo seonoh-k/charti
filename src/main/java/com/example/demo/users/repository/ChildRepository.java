@@ -37,6 +37,7 @@ public interface ChildRepository extends JpaRepository<Child, Long> {
      */
     List<Child> findByGroupId(Long id);
 
-    List<Child> findByParent_Id(Long parentId);
     long countByGroup(Group group);
+  
+    List<Child> findByParent_Id(Long parentId);
 }

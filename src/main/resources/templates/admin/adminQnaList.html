@@ -1,19 +1,24 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/admin_layout}">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 계정 생성 페이지</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Fontawesome 연결 Embed Code Start-->
+    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
+    <!-- Fontawesome 연결 Embed Code End-->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
-          rel="stylesheet">
+    <title>관리자 페이지</title>
 </head>
-<th:block layout:fragment="content">
-    <div class="max-w-6xl mx-auto bg-white shadow p-6 mt-8 rounded">
+<body class="h-screen flex flex-col">
+
+<!-- 헤더 (햄버거 버튼) -->
+<div th:replace="fragments/adminFragments :: hamburger"></div>
+
+<div class="flex flex-1">
+    <div th:replace="fragments/adminFragments :: sideBar"></div>
+    <div class="flex-1 justify-center items-center p-20">
         <h1 class="text-3xl font-bold text-gray-800 mb-6">1:1 문의 관리</h1>
         <hr class="mb-8 border-gray-300">
 
@@ -37,19 +42,19 @@
             <table class="min-w-full divide-y divide-gray-200 table-fixed">
                 <thead class="bg-gray-50">
                 <tr>
-                    <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         번호
                     </th>
-                    <th class="w-[50%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th class="w-[50%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         제목
                     </th>
-                    <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         상태
                     </th>
-                    <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         작성자
                     </th>
-                    <th class="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th class="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         작성일
                     </th>
                 </tr>
@@ -152,8 +157,9 @@
             }));
         })
     </script>
-    </div>
+</div>
 
-    <div id="toast-container" class="fixed inset-x-0 top-0 z-50 space-y-3 text-center"></div>
-</th:block>
+<!-- 스크립트 -->
+<script th:src="@{/js/admin/adminSideBar.js}"></script>
+</body>
 </html>
