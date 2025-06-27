@@ -20,29 +20,18 @@ public class MainController {
         return "dailySurveyResult";
     }
 
-    // 아래 두개는 테스트용
-    @GetMapping("/point")
-    public String getUserPointPage() {
-        return "test-point";
-    }
-
 
     @GetMapping("/albums/create")
     public String getAlbumsPage() { return "albumsCreate";}
 
-    @GetMapping("/admin/record-survey")
-    public String getAdminRecordSurveyPage() {
-        return "test-record-admin";
-    }
-
 
     @GetMapping("/admin/surveys/special")
     public String manageSpecialSurveyPage() {
-        return "manage-specialSurvey";
+        return "/admin/surveys/manage-specialSurvey";
     }
 
     @GetMapping("/admin/surveys/group")
     public String manageGroupSurveyPage() {
-        return "manage-groupSurvey"; // manage-groupSurvey.html 파일의 위치
+        return "/admin/surveys/manage-groupSurvey";
     }
 }

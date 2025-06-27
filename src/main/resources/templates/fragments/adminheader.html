@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Charti</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pretendard & Inter 폰트 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>
+        body { font-family: 'Pretendard', 'Inter', sans-serif; }
+    </style>
+</head>
+<th:block th:fragment="headerFragment">
+    <header id="header" th:fragment="fragment-header" class="sticky top-0 bg-white z-50 shadow">
+        <!-- 상단: 로고 + 로그인/회원가입 -->
+        <div class="container mx-auto flex justify-between items-center py-4 px-6 mb-3">
+            <img id="homeLogo" th:src="@{/images/logo02.png}" onclick="location.href='/admin/main'"
+                 class="w-[150px] h-auto cursor-pointer"/>
+            <nav id="hdNav" class="mt-6">
+                <ul id="hdUl" class="flex gap-6 items-center">
+                    <th:block th:if="${session.userId == null}">
+                        <button>
+                            <a href="/" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">메인 홈페이지</a>
+                        </button>
+                        <li><a id="loginBtn" href="/admin/loginForm">로그인</a></li>
+                    </th:block>
+                    <th:block th:if="${session.userId != null}">
+                        <button>
+                            <a href="/" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">메인 홈페이지</a>
+                        </button>
+                        <li><a id="logoutBtn" href="/logout">로그아웃</a></li>
+                    </th:block>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- 하단 메뉴바 -->
+        <nav class="bg-[#374151] text-white">
+            <div class="container mx-auto flex justify-center items-center py-1 px-8">
+                <ul class="flex space-x-8">
+                    <li class="relative group">
+                        <a href="/admin/main" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">홈</a>
+                        <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block hover:block bg-black bg-opacity-70 text-white shadow-lg mt-0.5 min-w-[180px] text-center z-50 py-2">
+                            <li><a href="/admin/main" class="block px-4 py-2 hover:text-gray-300">관리자 홈페이지</a></li>
+                            <li><a href="/" class="block px-4 py-2 hover:text-gray-300">메인 홈페이지</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="relative group">
+                        <a href="/admin/expert-applicants" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">회원 가입 승인</a>
+                        <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block hover:block bg-black bg-opacity-70 text-white shadow-lg mt-0.5 min-w-[180px] text-center z-50 py-2">
+                            <li><a href="/admin/expert-applicants" class="block px-4 py-2 hover:text-gray-300">전문가 승인</a></li>
+                            <li><a href="/admin/manager-applicants" class="block px-4 py-2 hover:text-gray-300">담당자 승인</a></li>
+                        </ul>
+                    </li>
+                    <li class="relative group">
+                        <a href="/admin/create/admin" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">관리자</a>
+                        <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block hover:block bg-black bg-opacity-70 text-white shadow-lg mt-0.5 min-w-[180px] text-center z-50 py-2">
+                            <li><a href="/admin/create/admin" class="block px-4 py-2 hover:text-gray-300">관리자 추가</a></li>
+                            <li><a href="/admin/main" class="block px-4 py-2 hover:text-gray-300">관리자 목록[임시]</a></li>
+                        </ul>
+                    </li>
+                    <li class="relative group">
+                        <a href="/admin/member/all" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">회원 관리</a>
+                        <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block hover:block bg-black bg-opacity-70 text-white shadow-lg mt-0.5 min-w-[180px] text-center z-50 py-2">
+                            <li><a href="/admin/member/all" class="block px-4 py-2 hover:text-gray-300">일반 회원 목록</a></li>
+                            <li><a href="/admin/expert/all" class="block px-4 py-2 hover:text-gray-300">전문가 회원 목록</a></li>
+                            <li><a href="/admin/manager/all" class="block px-4 py-2 hover:text-gray-300">담당자 회원 목록</a></li>
+                            <li><a href="/admin/users/all/deleted"  class="block px-4 py-2 hover:text-gray-300">탈퇴 회원 목록</a></li>
+                        </ul>
+                    </li>
+                    <li class="relative group">
+                        <a href="/admin/surveys/daily" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">문진 관리</a>
+                        <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block hover:block bg-black bg-opacity-70 text-white shadow-lg mt-0.5 min-w-[180px] text-center z-50 py-2">
+                            <li><a href="/admin/surveys/daily" class="block px-4 py-2 hover:text-gray-300">데일리 문진</a></li>
+                            <li><a href="/admin/surveys/record" class="block px-4 py-2 hover:text-gray-300">기록 문진</a></li>
+                            <li><a href="/admin/surveys/group" class="block px-4 py-2 hover:text-gray-300">그룹 문진</a></li>
+                            <li><a href="/admin/surveys/special"  class="block px-4 py-2 hover:text-gray-300">특별 문진</a></li>
+                            <li><a href="/admin/surveySet"  class="block px-4 py-2 hover:text-gray-300">문진 세트</a></li>
+                        </ul>
+                    </li>
+                    <li class="relative group">
+                        <a href="/admin/notification/form" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">알림 발송</a>
+                        <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block hover:block bg-black bg-opacity-70 text-white shadow-lg mt-0.5 min-w-[180px] text-center z-50 py-2">
+                            <li><a href="/admin/notification/form" class="block px-4 py-2 hover:text-gray-300">알림 발송</a></li>
+                            <li><a href="/admin/notification/history" class="block px-4 py-2 hover:text-gray-300">발송 이력</a></li>
+                        </ul>
+                    </li>
+                    <a href="/admin/matching" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">전문가 매칭</a>
+                    <a href="/admin/point" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">포인트 관리</a>
+                    <a href="/admin/qna" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">고객 센터</a>
+
+                </ul>
+            </div>
+        </nav>
+    </header>
+</th:block>
+</html>

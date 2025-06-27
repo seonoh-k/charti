@@ -1,32 +1,43 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="ko">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8" />-->
+<!--    <meta http-equiv="X-UA-Compatible" content="IE=edge">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">-->
+<!--    &lt;!&ndash; Fontawesome 연결 Embed Code Start&ndash;&gt;-->
+<!--    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> &lt;!&ndash; Fontawesome 연결 &ndash;&gt;-->
+<!--    &lt;!&ndash; Fontawesome 연결 Embed Code End&ndash;&gt;-->
+<!--    <script src="https://cdn.tailwindcss.com"></script>-->
+<!--    <title>관리자 페이지</title>-->
+<!--</head>-->
+<!--<body class="h-screen flex flex-col">-->
+
+<!--    &lt;!&ndash; 헤더 (햄버거 버튼) &ndash;&gt;-->
+<!--    <div th:replace="fragments/adminFragments :: hamburger"></div>-->
+
+<!--    <div class="flex flex-1">-->
+<!--        <div th:replace="fragments/adminFragments :: sideBar"></div>-->
+
+<!--        <main class="flex-1 p-6 bg-gray-100">-->
+<!--            <h1 class="text-2xl font-bold mb-4">콘텐츠 영역</h1>-->
+<!--            <p>이곳에 관리자 화면 내용이 들어갑니다.</p>-->
+<!--        </main>-->
+<!--    -->
+<!--    </div>-->
+
+<!--&lt;!&ndash; 스크립트 &ndash;&gt;-->
+<!--<script th:src="@{/js/admin/adminSideBar.js}"></script>-->
+<!--</body>-->
+<!--</html>-->
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <!-- Fontawesome 연결 Embed Code Start-->
-    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
-    <!-- Fontawesome 연결 Embed Code End-->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>관리자 페이지</title>
-</head>
-<body class="h-screen flex flex-col">
-
-    <!-- 헤더 (햄버거 버튼) -->
-    <div th:replace="fragments/adminFragments :: hamburger"></div>
-
-    <div class="flex flex-1">
-        <div th:replace="fragments/adminFragments :: sideBar"></div>
-
-        <main class="flex-1 p-6 bg-gray-100">
-            <h1 class="text-2xl font-bold mb-4">콘텐츠 영역</h1>
-            <p>이곳에 관리자 화면 내용이 들어갑니다.</p>
-        </main>
-    
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/admin_layout">
+<th:block layout:fragment="content">
+    <div class="text-center bg-[#FAF1E3] h-[330px] content-center">
+        <h2 class="pb-3 text-2xl">콘텐츠 1 지워도됨</h2>
     </div>
-
-<!-- 스크립트 -->
-<script th:src="@{/js/admin/adminSideBar.js}"></script>
-</body>
+    <div class="text-center bg-[#C5A586] h-[330px] content-center">
+        <h2 class="pb-3 text-2xl">콘텐츠 2 지워도됨</h2>
+    </div>
+</th:block>
 </html>

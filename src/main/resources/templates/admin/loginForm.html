@@ -1,24 +1,18 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <!-- Fontawesome 연결 Embed Code Start-->
-    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
-    <!-- Fontawesome 연결 Embed Code End-->
-    <script src="https://cdn.tailwindcss.com"></script>
     <title>관리자 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
 </head>
-<body class="h-screen flex flex-col">
-
-    <!-- 헤더 (햄버거 버튼) -->
-    <div th:replace="fragments/adminFragments :: hamburger"></div>
-
-    <div class="flex flex-1">
-        <div th:replace="fragments/adminFragments :: sideBar"></div>
-        
+<th:block layout:fragment="content">
         <main class="flex-1 flex flex-col items-center justify-start bg-gray-100 p-6">
             <!-- (기존) 콘텐츠 영역 헤딩 -->
             <h1 class="text-2xl font-bold my-6">관리자 로그인 페이지</h1>
@@ -142,7 +136,6 @@
             console.error("로그인 폼 (id='adminLoginForm')을 찾을 수 없습니다.");
         }
     </script>
-<!-- 스크립트 -->
-<script th:src="@{/js/admin/adminSideBar.js}"></script>
-</body>
+    <div id="toast-container" class="fixed inset-x-0 top-0 z-50 space-y-3 text-center"></div>
+    </th:block>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,7 @@
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 rounded">
     <h1 class="text-2xl font-bold mb-4"
         th:text="${form.id==null?'새 문진 세트 생성':'문진 세트 수정'}">제목</h1>
 
@@ -82,6 +83,7 @@
             <a th:href="@{/surveySets}" class="bg-gray-500 text-white px-2 py-1 rounded">취소</a>
         </div>
     </form>
+    </div>
 
     <!-- 1) Thymeleaf 변수 치환용 inline 스크립트 -->
     <script th:inline="javascript">
