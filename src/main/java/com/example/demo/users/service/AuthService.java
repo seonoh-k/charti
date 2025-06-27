@@ -1,6 +1,7 @@
 package com.example.demo.users.service;
 
 import com.example.demo.dto.AddressDTO;
+import com.example.demo.dto.AdminDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.info.*;
 import com.example.demo.dto.request.ExpertJoinRequest;
@@ -17,6 +18,7 @@ import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.LoginHistoryRepository;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.*;
+import com.example.demo.users.exception.AdminNotFoundException;
 import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.*;
@@ -52,6 +54,7 @@ public class AuthService {
     private final AdminRepository adminRepository;
     private final AdminQueryRepository adminQueryRepository;
     private final AdminLoginHistoryRepository adminLoginHistoryRepository;
+    private final AdminService adminService;
 
     private Users commonInfoToEntity(CommonInfo commonInfo){
         Users users = Users.builder()
@@ -270,6 +273,22 @@ public class AuthService {
         UserDTO userDTO = userService.getMemberByUUID(uuid);
 
         return userDTO;
+    }
+    public AdminDTO getLoginAdmin() throws AdminNotFoundException {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        String uuid = (String) authentication.getPrincipal();
+
+        String role = authentication.getAuthorities()
+                .stream()
+                .findFirst()
+                .get()
+                .toString();
+
+        AdminDTO adminDTO = adminService.getAdminDTOByUUIDToAuth(uuid);
+
+        return adminDTO;
     }
 
 

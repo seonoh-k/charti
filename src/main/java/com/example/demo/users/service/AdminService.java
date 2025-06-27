@@ -33,6 +33,16 @@ public class AdminService {
         }
 
     };
+    public AdminDTO getAdminDTOByUUIDToAuth(String uuid) throws AdminNotFoundException{
+        Optional<AdminDTO> admin = adminRepository.getAdminDTOByUUIDToAuth(uuid);
+        if (admin.isEmpty()){
+            throw new AdminNotFoundException();
+        } else {
+            AdminDTO adminDTO = admin.get();
+            return adminDTO;
+        }
+
+    };
 
     public boolean existsAdminByUsername(String username){
         return adminRepository.existsByUsername(username);

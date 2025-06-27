@@ -47,7 +47,17 @@ public interface AdminRepository extends JpaRepository<Admin,Long> {
         WHERE a.username = :username
         """)
     Optional<AdminDTO> getAdminDTOByUsername(@Param("username") String username);
-
+    @Query(value = """
+        SELECT new com.example.demo.dto.AdminDTO(
+            a.id,
+            a.uuid,
+            a.name,
+            a.role
+        )
+        FROM Admin a
+        WHERE a.uuid = :uuid
+        """)
+    Optional<AdminDTO> getAdminDTOByUUIDToAuth(@Param("uuid") String uuid);
 
     Optional<Admin> existsByUuid(String uuid);
 

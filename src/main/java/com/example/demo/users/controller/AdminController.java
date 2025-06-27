@@ -1,41 +1,31 @@
 package com.example.demo.users.controller;
 
+import com.example.demo.annotation.AdminActionHistoryAuditLog;
 import com.example.demo.dto.*;
 import com.example.demo.dto.paging.PagingRequest;
+import com.example.demo.dto.paging.PagingResponse;
 import com.example.demo.dto.paging.PagingResultDTO;
-import com.example.demo.dto.request.AdminCreateRequest;
-import com.example.demo.dto.request.ExpertUpdateRequestByAdmin;
-import com.example.demo.dto.request.ManagerUpdateRequestByAdmin;
-import com.example.demo.dto.request.MemberUpdateRequestByAdmin;
+import com.example.demo.dto.request.*;
 import com.example.demo.dto.response.ApiResponse;
+import com.example.demo.enums.AdminActionHistoryCategory;
 import com.example.demo.exception.FirebaseAuthenticationException;
-import com.example.demo.exception.JwtTokenFormatInvalidException;
-import com.example.demo.exception.JwtTokenNotFoundException;
 import com.example.demo.jwt.JwtUtil;
 import com.example.demo.users.entity.*;
 import com.example.demo.users.exception.AdminAlreadyExistsException;
-import com.example.demo.users.exception.AdminNotFoundException;
 import com.example.demo.users.exception.UserIsNotDeletedException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.*;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
-import com.example.demo.util.IpUtils;
-import com.example.demo.util.StatusCode;
 import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.FirebaseToken;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.auth.AUTH;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -51,7 +41,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 @Controller
 @RequiredArgsConstructor
 @Log4j2
@@ -69,11 +58,14 @@ public class AdminController {
 
 
 
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.TEST)
     @GetMapping("/admin")
     public String showAdminPage() {
         log.info("[GET] 👨‍💼 request Admin Page");
         return "admin";
     }
+
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_ADMIN_MAIN)
     @GetMapping("/admin/main")
     public String showAdminMainPage(Model model) {
         log.info("[GET] 👨‍💼 request Admin Main Page");
@@ -97,12 +89,15 @@ public class AdminController {
         return "admin/loginForm";
     }
 
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_ADMIN_CREATE_FORM)
     @GetMapping("/admin/create/admin")
     public String showCreateAdminPage(Model model) {
         log.info("[GET] 👨‍💼 request Create Admin Page");
 
         return "admin/admin/createAdminForm";
     }
+
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.CHECK_ADMIN_VALIDATION)
     @PostMapping("/admin/check/admin")
     public ResponseEntity<ApiResponse> checkAdminValidation(@Valid @RequestBody AdminCreateRequest request,
                                                    BindingResult bindingResult,
@@ -139,6 +134,7 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse(GlobalStatus.OK));
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.CREATE_ADMIN)
     @PostMapping("/admin/create/admin")
     public ResponseEntity<ApiResponse> createAdmin(@RequestBody AdminCreateRequest request,
                                                    Model model) {
@@ -178,6 +174,7 @@ public class AdminController {
                 .body(new ApiResponse(GlobalStatus.OK));
     }
 
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_USERS_DELETED_LIST)
     @GetMapping("/admin/users/all/deleted")
     public String showAdminDeletedUserListPage(@ModelAttribute PagingRequest pagingRequest,
                                           @RequestParam(required = false) String type,
@@ -197,6 +194,7 @@ public class AdminController {
         return "admin/users/deletedUserList"; // 뷰 파일
     }
 
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_MEMBER_LIST)
     @GetMapping("/admin/member/all")
     public String showAdminMemberListPage(@ModelAttribute PagingRequest pagingRequest,
                                           @RequestParam(required = false) String type,
@@ -215,6 +213,7 @@ public class AdminController {
 
         return "admin/member/memberList"; // 뷰 파일
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_EXPERT_LIST)
     @GetMapping("/admin/expert/all")
     public String showAdminExpertListPage(@ModelAttribute PagingRequest pagingRequest,
                                           @RequestParam(required = false) String type,
@@ -234,6 +233,7 @@ public class AdminController {
 
         return "admin/expert/expertList"; // 뷰 파일
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_MANAGER_LIST)
     @GetMapping("/admin/manager/all")
     public String showAdminManagerListPage(@ModelAttribute PagingRequest pagingRequest,
                                            @RequestParam(required = false) String type,
@@ -254,6 +254,7 @@ public class AdminController {
         return "admin/manager/managerList"; // 뷰 파일
     }
 
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_USERS_DELETED)
     @GetMapping("/admin/users/all/deleted/search")
     public ResponseEntity<ApiResponse> searchAdminDeletedUserListPage(@ModelAttribute PagingRequest pagingRequest,
                                                @RequestParam(required = false) String type,
@@ -270,6 +271,7 @@ public class AdminController {
 
         return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_MEMBER)
     @GetMapping("/admin/member/all/search")
     public ResponseEntity<ApiResponse> searchAdminMemberListPage(@ModelAttribute PagingRequest pagingRequest,
                                                                  @RequestParam(required = false) String type,
@@ -287,7 +289,7 @@ public class AdminController {
 
         return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
     }
-
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_EXPERT)
     @GetMapping("/admin/expert/all/search")
     public ResponseEntity<ApiResponse> searchAdminExpertListPage(@ModelAttribute PagingRequest pagingRequest,
                                                                  @RequestParam(required = false) String type,
@@ -306,6 +308,7 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
     }
 
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_MANAGER)
     @GetMapping("/admin/manager/all/search")
     public ResponseEntity<ApiResponse> searchAdminManagerListPage(@ModelAttribute PagingRequest pagingRequest,
                                              @RequestParam(required = false) String type,
@@ -322,6 +325,7 @@ public class AdminController {
 
         return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_USERS_DELETED_RESTORE_FORM)
     @GetMapping("/admin/users/deleted/{id:[0-9]+}")
     public String showAdminDeletedUserUpdatePage(@PathVariable Long id,
                                                 @ModelAttribute PagingRequest pagingRequest,
@@ -353,6 +357,7 @@ public class AdminController {
 
         return "admin/users/deletedUserUpdateForm"; // 뷰 파일
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_MEMBER_UPDATE_FORM)
     @GetMapping("/admin/member/{id:[0-9]+}")
     public String showAdminMemberUpdatePage(@ModelAttribute PagingRequest pagingRequest,
                                             @PathVariable Long id,
@@ -379,7 +384,7 @@ public class AdminController {
 
 
 
-
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_EXPERT_UPDATE_FORM)
     @GetMapping("/admin/expert/{id:[0-9]+}")
     public String showAdminExpertUpdatePage(@PathVariable Long id,
                                             @ModelAttribute PagingRequest pagingRequest,
@@ -402,6 +407,7 @@ public class AdminController {
 
         return "admin/expert/updateForm";
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_MANAGER_UPDATE_FORM)
     @GetMapping("/admin/manager/{id:[0-9]+}")
     public String showAdminManagerUpdatePage(@ModelAttribute PagingRequest pagingRequest,
                                             @PathVariable Long id,
@@ -431,7 +437,7 @@ public class AdminController {
 
         return "admin/manager/updateForm";
     }
-
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.UPDATE_MEMBER)
     @PostMapping("/admin/member/{id:[0-9]+}")
     public ResponseEntity<ApiResponse> updateMember( @PathVariable Long id,
                                                      @RequestBody MemberUpdateRequestByAdmin request,
@@ -485,6 +491,7 @@ public class AdminController {
 
 
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.UPDATE_EXPERT)
     @PostMapping("/admin/expert/{id:[0-9]+}")
     public ResponseEntity<ApiResponse> updateExpert( @PathVariable Long id,
                                                     @RequestBody @Valid ExpertUpdateRequestByAdmin request,
@@ -531,6 +538,7 @@ public class AdminController {
         }
 
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.UPDATE_MANAGER)
     @PostMapping("/admin/manager/{id:[0-9]+}")
     public ResponseEntity<ApiResponse> updateManager(@PathVariable Long id,
                                                      @RequestBody @Valid ManagerUpdateRequestByAdmin request,
@@ -576,7 +584,7 @@ public class AdminController {
                     .body(new ApiResponse(GlobalStatus.SERVER_ERROR, "서버 오류 발생"));
         }
     }
-
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_MEMBER_CHILD_LIST)
     @GetMapping("/admin/member/{id:[0-9]+}/children")
     public String showAdminMemberChildrenPage(@ModelAttribute PagingRequest pagingRequest,
                                             @PathVariable Long id,
@@ -604,6 +612,7 @@ public class AdminController {
 
         return "admin/member/memberChildren";
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_MANAGER_CHILD_LIST)
     @GetMapping("/admin/manager/{id:[0-9]+}/children")
     public String showAdminManagerChildrenPage(@PathVariable Long id,
                                                @ModelAttribute PagingRequest pagingRequest,
@@ -636,6 +645,7 @@ public class AdminController {
         return "admin/manager/managerChildren";
     }
 
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.RESTORE_USERS)
     @PostMapping("/admin/users/deleted/restore/{id:[0-9]+}")
     public ResponseEntity<ApiResponse> restoreDeletedUsers(@PathVariable Long id,
                                                            @ModelAttribute PagingRequest pagingRequest,
@@ -662,6 +672,184 @@ public class AdminController {
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse(GlobalStatus.OK));
+    }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_EXPERT_UNAPPROVE_LIST)
+    @GetMapping("/admin/expert-applicants")
+    public String showExpertApplicants(
+            @ModelAttribute PagingRequest pagingRequest,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String keyword,
+            Model model) {
+
+        Pageable pageable = pagingRequest.toPageable();
+        PagingResultDTO<ExpertDTO, Expert> result =
+                (type != null && keyword != null && !keyword.isBlank())
+                        ? expertService.searchUnapprovedExpertList(type, keyword, pageable)
+                        : expertService.getUnapprovedExpertList(pageable);
+
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("result", result);
+
+        return "admin/expertApplicants";
+    }
+
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_EXPERT_UNAPPROVE)
+    @GetMapping("/admin/expert-applicants/search")
+    public ResponseEntity<ApiResponse<?>> searchExpertApplicants(
+            @RequestParam String type,
+            @RequestParam String keyword,
+            @ModelAttribute PagingRequest pagingRequest) {
+
+        Pageable pageable = pagingRequest.toPageable();
+        PagingResultDTO<ExpertDTO, Expert> result = expertService.searchUnapprovedExpertList(type, keyword, pageable);
+
+        if (result.getTotalElements() <= 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
+    }
+
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.APPROVE_EXPERT)
+    @PostMapping("/admin/approve-expert")
+    public ResponseEntity<ApiResponse> approveExpert(@ModelAttribute PagingRequest pagingRequest,
+                                                     @RequestBody IdsRequest ids ,
+                                                     @RequestParam(required = false) String type,
+                                                     @RequestParam(required = false) String keyword,
+                                                     RedirectAttributes redirectAttributes,
+                                                     Model model) throws FirebaseAuthException{
+
+        // 리스트 순회 -> 승인
+        // 1. 파이어 베이스 클레임 변경
+        // 2. 데이터베이스 정보 변경
+        // 3. 성공 시 실패에 따라 응답 코드 발생
+        // 5. 모달 창 띄워줌
+        try{
+            for (Long id : ids.getIds()){
+                log.info("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥ID : {} 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥",id);
+                firebaseService.setRoleToExpertInClaim(id);
+                expertService.approveExpert(id);
+            }
+        } catch (UserNotFoundException userNotFoundException){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.USER_NOT_FOUND));
+        } catch (FirebaseAuthenticationException firebaseAuthenticationException){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(GlobalStatus.FIREBASE_ERROR));
+        }
+
+        Pageable pageable = pagingRequest.toPageable();
+
+        PagingResultDTO<ExpertDTO, Expert> result = expertService.getUnapprovedExpertList(pageable);
+
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("result",result);
+
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse(GlobalStatus.OK));
+    }
+    /**
+     * GET /api/admin/managers/pending
+     * localhost:8080/api/admin/managers/pending?page=0&size=5
+     *
+     * <ul>
+     *     <li>페이지 :  현재 페이지</li>
+     *     <li>페이지 하나당 보여줄 요소 개수</li>
+     *     <li>정렬 기준 필드를 기준</li>
+     *     <li>방향 [asc, desc]</li>
+     * </ul>
+     * @return
+     */
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_MANAGER_UNAPPROVE_LIST)
+    @GetMapping("/admin/manager-applicants")
+    public String showAdminManagerApplicantsPage(@ModelAttribute PagingRequest pagingRequest,
+                                                 @RequestParam(required = false) String type,
+                                                 @RequestParam(required = false) String keyword,
+                                                 Model model) {
+
+        Pageable pageable = pagingRequest.toPageable();
+
+        PagingResultDTO<ManagerDTO, Manager> result =
+                (type != null && keyword != null && !keyword.isBlank())
+                        ? managerService.searchUnapprovedManagerList(type, keyword, pageable)
+                        : managerService.getUnapprovedManagerList(pageable);
+
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("result", result);
+
+        return "admin/managerApplicants"; // 뷰 파일
+    }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_MANAGER_UNAPPROVE)
+    @GetMapping("/admin/manager-applicants/search")
+    public ResponseEntity<ApiResponse<?>> searchManagerApplicants(
+            @RequestParam String type,
+            @RequestParam String keyword,
+            @ModelAttribute PagingRequest pagingRequest) {
+
+        Pageable pageable = pagingRequest.toPageable();
+        PagingResultDTO<ManagerDTO, Manager> result = managerService.searchUnapprovedManagerList(type, keyword, pageable);
+
+        if (result.getTotalElements() <= 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
+    }
+
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.APPROVE_MANAGER)
+    @PostMapping("/admin/approve-manager")
+    public ResponseEntity<ApiResponse> approveManager(@ModelAttribute PagingRequest pagingRequest,
+                                                      @RequestBody IdsRequest ids ,
+                                                      @RequestParam(required = false) String type,
+                                                      @RequestParam(required = false) String keyword,
+                                                      RedirectAttributes redirectAttributes,
+                                                      Model model) throws FirebaseAuthException {
+
+        // 리스트 순회 -> 승인
+        // 1. 파이어 베이스 클레임 변경
+        // 2. 데이터베이스 정보 변경
+        // 3. 성공 실패에 따라 응답 코드 발생
+        try{
+            for (Long id : ids.getIds()){
+                firebaseService.setRoleToManagerInClaim(id);
+                managerService.approveManager(id);
+            }
+        } catch (UserNotFoundException userNotFoundException){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(AuthStatus.USER_NOT_FOUND));
+        } catch (FirebaseAuthenticationException firebaseAuthenticationException){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(GlobalStatus.FIREBASE_ERROR));
+        }
+
+        Pageable pageable = pagingRequest.toPageable();
+
+        PagingResultDTO<ManagerDTO, Manager> result = managerService.getUnapprovedManagerList(pageable);
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("result",result);
+
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse(GlobalStatus.OK));
+    }
+
+
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_MANAGER_UNAPPROVE)
+    @PostMapping("/api/admin/manager-applicants")
+    public ResponseEntity<ApiResponse<PagingResponse<ManagerDTO>>> getPendingManagerList(@RequestBody PagingRequest request) {
+        Pageable pageable = request.toPageable();
+        PagingResultDTO<ManagerDTO, Manager> result = managerService.getUnapprovedManagerList(pageable);
+
+        PagingResponse<ManagerDTO> response = PagingResponse.from(result);
+
+        return ResponseEntity.ok(new ApiResponse<>(GlobalStatus.SUCCESS_WITH_DATA, response));
     }
 
 }
