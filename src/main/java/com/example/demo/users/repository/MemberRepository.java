@@ -17,5 +17,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @EntityGraph(attributePaths = {"users"})
     Optional<Member> findWithUsersById(Long id);
 
+    Optional<Member> findByUsersUuid(String name);
     Page<Member> findDistinctByChildren_Group_Id(Long groupId, Pageable pageable);
 }

@@ -24,6 +24,16 @@
                     th:text="|${s == 'ALL' ? '전체' : T(com.example.demo.enums.MatchingStatus).valueOf(s).displayName}|">
             </option>
         </select>
+
+        <!-- 제목 검색 -->
+        <label for="keyword" class="font-semibold">제목:</label>
+        <input type="text"
+               id="keyword"
+               name="keyword"
+               placeholder="제목 검색"
+               th:value="${keyword}"
+               class="border p-1 rounded"/>
+
         <button type="submit"
                 class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
             조회

@@ -35,7 +35,8 @@ public interface ChildRepository extends JpaRepository<Child, Long> {
      * @param groupId 기관(Group)의 ID
      * @return 자녀(Child) 목록
      */
-    List<Child> findByGroupId(Long groupId);
+    List<Child> findByGroupId(Long id);
 
+    List<Child> findByParent_Id(Long parentId);
     long countByGroup(Group group);
 }

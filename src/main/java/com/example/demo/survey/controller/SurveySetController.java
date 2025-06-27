@@ -22,17 +22,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping("/surveySets")
+@RequestMapping("/admin/surveySet")
 @RequiredArgsConstructor
 public class SurveySetController {
     private final SurveySetService service;
 
-    // ① 실제 선택 가능한 연령대만 (ALL, VARIOUS 제외)
+    // 실제 선택 가능한 연령대만 (ALL, VARIOUS 제외)
     private final List<AgeGroup> ageOptions = Arrays.stream(AgeGroup.values())
             .filter(ag -> ag != AgeGroup.ALL && ag != AgeGroup.VARIOUS)
             .collect(Collectors.toList());
 
-    // ② 실제 선택 가능한 카테고리만
+    // 실제 선택 가능한 카테고리만
     private final List<SurveyCategory> categoryOptions = Arrays.stream(SurveyCategory.values())
             .filter(sc -> sc != SurveyCategory.ALL && sc != SurveyCategory.VARIOUS)
             .collect(Collectors.toList());
@@ -49,7 +49,7 @@ public class SurveySetController {
         // 뷰에 넘겨줄 필터용 옵션
         model.addAttribute("ageOptions", ageOptions);
         model.addAttribute("categoryOptions", categoryOptions);
-        return "survey/setList";
+        return "admin/surveys/setList";
     }
 
     // 상세
@@ -61,7 +61,7 @@ public class SurveySetController {
         List<? extends BaseSurvey> surveys = service.getSurveysBySetId(id);
         model.addAttribute("surveys", surveys);
 
-        return "survey/setDetail";
+        return "admin/surveys/setDetail";
     }
 
     // 생성 폼
@@ -75,7 +75,7 @@ public class SurveySetController {
                         ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
                         : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
         );
-        return "survey/setForm";
+        return "admin/surveys/setForm";
     }
 
     // 수정 폼
@@ -100,7 +100,7 @@ public class SurveySetController {
                         ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
                         : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
         );
-        return "survey/setForm";
+        return "admin/surveys/setForm";
     }
 
     // 저장 처리
@@ -113,7 +113,7 @@ public class SurveySetController {
                             ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
                             : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
             );
-            return "survey/setForm";
+            return "admin/surveys/setForm";
         }
 
         try {
@@ -125,10 +125,10 @@ public class SurveySetController {
                             ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
                             : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
             );
-            return "survey/setForm";
+            return "admin/surveys/setForm";
         }
 
-        return "redirect:/surveySets";
+        return "redirect:/admin/surveySet";
     }
 
 }
