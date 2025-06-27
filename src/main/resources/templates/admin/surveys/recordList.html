@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}">
+      layout:decorate="~{layout/admin_layout}">
 <head>
     <meta charset="UTF-8">
     <title>기록 문진 목록</title>
@@ -9,10 +9,16 @@
 </head>
 
 <th:block layout:fragment="content">
-    <div class="max-w-6xl mx-auto p-6">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 rounded">
+        <div class="flex justify-center mt-3 mb-5 space-x-6">
+            <a href="/admin/surveys/record" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+                문진 목록
+            </a>
+            <a href="/admin/surveys/record/history" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+                문진 이력
+            </a>
+        </div>
         <h1 class="text-2xl font-bold mb-4">기록 문진 목록</h1>
-
-        <!-- 필터 -->
         <form th:action="@{/admin/surveys/record}" method="get" class="mb-6 flex gap-4">
             <select name="ageGroup" class="border p-2 rounded">
                 <option value="ALL" th:selected="${selectedAgeGroup == 'ALL'}">전체</option>
