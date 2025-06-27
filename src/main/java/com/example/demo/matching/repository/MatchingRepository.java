@@ -23,4 +23,6 @@ public interface MatchingRepository extends JpaRepository<Matching, Long> {
     // 전문가별 + 상태별 상담 조회
     Page<Matching> findByExpertIdAndStatus(Long expertId, MatchingStatus status, Pageable pageable);
 
+    // 전문가별 단순 조회
+    List<Matching> findAllById(Long id);
 }
