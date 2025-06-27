@@ -34,23 +34,23 @@ public class UserController {
 
     private final UserService userService;
 
-    @PutMapping("/update")
-    public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest request,
-                                        Authentication authentication) {
-        String uid = authentication.getPrincipal().toString();
-        try {
-
-            userService.updateUser(request, uid);
-            return ResponseEntity.ok(new ApiResponse(UserStatus.UPDATE_SUCCESS));
-
-        } catch (FirebaseAuthException e) {
-            return ResponseEntity.internalServerError()
-                    .body(new ApiResponse(GlobalStatus.FIREBASE_ERROR, "Firebase 업데이트 실패"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse(GlobalStatus.AUTHENTICATION_FAIL, e.getMessage()));
-        }
-    }
+//    @PutMapping("/update")
+//    public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest request,
+//                                        Authentication authentication) {
+//        String uid = authentication.getPrincipal().toString();
+//        try {
+//
+//            userService.updateUser(request, uid);
+//            return ResponseEntity.ok(new ApiResponse(UserStatus.UPDATE_SUCCESS));
+//
+//        } catch (FirebaseAuthException e) {
+//            return ResponseEntity.internalServerError()
+//                    .body(new ApiResponse(GlobalStatus.FIREBASE_ERROR, "Firebase 업데이트 실패"));
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest()
+//                    .body(new ApiResponse(GlobalStatus.AUTHENTICATION_FAIL, e.getMessage()));
+//        }
+//    }
 
     @PutMapping("/update/password")
     public ResponseEntity<?> changePassword(@RequestBody PasswordChangeRequest request,

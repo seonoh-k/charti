@@ -1,9 +1,6 @@
 package com.example.demo.users.controller;
 
-import com.example.demo.dto.AddressDTO;
-import com.example.demo.dto.ExpertDTO;
-import com.example.demo.dto.ManagerDTO;
-import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.*;
 import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResponse;
 import com.example.demo.dto.paging.PagingResultDTO;
@@ -12,9 +9,12 @@ import com.example.demo.dto.request.ManagerUpdateRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.service.AddressService;
 import com.example.demo.exception.FirebaseAuthenticationException;
+import com.example.demo.service.GroupService;
 import com.example.demo.users.entity.Manager;
+import com.example.demo.users.entity.Member;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.service.*;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.util.AuthStatus;
@@ -34,6 +34,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -46,7 +49,7 @@ public class ManagerController {
     private final AddressService addressService;
     private final FirebaseService firebaseService;
     private final ChildService childService;
-
+    private final GroupService groupService;
 
     @GetMapping("/manager")
     public String showMangerPage() {
@@ -75,21 +78,24 @@ public class ManagerController {
     public String showGroupManagerPage(Model model) {
         log.info("[GET] 👨‍💼 request groupManager Page");
 
-        UserDTO loginUser = authService.getLoginUser(); // 유저 전체 정보
+        // 1. 로그인 유저, 그룹, 담당자 등 기존 정보 세팅
+        UserDTO loginUser = authService.getLoginUser();
         AddressDTO address = addressService.getAddressByUid(loginUser.getUuid());
-        ManagerDTO  managerDTO = managerService.getManagerById(loginUser.getId());
+        ManagerDTO managerDTO = managerService.getManagerById(loginUser.getId());
         managerDTO.setAddress(address);
 
-        log.info("📞 managerDTO.getGroupEmail = {}", managerDTO.getGroupEmail());
-        log.info("📞 managerDTO.getGroupId = {}", managerDTO.getGroupId());
-        log.info("📞 managerDTO.getTargetGroup = {}", managerDTO.getTargetGroup());
-        log.info("📞 managerDTO.getGroupPhoneNumber = {}", managerDTO.getGroupPhoneNumber());
-        model.addAttribute("groupInfo", managerDTO);
-        model.addAttribute("hasChildren", !managerDTO.getChildren().isEmpty());
+        // 2. 그룹 아이디 뽑기
+        Long groupId = managerDTO.getGroupId();
+        // 3. 자녀+부모 정보 DTO 리스트로 조회 (새 쿼리/DTO 사용)
+        List<ParentWithChildrenDTO> parentCards = groupService.getChildrenWithParentByGroupId(groupId);
 
+        // 4. 모델에 정보 추가
+        model.addAttribute("groupInfo", managerDTO);
+        model.addAttribute("parentCards", parentCards); // 뷰에서 반복문 돌릴 데이터
+
+        // 5. 화면 이동
         return "manager/groupManager";
     }
-
     @PostMapping("/manager/update")
     public String updateManager(
             @ModelAttribute ManagerUpdateRequest req,
