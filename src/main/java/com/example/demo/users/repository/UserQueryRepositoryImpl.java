@@ -1,6 +1,6 @@
 package com.example.demo.users.repository;
 
-import com.example.demo.dto.UserAuthDTO;
+import com.example.demo.dto.auth.UserAuthDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.users.entity.QUsers;
 import com.querydsl.core.BooleanBuilder;
@@ -23,7 +23,7 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Optional<UserAuthDTO> findAuthByUuid(String uuid) {
+    public Optional<UserAuthDTO> getUserAuthDTOByUuid(String uuid) {
         QUsers u = QUsers.users;
 
         UserAuthDTO dto = queryFactory

@@ -118,6 +118,19 @@ const firebaseConfig = {
 
                 window.location.href = '/main';
             } else {
+
+                const recordAttemptFailRes = await fetch('/auth/login/attempt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        success: false,
+                        failureReason: result.message
+                    })
+                });
+
+                const recordResult = await recordAttemptFailRes.json();
+
                 console.log(result.code);
                 console.log(result.message);
                 alert('로그인 실패: ' + result.message);
@@ -133,6 +146,7 @@ const firebaseConfig = {
                     failureReason: error.message
                 })
             });
+
             const recordResult = await recordAttemptFailRes.json();
             console.group('❌ fetch 에러');
             console.log('error.name   :', error.name);      // 예: TypeError, HTTPError
