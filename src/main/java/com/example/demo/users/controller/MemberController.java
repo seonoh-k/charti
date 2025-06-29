@@ -1,13 +1,18 @@
 package com.example.demo.users.controller;
 
-import com.example.demo.dto.AddressDTO;
-import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.*;
 import com.example.demo.dto.request.UserUpdateRequest;
 import com.example.demo.service.AddressService;
+import com.example.demo.survey.dto.DailyAnswerDto;
+import com.example.demo.survey.dto.RecordAnswerResponse;
+import com.example.demo.survey.service.DailyAnswerService;
+import com.example.demo.survey.service.RecordAnswerService;
+import com.example.demo.users.entity.Child;
+import com.example.demo.users.entity.Member;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.exception.UserNotFoundException;
-import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.AuthService;
+import com.example.demo.users.service.ChildService;
 import com.example.demo.users.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,14 +26,22 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Controller
 @RequiredArgsConstructor
 @Log4j2
 public class MemberController {
 
     private final UserService userService;
+    private final ChildService childService;
     private final AuthService authService;
     private final AddressService addressService;
+    private final DailyAnswerService dailyAnswerService;
+    private final RecordAnswerService recordAnswerService;
+    private final MemberService memberService;
 
     @GetMapping("/member")
     public String showMemberPage() {
@@ -36,32 +49,67 @@ public class MemberController {
         return "member";
     }
 
-    @GetMapping("/myInfo")
+    @GetMapping("/mypage")
     public String myInfoPage() {
         UserDTO userDTO = authService.getLoginUser();
         Role role = Role.valueOf(userDTO.getRole());
 
         // ✅ 권한에 따라 마이페이지 리다이렉트
         return switch (role) {
-            case ROLE_MEMBER -> "redirect:/member/myPage";
+            case ROLE_MEMBER -> "redirect:/member/main";
             case ROLE_EXPERT -> "redirect:/expert/myPage";
             case ROLE_MANAGER -> "redirect:/manager/myPage";
             default -> "redirect:/error";
         };
     }
 
+    @GetMapping("/member/main")
+    public String showMyPageMain(Model model) {
+        UserDTO user = authService.getLoginUser();
+
+        if(!user.getRole().equals(Role.ROLE_MEMBER.getKey())) {
+            return "redirect:/error";
+        }
+        Member memberInfo = memberService.get(user.getId());
+        MemberDTO member = new MemberDTO(memberInfo);
+
+        List<Child> children = memberInfo.getChildren();
+        List<ChildDTO> childList = new ArrayList<>();
+        for(Child child : children) {
+            // 데일리 문진 이력 조회 - 최근 5개
+            List<DailyAnswerDto> dailyAnswer = dailyAnswerService.getPagedAnswerList(child.getId());
+            List<DailyAnswerDto> dAnswer = new ArrayList<>(
+                    dailyAnswer.stream().collect(Collectors.toMap(
+                            DailyAnswerDto::getCreated,
+                            DailyAnswerDto -> DailyAnswerDto,
+                            (existing, replacement) -> existing
+                    )).values()
+            );
+            // 기록 문진 이력 조회 - 최근 5개
+            List<RecordAnswerResponse> recordAnswer = recordAnswerService.getPagedAnswerList(child.getId());
+            List<RecordAnswerResponse> rAnswer = new ArrayList<>(
+                    recordAnswer.stream().collect(Collectors.toMap(
+                            RecordAnswerResponse::getCreated,
+                            RecordAnswerResponse -> RecordAnswerResponse,
+                            (existing, replacement) -> existing
+                    )).values()
+            );
+            childList.add(new ChildDTO(child, dAnswer, rAnswer));
+        }
+
+        model.addAttribute("member", member);
+        model.addAttribute("childList", childList);
+
+        return "member/main";
+    }
+
     @GetMapping("/member/myPage")
     public String showMemberMyPage(Model model) {
-        log.info("[GET] 👨‍💼 request member Page");
-        UserDTO userDTO = authService.getLoginUser();
 
-        AddressDTO address =  addressService.getAddressByUid(userDTO.getUuid());
-
-        userDTO.setAddress(address);
-        model.addAttribute("userInfo", userDTO);
 
         return "member/myPage";
     }
+
     @PostMapping("/member/update")
     public String updateMemberInfo(
             @ModelAttribute UserUpdateRequest req,

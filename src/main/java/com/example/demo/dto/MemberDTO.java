@@ -5,6 +5,7 @@ import com.example.demo.users.entity.Users;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Getter
@@ -56,17 +57,17 @@ public class MemberDTO {
                 .createdAt(user.getCreatedAt())
                 .build();
     }
-    public MemberDTO(Long id, String name, String nickname, String username,
-                     String phoneNumber, String provider, Integer totalPoint,
-                     LocalDateTime createdAt) {
-        this.id = id;
-        this.name = name;
-        this.nickname = nickname;
-        this.username = username; // email
-        this.phoneNumber = phoneNumber;
-        this.provider = provider;
-        this.totalPoint = totalPoint;
-        this.createdAt = createdAt;
+
+    private String created;
+    public MemberDTO(Member member) {
+        this.id = member.getUsers().getId();
+        this.name = member.getUsers().getName();
+        this.nickname = member.getUsers().getNickname();
+        this.username = member.getUsers().getUsername(); // email
+        this.phoneNumber = member.getUsers().getPhoneNumber();
+        this.totalPoint = member.getTotalPoint();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        this.created = member.getUsers().getCreatedAt().format(formatter);
     }
     public MemberDTO(Long id, String name, String nickname, String username,
                      String phoneNumber, String provider, Integer totalPoint,

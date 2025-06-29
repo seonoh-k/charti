@@ -1,12 +1,18 @@
 package com.example.demo.survey.service;
 
+import com.example.demo.survey.dto.DailyAnswerDto;
 import com.example.demo.survey.entity.DailyAnswer;
 import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.repository.DailyAnswerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,6 +48,18 @@ public class DailyAnswerService {
                 .orElseThrow(() -> new EntityNotFoundException("답변을 찾을 수 없습니다."));
         da.markAsDeleted();  // BaseEntity 의 soft-delete 메서드
         repo.save(da);
+    }
+
+    public List<DailyAnswerDto> getPagedAnswerList(Long childId) {
+        Pageable pageable = PageRequest.of(0, 5, Sort.by("createdAt").descending());
+        Page<DailyAnswer> ansList = repo.findAllByChildIdAndDeletedFalse(childId, pageable);
+
+        List<DailyAnswerDto> dtoList = new ArrayList<>();
+        for(DailyAnswer d : ansList.getContent()) {
+            dtoList.add(new DailyAnswerDto(d));
+        }
+
+        return dtoList;
     }
 }
 

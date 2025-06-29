@@ -287,7 +287,7 @@
                 <div class="p-4">
                     <div class="flex items-center justify-between">
                         <a href="/album/${album.id}" class="album-title text-lg font-semibold text-gray-800 truncate">${album.title}</a>
-                        <div class="relative inline-block text-left">
+                        <div class="${isOwner ? '' : 'hidden'} relative inline-block text-left">
                             <button class="kebab-menu-btn text-gray-500 text-2xl hover:text-gray-700">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>

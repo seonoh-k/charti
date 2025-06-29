@@ -1,19 +1,17 @@
 package com.example.demo.dto;
 
 import com.example.demo.enums.AgeGroup;
+import com.example.demo.survey.dto.DailyAnswerDto;
+import com.example.demo.survey.dto.RecordAnswerResponse;
 import com.example.demo.users.entity.Child;
-import com.example.demo.users.entity.Member;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Getter
 @Setter
@@ -114,6 +112,26 @@ public class ChildDTO {
         this.groupPhone = groupPhone;
         this.birthday = birthday;
         this.age = calculateAge();
+    }
+
+    private String birthdate;
+    private List<DailyAnswerDto> dAnswers;
+    private List<RecordAnswerResponse> rAnswers;
+    public ChildDTO(Child child, List<DailyAnswerDto> dAnswers, List<RecordAnswerResponse> rAnswers) {
+        this.id = child.getId();
+        this.birthOrder = child.getBirthOrder();
+        this.name = child.getName();
+        this.nickname = child.getNickname();
+        this.weight = child.getWeight();
+        this.height = child.getHeight();
+        this.gender = child.getGender();
+        this.groupName = child.getGroup() != null ? child.getGroup().getGroupName() : null;
+        this.groupPhone = child.getGroup() != null ? child.getGroup().getGroupPhoneNumber() : null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        this.birthdate = child.getBirthday().format(formatter);
+        this.age = calculateAge();
+        this.dAnswers = dAnswers;
+        this.rAnswers = rAnswers;
     }
 }
 

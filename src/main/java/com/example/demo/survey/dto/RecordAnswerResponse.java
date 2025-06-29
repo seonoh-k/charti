@@ -4,6 +4,7 @@ import com.example.demo.survey.entity.RecordAnswer;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * 기록 문진 답변 정보를 응답용으로 변환하는 DTO.
@@ -76,5 +77,14 @@ public class RecordAnswerResponse {
                 entity.getChild().getName(),
                 entity.getCreatedAt()
         );
+    }
+
+    // 일반 회원의 마이페이지에서 기록 문진 이력을 간략히 조회
+    private String created;
+    public RecordAnswerResponse (RecordAnswer answer) {
+        this.answerId = answer.getAnswerId();
+        this.childName = answer.getChild().getName();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        this.created = answer.getCreatedAt().format(formatter);
     }
 }
