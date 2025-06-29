@@ -422,11 +422,13 @@ public class FirebaseService {
 
     @Transactional
     public void initFirebasePassword(String uuid) throws FirebaseAuthException{
-        String DEFAULT_PASSWORD = "Charti@1234";
+        String DEFAULT_PASSWORD = "@Charti1234";
         UserRecord.UpdateRequest request = new UserRecord.UpdateRequest(uuid)
                 .setPassword(DEFAULT_PASSWORD);
         FirebaseAuth.getInstance().updateUser(request);
     }
+
+
 
 
 }

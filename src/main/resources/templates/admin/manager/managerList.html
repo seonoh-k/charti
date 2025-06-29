@@ -23,15 +23,15 @@
                 <!-- 검색 기준 -->
                 <select name="type" id="searchType"
                     class="border border-gray-300 rounded px-3 py-2 text-sm">
-                    <option value="name">이름</option>
-                    <option value="email">이메일</option>
-                    <option value="phoneNumber">전화번호</option>
-                    <option value="groupName">그룹이름</option>
+                    <option value="name" th:selected="${type=='name'}" >이름</option>
+                    <option value="email" th:selected="${type=='email'}" >이메일</option>
+                    <option value="phoneNumber" th:selected="${type=='phoneNumber'}" >전화번호</option>
+                    <option value="groupName" th:selected="${type=='groupName'}" >그룹이름</option>
                 </select>
             
                 <!-- 검색 입력 -->
                 <div class="relative w-full max-w-xs">
-                    <input type="text" name="keyword" id="searchInput" placeholder="검색어 입력"
+                    <input type="text" name="keyword" id="searchInput" placeholder="검색어 입력" th:value="${keyword}"
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring" />
                     <div id="suggestions"
                         class="absolute top-full left-0 w-full mt-1 bg-white border border-gray-300 rounded shadow hidden z-20 max-h-60 overflow-y-auto text-sm">
