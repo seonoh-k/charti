@@ -16,8 +16,8 @@
     <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 rounded">
             <h1 class="text-2xl font-bold mb-4">전문가 목록</h1>
             <!-- 검색바 (폼 없이 구현) -->
-            <div class="flex justify-end gap-2 mb-6">
-                <!-- 검색 기준 -->
+            <!-- <div class="flex justify-end gap-2 mb-6">
+
                 <select id="searchType"
                         class="border border-gray-300 rounded px-3 py-2 text-sm">
                     <option value="name">이름</option>
@@ -26,7 +26,7 @@
                     <option value="major">전공</option>
                 </select>
             
-                <!-- 검색 입력 -->
+
                 <div class="relative w-full max-w-xs">
                     <input type="text" id="searchInput" placeholder="검색어 입력"
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring" />
@@ -38,43 +38,86 @@
                     </div>
                 </div>
             
-                <!-- 검색 버튼 -->
+
                 <button id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
-                <!-- 초기화 버튼 -->
+
                 <button id="resetBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
                     <i class="fa-solid fa-rotate-left"></i>
                 </button>
-            </div>
-            <table class="w-full table-auto border text-center" id="expert-table">
-                <thead>
-                <tr>
-                    <th class="border px-4 py-2">id</th>
-                    <th class="border px-4 py-2">이름</th>
-                    <th class="border px-4 py-2">이메일</th>
-                    <th class="border px-4 py-2">전화번호</th>
-                    <th class="border px-4 py-2">전공</th>
-                </tr>
-                </thead>
-                <tbody id="table-body">
-                <tr th:each="expert : ${result.dtoList}">
-                    <td class="border px-4 py-2" th:text="${expert.id}">홍길동</td>
-                    <td class="border px-4 py-2" ><a th:href="@{/admin/expert/{id}(id=${expert.id})}" th:text="${expert.name}" class="hover:underline"></a></td>
-                    <td class="border px-4 py-2" th:text="${expert.username}">hong@test.com</td>
-                    <td class="border px-4 py-2" th:text="${expert.phoneNumber}"></td>
-                    <td class="border px-4 py-2" th:text="${expert.major}"></td>
-                </tr>
-                </tbody>
-            </table>
+            </div> -->
+            <!-- 검색바  -->
+            <form id="searchForm"
+                th:action="@{/admin/expert/all}"
+                th:method="GET"
+                class="flex justify-end gap-2 mb-6">
+                <!-- 검색 기준 -->
+                <select name="type" id="searchType"
+                    class="border border-gray-300 rounded px-3 py-2 text-sm">
+                    <option value="name">이름</option>
+                    <option value="email">이메일</option>
+                    <option value="phoneNumber">전화번호</option>
+                    <option value="major">전공</option>
+                </select>
+            
+                <!-- 검색 입력 -->
+                <div class="relative w-full max-w-xs">
+                    <input type="text" name="keyword" id="searchInput" placeholder="검색어 입력"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring" />
+                    <div id="suggestions"
+                        class="absolute top-full left-0 w-full mt-1 bg-white border border-gray-300 rounded shadow hidden z-20 max-h-60 overflow-y-auto text-sm">
+                    </div>
+                </div>
+            
+                <button id="searchBtn"
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            
+                <!-- 리셋 버튼: 폼 리셋 -->
+                <button id="resetBtn" 
+                    type="button"
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </form>
+            <th:block th:if="${hasExpert}">
+                <table class="w-full table-auto border text-center" id="expert-table">
+                    <thead>
+                    <tr>
+                        <th class="border px-4 py-2">id</th>
+                        <th class="border px-4 py-2">이름</th>
+                        <th class="border px-4 py-2">이메일</th>
+                        <th class="border px-4 py-2">전화번호</th>
+                        <th class="border px-4 py-2">전공</th>
+                    </tr>
+                    </thead>
+                    <tbody id="table-body">
+                    <tr th:each="expert : ${result.dtoList}">
+                        <td class="border px-4 py-2" th:text="${expert.id}">홍길동</td>
+                        <td class="border px-4 py-2" ><a th:href="@{/admin/expert/{id}(id=${expert.id})}" th:text="${expert.name}" class="hover:underline"></a></td>
+                        <td class="border px-4 py-2" th:text="${expert.username}">hong@test.com</td>
+                        <td class="border px-4 py-2" th:text="${expert.phoneNumber}"></td>
+                        <td class="border px-4 py-2" th:text="${expert.major}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </th:block>
+            <th:block th:unless="${hasExpert}">
+                <div class="text-center text-gray-500 text-lg py-10">
+                    <i class="fa-solid fa-user-graduate fa-2x my-4"></i><br/>
+                    전문가 회원이 없습니다.
+                </div>
+            </th:block>
             <!-- 페이징 -->
             <div class="mt-4 flex justify-center gap-2" id="pagination">
                 <!-- ◀ 이전 페이지 -->
                 <a th:href="@{/admin/member/all(
                     page=${result.startPage - 1},
                     size=10,
-                    sort='createdAt',
-                    direction='desc',
+                    sort=${sort},
                     type=${type},
                     keyword=${keyword})}"
                 th:if="${result.startPage - 1 > 0}"
@@ -86,8 +129,7 @@
                     th:href="@{/admin/expert/all(
                     page=${p},
                     size=10,
-                    sort='createdAt',
-                    direction='desc',
+                    sort=${sort},
                     type=${type},
                     keyword=${keyword})}"
                 th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
@@ -97,8 +139,7 @@
                 <a th:href="@{/admin/expert/all(
                     page=${result.endPage + 1},
                     size=10,
-                    sort='createdAt',
-                    direction='desc',
+                    sort=${sort},
                     type=${type},
                     keyword=${keyword})}"
                 th:if="${result.endPage + 1 < result.totalPages}"
@@ -131,10 +172,12 @@
         });
     
         // 검색 버튼 클릭 시 페이지 이동
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
             const keyword = input.value.trim();
+            
             if (!keyword) return;
-            window.location.href = `/admin/expert/all?type=${type.value}&keyword=${encodeURIComponent(keyword)}`;
+            window.location.href = `/admin/expert/all?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`;
         });
         
         // Reset 검색 조건 초기화
@@ -148,7 +191,7 @@
         // 비동기 검색 요청
         async function fetchSuggestions(keyword) {
             try {
-                const response = await fetch(`/admin/expert/all/search?type=${type.value}&keyword=${encodeURIComponent(keyword)}`);
+                const response = await fetch(`/admin/expert/all/search?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`);
                 if (response.status === 204) {
                     suggestions.classList.add('hidden');
                     return;

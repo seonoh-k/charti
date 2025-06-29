@@ -31,7 +31,10 @@ public enum GlobalStatus implements StatusCode{
     STATIC_RESOURCE_NOT_FOUND("SRNF","정적 리소스 탐색 실패"),
     SERVER_ERROR("SE","서비스 서버 이상"),
     FIREBASE_ERROR("FE","인증 서버 오류"),
-    USERNAME_VALIDATION_FAILED("UVF","사용할 수 없는 아이디");
+    FIREBASE_ROLE_SAVE_FAIL("FRSE","인증 서버 인증 정보 저장 실패"),
+    USERNAME_VALIDATION_FAILED("UVF","사용할 수 없는 아이디"),
+    EMAIL_VALIDATION_FAILED("EVF", "사용할 수 없는 이메일"),
+    PHONENUMBER_VALIDATION_FAILED("PVF", "사용할 수 없는 전화번호");
 
 
 

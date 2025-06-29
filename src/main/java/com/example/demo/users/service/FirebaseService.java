@@ -81,12 +81,11 @@ public class FirebaseService {
     }
 
     @Transactional
-    public String createMember(AdminCreateRequest adminCreateRequest) throws FirebaseAuthException {
+    public String createAdmin(AdminCreateRequest adminCreateRequest) throws FirebaseAuthException {
 //        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
         UserRecord userRecord = firebaseAuth.createUser(new UserRecord.CreateRequest()
                 .setEmail(adminCreateRequest.getUsername())
                 .setPassword(adminCreateRequest.getPassword())
-                .setPhoneNumber(adminCreateRequest.getPhoneNumber())
                 .setDisplayName(adminCreateRequest.getName()));
 
         return userRecord.getUid();

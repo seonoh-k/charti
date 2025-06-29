@@ -128,8 +128,47 @@ public class ExpertQueryRepositoryImpl implements ExpertQueryRepository {
                 case "name" -> builder.and(u.name.lower().like(lowerKeyword));
                 case "email" -> builder.and(u.username.lower().like(lowerKeyword));
                 case "phoneNumber" -> builder.and(u.phoneNumber.lower().like(lowerKeyword));
-                case "nickname" -> builder.and(u.nickname.lower().like(lowerKeyword));
+                case "major" -> builder.and(e.major.lower().like(lowerKeyword));
             }
+        }
+        String sortProp = pageable.getSort().isSorted()
+                ? pageable.getSort().iterator().next().getProperty()
+                : "createdAt";
+
+        OrderSpecifier<?>[] orders;
+        switch (sortProp) {
+            case "name":
+                // 이름은 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.name.asc()
+                };
+                break;
+            case "email":
+                // 이메일 → 이름 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.username.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "phoneNumber":
+                orders = new OrderSpecifier<?>[]{
+                        u.phoneNumber.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "major":
+                orders = new OrderSpecifier<?>[]{
+                        e.major.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "createdAt":
+            default:
+                // 생성일은 내림차순
+                orders = new OrderSpecifier<?>[]{
+                        u.createdAt.desc()
+                };
+                break;
         }
 
         List<ExpertDTO> content = queryFactory
@@ -144,7 +183,7 @@ public class ExpertQueryRepositoryImpl implements ExpertQueryRepository {
                 .where(builder)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(u.createdAt.desc()) // 기본 정렬
+                .orderBy(orders) // 기본 정렬
                 .fetch();
 
         Long total = queryFactory
@@ -217,8 +256,47 @@ public class ExpertQueryRepositoryImpl implements ExpertQueryRepository {
                 case "name" -> builder.and(u.name.lower().like(lowerKeyword));
                 case "email" -> builder.and(u.username.lower().like(lowerKeyword));
                 case "phoneNumber" -> builder.and(u.phoneNumber.lower().like(lowerKeyword));
-                case "nickname" -> builder.and(u.nickname.lower().like(lowerKeyword));
+                case "major" -> builder.and(e.major.lower().like(lowerKeyword));
             }
+        }
+        String sortProp = pageable.getSort().isSorted()
+                ? pageable.getSort().iterator().next().getProperty()
+                : "createdAt";
+
+        OrderSpecifier<?>[] orders;
+        switch (sortProp) {
+            case "name":
+                // 이름은 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.name.asc()
+                };
+                break;
+            case "email":
+                // 이메일 → 이름 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.username.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "phoneNumber":
+                orders = new OrderSpecifier<?>[]{
+                        u.phoneNumber.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "major":
+                orders = new OrderSpecifier<?>[]{
+                        e.major.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "createdAt":
+            default:
+                // 생성일은 내림차순
+                orders = new OrderSpecifier<?>[]{
+                        u.createdAt.desc()
+                };
+                break;
         }
 
         List<ExpertDTO> content = queryFactory
@@ -231,9 +309,9 @@ public class ExpertQueryRepositoryImpl implements ExpertQueryRepository {
                 .from(e)
                 .join(e.users, u)
                 .where(builder)
+                .orderBy(orders) // 기본 정렬
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(u.createdAt.desc()) // 기본 정렬
                 .fetch();
 
         Long total = queryFactory
