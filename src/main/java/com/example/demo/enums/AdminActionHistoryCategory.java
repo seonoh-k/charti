@@ -6,6 +6,7 @@ public enum AdminActionHistoryCategory {
     ACCESS_ADMIN_MAIN,
     ACCESS_ADMIN_CREATE_FORM,
     // 검색 페이지 접근
+    SEARCH_ADMIN,
     SEARCH_EXPERT,
     SEARCH_MANAGER,
     SEARCH_MEMBER,
@@ -14,6 +15,7 @@ public enum AdminActionHistoryCategory {
     SEARCH_MANAGER_UNAPPROVE,
 
     // 리스트 페이지 접근
+    ACCESS_ADMIN_LIST,
     ACCESS_EXPERT_LIST,
     ACCESS_MANAGER_LIST,
     ACCESS_MEMBER_LIST,
@@ -27,6 +29,7 @@ public enum AdminActionHistoryCategory {
     ACCESS_EXPERT_UPDATE_FORM,
     ACCESS_MANAGER_UPDATE_FORM,
     ACCESS_MEMBER_UPDATE_FORM,
+    ACCESS_ADMIN_UPDATE_FORM,
     ACCESS_USERS_DELETED_RESTORE_FORM,
 
     // [담당자, 전문가] 승인
@@ -43,6 +46,7 @@ public enum AdminActionHistoryCategory {
 
     // 관리자 생성
     CREATE_ADMIN,
-    CHECK_ADMIN_VALIDATION
+    CHECK_ADMIN_VALIDATION,
+    INITIALIZE_ADMIN_PASSWORD,
 
 }

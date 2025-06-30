@@ -8,8 +8,11 @@ import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.entity.Group;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Expert;
+import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.repository.*;
+import com.example.demo.users.service.ManagerService;
+import groovy.util.logging.Log4j2;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +58,9 @@ class ExpertRepositoryTests {
 
     @Autowired
     private UserQueryRepository userQueryRepository;
+
+    @Autowired
+    private ManagerService managerService;
 
 
 //    @Test
@@ -174,6 +180,20 @@ class ExpertRepositoryTests {
             String targetGroup = managerById.get().getTargetGroup();
             System.out.println("ExpertRepositoryTests.testUser : " + targetGroup);
         }
+    }
+
+    @Test
+    public void testSearch(){
+        PagingRequest pagingRequest = PagingRequest.builder().page(0).size(10).direction("desc").sort("groupName").build();
+        Pageable pageable = pagingRequest.toPageable();
+        // Page<ManagerDTO> managerDTOS = managerQueryRepository.searchApprovedManagerList("name", "", pageable);
+        PagingResultDTO<ManagerDTO, Manager> name = managerService.searchApprovedManagerList("groupName", "(주)", pageable);
+        name.getDtoList().forEach(managerDTO -> {
+            System.out.printf("managerDTO[ name : %s , email :  %s, phoneNumber : %s, groupName : %s ] %n",
+                    managerDTO.getName(),managerDTO.getUsername(),managerDTO.getPhoneNumber(),managerDTO.getGroupName());
+        });
+
+
     }
 
 

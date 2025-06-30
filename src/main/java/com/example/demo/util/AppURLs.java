@@ -38,7 +38,8 @@ public class AppURLs {
             "/auth/login/attempt",
             "/admin/loginForm",
             "/admin/login",
-            "/admin/login/attempt"
+            "/admin/login/attempt",
+            "/firebase-messaging-sw.js"
 
 
 
