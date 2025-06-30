@@ -1,3 +1,4 @@
+<!-- community/announcementDetail.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -10,9 +11,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"/>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
-          rel="stylesheet"/>
-    <style>body { font-family: 'Poppins', sans-serif; }</style>
 </head>
 <th:block layout:fragment="content">
     <div class="container mx-auto p-6 bg-white shadow rounded-lg">
@@ -23,11 +21,9 @@
             <p><span class="font-medium">조회수:</span>
                 <span th:text="${board.views}">0</span></p>
             <p><span class="font-medium">작성자:</span>
-                <span th:text="${userService.getNicknameByUsersId(board.usersId)}">닉네임</span></p>
+                <span th:text="${authorNickname}">닉네임</span></p>
             <p><span class="font-medium">작성일:</span>
-                <span th:text="${#temporals.format(board.createdAt,'yyyy.MM.dd HH:mm')}">
-          2025.06.27 16:00
-        </span></p>
+                <span th:text="${#temporals.format(board.createdAt,'yyyy.MM.dd HH:mm')}">2025.06.27 16:00</span></p>
         </div>
 
         <hr class="my-4"/>
@@ -36,43 +32,33 @@
 
         <h3 class="text-2xl font-semibold text-gray-800 mb-4">댓글</h3>
         <div class="space-y-4 mb-6">
-            <div th:each="c : ${commentsPage.content}" class="border-b pb-2">
+            <div th:each="c, stat : ${commentsPage.content}" class="border-b pb-2">
                 <p>
                     <strong class="text-[#7CA48C]"
-                            th:text="${userService.getNicknameByUsersId(c.usersId) ?: '손님'}">
-                        닉네임
-                    </strong>:
+                            th:text="${commentNicknames[stat.index]}">닉네임</strong>:
                     <span th:text="${c.content}">댓글 내용</span>
                     <small class="text-gray-500 ml-2"
-                           th:text="${#temporals.format(c.createdAt,'yyyy.MM.dd HH:mm')}">
-                        2025.06.27 16:05
-                    </small>
+                           th:text="${#temporals.format(c.createdAt,'yyyy.MM.dd HH:mm')}">시간</small>
                 </p>
             </div>
         </div>
 
-        <nav th:if="${commentsPage.totalElements>0}"
-             class="flex justify-center space-x-2 mb-6">
+        <!-- 댓글 페이징 -->
+        <nav th:if="${commentsPage.totalElements>0}" class="flex justify-center space-x-2 mb-6">
       <span th:if="${commentsPage.hasPrevious()}">
         <a th:href="@{/community/announcement/{id}(id=${board.communityId},commentPage=${commentsPage.number-1})}"
-           class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-gray-300 transition">
-          &lt; 이전
-        </a>
+           class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-gray-300">&lt; 이전</a>
       </span>
             <span th:each="i : ${#numbers.sequence(0,commentsPage.totalPages-1)}">
         <a th:href="@{/community/announcement/{id}(id=${board.communityId},commentPage=${i})}"
            th:text="${i+1}"
-           th:classappend="${i==commentsPage.number}?
-             ' bg-[#E3A67A] text-white' : ' bg-gray-200 text-[#E3A67A]'"
-           class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition">
-          1
-        </a>
+           th:classappend="${i==commentsPage.number}
+             ? ' bg-[#E3A67A] text-white' : ' bg-gray-200 text-[#E3A67A]'"
+           class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white">1</a>
       </span>
             <span th:if="${commentsPage.hasNext()}">
         <a th:href="@{/community/announcement/{id}(id=${board.communityId},commentPage=${commentsPage.number+1})}"
-           class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-gray-300 transition">
-          다음 &gt;
-        </a>
+           class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-gray-300">다음 &gt;</a>
       </span>
         </nav>
 
@@ -82,29 +68,30 @@
                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required></textarea>
             <button type="submit"
-                    class="mt-2 bg-[#E3A67A] text-white font-semibold px-5 py-2 rounded hover:opacity-90 transition">
+                    class="mt-2 bg-[#E3A67A] text-white font-semibold px-5 py-2 rounded hover:opacity-90">
                 등록
             </button>
         </form>
 
-        <div class="flex gap-4 mb-6">
+        <!-- 수정/삭제 버튼: 본문 작성자만 -->
+        <div class="flex gap-4 mb-6"
+             th:if="${currentUserId != null and currentUserId == board.usersId}">
             <a th:href="@{/community/announcement/{id}/edit(id=${board.communityId})}"
-               class="inline-flex items-center bg-[#7CA48C] active:bg-[#628C73] text-white font-semibold px-5 py-2 rounded hover:opacity-90 transition">
+               class="inline-flex items-center bg-[#7CA48C] text-white px-5 py-2 rounded hover:opacity-90">
                 <i class="fas fa-edit mr-2"></i>수정
             </a>
             <form th:action="@{/community/announcement/{id}/delete(id=${board.communityId})}"
                   method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
                 <button type="submit"
-                        class="inline-flex items-center bg-red-500 text-white font-semibold px-5 py-2 rounded hover:bg-red-600 transition">
+                        class="inline-flex items-center bg-red-500 text-white px-5 py-2 rounded hover:bg-red-600">
                     <i class="fas fa-trash mr-2"></i>삭제
                 </button>
             </form>
         </div>
 
         <a th:href="@{/community/announcement/list}"
-           class="inline-block text-[#E3A67A] hover:underline">
-            ◀ 목록으로 돌아가기
-        </a>
+           class="inline-block text-[#E3A67A] hover:underline">◀ 목록으로 돌아가기</a>
+
     </div>
 </th:block>
 </html>
