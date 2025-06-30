@@ -1,6 +1,7 @@
 package com.example.demo.survey.dto;
 
 import com.example.demo.enums.AgeGroup;
+import com.example.demo.survey.entity.RecordSurvey;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -29,4 +30,16 @@ public class RecordSurveyResponse {
      * 문진 질문이 생성된 일시입니다.
      */
     private LocalDateTime createdAt;
+
+    private String answer;
+
+    public static RecordSurveyResponse fromEntity(RecordSurvey survey) {
+        return new RecordSurveyResponse(
+                survey.getSurveyId(),
+                survey.getQuestion(),
+                survey.getAgeGroup(),
+                survey.getCreatedAt(),
+                survey.getAnswer()
+        );
+    }
 }

@@ -4,6 +4,7 @@ import com.example.demo.dto.UserDTO;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.survey.dto.RecordSurveyAnswerDto;
 import com.example.demo.survey.dto.RecordSurveyDataResponse;
+import com.example.demo.survey.dto.RecordSurveyResponse;
 import com.example.demo.survey.entity.RecordSurvey;
 import com.example.demo.survey.service.RecordAnswerService;
 import com.example.demo.survey.service.RecordSurveyService;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 기록문진 사용자 컨트롤러
@@ -97,6 +99,25 @@ public class RecordSurveyController {
      * @param childId 자녀 ID
      * @return 자녀 정보 + 문진 질문 리스트 응답
      */
+//    @GetMapping("/child/{childId}")
+//    @ResponseBody
+//    public RecordSurveyDataResponse getSurveyByChild(@PathVariable Long childId) {
+//        Child child = childService.findById(childId);
+//        if (child == null) {
+//            log.warn("Child not found for ID: {}", childId);
+//            return new RecordSurveyDataResponse(null, new ArrayList<>());
+//        }
+//
+//        if (recordAnswerService.hasAnsweredToday(child)) {
+//            log.info("Child ID '{}' has already submitted a record survey today.", childId);
+//            return new RecordSurveyDataResponse(child, new ArrayList<>());
+//        }
+//
+//        AgeGroup ageGroup = child.getAgeGroup();
+//        List<RecordSurvey> surveys = recordSurveyService.getSurveysByAgeGroup(ageGroup);
+//        return new RecordSurveyDataResponse(child, surveys);
+//    }
+
     @GetMapping("/child/{childId}")
     @ResponseBody
     public RecordSurveyDataResponse getSurveyByChild(@PathVariable Long childId) {
@@ -113,9 +134,14 @@ public class RecordSurveyController {
 
         AgeGroup ageGroup = child.getAgeGroup();
         List<RecordSurvey> surveys = recordSurveyService.getSurveysByAgeGroup(ageGroup);
-        return new RecordSurveyDataResponse(child, surveys);
-    }
 
+        // ✅ RecordSurvey → RecordSurveyResponse 변환
+        List<RecordSurveyResponse> surveyResponses = surveys.stream()
+                .map(RecordSurveyResponse::fromEntity)
+                .collect(Collectors.toList());
+
+        return new RecordSurveyDataResponse(child, surveyResponses);
+    }
     /**
      * 문진 응답 제출 처리
      * @param requestList 문진 응답 리스트

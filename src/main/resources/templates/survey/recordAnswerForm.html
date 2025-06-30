@@ -134,6 +134,9 @@
                 <div th:each="survey, i : ${surveys}" class="mb-6">
                     <label th:for="${'answer_' + i.index}" class="block font-semibold mb-1"
                            th:text="${i.index + 1 + '. ' + survey.question}"></label>
+                    <p class="text-sm text-gray-500 italic mb-1"
+                       th:if="${survey.answer != null}"
+                       th:text="'예시: ' + ${survey.answer}"></p>
                     <textarea th:id="${'answer_' + i.index}"
                               th:name="${'answers[' + i.index + '].text'}"
                               class="w-full border p-2 rounded" rows="3"
