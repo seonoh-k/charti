@@ -43,4 +43,6 @@ public interface DailyAnswerRepository extends JpaRepository<DailyAnswer, Long> 
     boolean existsByChildIdAndCreatedAtBetween(Long childId,
                                                LocalDateTime start,
                                                LocalDateTime end);
+
+    Page<DailyAnswer> findAllByChildIdAndDeletedFalse(Long childId, Pageable pageable);
 }

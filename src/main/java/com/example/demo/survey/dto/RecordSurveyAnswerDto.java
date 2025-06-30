@@ -24,4 +24,5 @@ public class RecordSurveyAnswerDto {
      * 이 답변이 속한 자녀의 고유 ID입니다.
      */
     private Long childId;
+
 }

@@ -256,4 +256,20 @@ public class RecordAnswerService extends BaseService<RecordAnswer, RecordAnswerR
 
         return PagingResponse.from(pagingResultDTO);
     }
+
+    public List<RecordAnswerResponse> getPagedAnswerList(Long childId) {
+        Child child = childService.findById(childId);
+
+        Pageable pageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        Page<RecordAnswer> result = repository.findByChildAndDeletedFalse(child, pageable);
+
+        List<RecordAnswerResponse> rAnswerList = new ArrayList<>();
+        for(RecordAnswer answer : result.getContent()) {
+            rAnswerList.add(new RecordAnswerResponse(answer));
+        }
+
+        return rAnswerList;
+    }
 }

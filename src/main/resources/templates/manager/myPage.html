@@ -1,44 +1,28 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>담당자 대시보드</title>
-</head>
-<body class="h-screen flex flex-col">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/managerLayout">
+<th:block layout:fragment="content">
+    <!-- 메인(콘텐츠) -->
+    <main class="flex-1 p-6 bg-gray-100">
+        <!-- 중앙 정렬 wrapper -->
+        <div class="flex justify-center items-center py-20">
+            <!-- 마이페이지 카드 박스 -->
+            <div class="bg-white p-6 rounded shadow-md w-full max-w-7xl">
 
-    <!-- 햄버거 버튼 (프래그먼트 또는 공통) -->
-    <div th:replace="fragments/managerFragments :: hamburger"></div>
-
-    <div class="flex flex-1">
-        <!-- 사이드바 (프래그먼트 or 공통) -->
-        <div th:replace="fragments/managerFragments :: sideBar"></div>
-
-        <!-- 메인(콘텐츠) -->
-        <main class="flex-1 p-6 bg-gray-100">
-            <!-- 실제 콘텐츠: 마이페이지, 그룹관리, 문진관리 등 분기 -->
-            <th:block layout:fragment="content">
-
-            <!-- 중앙 정렬 wrapper -->
-            <div class="flex justify-center items-center py-20">
-                <!-- 마이페이지 카드 박스 -->
-                <div class="bg-white p-6 rounded shadow-md w-full max-w-7xl">
-
-                    <!-- 메시지 고정 영역 -->
-                    <div class="min-h-[48px] mb-2">
-                        <div id="flashMsg" th:if="${msg}" class="bg-green-100 border p-2 rounded text-green-700 mb-2 text-sm">
-                            <span th:text="${msg}"></span>
-                        </div>
-                        <div id="flashError" th:if="${error}" class="bg-red-100 border p-2 rounded text-red-700 mb-2 text-sm">
-                            <span th:text="${error}"></span>
-                        </div>
+                <!-- 메시지 고정 영역 -->
+                <div class="min-h-[48px] mb-2">
+                    <div id="flashMsg" th:if="${msg}" class="bg-green-100 border p-2 rounded text-green-700 mb-2 text-sm">
+                        <span th:text="${msg}"></span>
                     </div>
+                    <div id="flashError" th:if="${error}" class="bg-red-100 border p-2 rounded text-red-700 mb-2 text-sm">
+                        <span th:text="${error}"></span>
+                    </div>
+                </div>
 
-                    <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">👤 회원 정보 관리</h1>
+                <a th:href="@{/main}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mb-4 text-sm font-medium">
+                메인으로
+                </a>
+
+                <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">👤 회원 정보 관리</h1>
 
                     <!-- 👀 보기용(일반모드, '수정하기' 누르기 전) -->
                     <div id="userViewSection">
@@ -77,7 +61,7 @@
                         </div>
                     </div>
 
-                    
+
 
                     <!-- 📝 수정모드(폼) -->
                     <form id="userEditForm" action="/manager/update" method="post" class="space-y-4 hidden" autocomplete="off">
@@ -135,7 +119,7 @@
                                 </button>
                             </div>
                             <div id="recaptcha-container"></div>
-                            <input type="hidden" name="newUid" id="newUid" value="">    
+                            <input type="hidden" name="newUid" id="newUid" value="">
                         </div>
 
                         <div class="flex flex-row justify-end gap-2 pb-2">
@@ -205,12 +189,12 @@
             <script type="module" src="/js/smsAuth.js"></script>
             <script src="/js/userEdit.js"></script>
             <script src="/js/manager/managerPage.js"></script>
-            <script src="/js/flashMsg.js"></script>    
+            <script src="/js/flashMsg.js"></script>
 
             </th:block>
         </main>
     </div>
-    
+
 
     <script th:src="@{/js/manager/managerSideBar.js}"></script>
 </body>

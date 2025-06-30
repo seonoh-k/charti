@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Charti</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pretendard & Inter 폰트 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>
+        body { font-family: 'Pretendard', 'Inter', sans-serif; }
+    </style>
+</head>
+<th:block th:fragment="headerFragment">
+    <header id="header" th:fragment="fragment-header" class="sticky top-0 bg-white z-50 shadow">
+        <!-- 상단: 로고 + 로그인/회원가입 -->
+        <div class="container mx-auto flex justify-between items-center py-4 px-6 mb-3">
+            <img id="homeLogo" th:src="@{/images/logo02.png}" onclick="location.href='/admin/main'"
+                 class="w-[150px] h-auto cursor-pointer"/>
+            <nav id="hdNav" class="mt-6">
+                <ul id="hdUl" class="flex gap-6 items-center">
+                    <th:block th:if="${session.userId == null}">
+                        <button>
+                            <a href="/" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">메인 홈페이지</a>
+                        </button>
+                        <li><a id="loginBtn" href="/admin/loginForm">로그인</a></li>
+                    </th:block>
+                    <th:block th:if="${session.userId != null}">
+                        <button>
+                            <a href="/" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">메인 홈페이지</a>
+                        </button>
+                        <li><a id="logoutBtn" href="/logout">로그아웃</a></li>
+                    </th:block>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- 하단 메뉴바 -->
+        <nav class="bg-[#374151] text-white">
+            <div class="container mx-auto flex justify-center items-center py-1 px-8">
+                <ul class="flex space-x-8">
+                    <li class="relative group">
+                        <a href="/manager/home" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">홈</a>
+                        <ul class="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block hover:block bg-black bg-opacity-70 text-white shadow-lg mt-0.5 min-w-[180px] text-center z-50 py-2">
+                            <li><a href="/manager/home" class="block px-4 py-2 hover:text-gray-300">담당자 홈페이지</a></li>
+                            <li><a href="/" class="block px-4 py-2 hover:text-gray-300">메인 홈페이지</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="relative group">
+                        <a href="/manager/myPage" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">회원 정보</a>
+                    </li>
+
+                    <li class="relative group">
+                    <a href="/manager/groupManager" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">그룹 관리</a>
+                    </li>
+
+                    <li class="relative group">
+                        <a href="/manager" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">문진 관리</a>
+                    </li>
+
+                    <li class="relative group">
+                        <a href="/qnaList" class="block px-1 py-4 text-md hover:text-[#FEF9F3] whitespace-nowrap">문의 내역</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+</th:block>
+</html>
