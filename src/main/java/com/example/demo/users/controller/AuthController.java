@@ -197,7 +197,7 @@ public class AuthController {
 
         authService.createUserLoginFailHistory(req,clientIp);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(GlobalStatus.OK));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(GlobalStatus.USERNAME_VALIDATION_FAILED));
     }
     @PostMapping("/admin/login/attempt")
     public ResponseEntity<ApiResponse> recordAdminLoginAttemptFail(@RequestBody LoginAttemptRequest req,
@@ -206,7 +206,7 @@ public class AuthController {
 
         authService.createAdminLoginFailHistory(req,clientIp);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(GlobalStatus.OK));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(GlobalStatus.USERNAME_VALIDATION_FAILED,"아이디 비밀번호를 확인해주세요"));
     }
     @GetMapping("/findUsernameForm")
     public String findUsernameForm() {

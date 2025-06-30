@@ -17,7 +17,7 @@ public interface ManagerRepository extends JpaRepository<Manager, Long> {
     @Query("SELECT m FROM Users u JOIN u.manager m JOIN m.group g WHERE m.isApproved = true")
     Page<Manager> findByIsApprovedTrue(Pageable pageable);
     @Modifying
-    @Query("UPDATE Expert e SET e.isApproved = true WHERE e.users.id = :id")
+    @Query("UPDATE Manager m SET m.isApproved = true WHERE m.users.id = :id")
     int approveManager(Long id);
 
 

@@ -25,45 +25,83 @@
 
                 <div class="flex justify-center items-center py-20">
                     <div class="bg-white p-6 rounded shadow-md w-full max-w-7xl">
-                        <!-- 그룹 정보 -->
-                        <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">🏢 그룹 정보 관리</h2>
 
-                        <form id="groupEditForm" action="/manager/group/update" method="post" class="space-y-6" autocomplete="off">
+                                        <!-- 메시지 고정 영역 -->
+                        <div class="min-h-[48px] mb-2">
+                            <div id="flashMsg" th:if="${msg}" class="bg-green-100 border p-2 rounded text-green-700 mb-2 text-sm">
+                                <span th:text="${msg}"></span>
+                            </div>
+                            <div id="flashError" th:if="${error}" class="bg-red-100 border p-2 rounded text-red-700 mb-2 text-sm">
+                                <span th:text="${error}"></span>
+                            </div>
+                        </div>
+
+                        <!-- 그룹 정보 -->
+                        <!-- -------- 👀 보기모드 -------- -->
+                        <div id="groupViewSection">
+                            <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">🏢 그룹 정보 관리</h2>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- 그룹 이름 -->
+                                <div>
+                                    <label class="block mb-1 text-sm font-medium">그룹 이름</label>
+                                    <div id="v_groupName" class="w-full border border-gray-200 rounded px-3 py-2 bg-gray-100">
+                                        <span th:text="${groupInfo.groupName}"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block mb-1 text-sm font-medium">그룹 이메일</label>
+                                    <div id="v_groupEmail" class="w-full border border-gray-200 rounded px-3 py-2 bg-gray-100">
+                                        <span th:text="${groupInfo.groupEmail}"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block mb-1 text-sm font-medium">그룹 전화번호</label>
+                                    <div id="v_groupPhoneNumber" class="w-full border border-gray-200 rounded px-3 py-2 bg-gray-100">
+                                        <span th:text="${groupInfo.groupPhoneNumber}"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block mb-1 text-sm font-medium">그룹 분류</label>
+                                    <div id="v_targetGroup" class="w-full border border-gray-200 rounded px-3 py-2 bg-gray-100">
+                                        <span th:text="${groupInfo.targetGroup}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <label class="block mb-1 text-sm font-medium">주소</label>
+                                <div id="v_zipNum" class="w-full mb-2 border border-gray-200 rounded px-3 py-2 bg-gray-100 text-gray-500">
+                                    <span th:text="${groupInfo.address.zipNum}"></span>
+                                </div>
+                                <div id="v_addr1" class="w-full border border-gray-200 rounded px-3 py-2 bg-gray-100 text-gray-500">
+                                    <span th:text="${groupInfo.address.sido + ' ' + groupInfo.address.gugun + ' ' + groupInfo.address.dong + (groupInfo.address.bunji != null && !#strings.isEmpty(groupInfo.address.bunji) ? ' ' + groupInfo.address.bunji : '')}"></span>
+                                </div>
+                            </div>
+                            <div class="flex flex-row justify-end gap-2 pt-4">
+                                <button type="button" onclick="toggleGroupEdit(true)" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">수정하기</button>
+                            </div>
+                        </div>
+                        <!-- -------- 📝 수정모드(폼) -------- -->
+                        <form id="groupEditForm" action="/manager/group/update" method="post" class="space-y-6 hidden" autocomplete="off">
+                            <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">🏢 그룹 정보 수정</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block mb-1 text-sm font-medium">그룹 이름</label>
                                     <input type="text" name="groupName" id="groupName"
-                                        th:value="${groupInfo.groupName}" 
-                                        class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 focus:outline-none"
-                                        readonly />
+                                        th:value="${groupInfo.groupName}"
+                                        class="w-full border border-gray-300 rounded px-3 py-2" />
                                 </div>
-                                <!-- 그룹 이메일 -->
                                 <div>
                                     <label class="block mb-1 text-sm font-medium">그룹 이메일</label>
                                     <input type="email" name="groupEmail" id="groupEmail"
                                         th:value="${groupInfo.groupEmail}"
-                                        class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 focus:outline-none"
-                                        readonly />
+                                        class="w-full border border-gray-300 rounded px-3 py-2" />
                                 </div>
-                                <!-- 그룹 전화번호 -->
                                 <div>
                                     <label class="block mb-1 text-sm font-medium">그룹 전화번호</label>
                                     <input type="text" name="groupPhoneNumber" id="groupPhoneNumber"
                                         th:value="${groupInfo.groupPhoneNumber}"
-                                        class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 focus:outline-none"
-                                        readonly />
+                                        class="w-full border border-gray-300 rounded px-3 py-2" />
                                 </div>
-                                <!-- 그룹 분류(보기용) -->
-                                <div id="targetGroupDisplayBox">
-                                    <label class="block mb-1 text-sm font-medium">그룹 분류</label>
-                                    <input type="text" id="targetGroupDisplayName" name="targetGroupDisplayName"
-                                        th:value="${groupInfo.targetGroup}" 
-                                        class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 focus:outline-none"
-                                        readonly />
-                                </div>
-                                <!-- 그룹 분류(수정모드용) -->
-                                <div id="targetGroupSelectBox" class="hidden">
+                                <div>
                                     <label class="block mb-1 text-sm font-medium">그룹 분류</label>
                                     <select name="targetGroup" id="targetGroup"
                                         class="w-full border border-gray-300 rounded px-3 py-2">
@@ -73,26 +111,20 @@
                                     </select>
                                 </div>
                             </div>
-
-                            <!-- 주소 -->
+                            <!-- 주소: 수정모드에만 주소검색 버튼 표시 -->
                             <div>
                                 <label class="block mb-1 text-sm font-medium">주소</label>
                                 <button type="button" id="addressSearchBtn" onclick="openAddressModal()"
-                                    class="hidden mb-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                                    class="mb-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
                                     주소 검색
                                 </button>
                                 <input type="text" id="zipNum" class="w-full mb-2 border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" readonly th:value="${groupInfo.address.zipNum}" />
                                 <input type="text" id="addr1" class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" readonly th:value="${groupInfo.address.sido + ' ' + groupInfo.address.gugun + ' ' + groupInfo.address.dong + (groupInfo.address.bunji != null && !#strings.isEmpty(groupInfo.address.bunji) ? ' ' + groupInfo.address.bunji : '')}" />
                                 <input type="hidden" id="addressId" name="addressId" th:value="${groupInfo.address.id}" />
                             </div>
-
-                            <!-- 버튼 -->
-                            <div id="groupEditButtonBox" class="flex flex-row justify-end gap-2 pt-4">
-                                <button type="button" onclick="enableGroupEditMode()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">수정하기</button>
-                            </div>
-                            <div id="groupActionButtonBox" class="flex flex-row justify-end gap-2 pt-4 hidden">
-                                <button type="button" onclick="submitGroupEdit()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">저장</button>
-                                <button type="button" onclick="cancelGroupEdit()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
+                            <div class="flex flex-row justify-end gap-2 pt-4">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">저장</button>
+                                <button type="button" onclick="toggleGroupEdit(false)" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
                             </div>
                         </form>
 
@@ -109,7 +141,7 @@
 
                         </div>
                     </div>
-                    
+
                 </div>
                 <!-- 자녀 상세정보 모달 (hidden: 기본 숨김) -->
                 <div id="childDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
@@ -120,10 +152,8 @@
                         <div class="mb-2"><b>이름:</b> <span id="modalChildName"></span></div>
                         <div class="mb-2"><b>성별:</b> <span id="modalChildGender"></span></div>
                         <div class="mb-2"><b>생년월일:</b> <span id="modalChildBirthday"></span></div>
-                        <div class="mb-2"><b>태명:</b> <span id="modalChildNickname"></span></div>
                         <div class="mb-2"><b>신장:</b> <span id="modalChildHeight"></span></div>
                         <div class="mb-2"><b>체중:</b> <span id="modalChildWeight"></span></div>
-                        <div class="mb-2"><b>출생순위:</b> <span id="modalChildBirthOrder"></span></div>
                         <div class="mb-2"><b>고위험군 여부:</b> <span id="modalChildRiskGroup"></span></div>
                         <!-- 필요하면 더 추가 가능! -->
                         <button id="removeChildBtn" class="mt-6 w-full bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2">
@@ -148,13 +178,14 @@
                     </div>
                 </div>
             </div>
-<script>
-  const groupId = [[${groupInfo.groupId}]];
-</script>
+            <script>
+                const groupId = [[${groupInfo.groupId}]];
+            </script>
 
             <script src="/js/addressSearch.js"></script>
             <script src="/js/manager/groupManager.js"></script>
             <script src="/js/manager/paging.js"></script>
+            <script src="/js/flashMsg.js"></script>    
         
             </th:block>
         </main>

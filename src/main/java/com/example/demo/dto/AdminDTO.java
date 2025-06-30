@@ -5,6 +5,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,6 +24,7 @@ public class AdminDTO {
     private String phoneNumber;
 
     private String role;
+    private LocalDateTime createdAt;
 
     public AdminDTO(Long id, String name, String position, String username, String password, String phoneNumber,Role role) {
         this.id = id;
@@ -33,6 +36,24 @@ public class AdminDTO {
         this.role = role.name();
     }
 
+    public AdminDTO(Long id, String name, String position, String username, String phoneNumber, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.position = position;
+        this.username = username;
+        this.phoneNumber = phoneNumber;
+        this.createdAt = createdAt;
+    }
+
+    public AdminDTO(Long id, String name, String position, String username, String phoneNumber,Role role, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.position = position;
+        this.username = username;
+        this.phoneNumber = phoneNumber;
+        this.role = role.name();
+        this.createdAt = createdAt;
+    }
 
     public AdminDTO(String name, String position, String username, String password, String phoneNumber) {
         this.name = name;

@@ -17,7 +17,7 @@
             <h1 class="text-2xl font-bold mb-4">전문가 목록</h1>
             <!-- 검색바  -->
             <form id="searchForm"
-                th:action="@{/admin/expert/all}"
+                th:action="@{/admin/admin/all}"
                 th:method="GET"
                 class="flex justify-end gap-2 mb-6">
                 <!-- 검색 기준 -->
@@ -26,7 +26,7 @@
                     <option value="name" th:selected="${type=='name'}">이름</option>
                     <option value="email" th:selected="${type=='email'}">이메일</option>
                     <option value="phoneNumber" th:selected="${type=='phoneNumber'}">전화번호</option>
-                    <option value="major" th:selected="${type=='major'}">전공</option>
+                    <option value="position" th:selected="${type=='position'}">업무</option>
                 </select>
             
                 <!-- 검색 입력 -->
@@ -51,38 +51,38 @@
                     <i class="fa-solid fa-rotate-left"></i>
                 </button>
             </form>
-            <th:block th:if="${hasExpert}">
-                <table class="w-full table-auto border text-center" id="expert-table">
+            <th:block th:if="${hasAdmin}">
+                <table class="w-full table-auto border text-center" id="admin-table">
                     <thead>
                     <tr>
                         <th class="border px-4 py-2">id</th>
                         <th class="border px-4 py-2">이름</th>
                         <th class="border px-4 py-2">이메일</th>
                         <th class="border px-4 py-2">전화번호</th>
-                        <th class="border px-4 py-2">전공</th>
+                        <th class="border px-4 py-2">업무</th>
                     </tr>
                     </thead>
                     <tbody id="table-body">
-                    <tr th:each="expert : ${result.dtoList}">
-                        <td class="border px-4 py-2" th:text="${expert.id}">홍길동</td>
-                        <td class="border px-4 py-2" ><a th:href="@{/admin/expert/{id}(id=${expert.id})}" th:text="${expert.name}" class="hover:underline"></a></td>
-                        <td class="border px-4 py-2" th:text="${expert.username}">hong@test.com</td>
-                        <td class="border px-4 py-2" th:text="${expert.phoneNumber}"></td>
-                        <td class="border px-4 py-2" th:text="${expert.major}"></td>
+                    <tr th:each="admin : ${result.dtoList}">
+                        <td class="border px-4 py-2" th:text="${admin.id}"></td>
+                        <td class="border px-4 py-2" ><a th:href="@{/admin/admin/{id}(id=${admin.id})}" th:text="${admin.name}" class="hover:underline"></a></td>
+                        <td class="border px-4 py-2" th:text="${admin.username}"></td>
+                        <td class="border px-4 py-2" th:text="${admin.phoneNumber}"></td>
+                        <td class="border px-4 py-2" th:text="${admin.position}"></td>
                     </tr>
                     </tbody>
                 </table>
             </th:block>
-            <th:block th:unless="${hasExpert}">
+            <th:block th:unless="${hasAdmin}">
                 <div class="text-center text-gray-500 text-lg py-10">
-                    <i class="fa-solid fa-user-graduate fa-2x my-4"></i><br/>
-                    전문가 회원이 없습니다.
+                  <i class="fa-solid fa-users-gear fa-2x my-4"></i><br/>
+                    관리자가 없습니다.
                 </div>
             </th:block>
             <!-- 페이징 -->
             <div class="mt-4 flex justify-center gap-2" id="pagination">
                 <!-- ◀ 이전 페이지 -->
-                <a th:href="@{/admin/expert/all(
+                <a th:href="@{/admin/admin/all(
                     page=${result.startPage - 1},
                     size=10,
                     sort=${sort},
@@ -94,7 +94,7 @@
                 <!-- 페이지 번호 목록 -->
                 <a th:each="p : ${result.pageList}"
                     th:text="${p}"
-                    th:href="@{/admin/expert/all(
+                    th:href="@{/admin/admin/all(
                     page=${p},
                     size=10,
                     sort=${sort},
@@ -104,7 +104,7 @@
                 class="px-3 py-1 rounded hover:bg-blue-500"></a>
                 
                 <!-- ▶ 다음 페이지 -->
-                <a th:href="@{/admin/expert/all(
+                <a th:href="@{/admin/admin/all(
                     page=${result.endPage + 1},
                     size=10,
                     sort=${sort},
@@ -145,21 +145,21 @@
             const keyword = input.value.trim();
             
             if (!keyword) return;
-            window.location.href = `/admin/expert/all?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`;
+            window.location.href = `/admin/admin/all?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`;
         });
         
         // Reset 검색 조건 초기화
         resetBtn.addEventListener('click', () => {
             document.getElementById('searchInput').value = '';
             document.getElementById('searchType').value = 'name'; // 초기값 선택
-            window.location.href = '/admin/expert/all'; // 기본 조회 페이지로 이동
+            window.location.href = '/admin/admin/all'; // 기본 조회 페이지로 이동
         });
         
     
         // 비동기 검색 요청
         async function fetchSuggestions(keyword) {
             try {
-                const response = await fetch(`/admin/expert/all/search?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`);
+                const response = await fetch(`/admin/admin/all/search?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`);
                 if (response.status === 204) {
                     suggestions.classList.add('hidden');
                     return;
