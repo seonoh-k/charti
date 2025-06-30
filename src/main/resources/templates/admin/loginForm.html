@@ -12,16 +12,9 @@
     <title>관리자 페이지</title>
 </head>
 <body class="h-screen flex flex-col">
-
-    <!-- 헤더 (햄버거 버튼) -->
-    <div th:replace="fragments/adminFragments :: hamburger"></div>
-
-    <div class="flex flex-1">
-        <div th:replace="fragments/adminFragments :: sideBar"></div>
-        
         <main class="flex-1 flex flex-col items-center justify-start bg-gray-100 p-6">
             <!-- (기존) 콘텐츠 영역 헤딩 -->
-            <h1 class="text-2xl font-bold my-6">관리자 로그인 페이지</h1>
+            <h1 class="text-2xl font-bold my-12">관리자 로그인 페이지</h1>
         
             <!-- 로그인 카드 -->
             <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
@@ -191,12 +184,10 @@
         }, duration);
     }
     </script>
-    
-    
-    
+
+
+
 
 <div id="toast-container" class="fixed inset-x-0 top-0 z-50 space-y-3 text-center"></div>
-<!-- 스크립트 -->
-<script th:src="@{/js/admin/adminSideBar.js}"></script>
 </body>
 </html>
