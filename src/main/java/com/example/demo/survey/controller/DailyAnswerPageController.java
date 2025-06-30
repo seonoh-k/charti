@@ -31,16 +31,27 @@ public class DailyAnswerPageController {
     private final DailyAnswerService answerService;
 
     /** 뷰: 이력 페이지 */
-    @GetMapping("/history")
-    public String showHistoryPage(Authentication auth, Model model) {
+    @GetMapping("/history")                       // ← 추가!
+    public String showHistoryPage(
+            @RequestParam(required = false) Long childId,
+            Authentication auth,
+            Model model) {
+
         Users me;
         try {
             me = userService.findByUsernameEntity(auth.getName());
         } catch (UserNotFoundException e) {
             me = userService.findByUuidEntity(auth.getName());
         }
+
+        // 자녀 목록
         List<Child> children = childService.findByUsersId(me.getId());
         model.addAttribute("children", children);
+
+        // 선택된 아이디
+        model.addAttribute("childId", childId);
+
+        // 뷰 이름 (templates/survey/dailyAnswerHistory.html)
         return "survey/dailyAnswerHistory";
     }
 
@@ -50,7 +61,6 @@ public class DailyAnswerPageController {
     public List<DailyAnswerDto> getHistoryByChild(@PathVariable Long childId) {
         return answerService.getAnswersByChild(childId).stream()
                 .map(da -> {
-                    // 나이 계산
                     LocalDate bday = da.getChild().getBirthday().toLocalDate();
                     int age = Period.between(bday, LocalDate.now()).getYears();
                     String childDisplay = da.getChild().getName()
@@ -60,7 +70,6 @@ public class DailyAnswerPageController {
                             s.getAnswer1(), s.getAnswer2(), s.getAnswer3(),
                             s.getAnswer4(), s.getAnswer5()
                     );
-                    // da.getAnswer() 에 저장된 텍스트이므로, 몇 번째인지 찾아서 selectedValue 로 전달
                     int sel = opts.indexOf(da.getAnswer()) + 1;
                     return new DailyAnswerDto(
                             da.getId(),
@@ -83,8 +92,7 @@ public class DailyAnswerPageController {
     @ResponseBody
     public ResponseEntity<?> updateAnswer(
             @PathVariable Long id,
-            @RequestBody DailyAnswerRequest req   // DTO 로 받는다!
-    ) {
+            @RequestBody DailyAnswerRequest req) {
         answerService.updateAnswerValue(id, req.getAnswerValue());
         return ResponseEntity.ok().build();
     }

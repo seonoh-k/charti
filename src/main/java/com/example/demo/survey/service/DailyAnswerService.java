@@ -4,7 +4,9 @@ import com.example.demo.survey.dto.DailyAnswerDto;
 import com.example.demo.survey.entity.DailyAnswer;
 import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.repository.DailyAnswerRepository;
+import com.example.demo.users.entity.Child;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +14,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,6 +65,17 @@ public class DailyAnswerService {
         }
 
         return dtoList;
+    }
+
+    // 특정 자녀가 오늘 데일리 문진을 제출했는지 여부를 확인
+    @Transactional(readOnly = true)
+    public boolean hasAnsweredToday(Child child) {
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end   = LocalDate.now().atTime(LocalTime.MAX);
+        return repo.existsByChildAndCreatedAtBetween(child, start, end);
+    }
+    public DailyAnswer save(DailyAnswer da) {
+        return repo.save(da);
     }
 }
 

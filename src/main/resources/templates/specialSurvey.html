@@ -4,178 +4,216 @@
       layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>특별 문진</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
-          rel="stylesheet">
-    <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-4xl mx-auto p-6">
         <h1 class="text-2xl font-bold mb-6">특별 문진</h1>
 
+        <!-- 1) & 4) 자녀 선택 & URL 파라미터 자동 선택 -->
         <div class="mb-4">
             <label class="block mb-1 font-semibold" for="childSelect">자녀 선택</label>
             <select id="childSelect" class="border p-2 rounded w-64">
                 <option value="">-- 자녀를 선택하세요 --</option>
                 <option th:each="c : ${children}"
                         th:value="${c.id}"
-                        th:text="${c.name + ' (' + c.nickname + ')'}">
+                        th:text="${c.name + ' (' + c.ageDisplay + ')'}">
                 </option>
             </select>
         </div>
 
-        <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="ageSelect">연령대</label>
-            <select id="ageSelect" class="border p-2 rounded w-64">
-                <option value="">-- 연령대를 선택하세요 --</option>
-                <option th:each="ag : ${ageGroups}"
-                        th:value="${ag.getDisplayName()}"
-                        th:text="${ag.getDisplayName()}">
-                </option>
-            </select>
+        <!-- 2) 자녀 정보 출력 -->
+        <div id="childInfo" class="mb-4 p-4 border rounded bg-gray-50" style="display:none;">
+            <p><strong>이름:</strong> <span id="ci-name"></span></p>
+            <p><strong>성별:</strong> <span id="ci-gender"></span></p>
+            <p><strong>나이:</strong> <span id="ci-age"></span></p>
+            <p><strong>키:</strong> <span id="ci-height"></span></p>
+            <p><strong>체중:</strong> <span id="ci-weight"></span></p>
         </div>
 
+        <!-- 4) 연령대 셀렉트 박스 제거 -->
+
+        <!-- 5) 카테고리 선택 -->
         <div class="mb-4">
-            <label class="block mb-1 font-semibold" for="categorySelect">카테고리</label>
+            <label class="block mb-1 font-semibold" for="categorySelect">카테고리 선택</label>
             <select id="categorySelect" class="border p-2 rounded w-64">
                 <option value="">-- 카테고리를 선택하세요 --</option>
                 <option th:each="cat : ${categories}"
                         th:if="${cat != T(com.example.demo.enums.SurveyCategory).ALL
-                              and cat != T(com.example.demo.enums.SurveyCategory).VARIOUS}"
+                        and cat != T(com.example.demo.enums.SurveyCategory).VARIOUS}"
                         th:value="${cat.getDisplayName()}"
                         th:text="${cat.getDisplayName()}">
                 </option>
             </select>
         </div>
 
+        <!-- 문진 출력 -->
         <div id="surveyContainer" class="mb-6 space-y-4"></div>
 
+        <!-- 제출 버튼 -->
         <button id="submitBtn"
-                class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+                class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                style="display:none;">
             제출하기
         </button>
     </div>
 
     <script>
-        const childSelect = document.getElementById('childSelect');
         const params       = new URLSearchParams(window.location.search);
         const preChildId   = params.get('childId');
-        if (preChildId) {
-            Array.from(childSelect.options).forEach(opt => {
-                if (opt.value === preChildId) {
-                    childSelect.value = preChildId;
-                }
-            });
-        }
-
-        const ageSelect   = document.getElementById('ageSelect');
-        const catSelect   = document.getElementById('categorySelect');
+        const childSelect  = document.getElementById('childSelect');
+        const categorySelect = document.getElementById('categorySelect');
+        const childInfoDiv = document.getElementById('childInfo');
+        const ci = {
+          name:   document.getElementById('ci-name'),
+          gender: document.getElementById('ci-gender'),
+          age:    document.getElementById('ci-age'),
+          height: document.getElementById('ci-height'),
+          weight: document.getElementById('ci-weight'),
+        };
         const container   = document.getElementById('surveyContainer');
         const submitBtn   = document.getElementById('submitBtn');
-        let surveys = [];
 
-        function loadSurveys() {
-            const age = ageSelect.value;
-            const cat = catSelect.value;
-            // [수정] 연령대와 카테고리가 모두 선택되어야 문항을 불러옴
-            if (!age || !cat) {
-                container.innerHTML = '';
-                surveys = [];
-                return;
-            }
+        let surveys = [], currentChildId, currentAgeGroup;
 
-            // [수정] API 경로를 카테고리별 조회로 변경
-            fetch(`/api/special-surveys/by-age/${encodeURIComponent(age)}`)
-                .then(r => r.ok ? r.json() : Promise.reject())
-                .then(data => {
-                    surveys = data.filter(s => s.category === cat);
-                    renderSurveys();
-                })
-                .catch(e => {
-                    console.error(e);
-                    alert('문진 데이터를 불러오는 중 오류 발생');
-                });
+        // ① URL 파라미터가 있으면 미리 선택
+        if (preChildId) {
+          childSelect.value = preChildId;
+          onChildChange();
         }
 
-        ageSelect.addEventListener('change', loadSurveys);
-        catSelect.addEventListener('change', loadSurveys);
+        // 자녀 변경 핸들러
+        childSelect.addEventListener('change', onChildChange);
+
+        async function onChildChange() {
+          currentChildId = childSelect.value;
+          // 선택 해제 시 초기화
+          if (!currentChildId) {
+            childInfoDiv.style.display = 'none';
+            container.innerHTML = '';
+            submitBtn.style.display = 'none';
+            return;
+          }
+          // ② 자녀 정보 AJAX 로드
+          try {
+            const res = await fetch(`/api/child/info/${currentChildId}`);
+            const data = await res.json();
+            // 화면에 뿌리기
+            ci.name.textContent   = data.name;
+            ci.gender.textContent = data.gender;
+            ci.age.textContent    = data.ageDisplay;
+            ci.height.textContent = data.height;
+            ci.weight.textContent = data.weight;
+            childInfoDiv.style.display = 'block';
+            // ageGroup 보관
+            currentAgeGroup = data.ageGroup;
+            // 만약 카테고리가 이미 선택된 상태라면 설문 로드
+            if (categorySelect.value) {
+              loadSurveys();
+            }
+          } catch {
+            alert('자녀 정보를 불러오는 중 오류 발생');
+          }
+        }
+
+        // ⑤ 카테고리 변경 시 설문 로드
+        categorySelect.addEventListener('change', () => {
+          if (!currentChildId) {
+            return alert('먼저 자녀를 선택해주세요');
+          }
+          loadSurveys();
+        });
+
+        async function loadSurveys() {
+          const cat = categorySelect.value;
+          if (!currentAgeGroup || !cat) {
+            container.innerHTML = '';
+            submitBtn.style.display = 'none';
+            return;
+          }
+          try {
+            // by-age API → filter by 카테고리
+            const res = await fetch(
+              `/api/special-surveys/by-age/${encodeURIComponent(currentAgeGroup)}`
+            );
+            const data = await res.json();
+            surveys = data.filter(s => s.category === cat);
+            renderSurveys();
+          } catch {
+            alert('문진 데이터를 불러오는 중 오류 발생');
+          }
+        }
 
         function renderSurveys() {
-            container.innerHTML = '';
-            if (surveys.length === 0) {
-                container.innerHTML = '<p class="text-gray-500">선택된 조건의 문항이 없습니다.</p>';
-                return;
-            }
-            surveys.forEach((s, i) => {
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded';
+          container.innerHTML = '';
+          if (!surveys.length) {
+            container.innerHTML = '<p class="text-gray-500">선택된 조건의 문항이 없습니다.</p>';
+            submitBtn.style.display = 'none';
+            return;
+          }
+          surveys.forEach((s,i) => {
+            const div = document.createElement('div');
+            div.className = 'border p-4 rounded';
+            // 가능한 답변만 뽑아서 라디오 생성
+            const opts = [s.answer1,s.answer2,s.answer3,s.answer4,s.answer5]
+              .filter(a => a && a.trim())
+              .map((text, idx) => `
+                <label class="block">
+                  <input type="radio" name="q${s.id}" value="${idx+1}" required>
+                  ${text}
+                </label>
+              `).join('');
 
-                let optionsHtml = '';
-                // [수정] DB에 저장된 답변만 동적으로 생성
-                const availableAnswers = [s.answer1, s.answer2, s.answer3, s.answer4, s.answer5]
-                    .filter(ans => ans != null && ans.trim() !== '');
-
-                availableAnswers.forEach((answerText, index) => {
-                    const value = index + 1;
-                     optionsHtml += `
-                        <label class="block">
-                            <input type="radio" name="q${s.id}" value="${value}" required>
-                            ${answerText}
-                         </label>`;
-                });
-
-                div.innerHTML = `
-                    <p class="font-semibold mb-2">
-                        Q${i+1}. ${s.question}
-                        <span class="text-sm text-gray-500">(${s.category})</span>
-                    </p>
-                    ${optionsHtml}
-                `;
-                container.appendChild(div);
-            });
+            div.innerHTML = `
+              <p class="font-semibold mb-2">
+                Q${i+1}. ${s.question}
+              </p>
+              ${opts}
+            `;
+            container.appendChild(div);
+          });
+          submitBtn.style.display = 'inline-block';
         }
 
-        submitBtn.addEventListener('click', () => {
-            const answers = [];
-            if (!childSelect.value) return alert('자녀를 선택해주세요');
-            if (!ageSelect.value)   return alert('연령대를 선택해주세요');
-            if (!catSelect.value)   return alert('카테고리를 선택해주세요');
+        // ⑥ 제출
+        submitBtn.addEventListener('click', async () => {
+          // validate
+          if (!currentChildId) return alert('자녀를 선택해주세요');
+          if (!currentAgeGroup) return alert('잘못된 연령대입니다');
+          if (!categorySelect.value) return alert('카테고리를 선택해주세요');
+          const answers = [];
+          for (let s of surveys) {
+            const sel = document.querySelector(`input[name="q${s.id}"]:checked`);
+            if (!sel) return alert('모든 문진에 답변해주세요');
+            const label = sel.closest('label').textContent.trim();
+            answers.push({
+              surveyId:    s.id,
+              surveySetId: s.surveySetId,
+              question: s.question,
+              answerText: label
+            });
+          }
 
-            // [핵심 수정] 답변을 {surveyId, answerValue} 객체 형태로 수집
-            for (let s of surveys) {
-                const sel = document.querySelector(`input[name="q${s.id}"]:checked`);
-                if (!sel) {
-                    alert('모든 문진에 답변해주세요');
-                    return;
-                }
-                answers.push({
-                    surveyId: s.id,
-                    answerValue: parseInt(sel.value, 10)
-                });
-            }
-
-            // [핵심 수정] answers가 올바른 형식의 객체 배열로 전송됨
-            fetch('/api/special-surveys/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    childId:  Number(childSelect.value),
-                    ageGroup: ageSelect.value,
-                    category: catSelect.value,
-                    answers:  answers
-                })
-            })
-            .then(r => r.ok ? r.json() : Promise.reject())
-            .then(res => {
-                // 결과 페이지는 동일하게 사용
-                const payload = encodeURIComponent(JSON.stringify(res));
-                window.location.href = `/specialSurvey/result?data=${payload}`;
-            })
-            .catch(() => alert('제출 중 오류가 발생했습니다.'));
+          // send
+          try {
+            const resp = await fetch('/api/special-surveys/submit', {
+              method: 'POST',
+              headers: { 'Content-Type':'application/json' },
+              body: JSON.stringify({
+                childId:  Number(currentChildId),
+                ageGroup: currentAgeGroup,
+                category: categorySelect.value,
+                answers:  answers
+              })
+            });
+            const result = await resp.json();
+            // redirect or 처리
+            const p = encodeURIComponent(JSON.stringify(result));
+            window.location.href = `/specialSurvey/result?data=${p}`;
+          } catch {
+            alert('제출 중 오류가 발생했습니다.');
+          }
         });
     </script>
 </th:block>

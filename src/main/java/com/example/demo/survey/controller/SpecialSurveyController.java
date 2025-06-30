@@ -88,8 +88,27 @@ public class SpecialSurveyController {
 //                dto.getAnswers().stream().map(answer -> answer.get("answerValue")).collect(Collectors.toList()) // answerValue만 추출
 //        );
 
-        // 평가
+        // 1) enum 파싱
+        AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
+        SurveyCategory sc = SurveyCategory.fromValue(dto.getCategory());
+
+        // 2) 답변 저장
+        List<SpecialAnswer> savedAnswers = specialAnswerService.saveAndGetAnswers(
+                dto.getChildId(), ag, sc, dto.getAnswers()
+        );
+
+        // 3) 평가 로직
         Map<String,Object> result = specialSurveyService.evaluate(dto);
+
+        // 4) 결과에 childId, enum name, answerIds 담기
+        result.put("childId",  dto.getChildId());
+        result.put("category", sc.name());
+        if ((boolean) result.get("needsMatching")) {
+            List<Long> answerIds = savedAnswers.stream()
+                    .map(SpecialAnswer::getId)
+                    .toList();
+            result.put("answerIds", answerIds);
+        }
 
         // [수정] 매칭이 필요할 때, 저장된 답변들의 ID 목록을 결과에 추가
 //        if ((boolean) result.get("needsMatching")) {

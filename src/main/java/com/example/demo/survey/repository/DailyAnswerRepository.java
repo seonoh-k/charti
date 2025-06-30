@@ -3,6 +3,7 @@ package com.example.demo.survey.repository;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.entity.DailyAnswer;
+import com.example.demo.users.entity.Child;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -45,4 +46,6 @@ public interface DailyAnswerRepository extends JpaRepository<DailyAnswer, Long> 
                                                LocalDateTime end);
 
     Page<DailyAnswer> findAllByChildIdAndDeletedFalse(Long childId, Pageable pageable);
+
+    boolean existsByChildAndCreatedAtBetween(Child child, LocalDateTime from, LocalDateTime to);
 }
