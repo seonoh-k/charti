@@ -86,7 +86,6 @@ public class SpecialAnswerService {
         Child child = childRepo.findById(childId)
                 .orElseThrow(() -> new EntityNotFoundException("자녀를 찾을 수 없습니다: " + childId));
 
-
         List<SpecialAnswer> saved = new ArrayList<>();
         for (SpecialSurveyRequestDto.AnswerDto dto : answers) {
 
@@ -139,6 +138,12 @@ public class SpecialAnswerService {
                 case 5 -> s.getAnswer5();
                 default -> throw new IllegalArgumentException("1~5 사이 값 필요");
             };
+          
+        List<SpecialAnswer> saved = new ArrayList<>();
+        for (SpecialSurveyRequestDto.AnswerDto dto : answers) {
+            // 2) SurveySet 조회 (FK)
+            SurveySet set = surveySetRepo.findById(dto.getSurveySetId())
+                    .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
 
             // 3) SpecialAnswer 엔티티 채우기
             SpecialAnswer ans = new SpecialAnswer();
@@ -155,6 +160,13 @@ public class SpecialAnswerService {
 //                        .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
 //                ans.setSurveySet(set);
 //            }
+
+            ans.setSurveySet(set);
+            ans.setAgeGroup(ageGroup);
+            ans.setCategory(category);
+            ans.setQuestion(dto.getQuestion());
+            ans.setAnswer(dto.getAnswerText());
+
 
             // 4) 저장
             saved.add(answerRepo.save(ans));

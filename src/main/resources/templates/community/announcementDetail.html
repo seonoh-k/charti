@@ -17,7 +17,9 @@
         <h1 class="text-3xl font-bold text-[#628C73] mb-4"
             th:text="${board.title}">공지 제목</h1>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-700 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-gray-700 mb-6">
+            <p><span class="font-medium">카테고리:</span>
+                <span th:text="${board.category2}"/></p>
             <p><span class="font-medium">조회수:</span>
                 <span th:text="${board.views}">0</span></p>
             <p><span class="font-medium">작성자:</span>

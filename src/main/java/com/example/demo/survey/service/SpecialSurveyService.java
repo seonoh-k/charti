@@ -161,11 +161,36 @@ public class SpecialSurveyService {
 
             // [수정] 수정된 getMultiplier 호출 (long을 int로 캐스팅)
             double multiplier = getMultiplier(answer, (int)totalOptions);
+                    .count();
 
-            SurveyCategory cat = survey.getCategory();
+            // 클라이언트가 보낸 텍스트 응답
+            String answerText = ansDto.getAnswerText();
+
+            // 옵션 리스트로 변환
+            List<String> options = Stream.of(
+                            survey.getAnswer1(), survey.getAnswer2(),
+                            survey.getAnswer3(), survey.getAnswer4(),
+                            survey.getAnswer5()
+                    )
+                    .filter(opt -> opt != null && !opt.isBlank())
+                    .toList();
+
+            // 텍스트가 옵션의 몇 번째인지 찾기 (0-based)
+            int idx = options.indexOf(answerText);
+            if (idx < 0) {
+                throw new IllegalArgumentException(
+                        "응답값이 예상된 선택지에 없습니다: " + answerText
+                );
+            }
+            int answerIndex = idx + 1; // 1-based index
 
             categoryMultiplierSum.merge(cat, multiplier, Double::sum);
             categoryQuestionCount.merge(cat, 1, Integer::sum);
+          
+            // multiplier 계산
+            double multiplier = getMultiplier(answerIndex, (int) totalOptions);
+            categoryMultiplierSum.merge(survey.getCategory(), multiplier, Double::sum);
+            categoryQuestionCount.merge(survey.getCategory(), 1, Integer::sum);
         }
 
         // 5) 최종 점수 계산 및 매칭 필요 여부 확인
@@ -183,6 +208,7 @@ public class SpecialSurveyService {
             }
         }
 
+        // 6) 결과 구성
         Map<String,Object> result = new HashMap<>();
         result.put("categoryScores", finalCategoryScores);
         result.put("needsMatching", needsMatching);
@@ -190,10 +216,15 @@ public class SpecialSurveyService {
         if (needsMatching) {
             result.put("childId", dto.getChildId());
             result.put("category", sc.name());
+            List<Long> answerIds = dto.getAnswers().stream()
+                    .map(SpecialSurveyRequestDto.AnswerDto::getSurveyId)
+                    .collect(Collectors.toList());
+            result.put("answerIds", answerIds);
         }
 
         return result;
     }
+
 
     private double getMultiplier(int answer, int totalOptions) {
         switch (totalOptions) {

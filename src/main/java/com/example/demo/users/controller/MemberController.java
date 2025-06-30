@@ -1,6 +1,8 @@
 package com.example.demo.users.controller;
 
 import com.example.demo.dto.*;
+import com.example.demo.dto.request.ChildCreateRequest;
+import com.example.demo.dto.request.ChildUpdateRequest;
 import com.example.demo.dto.request.UserUpdateRequest;
 import com.example.demo.service.AddressService;
 import com.example.demo.survey.dto.DailyAnswerDto;
@@ -14,18 +16,18 @@ import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.ChildService;
 import com.example.demo.users.service.MemberService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import com.example.demo.users.service.UserService;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -126,6 +128,49 @@ public class MemberController {
         model.addAttribute("children", children);
         return "member/child";
     }
+
+    @GetMapping("/member/child/{childId}")
+    @ResponseBody
+    public ChildDTO getChildDetail(@PathVariable Long childId) {
+        Child child = childService.findById(childId);
+
+        return ChildDTO.fromEntityWithDetails(child);
+    }
+    @PostMapping("/member/child/create")
+    public String addChild(@ModelAttribute @Valid ChildCreateRequest dto, BindingResult bindingResult, RedirectAttributes ra) {
+        if (bindingResult.hasErrors()) {
+            // 에러 메시지 리스트 만들기
+            List<String> errorMessages = bindingResult.getFieldErrors().stream()
+                    .map(e -> e.getDefaultMessage())
+                    .toList();
+            ra.addFlashAttribute("error", errorMessages);
+            return "redirect:/member/child";
+        }
+        // 날짜확인
+        if (dto.getBirthday() != null) {
+            LocalDate date = LocalDate.parse(dto.getBirthday());
+            if (date.isAfter(LocalDate.now())) {
+                ra.addFlashAttribute("error", "생일은 오늘보다 이후일 수 없습니다.");
+                return "redirect:/member/child";
+            }
+        }
+        childService.createChild(dto);
+        ra.addFlashAttribute("msg", "자녀가 등록되었습니다!");
+        return "redirect:/member/child";
+    }
+    @PostMapping("/member/child/update")
+    public String updateChild(ChildUpdateRequest dto, RedirectAttributes ra) {
+        childService.updateChild(dto.getId(), dto);
+        ra.addFlashAttribute("msg", "수정 완료!");
+        return "redirect:/member/child"; // 목록 또는 상세로 리다이렉트
+    }
+    @PostMapping("/member/child/delete")
+    public String deleteChild(@RequestParam Long id, RedirectAttributes ra) {
+        childService.softDeleteChild(id);
+        ra.addFlashAttribute("msg", "삭제 완료!");
+        return "redirect:/member/child";
+    }
+
 
 
     @PostMapping("/member/update")
