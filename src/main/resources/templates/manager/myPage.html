@@ -18,11 +18,7 @@
                     </div>
                 </div>
 
-                <a th:href="@{/main}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mb-4 text-sm font-medium">
-                메인으로
-                </a>
-
-                <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">👤 회원 정보 관리</h1>
+                <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center"> 회원 정보 관리</h1>
 
                     <!-- 👀 보기용(일반모드, '수정하기' 누르기 전) -->
                     <div id="userViewSection">
@@ -151,8 +147,8 @@
                         <button type="button" onclick="confirmDelete()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">회원 탈퇴</button>
                     </div>
 
-                </div>
             </div>
+        </div>
 
             <!-- 🔐 비밀번호 변경 모달 -->
             <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
@@ -191,10 +187,9 @@
             <script src="/js/manager/managerPage.js"></script>
             <script src="/js/flashMsg.js"></script>
 
-            </th:block>
-        </main>
-    </div>
+    </main>
 
+</th:block>
 
     <script th:src="@{/js/manager/managerSideBar.js}"></script>
 </body>

@@ -90,18 +90,18 @@
                 questionContainer.innerHTML = '';
                 filteredSurveys.forEach((q, index) => {
                     const questionCard = document.createElement('div');
-                    questionCard.className = 'p-4 border bg-white rounded-md shadow-sm';
+                    questionCard.className = 'questionCard p-4 border bg-white rounded-md shadow-sm';
                     let optionsHtml = '';
                     ['answer1', 'answer2', 'answer3', 'answer4', 'answer5'].forEach((key, i) => {
                         const value = i + 1;
                         optionsHtml += `
                             <label class="flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-gray-100">
-                                <input type="radio" name="answer_${q.id}" value="${value}" required class="form-radio text-red-600 focus:ring-red-500">
-                                <span>${q[key] || ''}</span>
+                                <input type="radio" name="${q.id}" value="${value}" required class="form-radio text-red-600 focus:ring-red-500">
+                                <span class="answerText">${q[key] || ''}</span>
                             </label>`;
                     });
                     questionCard.innerHTML = `
-                        <p class="font-semibold mb-2">${index + 1}. ${q.question || ''}</p>
+                        <p class="question font-semibold mb-2">${index + 1}. ${q.question || ''}</p>
                         <div class="space-y-1">${optionsHtml}</div>`;
                     questionContainer.appendChild(questionCard);
                 });
@@ -118,9 +118,13 @@
                 const answers = [];
                 // surveyId와 answerValue를 함께 수집
                 questionContainer.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                    const questionCard = input.closest(".questionCard");
+                    const question = questionCard.querySelector(".question").textContent.trim();
+                    const answerText = input.nextElementSibling.textContent.trim();
                     answers.push({
-                        surveyId: parseInt(input.name.split('_')[1], 10),
-                        answerValue: parseInt(input.value, 10)
+                        surveyId: Number(input.name),
+                        question: question,
+                        answerText: answerText
                     });
                 });
 

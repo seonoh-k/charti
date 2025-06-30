@@ -6,12 +6,15 @@ import com.example.demo.survey.dto.SurveyRequestDto;
 import com.example.demo.survey.entity.DailyAnswer;
 import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.repository.DailyAnswerRepository;
+import com.example.demo.survey.service.DailyAnswerService;
 import com.example.demo.survey.service.DailySurveyService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.service.ChildService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +28,8 @@ import java.util.Map;
 public class DailySurveyController {
 
     private final DailySurveyService dailySurveyService;
-    private final DailyAnswerRepository answerRepo;
+    private final DailyAnswerService dailyAnswerService;
+    private final DailyAnswerRepository answerRepository;
     private final ChildService childService;
     private final MemberRepository memberRepository;
 
@@ -35,34 +39,47 @@ public class DailySurveyController {
         return dailySurveyService.getSurveysByAgeGroup(ageGroup);
     }
 
+    // 오늘 이미 문진했는지 체크
+    @GetMapping("/check/{childId}")
+    @ResponseBody
+    public ResponseEntity<Void> checkAnsweredToday(@PathVariable Long childId) {
+        Child child = childService.findById(childId);
+        boolean answered = dailyAnswerService.hasAnsweredToday(child);
+        if (answered) {
+            // HTTP 409 Conflict 로 이미 작성됨을 알림
+            return ResponseEntity.status(409).build();
+        }
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping(value = "/submit",
             consumes = "application/json; charset=UTF-8",
             produces = "application/json; charset=UTF-8")
     @ResponseBody
-    public Map<String,Object> submitSurvey(@RequestBody SurveyRequestDto dto) {
-        // 1) DTO 검증
-        System.out.println("====== SurveyRequestDto DTO 확인 ======");
-        System.out.println("받은 ageGroup: " + dto.getAgeGroup());
-        System.out.println("받은 answers: " + dto.getAnswers());
-        System.out.println("===================================");
-
-        // 2) 자녀 엔티티 조회
+    public ResponseEntity<?> submitSurvey(@RequestBody SurveyRequestDto dto) {
+        // 1) 자녀 조회
         Child child = childService.findById(dto.getChildId());
 
-        // 3) 설문 목록 조회
+        // 하루 한 번만 체크
+        if (dailyAnswerService.hasAnsweredToday(child)) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "오늘 이미 데일리 문진을 작성했습니다."));
+        }
+
+        // 2) 설문 목록 조회 & 검증 (기존 로직 그대로)
         List<DailySurvey> surveys = dailySurveyService.getSurveysByAgeGroup(dto.getAgeGroup());
         if (surveys == null || surveys.isEmpty()) {
             throw new IllegalArgumentException("문진 데이터가 없습니다.");
         }
-
         if (dto.getAnswers() == null || dto.getAnswers().isEmpty()) {
             throw new IllegalArgumentException("답변이 없습니다.");
         }
-
         if (dto.getAnswers().size() != surveys.size()) {
             throw new IllegalArgumentException("응답 배열과 설문 데이터 크기가 일치하지 않습니다.");
         }
-        // 4) 답변 저장
+
+        // 3) 답변 저장 (기존 로직)
         for (int i = 0; i < surveys.size(); i++) {
             DailySurvey s = surveys.get(i);
             int answerIdx = dto.getAnswers().get(i);
@@ -84,10 +101,10 @@ public class DailySurveyController {
             da.setQuestion(s.getQuestion());
             da.setAnswer(answerText);
             da.setWeight(s.getWeight());
-            answerRepo.save(da);
+            answerRepository.save(da);
         }
 
-        // 5) 포인트 적립: 이 child의 부모(Member) totalPoint += 500
+        // 4) 포인트 적립 (기존 로직)
         Member parent = child.getParent();
         if (parent.getTotalPoint() == null) {
             parent.setTotalPoint(0);
@@ -95,12 +112,18 @@ public class DailySurveyController {
         parent.setTotalPoint(parent.getTotalPoint() + 500);
         memberRepository.save(parent);
 
-        // 6) 기존 위험도 계산 로직
+        // 5) 위험도 계산 및 결과 반환 (기존 로직)
         double totalRisk = dailySurveyService.calculateRiskScore(dto.getAnswers(), surveys);
         Map<String,Object> result = new HashMap<>();
         result.put("totalRiskScore", totalRisk);
         result.put("categoryScores", dailySurveyService.calculateCategoryRiskScore(dto.getAnswers(), surveys));
-        return result;
+
+        boolean needsSpecial = result.get("categoryScores") != null
+                && ((Map<SurveyCategory,Double>)result.get("categoryScores")).values().stream()
+                .anyMatch(score -> score >= 60.0);
+        result.put("needsSpecialSurvey", needsSpecial);
+
+        return ResponseEntity.ok(result);
     }
 
     // 결과 페이지 라우팅 추가

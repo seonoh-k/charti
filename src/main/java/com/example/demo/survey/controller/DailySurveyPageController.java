@@ -1,5 +1,7 @@
 package com.example.demo.survey.controller;
 
+import com.example.demo.survey.service.DailyAnswerService;
+import com.example.demo.survey.service.DailySurveyService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
@@ -21,10 +23,15 @@ public class DailySurveyPageController {
 
     private final UserService  userService;
     private final ChildService childService;
-    private final ChildRepository childRepository;
+    private final DailyAnswerService dailyAnswerService;
+    private final DailySurveyService dailySurveyService;
 
     @GetMapping("/dailySurvey")
-    public String showDailySurveyPage(@RequestParam(required = false) Long childId, Authentication authentication, Model model) {
+    public String showDailySurveyPage(
+            @RequestParam(required = false) Long childId,
+            Authentication authentication,
+            Model model) {
+
         String principalName = authentication.getName();
         Users me;
 
@@ -41,15 +48,15 @@ public class DailySurveyPageController {
         List<Child> children = childService.findByUsersId(me.getId());
         model.addAttribute("children", children);
 
-        // **선택된 자녀 ID** 그대로 모델에 담기
+        // 선택된 자녀 ID** 그대로 모델에 담기
         model.addAttribute("selectedChildId", childId);
-
-        // **선택된 자녀의 AgeGroup** 이름을 모델에 담기 (childId가 null이면 null)
+        boolean already = false;
         if (childId != null) {
-            childRepository.findById(childId).ifPresent(c ->
-                    model.addAttribute("selectedAgeGroup", c.getAgeGroup().name())
+            already = dailyAnswerService.hasAnsweredToday(
+                    childService.findById(childId)
             );
         }
+        model.addAttribute("isAlreadyWritten", already);
 
         return "dailySurvey";
     }

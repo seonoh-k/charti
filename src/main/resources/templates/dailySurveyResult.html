@@ -1,54 +1,104 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>데일리 문진 결과</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
     <h1 class="text-2xl font-bold mb-4">데일리 문진 결과</h1>
-    <div id="result-container" class="mb-4"></div>
-    <button onclick="goHome()" >홈으로 돌아가기</button>
+    <div id="result-container" class="space-y-6 mb-6"></div>
+    <button onclick="goHome()"
+            class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+        홈으로 돌아가기
+    </button>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
+        // 1) URL 파라미터
+        const params       = new URLSearchParams(window.location.search);
+        const riskParam    = params.get("riskScores");
+        const childId      = params.get("childId");
+        const ageGroup     = params.get("ageGroup");
+        const needsSpecial = params.get("needsSpecial") === 'true';
 
-        // 이미 JSON.stringify → encodeURIComponent 된 걸 가져와서
-        const riskScoresParam = params.get("riskScores");
-        let resultData = {};
+        let resultData;
         try {
-          resultData = JSON.parse(decodeURIComponent(riskScoresParam));
+          resultData = JSON.parse(decodeURIComponent(riskParam));
         } catch (e) {
-          console.error("리스크 데이터 파싱 실패:", e);
-          document.getElementById("result-container")
-                  .innerHTML = `<p class="text-red-500">결과를 불러오는데 실패했습니다.</p>`;
+          console.error("파싱 실패:", e);
+          document.getElementById("result-container").innerHTML =
+            `<p class="text-red-500">결과를 불러오는 데 실패했습니다.</p>`;
           throw e;
         }
 
-        const categoryScores = resultData.categoryScores;
-        const totalRisk     = resultData.totalRiskScore;
-
+        const { categoryScores = {}, totalRiskScore = 0 } = resultData;
         const container = document.getElementById("result-container");
-        // 카테고리별 점수
-        for (const [category, score] of Object.entries(categoryScores)) {
-          const div = document.createElement("div");
-          div.className = "mb-2";
-          div.innerHTML = `<p class="font-semibold">${category} 위험도: ${score.toFixed(2)}%</p>`;
-          container.appendChild(div);
+
+        // Enum 매핑
+        const categoryEnumMap = {
+          "의사소통/정서/심리": "COMMUNICATION",
+          "운동/인지 발달":     "MOTOR_COGNITIVE",
+          "사회성/인지/창의":   "SOCIAL_COGNITIVE",
+          "생활습관":           "LIFESTYLE"
+        };
+
+        // 2) 카테고리별 카드
+        Object.entries(categoryScores).forEach(([catName, score]) => {
+          const pct    = score.toFixed(2);
+          const isHigh = score >= 60;
+          const card   = document.createElement("div");
+          card.className = `p-4 rounded-lg border ${
+            isHigh ? "border-orange-300 bg-orange-50" : "border-gray-200 bg-white"
+          }`;
+
+          let html = `
+            <div class="flex justify-between items-center">
+              <p class="font-semibold text-lg">${catName}</p>
+              <p class="text-2xl font-bold ${
+                isHigh ? "text-orange-600" : "text-green-700"
+              }">${pct}%</p>
+            </div>
+          `;
+
+          // 3) 60% 이상 & needsSpecial = true일 때만 버튼 추가
+          if (isHigh && needsSpecial && childId && ageGroup) {
+            const enumName = categoryEnumMap[catName];
+            if (enumName) {
+              const sp = new URLSearchParams({
+                childId,
+                ageGroup,
+                categories: enumName
+              });
+              html += `
+                <div class="mt-3 pt-3 border-t border-orange-200">
+                  <p class="text-sm text-orange-800 mb-1">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    <strong>'${catName}'</strong> 항목에 대한 심층적인 확인이 권장됩니다.
+                  </p>
+                  <a href="/specialSurvey/by-risk?${sp.toString()}"
+                     class="inline-block bg-orange-500 text-white px-4 py-1 rounded hover:bg-orange-600 text-sm font-bold">
+                    특별 문진 시작하기
+                  </a>
+                </div>
+              `;
+            }
+          }
+
+          card.innerHTML = html;
+          container.appendChild(card);
+        });
+
+        function goHome() {
+          window.location.href = "/dailySurvey";
         }
-
-        // 전체 평균
-        const overallDiv = document.createElement("div");
-        const categoryCount = 4;
-        overallDiv.className = "mt-4 font-bold text-lg";
-        overallDiv.innerHTML = `통합 위험도: ${totalRisk.toFixed(2)  / categoryCount}%`;
-        container.appendChild(overallDiv);
-
-        function goHome() { window.location.href = "/dailySurvey"; }
     </script>
 </th:block>
 </html>

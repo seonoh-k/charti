@@ -1,5 +1,6 @@
 package com.example.demo.survey.service;
 
+import com.example.demo.survey.dto.SurveySetSubmitRequestDto;
 import com.example.demo.survey.entity.GroupAnswer;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.GroupAnswerRepository;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,17 +31,22 @@ public class GroupAnswerService {
     @Transactional
     public void saveAnswers(Long childId,
                             Long setId,
-                            List<Integer> answers) {
+                            List<SurveySetSubmitRequestDto.AnswerDto> answerList) {
                 Child child = childService.findById(childId);
                         SurveySet set = surveySetRepo.findById(setId)
                                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 세트: " + setId));
                 List<GroupSurvey> surveys = set.getGroupSurveys();
-        if (surveys.size() != answers.size()) {
+        if (surveys.size() != answerList.size()) {
             throw new IllegalArgumentException("문진 항목 수와 응답 수 불일치");
         }
+
+        Map<Long, Integer> answerMap = answerList.stream()
+                .collect(Collectors.toMap(SurveySetSubmitRequestDto.AnswerDto::getSurveyId,
+                        SurveySetSubmitRequestDto.AnswerDto::getAnswerValue));
+
         for (int i = 0; i < surveys.size(); i++) {
             GroupSurvey s = surveys.get(i);
-            int idx = answers.get(i);
+            int idx = answerMap.get(s.getId());
             String text = switch(idx) {
                 case 1 -> s.getAnswer1();
                 case 2 -> s.getAnswer2();

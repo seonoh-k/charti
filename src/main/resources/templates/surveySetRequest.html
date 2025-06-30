@@ -45,9 +45,9 @@
 
         <!-- 설문 세트 메타 정보 -->
         <div class="mb-6 space-y-1">
-            <p><strong>연령대:</strong> <span th:text="${ageGroup}">0~12개월</span></p>
-            <p><strong>카테고리:</strong> <span th:text="${category}">의사소통/정서/심리</span></p>
-            <p><strong>타입:</strong> <span th:text="${typeLabel}">그룹 문진</span></p>
+            <p><strong>연령대:</strong> <span id="ageGroup" th:text="${ageGroup}">0~12개월</span></p>
+            <p><strong>카테고리:</strong> <span id="category" th:text="${category}">의사소통/정서/심리</span></p>
+            <p><strong>타입:</strong> <span id="typeLabel" th:text="${typeLabel}">그룹 문진</span></p>
         </div>
 
         <!-- 문항별 라디오 버튼 폼 -->
@@ -59,7 +59,7 @@
                  class="question-block mb-5 p-4 border rounded">
                 <p class="font-semibold mb-2">
                     Q<span th:text="${idx.count}">1</span>.
-                    <span th:text="${q.question}">문항 텍스트</span>
+                    <span th:text="${q.question}" class="question">문항 텍스트</span>
                     <span class="text-sm text-gray-500">
             ( <span th:text="${q.category.displayName}">카테고리명</span> )
           </span>
@@ -69,7 +69,7 @@
                 <div th:each="v : ${#numbers.sequence(1,5)}">
                     <label class="block">
                         <input type="radio"
-                               th:name="${'q' + q.id}"
+                               th:name="${q.id}"
                                th:value="${v}"
                                class="mr-2"/>
                         <span th:switch="${v}">
@@ -94,22 +94,33 @@
     <script>
         document.getElementById('submitBtn').addEventListener('click', () => {
           const form  = document.getElementById('surveyForm');
+          const ageGroup = document.querySelector("#ageGroup").textContent.trim();
+          const category = document.querySelector("#category").textContent.trim();
+          const answerList = [];
           const data  = new FormData(form);
-          const payload = {
-            childId: Number(data.get('childId')),
-            setId:   Number(data.get('setId')),
-            answers: []
-          };
 
           document.querySelectorAll('.question-block').forEach(block => {
             const name = block.querySelector('input[type="radio"]').name;
+            const question = block.querySelector(".question").textContent.trim();
             const sel  = data.get(name);
             if (!sel) {
               alert('모든 문항에 답변해주세요');
               throw '답변 누락';
             }
-            payload.answers.push(Number(sel));
+            answerList.push({
+                surveyId: Number(name),
+                question: question,
+                answerValue: Number(sel)
+            });
           });
+
+          const payload = {
+              childId: Number(data.get('childId')),
+              setId:   Number(data.get('setId')),
+              answerList: answerList,
+              ageGroup: ageGroup,
+              category: category
+          };
 
           fetch('/api/surveySet/submit', {
             method: 'POST',
@@ -120,7 +131,16 @@
             if (!r.ok) throw new Error('네트워크 오류');
             return r.json();
           })
-          .then(res => alert('저장 완료'))
+          .then(res => {
+              alert('저장 완료');
+              const typeLabel = document.querySelector("#typeLabel").textContent.trim();
+              const payload = encodeURIComponent(JSON.stringify(res));
+              if(typeLabel === '그룹 문진') {
+                  window.location.href = `/groupSurvey/result?data=${payload}`;
+              }else {
+                  window.location.href = `/specialSurvey/result?data=${payload}`;
+              }
+          })
           .catch(err => alert('저장 중 오류: ' + err.message));
         });
     </script>

@@ -9,6 +9,7 @@ import com.example.demo.survey.entity.SpecialSurvey;
 import com.example.demo.survey.service.SpecialAnswerService;
 import com.example.demo.survey.service.SpecialSurveyService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/special-surveys")
 @RequiredArgsConstructor
+@Slf4j
 public class SpecialSurveyController {
 
     private final SpecialSurveyService specialSurveyService;
@@ -79,7 +81,7 @@ public class SpecialSurveyController {
     @PostMapping("/submit")
     public ResponseEntity<Map<String,Object>> submitAndSave(
             @RequestBody SpecialSurveyRequestDto dto) {
-
+    log.info(String.valueOf(dto.getChildId()));
         // [수정] 새로 만든 서비스 메소드를 호출하여 저장된 답변 목록을 받음
 //        List<SpecialAnswer> savedAnswers = specialAnswerService.saveAndGetAnswers(
 //                dto.getChildId(),
@@ -88,8 +90,27 @@ public class SpecialSurveyController {
 //                dto.getAnswers().stream().map(answer -> answer.get("answerValue")).collect(Collectors.toList()) // answerValue만 추출
 //        );
 
-        // 평가
+        // 1) enum 파싱
+        AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
+        SurveyCategory sc = SurveyCategory.fromValue(dto.getCategory());
+
+        // 2) 답변 저장
+        List<SpecialAnswer> savedAnswers = specialAnswerService.saveAndGetAnswers(
+                dto.getChildId(), ag, sc, dto.getAnswers()
+        );
+
+        // 3) 평가 로직
         Map<String,Object> result = specialSurveyService.evaluate(dto);
+
+        // 4) 결과에 childId, enum name, answerIds 담기
+        result.put("childId",  dto.getChildId());
+        result.put("category", sc.name());
+        if ((boolean) result.get("needsMatching")) {
+            List<Long> answerIds = savedAnswers.stream()
+                    .map(SpecialAnswer::getId)
+                    .toList();
+            result.put("answerIds", answerIds);
+        }
 
         // [수정] 매칭이 필요할 때, 저장된 답변들의 ID 목록을 결과에 추가
 //        if ((boolean) result.get("needsMatching")) {
