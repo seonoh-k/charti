@@ -49,60 +49,79 @@ public class SpecialSurveyService {
         Map<SurveyCategory, Double> categoryMultiplierSum = new HashMap<>();
         Map<SurveyCategory, Integer> categoryQuestionCount = new HashMap<>();
 
-        // 4) 루프에서 weight 관련 계산 모두 제거
+        // 4) 각 문항별 multiplier 합산
         for (int i = 0; i < surveys.size(); i++) {
             SpecialSurvey survey = surveys.get(i);
+            SpecialSurveyRequestDto.AnswerDto ansDto = dto.getAnswers().get(i);
 
-            // [핵심 수정] DTO의 List<Map> 구조에 맞게 'answerValue' 키로 값을 가져오도록 변경
-//            int answer = dto.getAnswers().get(i).get("answerValue");
-
-            long totalOptions = Stream.of(survey.getAnswer1(), survey.getAnswer2(), survey.getAnswer3(), survey.getAnswer4(), survey.getAnswer5())
-                    .filter(ans -> ans != null && !ans.isBlank())
+            // 전체 선택지 개수
+            long totalOptions = Stream.of(
+                            survey.getAnswer1(), survey.getAnswer2(),
+                            survey.getAnswer3(), survey.getAnswer4(),
+                            survey.getAnswer5()
+                    )
+                    .filter(opt -> opt != null && !opt.isBlank())
                     .count();
-//            double multiplier = getMultiplier(answer, (int)totalOptions);
 
-            SurveyCategory cat = survey.getCategory();
+            // 클라이언트가 보낸 텍스트 응답
+            String answerText = ansDto.getAnswerText();
 
-            // 카테고리별 답변 비율(multiplier)의 합과 문항 수를 기록
-//            categoryMultiplierSum.merge(cat, multiplier, Double::sum);
-            categoryQuestionCount.merge(cat, 1, Integer::sum);
+            // 옵션 리스트로 변환
+            List<String> options = Stream.of(
+                            survey.getAnswer1(), survey.getAnswer2(),
+                            survey.getAnswer3(), survey.getAnswer4(),
+                            survey.getAnswer5()
+                    )
+                    .filter(opt -> opt != null && !opt.isBlank())
+                    .toList();
+
+            // 텍스트가 옵션의 몇 번째인지 찾기 (0-based)
+            int idx = options.indexOf(answerText);
+            if (idx < 0) {
+                throw new IllegalArgumentException(
+                        "응답값이 예상된 선택지에 없습니다: " + answerText
+                );
+            }
+            int answerIndex = idx + 1; // 1-based index
+
+            // multiplier 계산
+            double multiplier = getMultiplier(answerIndex, (int) totalOptions);
+            categoryMultiplierSum.merge(survey.getCategory(), multiplier, Double::sum);
+            categoryQuestionCount.merge(survey.getCategory(), 1, Integer::sum);
         }
 
-        // 5) 최종 점수 계산 및 매칭 필요 여부 동시 확인
+        // 5) 최종 점수 계산 및 매칭 필요 여부 확인
         Map<String, Double> finalCategoryScores = new HashMap<>();
-        boolean needsMatching = false; // 플래그 이름 변경
+        boolean needsMatching = false;
 
         for (SurveyCategory cat : categoryMultiplierSum.keySet()) {
             double sumOfMultipliers = categoryMultiplierSum.get(cat);
-            int countOfQuestions = categoryQuestionCount.get(cat);
+            int count = categoryQuestionCount.getOrDefault(cat, 0);
 
-            // 카테고리별 '답변 위험도 평균 퍼센트' 계산
-            double averageRiskPercentage = (countOfQuestions > 0)
-                    ? (sumOfMultipliers / countOfQuestions) * 100
-                    : 0.0;
-
-            finalCategoryScores.put(cat.getDisplayName(), averageRiskPercentage);
-
-            // 평균 위험도가 60% 이상인지 확인
-            if (needsMatching(averageRiskPercentage)) {
+            double avgPercent = (count > 0 ? (sumOfMultipliers / count) * 100 : 0.0);
+            finalCategoryScores.put(cat.getDisplayName(), avgPercent);
+            if (needsMatching(avgPercent)) {
                 needsMatching = true;
             }
         }
 
-        // 6) 최종 결과 Map 구성
+        // 6) 결과 구성
         Map<String,Object> result = new HashMap<>();
         result.put("categoryScores", finalCategoryScores);
-        result.put("needsMatching", needsMatching); // 키 이름 변경
+        result.put("needsMatching", needsMatching);
 
-        // 매칭이 필요할 경우 관련 정보 추가 (추후 매칭 테이블 저장 시 사용)
         if (needsMatching) {
             result.put("childId", dto.getChildId());
-            // [수정] category는 ENUM의 name()을 반환하도록 통일
             result.put("category", sc.name());
+            List<Long> answerIds = dto.getAnswers().stream()
+                    .map(SpecialSurveyRequestDto.AnswerDto::getSurveyId)
+                    .collect(Collectors.toList());
+            result.put("answerIds", answerIds);
         }
 
         return result;
     }
+
 
     private double getMultiplier(int answer, int totalOptions) {
         switch (totalOptions) {

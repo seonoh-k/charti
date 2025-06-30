@@ -36,11 +36,14 @@ public class ChildController {
     public Map<String, Object> getChildInfo(@PathVariable Long childId) {
         Child child = childService.findById(childId);
         Map<String, Object> result = new HashMap<>();
+        result.put("id", child.getId());
         result.put("name", child.getName());
         result.put("gender", child.getGender());
         result.put("age", child.getAge());
         result.put("height", child.getHeight());
         result.put("weight", child.getWeight());
+        result.put("ageGroup", child.getAgeGroup().name());
+        result.put("ageDisplay", child.getAgeDisplay());
         return result;
     }
 }

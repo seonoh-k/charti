@@ -2,6 +2,7 @@
 package com.example.demo.survey.service;
 
 import com.example.demo.enums.SurveyCategory;
+import com.example.demo.survey.dto.SpecialSurveyRequestDto;
 import com.example.demo.survey.entity.SpecialAnswer;
 import com.example.demo.survey.entity.SpecialSurvey;
 import com.example.demo.enums.AgeGroup;
@@ -31,7 +32,7 @@ public class SpecialAnswerService {
     private final SurveySetRepository surveySetRepo;
     private final SpecialSurveyRepository surveyRepo;
     private final SpecialSurveyRepository surveyRepository;
-    private final ChildRepository childRepository;
+    private final ChildRepository childRepo;
 
     @Transactional
     public void saveAnswers(Long childId,
@@ -70,37 +71,35 @@ public class SpecialAnswerService {
 
     // [신규 메소드 추가] - 저장된 SpecialAnswer 엔티티 목록을 반환
     @Transactional
-    public List<SpecialAnswer> saveAndGetAnswers(Long childId, AgeGroup ageGroup, SurveyCategory category, List<Integer> answerValues) {
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> new EntityNotFoundException("Child not found: " + childId));
+    public List<SpecialAnswer> saveAndGetAnswers(
+            Long childId,
+            AgeGroup ageGroup,
+            SurveyCategory category,
+            List<SpecialSurveyRequestDto.AnswerDto> answers
+    ) {
+        // 1) Child 조회
+        Child child = childRepo.findById(childId)
+                .orElseThrow(() -> new EntityNotFoundException("자녀를 찾을 수 없습니다: " + childId));
 
-        List<SpecialSurvey> surveys = surveyRepo.findByAgeGroupAndCategoryAndDeletedFalse(ageGroup, category);
+        List<SpecialAnswer> saved = new ArrayList<>();
+        for (SpecialSurveyRequestDto.AnswerDto dto : answers) {
+            // 2) SurveySet 조회 (FK)
+            SurveySet set = surveySetRepo.findById(dto.getSurveySetId())
+                    .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
 
-        if (surveys.size() != answerValues.size()) {
-            throw new IllegalArgumentException("답변 수가 문항 수와 일치하지 않습니다.");
+            // 3) SpecialAnswer 엔티티 채우기
+            SpecialAnswer ans = new SpecialAnswer();
+            ans.setChild(child);
+            ans.setSurveySet(set);
+            ans.setAgeGroup(ageGroup);
+            ans.setCategory(category);
+            ans.setQuestion(dto.getQuestion());
+            ans.setAnswer(dto.getAnswerText());
+
+            // 4) 저장
+            saved.add(answerRepo.save(ans));
         }
-
-        Map<Long, SpecialSurvey> surveyMap = surveys.stream()
-                .collect(Collectors.toMap(SpecialSurvey::getId, Function.identity()));
-
-        List<SpecialAnswer> savedAnswers = new ArrayList<>();
-
-        for (int i = 0; i < surveys.size(); i++) {
-            SpecialSurvey survey = surveys.get(i);
-            int answerValue = answerValues.get(i);
-            String answerText = getAnswerTextByValue(survey, answerValue);
-
-            SpecialAnswer specialAnswer = new SpecialAnswer();
-            specialAnswer.setChild(child);
-//            specialAnswer.setSurvey(survey);
-            specialAnswer.setAgeGroup(ageGroup);
-            specialAnswer.setCategory(category);
-            specialAnswer.setQuestion(survey.getQuestion());
-            specialAnswer.setAnswer(answerText);
-
-            savedAnswers.add(answerRepo.save(specialAnswer));
-        }
-        return savedAnswers;
+        return saved;
     }
 
     // 답변 값(1~5)에 해당하는 답변 텍스트를 가져오는 헬퍼 메소드
