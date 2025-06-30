@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.entity.Group;
 import lombok.*;
 
 import java.util.List;
@@ -20,4 +21,8 @@ public class GroupDTO {
 
     private List<ChildDTO> children;
 
+    public GroupDTO(Group group) {
+        this.id = group.getId();
+        this.groupName = group.getGroupName();
+    }
 }

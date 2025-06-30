@@ -25,14 +25,6 @@ public class CommentService {
     }
 
     /**
-     * 새로운 댓글을 저장합니다.
-     */
-    @Transactional
-    public Comment save(Comment comment) {
-        return repo.save(comment);
-    }
-
-    /**
      * 지정된 게시글 ID에 달린 댓글을 페이지 단위로 조회합니다.
      * @param communityId 댓글이 속한 게시글 ID
      * @param page 조회할 페이지 번호 (0부터 시작)
@@ -40,5 +32,24 @@ public class CommentService {
     public Page<Comment> getCommentsPage(Long communityId, int page) {
         Pageable pageable = PageRequest.of(page, 5, Sort.by(Sort.Order.asc("createdAt")));
         return repo.findByCommunityId(communityId, pageable);
+    }
+    /** 단일 댓글 조회 (수정/삭제 전 권한 체크 등에 사용) */
+    public Comment findById(Long commentId) {
+        return repo.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글이 없습니다. id=" + commentId));
+    }
+
+    /** 댓글 저장/수정 */
+    @Transactional
+    public Comment save(Comment comment) {
+        return repo.save(comment);
+    }
+
+    /** 댓글 삭제 */
+    @Transactional
+    public void delete(Long commentId) {
+        Comment c = findById(commentId);
+        c.setDeleted(true);
+        repo.save(c);
     }
 }

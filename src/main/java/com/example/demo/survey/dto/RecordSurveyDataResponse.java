@@ -22,7 +22,7 @@ public class RecordSurveyDataResponse {
     /**
      * 해당 자녀에게 제시될 기록 문진 질문들의 리스트입니다.
      */
-    private final List<RecordSurvey> surveys;
+    private final List<RecordSurveyResponse> surveys;
 
     /**
      * RecordSurveyDataResponse의 생성자입니다.
@@ -30,7 +30,12 @@ public class RecordSurveyDataResponse {
      * @param child 문진 질문을 받을 자녀 엔티티
      * @param surveys 자녀에게 제시될 RecordSurvey 엔티티 리스트
      */
-    public RecordSurveyDataResponse(Child child, List<RecordSurvey> surveys) {
+//    public RecordSurveyDataResponse(Child child, List<RecordSurvey> surveys) {
+//        this.child = child;
+//        this.surveys = surveys;
+//    }
+
+    public RecordSurveyDataResponse(Child child, List<RecordSurveyResponse> surveys) {
         this.child = child;
         this.surveys = surveys;
     }

@@ -1,22 +1,7 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <!-- Fontawesome 연결 Embed Code Start-->
-    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
-    <!-- Fontawesome 연결 Embed Code End-->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>관리자 페이지</title>
-</head>
-<body class="h-screen flex flex-col">
-    <!-- 헤더 (햄버거 버튼) -->
-    <div th:replace="fragments/expertFragments :: hamburger"></div>
-
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/expertLayout">
+<th:block layout:fragment="content">
     <div class="flex flex-1">
-        <div th:replace="fragments/expertFragments :: sideBar"></div>
         <div class="flex-1 justify-center items-center p-20">
             <h1 class="text-2xl font-bold mb-4">상담 상세 및 답변</h1>
 
@@ -125,6 +110,5 @@
           });
         });
     </script>
-</body>
-<script th:src="@{/js/admin/adminSideBar.js}"></script>
+</th:block>>
 </html>

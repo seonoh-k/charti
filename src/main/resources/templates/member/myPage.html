@@ -1,14 +1,13 @@
-    <!DOCTYPE html>
-    <html lang="ko"
-        xmlns:th="http://www.thymeleaf.org"
-        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        layout:decorate="~{layout/default_layout}">
-    <th:block layout:fragment="content">
-
-        <!-- 중앙 정렬 wrapper -->
-        <div class="flex justify-center items-center py-20">
-            <!-- 마이페이지 카드 박스 -->
-            <div class="bg-white p-10 rounded-xl shadow-xl w-full max-w-2xl">
+<!DOCTYPE html>
+<html lang="ko"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/default_layout}">
+<th:block layout:fragment="content">
+<!-- 중앙 정렬 wrapper -->
+<div class="flex justify-center items-center py-20">
+    <!-- 마이페이지 카드 박스 -->
+    <div class="bg-white p-10 rounded-xl shadow-xl w-full max-w-2xl">
 
                 <!-- 메시지 고정 영역 -->
                 <div class="min-h-[48px] mb-2">
@@ -19,7 +18,7 @@
                         <span th:text="${error}"></span>
                     </div>
                 </div>
-                    
+
                 <h1 class="text-2xl font-bold mb-8 text-center">👤 일반회원 마이페이지</h1>
 
                 <!-- 👀 보기 전용 -->
@@ -54,9 +53,9 @@
                             <span th:text="${userInfo.address != null ? userInfo.address.zipNum : '주소정보가 없습니다'}"></span>
                         </div>
                         <div id="v_addr1" class="w-full border border-gray-300 p-2 bg-gray-100 rounded">
-                            <span th:text="${userInfo.address != null ? 
-                                userInfo.address.sido + ' ' + userInfo.address.gugun + ' ' + userInfo.address.dong + 
-                                (userInfo.address.bunji != null and !#strings.isEmpty(userInfo.address.bunji) 
+                            <span th:text="${userInfo.address != null ?
+                                userInfo.address.sido + ' ' + userInfo.address.gugun + ' ' + userInfo.address.dong +
+                                (userInfo.address.bunji != null and !#strings.isEmpty(userInfo.address.bunji)
                                     ? ' ' + userInfo.address.bunji : '') : ''}"></span>
                         </div>
                     </div>
@@ -136,7 +135,7 @@
 
                         <input type="text" id="addr1"
                             class="w-full border p-2 bg-gray-100 rounded" readonly
-                            th:value="${userInfo.address != null ? 
+                            th:value="${userInfo.address != null ?
                                 userInfo.address.sido + ' ' + userInfo.address.gugun + ' ' + userInfo.address.dong +
                                 (userInfo.address.bunji != null and !#strings.isEmpty(userInfo.address.bunji)
                                     ? ' ' + userInfo.address.bunji : '') : ''}" />
@@ -213,10 +212,10 @@
             <script type="module" src="/js/smsAuth.js"></script>
             <script src="/js/userEdit.js"></script>
             <script src="/js/manager/managerPage.js"></script>
-            <script src="/js/flashMsg.js"></script>   
+            <script src="/js/flashMsg.js"></script>
         </th:block>
 
-    </th:block>
+</th:block>
 
 
-    </html>
+</html>
