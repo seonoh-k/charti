@@ -21,18 +21,9 @@
                  class="w-[150px] h-auto cursor-pointer"/>
             <nav id="hdNav" class="mt-6">
                 <ul id="hdUl" class="flex gap-6 items-center">
-                    <th:block th:if="${session.userId == null}">
-                        <button>
-                            <a href="/" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">메인 홈페이지</a>
-                        </button>
-                        <li><a id="loginBtn" href="/admin/loginForm">로그인</a></li>
-                    </th:block>
-                    <th:block th:if="${session.userId != null}">
-                        <button>
-                            <a href="/" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">메인 홈페이지</a>
-                        </button>
-                        <li><a id="logoutBtn" href="/logout">로그아웃</a></li>
-                    </th:block>
+                    <li><a id="loginBtn" href="/loginForm">로그인</a></li>
+                    <li><span id="welcomeText" class="hidden text-gray-700 font-semibold"></span></li>
+                    <li><a id="logoutBtn" href="/logout" class="hidden">로그아웃</a></li>
                 </ul>
             </nav>
         </div>
@@ -97,5 +88,54 @@
             </div>
         </nav>
     </header>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/api/admin/me", {
+                method: "GET",
+                credentials: "include"  // 쿠키 자동 전송
+            })
+<!--            .then(response => {-->
+<!--                if (!response.ok) throw new Error("Not logged in");-->
+<!--                return response.json();-->
+<!--            })-->
+                .then(response => {
+                    console.log("응답:", response); // ✅ 추가
+                    if (!response.ok) throw new Error("Not logged in");
+                    return response.json();
+                })
+            .then(admin => {
+                // 로그인된 경우 UI 수정
+                console.log("👤 관리자:", admin.name); // AdminDTO에 맞춰 출력
+                document.getElementById("loginBtn")?.classList.add("hidden");
+                const welcomeText = document.getElementById("welcomeText");
+                if (welcomeText) {
+                    welcomeText.textContent = `${admin.name}님, 환영합니다!`;
+                    welcomeText.classList.remove("hidden");
+                }
+                document.getElementById("logoutBtn")?.classList.remove("hidden");
+            })
+            .catch(() => {
+                // 로그인 안 된 경우: 마이페이지/로그아웃 숨김
+                document.getElementById("logoutBtn")?.classList.add("hidden");
+                document.getElementById("loginBtn")?.classList.remove("hidden");
+            });
+
+            // 로그아웃 처리
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    // 서버 요청
+                    fetch("/api/users/delete", {
+                        method: "DELETE",
+                        credentials: "include"
+                    }).then(() => {
+                        document.cookie = "token=; Path=/; Max-Age=0";
+                        window.location.href = "/";
+                    });
+                });
+            }
+        });
+    </script>
 </th:block>
 </html>

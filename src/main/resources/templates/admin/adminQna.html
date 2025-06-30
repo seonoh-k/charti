@@ -1,6 +1,18 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/admin_layout">
-<th:block layout:fragment="content">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+</head>
+    <th:block layout:fragment="content">
+        <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
     <div class="flex flex-1">
         <div class="flex-1 justify-center items-center p-20">
             <div class="relative flex items-center justify-between">
@@ -67,7 +79,7 @@
                 </form>
             </div>
 
-            <div class="flex justify-center mt-6">
+            <div class="flex justify-center mt-6 mx-6">
                 <a href="/admin/qna" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded shadow">
                     목록
                 </a>
@@ -131,5 +143,6 @@
             })
         </script>
     </div>
+        </div>
 </th:block>>
 </html>

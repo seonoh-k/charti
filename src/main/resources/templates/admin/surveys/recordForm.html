@@ -9,7 +9,7 @@
 </head>
 
 <th:block layout:fragment="content">
-    <div class="max-w-4xl mx-auto bg-white shadow p-6 mt-8 rounded">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
         <h1 class="text-2xl font-bold mb-4" th:text="${survey.surveyId == null ? '문진 등록' : '문진 수정'}"></h1>
 
         <form th:action="${survey.surveyId == null} ? @{/admin/surveys/record} : @{'/admin/surveys/record/' + ${survey.surveyId}}"
