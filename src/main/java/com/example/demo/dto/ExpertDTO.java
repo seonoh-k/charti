@@ -25,6 +25,7 @@ public class ExpertDTO {
     private LocalDateTime createdAt;
     private Boolean isApproved;
     private Boolean deleted;
+    private AddressDTO address;
     // 엔티티 → DTO 변환 메서드
     public static ExpertDTO fromEntity(Expert expert) {
         // 추가로 필요한 데이터 작성

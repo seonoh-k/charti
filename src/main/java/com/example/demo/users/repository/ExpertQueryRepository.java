@@ -24,5 +24,6 @@ public interface ExpertQueryRepository {
     // deleted = false, approve = false, ROLE = MEMBER,  OrderBy => createAt[DESC]
     Page<ExpertDTO> getUnapprovedExpertList(Pageable pageable);
 
+    Optional<ExpertDTO> getExpertByIdWithAddress(Long id);
 }
 

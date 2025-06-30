@@ -4,70 +4,73 @@
     xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layout/default_layout}">
 <th:block layout:fragment="content">
-<!-- 중앙 정렬 wrapper -->
-<div class="flex justify-center items-center py-20">
-    <!-- 마이페이지 카드 박스 -->
-    <div class="bg-white p-10 rounded-xl shadow-xl w-full max-w-2xl">
+    <div class="flex gap-6 m-10">
+        <aside class="w-[15%] p-4">
+            <th:block th:replace="~{fragments/subMenu :: subMenuFragment}"></th:block>
+        </aside>
 
-                <!-- 메시지 고정 영역 -->
-                <div class="min-h-[48px] mb-2">
-                    <div id="flashMsg" th:if="${msg}" class="bg-green-100 border p-2 rounded text-green-700 mb-2 text-sm">
-                        <span th:text="${msg}"></span>
-                    </div>
-                    <div id="flashError" th:if="${error}" class="bg-red-100 border p-2 rounded text-red-700 mb-2 text-sm">
-                        <span th:text="${error}"></span>
-                    </div>
+        <main class="w-full md:w-[70%] m-4 p-8 space-y-8 bg-white rounded-2xl shadow flex flex-col">
+            <!-- 메시지 영역 -->
+            <div class="min-h-[48px] mb-2">
+                <div id="flashMsg" th:if="${msg}" class="bg-green-100 border border-green-300 p-2 rounded text-green-700 mb-2 text-sm">
+                    <span th:text="${msg}"></span>
                 </div>
+                <div id="flashError" th:if="${error}" class="bg-red-100 border border-red-300 p-2 rounded text-red-700 mb-2 text-sm">
+                    <span th:text="${error}"></span>
+                </div>
+            </div>
 
-                <h1 class="text-2xl font-bold mb-8 text-center">👤 일반회원 마이페이지</h1>
+            <h1 class="text-2xl font-bold mb-8 text-center">회원 정보 관리</h1>
 
-                <!-- 👀 보기 전용 -->
-                <div id="userViewSection">
+            <!--  보기 전용 -->
+            <section id="userViewSection" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-semibold mb-1">이름</label>
-                        <div id="v_name" class="w-full border border-gray-300 p-2 rounded-md bg-gray-100">
+                        <div class="border border-gray-200 p-2 rounded bg-gray-50 text-gray-800">
                             <span th:text="${userInfo.name}"></span>
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-1">닉네임</label>
-                        <div id="v_nickname" class="w-full border border-gray-300 p-2 rounded-md bg-gray-100">
+                        <div class="border border-gray-200 p-2 rounded bg-gray-50 text-gray-800">
                             <span th:text="${userInfo.nickname}"></span>
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-1">이메일</label>
-                        <div id="v_username" class="w-full border border-gray-300 p-2 rounded-md bg-gray-100">
+                        <div class="border border-gray-200 p-2 rounded bg-gray-50 text-gray-800">
                             <span th:text="${userInfo.username}"></span>
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-1">전화번호</label>
-                        <div id="v_phoneNumber" class="w-full border border-gray-300 p-2 rounded-md bg-gray-100">
+                        <div class="border border-gray-200 p-2 rounded bg-gray-50 text-gray-800">
                             <span th:text="${userInfo.phoneNumber}"></span>
                         </div>
                     </div>
-                    <div>
+                    <div class="md:col-span-2">
                         <label class="block text-sm font-semibold mb-1">주소</label>
-                        <div id="v_zipNum" class="w-full mb-2 border border-gray-300 p-2 bg-gray-100 rounded">
-                            <span th:text="${userInfo.address != null ? userInfo.address.zipNum : '주소정보가 없습니다'}"></span>
+                        <div class="flex flex-col gap-1">
+                            <div class="border border-gray-200 p-2 rounded bg-gray-50">
+                                <span th:text="${userInfo.address != null ? userInfo.address.zipNum : '주소정보가 없습니다'}"></span>
+                            </div>
+                            <div class="border border-gray-200 p-2 rounded bg-gray-50">
+                                <span th:text="${userInfo.address != null ? userInfo.address.sido + ' ' + userInfo.address.gugun + ' ' + userInfo.address.dong + (userInfo.address.bunji != null and !#strings.isEmpty(userInfo.address.bunji) ? ' ' + userInfo.address.bunji : '') : ''}"></span>
+                            </div>
                         </div>
-                        <div id="v_addr1" class="w-full border border-gray-300 p-2 bg-gray-100 rounded">
-                            <span th:text="${userInfo.address != null ?
-                                userInfo.address.sido + ' ' + userInfo.address.gugun + ' ' + userInfo.address.dong +
-                                (userInfo.address.bunji != null and !#strings.isEmpty(userInfo.address.bunji)
-                                    ? ' ' + userInfo.address.bunji : '') : ''}"></span>
-                        </div>
-                    </div>
-                    <div class="flex flex-row justify-end gap-2 pt-4">
-                        <button type="button" onclick="toggleUserEdit(true)" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
-                            수정하기
-                        </button>
                     </div>
                 </div>
+                <div class="flex flex-row justify-end gap-2 pt-2">
+                    <button type="button" onclick="toggleUserEdit(true)" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-md shadow transition">
+                        수정하기
+                    </button>
+                </div>
+            </section>
 
-                <!-- 📝 수정(폼) -->
-                <form id="userEditForm" th:action="@{/member/update}" method="post" autocomplete="off" class="hidden">
+            <!--  수정(폼) -->
+            <form id="userEditForm" th:action="@{/member/update}" method="post" autocomplete="off" class="space-y-4 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-semibold mb-1">이름</label>
                         <input type="text" name="name" id="name"
@@ -84,86 +87,87 @@
                         <label class="block text-sm font-semibold mb-1">이메일</label>
                         <input type="email" name="username" id="username"
                             th:value="${userInfo.username}"
-                            class="w-full border p-2 rounded-md bg-gray-100" readonly />
+                            class="w-full border border-gray-300 p-2 rounded-md bg-gray-100" readonly />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-1">전화번호</label>
                         <input type="text" name="phoneNumber" id="phoneNumber"
                             th:value="${userInfo.phoneNumber}"
-                            class="w-full border p-2 rounded-md bg-gray-100" readonly />
+                            class="w-full border border-gray-300 p-2 rounded-md bg-gray-100" readonly />
                     </div>
+                </div>
 
-                    <!-- 🔐 SMS 인증 (수정모드에서만 보임) -->
-                    <div id="smsSection">
-                        <label for="phone" class="block mb-1 text-sm font-medium">휴대전화</label>
-                        <div class="flex gap-2">
-                            <select id="phone1" class="p-2 rounded border w-20">
-                                <option value="010">010</option>
-                                <option value="011">011</option>
-                                <option value="016">016</option>
-                                <option value="017">017</option>
-                                <option value="018">018</option>
-                                <option value="019">019</option>
-                            </select>
-                            <input id="phone2" type="text" maxlength="4" placeholder="1234" class="p-2 rounded border w-20" pattern="\d*" />
-                            <input id="phone3" type="text" maxlength="4" placeholder="5678" class="p-2 rounded border w-20" pattern="\d*" />
-                            <button type="button" id="send-otp-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" onclick="sendSmsOtp()">
-                                인증번호 받기
-                            </button>
-                        </div>
-                        <div class="mt-2">
-                            <label for="otp" class="block text-sm font-medium mb-1">인증번호</label>
-                            <input id="otp" type="text" placeholder="6자리 코드" class="w-full p-2 rounded border" disabled />
-                            <button type="button" id="verify-otp-btn" class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded" onclick="verifySmsOtp()" disabled>
-                                인증 확인
-                            </button>
-                        </div>
-                        <div id="recaptcha-container"></div>
-                        <input type="hidden" name="newUid" id="newUid" value="">
-                    </div>
-
-                    <!-- 주소/주소검색 버튼 -->
-                    <div>
-                        <label class="block text-sm font-semibold mb-1">주소</label>
-                        <button type="button" onclick="openAddressModal()"
-                                class="mb-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
-                            주소 검색
+                <!--  SMS 인증 -->
+                <div id="smsSection" class="my-2">
+                    <label for="phone" class="block mb-1 text-sm font-medium">휴대전화</label>
+                    <div class="flex gap-2">
+                        <select id="phone1" class="p-2 rounded border w-20">
+                            <option value="010">010</option>
+                            <option value="011">011</option>
+                            <option value="016">016</option>
+                            <option value="017">017</option>
+                            <option value="018">018</option>
+                            <option value="019">019</option>
+                        </select>
+                        <input id="phone2" type="text" maxlength="4" placeholder="1234" class="p-2 rounded border w-20" pattern="\d*" />
+                        <input id="phone3" type="text" maxlength="4" placeholder="5678" class="p-2 rounded border w-20" pattern="\d*" />
+                        <button type="button" id="send-otp-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" onclick="sendSmsOtp()">
+                            인증번호 받기
                         </button>
-                        <input type="text" id="zipNum"
-                            class="w-full mb-2 border p-2 bg-gray-100 rounded" readonly
-                            th:value="${userInfo.address != null ? userInfo.address.zipNum : '주소정보가 없습니다'}" />
-
-                        <input type="text" id="addr1"
-                            class="w-full border p-2 bg-gray-100 rounded" readonly
-                            th:value="${userInfo.address != null ?
-                                userInfo.address.sido + ' ' + userInfo.address.gugun + ' ' + userInfo.address.dong +
-                                (userInfo.address.bunji != null and !#strings.isEmpty(userInfo.address.bunji)
-                                    ? ' ' + userInfo.address.bunji : '') : ''}" />
-
-                        <input type="hidden" id="addressId" name="addressId"
-                            th:value="${userInfo.address != null ? userInfo.address.id : ''}" />
                     </div>
-
-                    <div class="flex flex-row justify-end gap-2 pt-4">
-                        <button type="button" onclick="submitEdit()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">완료</button>
-                        <button type="button" onclick="toggleUserEdit(false)" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
+                    <div class="mt-2">
+                        <label for="otp" class="block text-sm font-medium mb-1">인증번호</label>
+                        <input id="otp" type="text" placeholder="6자리 코드" class="w-full p-2 rounded border" disabled />
+                        <button type="button" id="verify-otp-btn" class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded" onclick="verifySmsOtp()" disabled>
+                            인증 확인
+                        </button>
                     </div>
-                </form>
+                    <div id="recaptcha-container"></div>
+                    <input type="hidden" name="newUid" id="newUid" value="">
+                </div>
 
-                <!-- 내 자녀 : n명 -->
-                <div class="flex items-center gap-2 mt-8">
-                <span>👶 내 자녀: <b th:text="${#lists.size(children)}">0</b>명</span>
+                <!-- 주소/주소검색 버튼 -->
+                <div>
+                    <label class="block text-sm font-semibold mb-1">주소</label>
+                    <button type="button" onclick="openAddressModal()"
+                            class="mb-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                        주소 검색
+                    </button>
+                    <input type="text" id="zipNum"
+                        class="w-full mb-2 border border-gray-300 p-2 bg-gray-100 rounded" readonly
+                        th:value="${userInfo.address != null ? userInfo.address.zipNum : '주소정보가 없습니다'}" />
+
+                    <input type="text" id="addr1"
+                        class="w-full border border-gray-300 p-2 bg-gray-100 rounded" readonly
+                        th:value="${userInfo.address != null ?
+                            userInfo.address.sido + ' ' + userInfo.address.gugun + ' ' + userInfo.address.dong +
+                            (userInfo.address.bunji != null and !#strings.isEmpty(userInfo.address.bunji)
+                                ? ' ' + userInfo.address.bunji : '') : ''}" />
+
+                    <input type="hidden" id="addressId" name="addressId"
+                        th:value="${userInfo.address != null ? userInfo.address.id : ''}" />
+                </div>
+
+                <div class="flex flex-row justify-end gap-2 pt-2">
+                    <button type="button" onclick="submitEdit()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">완료</button>
+                    <button type="button" onclick="toggleUserEdit(false)" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
+                </div>
+            </form>
+
+            <!-- 내 자녀 : n명 -->
+            <div class="flex items-center gap-2 mt-8">
+                <span> 내 자녀: <b th:text="${#lists.size(children)}">0</b>명</span>
                 <a href="/member/child" class="ml-4 px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">자녀 관리</a>
-                </div>
-
-                <!-- --------- 비밀번호 변경/회원탈퇴 --------- -->
-                <div class="flex flex-row justify-end gap-2 pt-4">
-                    <button type="button" onclick="openPasswordModal()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">비밀번호 변경</button>
-                    <button type="button" onclick="confirmDelete()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">회원 탈퇴</button>
-                </div>
-
             </div>
-        </div>
+
+            <!-- --------- 비밀번호 변경/회원탈퇴 --------- -->
+            <div class="flex flex-row justify-end gap-2 pt-4">
+                <button type="button" onclick="openPasswordModal()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">비밀번호 변경</button>
+                <button type="button" onclick="confirmDelete()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">회원 탈퇴</button>
+            </div>
+        </main>
+
+    </div>
 
         <!-- 📍 주소 검색 모달 -->
         <div id="addressModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
@@ -183,7 +187,7 @@
             </div>
         </div>
 
-        <!-- 🔐 비밀번호 변경 모달 -->
+        <!--  비밀번호 변경 모달 -->
         <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
             <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h2 class="text-lg font-bold mb-4">비밀번호 변경</h2>

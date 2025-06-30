@@ -1,23 +1,26 @@
 package com.example.demo.users.service;
 
 import com.example.demo.dto.ChildDTO;
-import com.example.demo.dto.GroupDTO;
+import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.paging.PagingResultDTO;
+import com.example.demo.dto.request.ChildCreateRequest;
+import com.example.demo.dto.request.ChildUpdateRequest;
+import com.example.demo.entity.Group;
 import com.example.demo.exception.ChildNotFoundException;
-import com.example.demo.repository.GroupQueryRepository;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.service.BaseService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.repository.ChildQueryRepository;
 import com.example.demo.users.repository.ChildRepository;
+import com.example.demo.users.repository.MemberRepository;
 import groovy.util.logging.Slf4j;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,21 +30,82 @@ public class ChildService extends BaseService<Child, ChildRepository> {
 
 
     private ChildQueryRepository childQueryRepository;
-
-    public ChildService(ChildRepository repository,ChildQueryRepository childQueryRepository) {
+    private GroupRepository groupRepository;
+    private AuthService authService;
+    private MemberRepository memberRepository;
+    public ChildService(ChildRepository repository,ChildQueryRepository childQueryRepository,
+                        GroupRepository groupRepository, AuthService authService, MemberRepository memberRepository) {
         super(repository);
         this.childQueryRepository = childQueryRepository;
+        this.groupRepository = groupRepository;
+        this.authService = authService;
+        this.memberRepository = memberRepository;
     }
 //        extends BaseService<Child, ChildRepository> {
 
-    // 수정 메소드 작성 예시
-    public void updateChild(Integer id, String name, String nickname) {
-        // 부모 클래스의 메소드로 데이터 조회
-//        Child child = super.get(id);
-//        child.setName(name);
-//        child.setNickname(nickname);
-        // 부모 클래스의 메소드로 데이터 수정
-//        super.update(child);
+    @Transactional
+    public void createChild(ChildCreateRequest dto) {
+
+
+        Child child = new Child();
+        child.setName(dto.getName());
+        child.setNickname(dto.getNickname());
+        // birthday String -> LocalDateTime
+        LocalDate birth = LocalDate.parse(dto.getBirthday());
+        child.setBirthday(birth.atStartOfDay());
+        child.setGender(dto.getGender());
+        child.setHeight(dto.getHeight());
+        child.setWeight(dto.getWeight());
+        child.setBirthOrder(dto.getBirthOrder());
+        UserDTO loginUser = authService.getLoginUser();
+        Long memberId = loginUser.getId(); // DTO에서 ID 뽑기
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new RuntimeException("회원 없음"));
+
+        child.setParent(member); // 관계 맵핑 정상!
+
+        // 그룹(기관) 연결
+        if(dto.getGroupId() != null){
+            Group group = groupRepository.findById(dto.getGroupId())
+                    .orElseThrow(() -> new IllegalArgumentException("해당 기관이 존재하지 않습니다."));
+            child.setGroup(group);
+        }
+
+        child.setDeleted(false);
+        child.setRiskGroup(false);
+
+
+        repository.save(child);
+    }
+
+    @Transactional
+    public void updateChild(Long id, ChildUpdateRequest dto) {
+        Child child = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 자녀가 없습니다."));
+        child.setName(dto.getName());
+        child.setNickname(dto.getNickname());
+        child.setBirthday(dto.getBirthday().atStartOfDay());
+        child.setWeight(dto.getWeight());
+        child.setHeight(dto.getHeight());
+        child.setGender(dto.getGender());
+        child.setBirthOrder(dto.getBirthOrder());
+        // 소속(그룹) 변경
+        if (dto.getGroupId() != null) {
+            Group group = groupRepository.findById(dto.getGroupId())
+                    .orElseThrow(() -> new RuntimeException("그룹 없음"));
+            child.setGroup(group);
+        }
+
+        repository.save(child); // JPA 변경감지면 생략 가능
+    }
+
+    @Transactional
+    public void softDeleteChild(Long childId) {
+        Child child = repository.findById(childId)
+                .orElseThrow(() -> new IllegalArgumentException("자녀 정보가 없습니다."));
+        child.setDeleted(true);
+        // 변경 감지(dirty checking)로 자동 update됨
     }
 
     /**
@@ -69,8 +133,13 @@ public class ChildService extends BaseService<Child, ChildRepository> {
         }
     }
 
+    public ChildDTO findChildDtoById(Long id) {
+        Child child = findById(id); // 없으면 예외
+        return ChildDTO.fromEntity(child);
+    }
+
     public List<Child> findByUsersId(Long usersId) {
-        return repository.findByParentUsersId(usersId);
+        return repository.findByParentUsersIdAndDeletedFalse(usersId);
     }
 
     /**
