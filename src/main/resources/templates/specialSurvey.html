@@ -79,142 +79,146 @@
 
         // ① URL 파라미터가 있으면 미리 선택
         if (preChildId) {
-          childSelect.value = preChildId;
-          onChildChange();
+            childSelect.value = preChildId;
+            onChildChange();
         }
 
         // 자녀 변경 핸들러
         childSelect.addEventListener('change', onChildChange);
 
         async function onChildChange() {
-          currentChildId = childSelect.value;
-          // 선택 해제 시 초기화
-          if (!currentChildId) {
-            childInfoDiv.style.display = 'none';
-            container.innerHTML = '';
-            submitBtn.style.display = 'none';
-            return;
-          }
-          // ② 자녀 정보 AJAX 로드
-          try {
-            const res = await fetch(`/api/child/info/${currentChildId}`);
-            const data = await res.json();
-            // 화면에 뿌리기
-            ci.name.textContent   = data.name;
-            ci.gender.textContent = data.gender;
-            ci.age.textContent    = data.ageDisplay;
-            ci.height.textContent = data.height;
-            ci.weight.textContent = data.weight;
-            childInfoDiv.style.display = 'block';
-            // ageGroup 보관
-            currentAgeGroup = data.ageGroup;
-            // 만약 카테고리가 이미 선택된 상태라면 설문 로드
-            if (categorySelect.value) {
-              loadSurveys();
+            currentChildId = childSelect.value;
+            // 선택 해제 시 초기화
+            if (!currentChildId) {
+                childInfoDiv.style.display = 'none';
+                container.innerHTML = '';
+                submitBtn.style.display = 'none';
+                return;
             }
-          } catch {
-            alert('자녀 정보를 불러오는 중 오류 발생');
-          }
+            // ② 자녀 정보 AJAX 로드
+            try {
+                const res = await fetch(`/api/child/info/${currentChildId}`);
+                const data = await res.json();
+                // 화면에 뿌리기
+                ci.name.textContent   = data.name;
+                ci.gender.textContent = data.gender;
+                ci.age.textContent    = data.ageDisplay;
+                ci.height.textContent = data.height;
+                ci.weight.textContent = data.weight;
+                childInfoDiv.style.display = 'block';
+                // ageGroup 보관
+                currentAgeGroup = data.ageGroup;
+                // 만약 카테고리가 이미 선택된 상태라면 설문 로드
+                if (categorySelect.value) {
+                    loadSurveys();
+                }
+            } catch {
+                alert('자녀 정보를 불러오는 중 오류 발생');
+            }
         }
 
         // ⑤ 카테고리 변경 시 설문 로드
         categorySelect.addEventListener('change', () => {
-          if (!currentChildId) {
-            return alert('먼저 자녀를 선택해주세요');
-          }
-          loadSurveys();
+            if (!currentChildId) {
+                return alert('먼저 자녀를 선택해주세요');
+            }
+            loadSurveys();
         });
 
         async function loadSurveys() {
-          const cat = categorySelect.value;
-          if (!currentAgeGroup || !cat) {
-            container.innerHTML = '';
-            submitBtn.style.display = 'none';
-            return;
-          }
-          try {
-            // by-age API → filter by 카테고리
-            const res = await fetch(
-              `/api/special-surveys/by-age/${encodeURIComponent(currentAgeGroup)}`
-            );
-            const data = await res.json();
-            surveys = data.filter(s => s.category === cat);
-            renderSurveys();
-          } catch {
-            alert('문진 데이터를 불러오는 중 오류 발생');
-          }
+            const cat = categorySelect.value;
+            if (!currentAgeGroup || !cat) {
+                container.innerHTML = '';
+                submitBtn.style.display = 'none';
+                return;
+            }
+            try {
+                // by-age API → filter by 카테고리
+                const res = await fetch(
+                    `/api/special-surveys/by-age/${encodeURIComponent(currentAgeGroup)}`
+                );
+                const data = await res.json();
+                surveys = data.filter(s => s.category === cat);
+                renderSurveys();
+            } catch {
+                alert('문진 데이터를 불러오는 중 오류 발생');
+            }
         }
 
         function renderSurveys() {
           container.innerHTML = '';
-          if (!surveys.length) {
-            container.innerHTML = '<p class="text-gray-500">선택된 조건의 문항이 없습니다.</p>';
-            submitBtn.style.display = 'none';
-            return;
-          }
-          surveys.forEach((s,i) => {
-            const div = document.createElement('div');
-            div.className = 'border p-4 rounded';
-            // 가능한 답변만 뽑아서 라디오 생성
-            const opts = [s.answer1,s.answer2,s.answer3,s.answer4,s.answer5]
-              .filter(a => a && a.trim())
-              .map((text, idx) => `
+            if (!surveys.length) {
+                container.innerHTML = '<p class="text-gray-500">선택된 조건의 문항이 없습니다.</p>';
+                submitBtn.style.display = 'none';
+                return;
+            }
+            surveys.forEach((s,i) => {
+                const div = document.createElement('div');
+                div.className = 'border p-4 rounded';
+                // 가능한 답변만 뽑아서 라디오 생성
+                const opts = [s.answer1,s.answer2,s.answer3,s.answer4,s.answer5]
+                    .filter(a => a && a.trim())
+                    .map((text, idx) => `
                 <label class="block">
                   <input type="radio" name="q${s.id}" value="${idx+1}" required>
                   ${text}
                 </label>
               `).join('');
 
-            div.innerHTML = `
+                div.innerHTML = `
               <p class="font-semibold mb-2">
                 Q${i+1}. ${s.question}
               </p>
               ${opts}
             `;
-            container.appendChild(div);
-          });
-          submitBtn.style.display = 'inline-block';
+                container.appendChild(div);
+            });
+            submitBtn.style.display = 'inline-block';
         }
 
         // ⑥ 제출
         submitBtn.addEventListener('click', async () => {
-          // validate
-          if (!currentChildId) return alert('자녀를 선택해주세요');
-          if (!currentAgeGroup) return alert('잘못된 연령대입니다');
-          if (!categorySelect.value) return alert('카테고리를 선택해주세요');
-          const answers = [];
-          for (let s of surveys) {
-            const sel = document.querySelector(`input[name="q${s.id}"]:checked`);
-            if (!sel) return alert('모든 문진에 답변해주세요');
-            const label = sel.closest('label').textContent.trim();
-            answers.push({
-              surveyId:    s.id,
-              surveySetId: s.surveySetId,
-              question: s.question,
-              answerText: label
-            });
-          }
+            // validate
+            if (!currentChildId) return alert('자녀를 선택해주세요');
+            if (!currentAgeGroup) return alert('잘못된 연령대입니다');
+            if (!categorySelect.value) return alert('카테고리를 선택해주세요');
+            const answers = [];
+            for (let s of surveys) {
+                const sel = document.querySelector(`input[name="q${s.id}"]:checked`);
+                if (!sel) return alert('모든 문진에 답변해주세요');
+                const label = sel.closest('label').textContent.trim();
+                answers.push({
+                    surveyId:    Number(s.id),
+                    surveySetId: s.surveySetId,
+                    question: s.question,
+                    answerText: label
+                });
+            }
 
-          // send
-          try {
-            const resp = await fetch('/api/special-surveys/submit', {
-              method: 'POST',
-              headers: { 'Content-Type':'application/json' },
-              body: JSON.stringify({
-                childId:  Number(currentChildId),
-                ageGroup: currentAgeGroup,
-                category: categorySelect.value,
-                answers:  answers
-              })
-            });
-            const result = await resp.json();
-            // redirect or 처리
-            const p = encodeURIComponent(JSON.stringify(result));
-            window.location.href = `/specialSurvey/result?data=${p}`;
-          } catch {
-            alert('제출 중 오류가 발생했습니다.');
+            // send
+            try {
+                const resp = await fetch('/api/special-surveys/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type':'application/json' },
+                    body: JSON.stringify({
+                        childId:  Number(currentChildId),
+                        ageGroup: currentAgeGroup,
+                        category: categorySelect.value,
+                        answers:  answers
+                    })
+                });
+                const result = await resp.json();
+                // redirect or 처리
+                const p = encodeURIComponent(JSON.stringify(result));
+                window.location.href = `/specialSurvey/result?data=${p}`;
+            } catch {
+                alert('제출 중 오류가 발생했습니다.');
+            }
+
+            submitBtn.style.display = 'none';
+            return;
           }
-        });
+         
     </script>
 </th:block>
 </html>

@@ -26,7 +26,7 @@ public class SpecialAnswer extends BaseEntity {
 
     //  특별 문진 세트 (special_survey_set) 과 N:1
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "survey_set_id", nullable = false)
+    @JoinColumn(name = "survey_set_id")
     private SurveySet surveySet;
 
     // 자녀 (child) 과 N:1

@@ -9,6 +9,7 @@ import com.example.demo.survey.entity.SpecialSurvey;
 import com.example.demo.survey.service.SpecialAnswerService;
 import com.example.demo.survey.service.SpecialSurveyService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/special-surveys")
 @RequiredArgsConstructor
+@Slf4j
 public class SpecialSurveyController {
 
     private final SpecialSurveyService specialSurveyService;
@@ -79,7 +81,7 @@ public class SpecialSurveyController {
     @PostMapping("/submit")
     public ResponseEntity<Map<String,Object>> submitAndSave(
             @RequestBody SpecialSurveyRequestDto dto) {
-
+    log.info(String.valueOf(dto.getChildId()));
         // [수정] 새로 만든 서비스 메소드를 호출하여 저장된 답변 목록을 받음
 //        List<SpecialAnswer> savedAnswers = specialAnswerService.saveAndGetAnswers(
 //                dto.getChildId(),

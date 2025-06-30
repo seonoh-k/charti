@@ -5,6 +5,7 @@ import com.example.demo.enums.SurveyCategory;
 import com.example.demo.enums.TargetGroup;
 import com.example.demo.survey.dto.GroupSurveyRequestDto;
 import com.example.demo.survey.dto.GroupSurveyResponseDto;
+import com.example.demo.survey.dto.SurveySetSubmitRequestDto;
 import com.example.demo.survey.entity.GroupSurvey;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.GroupSurveyRepository;
@@ -12,6 +13,7 @@ import com.example.demo.survey.repository.SurveySetRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,6 +22,7 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GroupSurveyService {
 
     private final GroupSurveyRepository groupSurveyRepository;
@@ -97,39 +100,43 @@ public class GroupSurveyService {
 
 
     @Transactional
-    public Map<String,Object> evaluate(GroupSurveyRequestDto dto) {
+    public Map<String,Object> evaluate(SurveySetSubmitRequestDto dto) {
         AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
-        String tgt = dto.getTargetGroup();
-        boolean allTargets = (tgt == null || tgt.isBlank() || "all".equalsIgnoreCase(tgt));
-        TargetGroup tg = allTargets
-                ? null
-                : TargetGroup.fromValue(tgt);
+//        String tgt = dto.getTargetGroup();
+//        boolean allTargets = (tgt == null || tgt.isBlank() || "all".equalsIgnoreCase(tgt));
+//        TargetGroup tg = allTargets
+//                ? null
+//                : TargetGroup.fromValue(tgt);
 
         // 1) DB에서 설문 문항 조회
-        List<GroupSurvey> surveys = groupSurveyRepository.findByAgeGroupAndDeletedFalse(ag);
+        List<GroupSurvey> surveys = groupSurveyRepository.findBySurveySetId(dto.getSetId());
 
         // 2) 대상 그룹 필터링
-        if (!allTargets) {
-            surveys = surveys.stream()
-                    .filter(gs -> gs.getTargetGroup().filter(enumTg -> enumTg == tg).isPresent())
-                    .toList();
-        }
+//        if (!allTargets) {
+//            surveys = surveys.stream()
+//                    .filter(gs -> gs.getTargetGroup().filter(enumTg -> enumTg == tg).isPresent())
+//                    .toList();
+//        }
 
         // 3) 답변 개수 검증
-        if (surveys.size() != dto.getAnswers().size()) {
+        if (surveys.size() != dto.getAnswerList().size()) {
             throw new IllegalArgumentException(
                     "답변 수가 문진 수와 다릅니다. 서버측 설문 "
                             + surveys.size() + "개, 클라이언트측 응답 "
-                            + dto.getAnswers().size() + "개"
+                            + dto.getAnswerList().size() + "개"
             );
         }
 
         Map<SurveyCategory, Double> categoryMultiplierSum = new HashMap<>();
         Map<SurveyCategory, Integer> categoryQuestionCount = new HashMap<>();
 
+        Map<Long, Integer> answerMap = dto.getAnswerList().stream()
+                .collect(Collectors.toMap(SurveySetSubmitRequestDto.AnswerDto::getSurveyId,
+                        SurveySetSubmitRequestDto.AnswerDto::getAnswerValue));
+
         for (int i = 0; i < surveys.size(); i++) {
             GroupSurvey survey = surveys.get(i);
-            int answer = dto.getAnswers().get(i);
+            int answer = answerMap.get(survey.getId());
 
             // [수정] 엔티티 수정 없이 서비스 내에서 직접 선택지 개수 계산
             long totalOptions = Stream.of(survey.getAnswer1(), survey.getAnswer2(), survey.getAnswer3(), survey.getAnswer4(), survey.getAnswer5())
@@ -174,7 +181,7 @@ public class GroupSurveyService {
             result.put("ageGroup", dto.getAgeGroup());
             result.put("specialCategories", specialCategories);
         }
-
+        log.info(result.toString());
         return result;
     }
 

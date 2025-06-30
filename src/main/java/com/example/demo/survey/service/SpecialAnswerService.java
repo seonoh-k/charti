@@ -3,6 +3,7 @@ package com.example.demo.survey.service;
 
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.dto.SpecialSurveyRequestDto;
+import com.example.demo.survey.dto.SurveySetSubmitRequestDto;
 import com.example.demo.survey.entity.SpecialAnswer;
 import com.example.demo.survey.entity.SpecialSurvey;
 import com.example.demo.enums.AgeGroup;
@@ -37,19 +38,23 @@ public class SpecialAnswerService {
     @Transactional
     public void saveAnswers(Long childId,
                             Long setId,
-                            List<Integer> answers) {
+                            List<SurveySetSubmitRequestDto.AnswerDto> answers) {
         Child child = childService.findById(childId);
         SurveySet set = surveySetRepo.findById(setId)
-                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 세트: " + setId));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 세트: " + setId));
         List<SpecialSurvey> surveys = set.getSpecialSurveys();
 
         if (surveys.size() != answers.size()) {
             throw new IllegalArgumentException("문진 항목 수와 응답 수 불일치");
         }
 
+        Map<Long, Integer> answerMap = answers.stream()
+                .collect(Collectors.toMap(SurveySetSubmitRequestDto.AnswerDto::getSurveyId,
+                        SurveySetSubmitRequestDto.AnswerDto::getAnswerValue));
+
         for (int i = 0; i < surveys.size(); i++) {
             SpecialSurvey s = surveys.get(i);
-            int idx = answers.get(i);
+            int idx = answerMap.get(s.getId());
             String text = switch(idx) {
                 case 1 -> s.getAnswer1();
                 case 2 -> s.getAnswer2();
@@ -83,6 +88,59 @@ public class SpecialAnswerService {
 
         List<SpecialAnswer> saved = new ArrayList<>();
         for (SpecialSurveyRequestDto.AnswerDto dto : answers) {
+
+            // 3) SpecialAnswer 엔티티 채우기
+            SpecialAnswer ans = new SpecialAnswer();
+            ans.setChild(child);
+            ans.setAgeGroup(ageGroup);
+            ans.setCategory(category);
+            ans.setQuestion(dto.getQuestion());
+            ans.setAnswer(dto.getAnswerText());
+
+            // 2) SurveySet 조회 (FK)
+            if(dto.getSurveySetId() != null) {
+                SurveySet set = surveySetRepo.findById(dto.getSurveySetId())
+                        .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
+                ans.setSurveySet(set);
+            }
+
+            // 4) 저장
+            saved.add(answerRepo.save(ans));
+        }
+        return saved;
+    }
+
+    @Transactional
+    public List<SpecialAnswer> saveAndGetAnswers2(
+            Long childId,
+            AgeGroup ageGroup,
+            SurveyCategory category,
+            List<SurveySetSubmitRequestDto.AnswerDto> answers
+    ) {
+        // 1) Child 조회
+        Child child = childRepo.findById(childId)
+                .orElseThrow(() -> new EntityNotFoundException("자녀를 찾을 수 없습니다: " + childId));
+
+        Map<Long, Integer> answerMap = answers.stream()
+                .collect(Collectors.toMap(SurveySetSubmitRequestDto.AnswerDto::getSurveyId,
+                        SurveySetSubmitRequestDto.AnswerDto::getAnswerValue));
+
+        List<SpecialAnswer> saved = new ArrayList<>();
+        for (SurveySetSubmitRequestDto.AnswerDto dto : answers) {
+            SpecialSurvey s = surveyRepo.findById(dto.getSurveyId()).get();
+
+            int idx = answerMap.get(s.getId());
+            String text = switch(idx) {
+                case 1 -> s.getAnswer1();
+                case 2 -> s.getAnswer2();
+                case 3 -> s.getAnswer3();
+                case 4 -> s.getAnswer4();
+                case 5 -> s.getAnswer5();
+                default -> throw new IllegalArgumentException("1~5 사이 값 필요");
+            };
+          
+        List<SpecialAnswer> saved = new ArrayList<>();
+        for (SpecialSurveyRequestDto.AnswerDto dto : answers) {
             // 2) SurveySet 조회 (FK)
             SurveySet set = surveySetRepo.findById(dto.getSurveySetId())
                     .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
@@ -90,11 +148,25 @@ public class SpecialAnswerService {
             // 3) SpecialAnswer 엔티티 채우기
             SpecialAnswer ans = new SpecialAnswer();
             ans.setChild(child);
+            ans.setAgeGroup(ageGroup);
+            ans.setCategory(category);
+            ans.setQuestion(dto.getQuestion());
+            ans.setAnswer(text);
+
+
+            // 2) SurveySet 조회 (FK)
+//            if(dto.getSurveySetId() != null) {
+//                SurveySet set = surveySetRepo.findById(dto.getSurveySetId())
+//                        .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
+//                ans.setSurveySet(set);
+//            }
+
             ans.setSurveySet(set);
             ans.setAgeGroup(ageGroup);
             ans.setCategory(category);
             ans.setQuestion(dto.getQuestion());
             ans.setAnswer(dto.getAnswerText());
+
 
             // 4) 저장
             saved.add(answerRepo.save(ans));

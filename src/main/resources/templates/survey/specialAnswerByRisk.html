@@ -43,7 +43,7 @@
                     const answerIdQuery = result.answerIds.map(id => `answerId=${id}`).join('&');
 
                     // 최종 매칭 요청 URL 생성
-                    const matchingUrl = `/matching/${result.category}/request?childId=${result.childId}&${answerIdQuery}`;
+                    const matchingUrl = `/matching/${result.category}/request?type=SPECIAL&childId=${result.childId}&${answerIdQuery}`;
 
                     contentHtml += `
                         <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">

@@ -18,6 +18,7 @@ import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,12 +32,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Controller
 @RequestMapping("/matching")
 @RequiredArgsConstructor
+@Slf4j
 public class MatchingController {
 
     private final MatchingService         matchingService;
@@ -56,14 +59,14 @@ public class MatchingController {
             @RequestParam("childId") Long childId,
             @RequestParam("answerId") List<Long> answerIds,
             Model model) {
-
+        log.info("answerIds : {}", answerIds);
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new IllegalArgumentException("잘못된 자녀 ID입니다."));
 
         // 타입에 따라 답변 조회
-        List<SpecialAnswer> answers;
+        List<SpecialAnswer> answers = new ArrayList<>();
         if (type == MatchingRequestDto.AnswerType.SPECIAL) {
-            answers = specialAnswerRepository.findAllById(answerIds);
+            answers = specialAnswerRepository.findByIdIn(answerIds);
         } else {
             answers = groupAnswerRepository.findAllById(answerIds).stream()
                     .map(ga -> {
