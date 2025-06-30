@@ -16,4 +16,6 @@ public interface GroupRepository extends JpaRepository<Group,Long> {
      */
     @Query("SELECT DISTINCT g.targetGroup FROM Group g WHERE g.targetGroup IS NOT NULL")
     List<TargetGroup> findDistinctTargetGroups();
+
+    boolean existsByAddressId(Long addressId);
 }

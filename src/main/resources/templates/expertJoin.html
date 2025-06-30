@@ -197,7 +197,6 @@
     </div>
 
 
-<!-- th:inline="javascript"를 추가하여 Thymeleaf가 @{/join}을 치환 -->
 <script  type="module" th:inline="javascript">
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
@@ -207,10 +206,9 @@
     signInWithPhoneNumber
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    import { showLoadingModal } from "/js/loadingModal.js"; // ✅  모달 동작 함수
-    import { showErrorModal } from "/js/loadingModal.js"; // ✅  에러 모달 동작 함수
-     import { showSuccessModal } from "/js/loadingModal.js"; // ✅  성공 모달 동작 함수
-     import { hideLoadingModal } from "/js/loadingModal.js"; // ✅   모달 닫는 함수
+    import { showLoadingModal } from "/js/loadingModal.js"; //  모달 동작 함수
+    import { showErrorModal } from "/js/loadingModal.js"; //   에러 모달 동작 함수
+     import { showSuccessModal } from "/js/loadingModal.js"; //  성공 모달 동작 함수
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
@@ -322,9 +320,8 @@
         
         const major = document.getElementById('major').value.trim();
         const career = document.getElementById('career').value.trim();
-        // const nickname = document.getElementById('nickname').value.trim();
 
-        if (!name || !username || !password) {
+        if (!name || !username || !password || !nickname || !major || !career) {
             alert('모든 필드를 입력해주세요.');
             return;
         }
@@ -332,7 +329,7 @@
 
 
         try {
-            // // 🔵 먼저 로딩 모달 표시
+            //  먼저 로딩 모달 표시
             showLoadingModal("회원가입 진행중...");      
 
             const fileInput = document.querySelector('input[name="license"]');
@@ -374,9 +371,6 @@
                 })
             });
 
-
-
-console.log(addressId)
            // 여기서 응답 body를 JSON으로 파싱 시도
             let data = null;
             try {
@@ -391,12 +385,13 @@ console.log(addressId)
                     window.location.href = "/loginForm";
                 });
                 return;
-
-            }    else if (data.code === "VF") {     // 🔴 유효성 검사 실패
+            }   
+            
+            if (data.code === "VF") {     //  유효성 검사 실패
                 const fieldName = data.fieldName;
                 console.log(data);
                 console.log(fieldName);
-
+                // 모달 띄우고 필드 포커싱
                 showErrorModal(data.message, () => {
                     const inputField = document.getElementById(fieldName);
                     if (inputField) {
@@ -408,18 +403,31 @@ console.log(addressId)
                         }, { once: true });
                     }
                 });
+                return;
+            }else if (data.code === "DU") {
+                console.log(data);
+                showErrorModal("이미 가입된 이메일입니다.", () => {
+                    const inputField = document.getElementById('username');
+                    if (inputField) {
+                        inputField.focus();
+                    }
+                });
+                return;
+            }else if (data.code === "AIU") {
+                console.log(data);
+                showErrorModal("사용할수 없는 주소입니다.") 
+                return;
             }else {
                // 400, 500 등 에러 코드인 경우
                 const errorMsg = data && data.message ? data.message :
-                                '서버 오류 코드 ' + response.status;
-                                showErrorModal(data.message);
+                '서버 오류 코드 ' + response.status;
+                showErrorModal(data.message);
+                return;
             }
         } catch (err) {
             console.error('Fetch 통신 중 오류 발생:', err);
             showErrorModal(data.message);
             alert('통신 오류: ' + err.message);
-        } finally {
-            hideLoadingModal(); // 로딩 모달 닫기 함수
         }
     });
 </script>

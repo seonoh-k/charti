@@ -6,7 +6,8 @@ public enum AuthStatus implements StatusCode {
     AUTHENTICATION_FAIL("AF","인증 실패"),
     AUTHENTICATION_SUCCESS("AS","인증 성공"),
     ADMIN_NOT_FOUND("ANF","사용할 수 없는 아이디"),
-
+    DUPLICATED_USER("DU","이메일 중복"),
+    ADDRESS_IN_USE("AIU","이미 사용중인 주소"),
     PHONE_AUTH_FAIL("PAF","sms 인증 실패"),
     REGISTRATION_INCOMPLETE("RI","회원가입 미완료"),
 

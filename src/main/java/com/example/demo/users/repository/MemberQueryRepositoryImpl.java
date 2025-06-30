@@ -210,4 +210,17 @@ public class MemberQueryRepositoryImpl implements MemberQueryRepository{
 
         return new PageImpl<>(content, pageable, total);
     }
+
+    @Override
+    public Boolean existsByAddressId(Long addressId) {
+        QMember member = QMember.member;
+        Integer fetchFirst = queryFactory
+                .selectOne()
+                .from(member)
+                .where(member.address.id.eq(addressId))
+                .fetchFirst();
+
+        return fetchFirst != null;
+    }
+
 }

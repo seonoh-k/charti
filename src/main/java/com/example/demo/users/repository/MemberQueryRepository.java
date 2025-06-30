@@ -16,5 +16,5 @@ public interface MemberQueryRepository {
     Page<MemberDTO> searchMemberList(String type,String keyword,Pageable pageable);
 
 
-
+    Boolean existsByAddressId(Long id);
 }

@@ -22,16 +22,14 @@ import com.example.demo.repository.LoginHistoryRepository;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.exception.AddressAlreadyInUseException;
 import com.example.demo.users.exception.AdminNotFoundException;
 import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.repository.UserRepository;
-import com.example.demo.users.service.AdminService;
-import com.example.demo.users.service.AuthService;
-import com.example.demo.users.service.FirebaseService;
-import com.example.demo.users.service.UserService;
+import com.example.demo.users.service.*;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
 import com.example.demo.util.IpUtils;
@@ -70,12 +68,14 @@ public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final AuthService authService;
-    private final AddressRepository addressRepository;  // 주소 검색 요청을위해 임시사용
-    private final AddressService addressService;  // 그룹 주소 검색 을 위해 임시사용
-    private final GroupRepository groupRepository;  // 그룹 검색 을 위해 임시사용
-    private final ManagerRepository managerRepository;  // 그룹중복 검사를  위해 임시사용
-    private final UserRepository userRepository;  // 그룹중복 검사를  위해 임시사용
+    private final AddressRepository addressRepository;
+    private final AddressService addressService;
+    private final GroupRepository groupRepository;
+    private final ManagerRepository managerRepository;
+    private final UserRepository userRepository;
     private final AdminService adminService;
+    private final MemberService memberService;
+    private final ExpertService expertService;
 
 
 
@@ -379,9 +379,9 @@ public class AuthController {
      * @param memberJoinRequest : 폼 양식으로 받은 DTO 객체
      * @return
      */
-@PostMapping("/join/member")                                            // 기본정보 + 추가정보 + 주소정보
+    @PostMapping("/join/member")                                            // 기본정보 + 추가정보 + 주소정보
     public ResponseEntity<ApiResponse> joinMember(@Valid @RequestBody MemberJoinRequest memberJoinRequest, BindingResult bindingResult) {
-        // 1. 유효성 검사 실패하면 파이어베이스 계정 삭제  - 미구현
+
         try {
             // 화원가입 유효성 검사
             if (bindingResult.hasErrors()) {
@@ -404,17 +404,16 @@ public class AuthController {
                         .status(HttpStatus.BAD_REQUEST)
                         .body(errorResponse);
             }
-            log.info("[POST] 🎈 MemberJoinRequest '{}' :  ",memberJoinRequest);      // 정보 확인용 로그들
-            log.info("[POST] 🎈 MemberJoinRequest '{}' :  ",memberJoinRequest.getCommonInfo());
-            log.info("[POST] 🎈 MemberJoinRequest 이름: '{}' :  ",memberJoinRequest.getCommonInfo().getName());
-            log.info("[POST] 🎈 MemberJoinRequest 닉네임 :'{}' :  ",memberJoinRequest.getCommonInfo().getNickname());
-            log.info("[POST] 🎈 MemberJoinRequest 아이디 '{}' :  ",memberJoinRequest.getCommonInfo().getUsername());
-            log.info("[POST] 🎈 MemberJoinRequest 비밀번호 '{}' :  ",memberJoinRequest.getCommonInfo().getPassword());
-            log.info("[POST] 🎈 MemberJoinRequest id 토큰 '{}' :  ",memberJoinRequest.getCommonInfo().getSmsIdToken());
-            log.info("[POST] 🎈 MemberJoinRequest 주소 아이디 '{}' :  ",memberJoinRequest.getAddressInfo().getAddressId());
-
             // 공통 정보 인포
             CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
+            boolean isExist = userService.existsByEmail(commonInfo.getUsername());
+            if(isExist){
+                throw new UserAlreadyExistsException("중복된 이메일입니다");
+            }
+            boolean isAddressInUse = memberService.existsByAddressId(memberJoinRequest.getAddressInfo().getAddressId());
+            if (isAddressInUse) {
+                throw new AddressAlreadyInUseException("이미 사용중인 주소입니다.");
+            }
 
             FirebaseToken firebaseToken = firebaseService.verifyIdToken(commonInfo.getSmsIdToken());
 
@@ -431,7 +430,6 @@ public class AuthController {
                         .status(HttpStatus.BAD_REQUEST)
                         .body(new ApiResponse(AuthStatus.PHONE_AUTH_FAIL));
             }
-
             commonInfo.setPhoneNumber(phoneNumber);
             commonInfo.setRole(Role.ROLE_MEMBER.name());
             log.info("[POST] 🎈 MemberJoinRequest 저장된전화번호 '{}' :  ", commonInfo.getPhoneNumber());
@@ -453,19 +451,32 @@ public class AuthController {
 
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(new ApiResponse(authStatus));
-
             }
+        // 이메일 중복
+        }catch (UserAlreadyExistsException userAlreadyExistsException) {
 
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.DUPLICATED_USER));
+        // 주소 중복
+        } catch (AddressAlreadyInUseException addressAlreadyInUseException) {
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.ADDRESS_IN_USE));
+        // 파이어베이스 오류
         } catch (FirebaseAuthException firebaseAuthException) {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(AuthStatus.SERVER_ERROR));
-
+        // 잘못된 입력
         } catch (IllegalArgumentException illegalArgumentException) {
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse(AuthStatus.AUTHENTICATION_FAIL));
 
+        } catch (Exception e) {
+            log.error("회원가입 중 알 수 없는 오류", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(AuthStatus.SERVER_ERROR, e.getMessage()));
         }
     }
 
@@ -493,21 +504,17 @@ public class AuthController {
                         .status(HttpStatus.BAD_REQUEST)
                         .body(errorResponse);
             }
-            log.info("[POST] 🎈 expertJoinRequest '{}' :  ",expertJoinRequest);      // 정보 확인용 로그들
-            log.info("[POST] 🎈 expertJoinRequest '{}' :  ",expertJoinRequest.getCommonInfo());
-            log.info("[POST] 🎈 expertJoinRequest 이름: '{}' :  ",expertJoinRequest.getCommonInfo().getName());
-            log.info("[POST] 🎈 expertJoinRequest 닉네임 :'{}' :  ",expertJoinRequest.getCommonInfo().getNickname());
-            log.info("[POST] 🎈 expertJoinRequest 아이디 '{}' :  ",expertJoinRequest.getCommonInfo().getUsername());
-            log.info("[POST] 🎈 expertJoinRequest 비밀번호 '{}' :  ",expertJoinRequest.getCommonInfo().getPassword());
-            log.info("[POST] 🎈 expertJoinRequest id 토큰 '{}' :  ",expertJoinRequest.getCommonInfo().getSmsIdToken());
-            log.info("[POST] 🎈 expertJoinRequest 주소 아이디 '{}' :  ",expertJoinRequest.getAddressInfo().getAddressId());
-            log.info("[POST] 🎈 expertJoinRequest 전문가인포에 주소가? '{}' :  ",expertJoinRequest.getExpertInfo().getAddressId());
-            log.info("[POST] 🎈 expertJoinRequest 전공 '{}' :  ",expertJoinRequest.getExpertInfo().getMajor());
-            log.info("[POST] 🎈 expertJoinRequest 경력사항 '{}' :  ",expertJoinRequest.getExpertInfo().getCareer());
-            log.info("[POST] 🎈 expertJoinRequest 자격증파일 이름 '{}' :  ",expertJoinRequest.getExpertInfo().getLicense());
-
             // 공통 정보 인포
             CommonInfo commonInfo = expertJoinRequest.getCommonInfo();
+            // 이메일 & 주소 중복 검사
+            boolean isExist = userService.existsByEmail(commonInfo.getUsername());
+            if(isExist){
+                throw new UserAlreadyExistsException("중복된 이메일입니다");
+            }
+            boolean isAddressInUse = expertService.existsByAddressId(expertJoinRequest.getAddressInfo().getAddressId());
+            if (isAddressInUse) {
+                throw new AddressAlreadyInUseException("이미 사용중인 주소입니다.");
+            }
 
             FirebaseToken firebaseToken = firebaseService.verifyIdToken(commonInfo.getSmsIdToken());
 
@@ -539,26 +546,29 @@ public class AuthController {
 
                 return ResponseEntity.status(HttpStatus.OK)
                         .body(new ApiResponse(authStatus));
-
             } else {
-
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(new ApiResponse(authStatus));
-
             }
+            // 이메일 중복
+        }catch (UserAlreadyExistsException userAlreadyExistsException) {
 
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.DUPLICATED_USER));
+            // 주소 중복
+        } catch (AddressAlreadyInUseException addressAlreadyInUseException) {
 
-        } catch (FirebaseAuthException firebaseAuthException) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.ADDRESS_IN_USE));
+
+        }catch (FirebaseAuthException firebaseAuthException) {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(AuthStatus.SERVER_ERROR));
-
-
-        } catch (UserAlreadyExistsException userAlreadyExistsException){
-
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                     .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
-
+        } catch (Exception e) {
+            log.error("회원가입 중 알 수 없는 오류", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(AuthStatus.SERVER_ERROR, e.getMessage()));
         }
     }
 
@@ -619,25 +629,28 @@ public class AuthController {
                         .status(HttpStatus.BAD_REQUEST)
                         .body(errorResponse);
             }
-            log.info("[POST] 🎈 managerJoinRequest '{}' :  ",managerJoinRequest);      // 정보 확인용 로그들
-            log.info("[POST] 🎈 managerJoinRequest '{}' :  ",managerJoinRequest.getCommonInfo());
-            log.info("[POST] 🎈 managerJoinRequest 이름: '{}' :  ",managerJoinRequest.getCommonInfo().getName());
-            log.info("[POST] 🎈 managerJoinRequest 닉네임 :'{}' :  ",managerJoinRequest.getCommonInfo().getNickname());
-            log.info("[POST] 🎈 managerJoinRequest 아이디 '{}' :  ",managerJoinRequest.getCommonInfo().getUsername());
-            log.info("[POST] 🎈 managerJoinRequest 비밀번호 '{}' :  ",managerJoinRequest.getCommonInfo().getPassword());
-            log.info("[POST] 🎈 managerJoinRequest id 토큰 '{}' :  ",managerJoinRequest.getCommonInfo().getSmsIdToken());
-            log.info("[POST] 🎈 managerJoinRequest 주소 id '{}' :  ",managerJoinRequest.getAddressInfo().getAddressId());
-            log.info("[POST] 🎈 managerJoinRequest 담당자 포지션 '{}' :  ",managerJoinRequest.getManagerInfo().getPosition());
-            log.info("[POST] 🎈 managerJoinRequest 그룹 이메일 '{}' :  ",managerJoinRequest.getGroupInfo().getGroupEmail());
-            log.info("[POST] 🎈 managerJoinRequest 그룹 전화번호 '{}' :  ",managerJoinRequest.getGroupInfo().getGroupPhoneNumber());
-            log.info("[POST] 🎈 managerJoinRequest 그룹 이름 '{}' :  ",managerJoinRequest.getGroupInfo().getGroupName());
-            log.info("[POST] 🎈 managerJoinRequest 그룹 id '{}' :  ",managerJoinRequest.getGroupInfo().getGroupId());
-            log.info("[POST] 🎈 managerJoinRequest 그룹 카테고리 '{}' :  ",managerJoinRequest.getGroupInfo().getTargetGroup());
-
 
             // 공통 정보 인포
             CommonInfo commonInfo = managerJoinRequest.getCommonInfo();
-
+            // 이메일 & 주소 중복 찾기
+            boolean isExist = userService.existsByEmail(commonInfo.getUsername());
+            if(isExist){
+                throw new UserAlreadyExistsException("중복된 이메일입니다");
+            }
+            boolean isAddressInUse = groupRepository.existsByAddressId(managerJoinRequest.getAddressInfo().getAddressId());
+            if (isAddressInUse) {
+                throw new AddressAlreadyInUseException("이미 사용중인 주소입니다.");
+            }
+            Long groupId = managerJoinRequest.getGroupInfo().getGroupId();
+            // 그룹 ID가 있으면 → 해당 그룹에 이미 담당자가 있는지 검사
+            if (groupId != null) {
+                boolean alreadyExists = managerRepository.existsByGroupId(groupId);
+                if (alreadyExists) {
+                    log.warn("❌ 그룹 ID {} 에는 이미 담당자가 등록되어 있습니다.", groupId);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(new ApiResponse(AuthStatus.MANAGER_ALREADY_EXISTS));
+                }
+            }
             FirebaseToken firebaseToken = firebaseService.verifyIdToken(commonInfo.getSmsIdToken());
 
             String uid = firebaseToken.getUid();
@@ -653,16 +666,7 @@ public class AuthController {
                         .status(HttpStatus.BAD_REQUEST)
                         .body(new ApiResponse(AuthStatus.PHONE_AUTH_FAIL));
             }
-            Long groupId = managerJoinRequest.getGroupInfo().getGroupId();
-            // 🔒 그룹 ID가 있으면 → 해당 그룹에 이미 담당자가 있는지 검사
-            if (groupId != null) {
-                boolean alreadyExists = managerRepository.existsByGroupId(groupId);
-                if (alreadyExists) {
-                    log.warn("❌ 그룹 ID {} 에는 이미 담당자가 등록되어 있습니다.", groupId);
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(new ApiResponse(AuthStatus.MANAGER_ALREADY_EXISTS));
-                }
-            }
+
             commonInfo.setPhoneNumber(phoneNumber);
             commonInfo.setRole(Role.ROLE_MEMBER.name());
             log.info("[POST] 🎈 expertJoinRequest 저장된전화번호 '{}' :  ", commonInfo.getPhoneNumber());
@@ -685,18 +689,25 @@ public class AuthController {
                         .body(new ApiResponse(authStatus));
 
             }
+            // 이메일 중복
+        } catch (UserAlreadyExistsException userAlreadyExistsException) {
 
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.DUPLICATED_USER));
+            // 주소 중복
+        } catch (AddressAlreadyInUseException addressAlreadyInUseException) {
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(AuthStatus.ADDRESS_IN_USE));
         } catch (FirebaseAuthException firebaseAuthException) {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(AuthStatus.SERVER_ERROR));
 
-
-        } catch (UserAlreadyExistsException userAlreadyExistsException){
-
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ApiResponse(AuthStatus.USER_DUPLICATE));
-
+        } catch (Exception e) {
+            log.error("회원가입 중 알 수 없는 오류", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(AuthStatus.SERVER_ERROR, e.getMessage()));
         }
     }
 
