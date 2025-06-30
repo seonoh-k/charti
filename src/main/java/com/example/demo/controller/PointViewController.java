@@ -15,5 +15,4 @@ public class PointViewController {
         return "admin/point/pointForm";
     }
 
-
 }

@@ -14,12 +14,14 @@
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
-    <h1 class="text-2xl font-bold mb-4">데일리 문진 결과</h1>
-    <div id="result-container" class="space-y-6 mb-6"></div>
-    <button onclick="goHome()"
-            class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
-        홈으로 돌아가기
-    </button>
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-4">데일리 문진 결과</h1>
+        <div id="result-container" class="space-y-6 mb-6"></div>
+        <button onclick="goHome()"
+                class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+            홈으로 돌아가기
+        </button>
+    </div>
 
     <script>
         // 1) URL 파라미터

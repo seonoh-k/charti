@@ -14,69 +14,79 @@
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
-    <div class="max-w-2xl mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">상담 상세</h1>
+    <div class="flex gap-6 m-10">
+        <aside class="w-[20%] p-4">
+            <th:block th:replace="~{fragments/subMenu :: subMenuFragment}"></th:block>
+        </aside>
 
-        <!-- 기본 정보 -->
-        <section class="mb-6 border p-4 rounded bg-white">
-            <p><strong>카테고리:</strong> <span th:text="${matching.category.displayName}"/></p>
-            <p><strong>자녀:</strong> <span th:text="${matching.child.name}"/>
-                (<span th:text="${matching.child.age}"/>세)</p>
-            <p><strong>제목:</strong> <span th:text="${matching.title}"/></p>
-            <p><strong>내용:</strong></p>
-            <div class="mt-2 p-2 bg-gray-50 rounded"
-                 th:text="${matching.content}"/>
+        <main class="w-[75%] p-6 space-y-6 bg-white rounded-lg shadow">
+            <h1 class="text-3xl font-bold mb-4">상담 상세</h1>
 
-            <!-- 첨부 이미지 -->
-            <div th:if="${photos != null and !photos.isEmpty()}">
-                <h2 class="font-semibold mb-2">첨부 이미지</h2>
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div th:each="fileName : ${photos}">
-                        <img th:src="@{/api/proxy/image(filename='thumbnail/' + ${fileName})}"
-                             th:data-full="@{/api/proxy/image(filename='original/' + ${fileName})}"
-                             class="w-full h-32 object-cover rounded cursor-pointer thumbnail"
-                             th:alt="${fileName}"/>
+            <!-- 기본 정보 -->
+            <section class="mb-6 border p-4 rounded bg-white">
+                <p><strong>카테고리:</strong> <span th:text="${matching.category.displayName}"/></p>
+                <p><strong>자녀:</strong> <span th:text="${matching.child.name}"/>
+                    (<span th:text="${matching.child.age}"/>세)</p>
+                <p><strong>제목:</strong> <span th:text="${matching.title}"/></p>
+                <p><strong>내용:</strong></p>
+                <div class="mt-2 p-2 bg-gray-50 rounded"
+                     th:text="${matching.content}"/>
+
+                <!-- 첨부 이미지 -->
+                <div th:if="${photos != null and !photos.isEmpty()}">
+                    <h2 class="font-semibold mb-2">첨부 이미지</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div th:each="fileName : ${photos}">
+                            <img th:src="@{/api/proxy/image(filename='thumbnail/' + ${fileName})}"
+                                 th:data-full="@{/api/proxy/image(filename='original/' + ${fileName})}"
+                                 class="w-full h-32 object-cover rounded cursor-pointer thumbnail"
+                                 th:alt="${fileName}"/>
+                        </div>
+                    </div>
+                    <!-- 모달 -->
+                    <div id="image-modal"
+                         class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                        <button id="image-modal-close"
+                                class="absolute top-4 right-4 text-white text-2xl font-bold">&times;</button>
+                        <img id="image-modal-img" src="" alt="원본 이미지"
+                             class="max-h-[90%] max-w-[90%] rounded shadow-lg"/>
                     </div>
                 </div>
-                <!-- 모달 -->
-                <div id="image-modal"
-                     class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-                    <button id="image-modal-close"
-                            class="absolute top-4 right-4 text-white text-2xl font-bold">&times;</button>
-                    <img id="image-modal-img" src="" alt="원본 이미지"
-                         class="max-h-[90%] max-w-[90%] rounded shadow-lg"/>
+            </section>
+
+            <!-- 문진 질문/답변 -->
+            <details class="mb-6 border rounded">
+                <summary class="px-4 py-2 bg-gray-100 cursor-pointer">문진 질문/답변</summary>
+                <div class="p-4 space-y-4 bg-white">
+                    <div th:each="ans : ${matching.answers}">
+                        <p class="font-semibold" th:text="${ans.question}"/>
+                        <p class="ml-2" th:text="${ans.answer}"/>
+                        <hr/>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 전문가 답변 (배정된 이후) -->
+            <div th:if="${matching.status.name() != 'REQUESTED'}" class="mb-6">
+                <h2 class="text-xl font-semibold mb-2">전문가의 답변</h2>
+
+                <!-- 아직 답변이 없으면 -->
+                <div th:if="${#lists.isEmpty(expertAnswers)}" class="p-4 bg-gray-50 rounded">
+                    <p class="text-gray-600">아직 전문가가 답변하지 않았습니다.</p>
+                </div>
+
+                <!-- 답변이 있으면 -->
+                <div th:each="ea : ${expertAnswers}" class="border p-4 rounded bg-green-50 mt-4">
+                    <p th:text="${ea.content}"/>
+                    <p class="text-sm text-gray-500 mt-2"
+                       th:text="${#temporals.format(ea.createdAt, 'yyyy-MM-dd HH:mm')}"/>
                 </div>
             </div>
-        </section>
 
-        <!-- 문진 질문/답변 -->
-        <details class="mb-6 border rounded">
-            <summary class="px-4 py-2 bg-gray-100 cursor-pointer">문진 질문/답변</summary>
-            <div class="p-4 space-y-4 bg-white">
-                <div th:each="ans : ${matching.answers}">
-                    <p class="font-semibold" th:text="${ans.question}"/>
-                    <p class="ml-2" th:text="${ans.answer}"/>
-                    <hr/>
-                </div>
+            <div class="flex justify-center mt-6">
+                <a href="/matching" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow">목록</a>
             </div>
-        </details>
-
-        <!-- 전문가 답변 (배정된 이후) -->
-        <div th:if="${matching.status.name() != 'REQUESTED'}" class="mb-6">
-            <h2 class="text-xl font-semibold mb-2">전문가의 답변</h2>
-
-            <!-- 아직 답변이 없으면 -->
-            <div th:if="${#lists.isEmpty(expertAnswers)}" class="p-4 bg-gray-50 rounded">
-                <p class="text-gray-600">아직 전문가가 답변하지 않았습니다.</p>
-            </div>
-
-            <!-- 답변이 있으면 -->
-            <div th:each="ea : ${expertAnswers}" class="border p-4 rounded bg-green-50 mt-4">
-                <p th:text="${ea.content}"/>
-                <p class="text-sm text-gray-500 mt-2"
-                   th:text="${#temporals.format(ea.createdAt, 'yyyy-MM-dd HH:mm')}"/>
-            </div>
-        </div>
+        </main>
     </div>
 
     <!-- 이미지 모달 스크립트 -->

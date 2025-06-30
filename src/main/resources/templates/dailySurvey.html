@@ -15,54 +15,56 @@
 </head>
 
 <th:block layout:fragment="content">
-    <h1 class="text-2xl font-bold mb-4">데일리 문진</h1>
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-4">데일리 문진</h1>
 
-    <!-- 1) 자녀 선택 -->
-    <label for="childSelect" class="block mb-2 font-semibold">자녀 선택:</label>
-    <select id="childSelect" class="border p-2 rounded mb-4">
-        <option value="">-- 자녀를 선택하세요 --</option>
-        <option th:each="c : ${children}"
-                th:value="${c.id}"
-                th:selected="${c.id == selectedChildId}"
-                th:text="${c.name + ' (' + c.ageDisplay + ')'}">
-        </option>
-    </select>
+        <!-- 1) 자녀 선택 -->
+        <label for="childSelect" class="block mb-2 font-semibold">자녀 선택:</label>
+        <select id="childSelect" class="border p-2 rounded mb-4">
+            <option value="">-- 자녀를 선택하세요 --</option>
+            <option th:each="c : ${children}"
+                    th:value="${c.id}"
+                    th:selected="${c.id == selectedChildId}"
+                    th:text="${c.name + ' (' + c.ageDisplay + ')'}">
+            </option>
+        </select>
 
-    <!-- 2) 이미 작성했으면 이 메시지만 보이고, 나머지는 숨김 -->
-    <div id="alreadyMessage"
-         class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 hidden"
-         th:classappend="${isAlreadyWritten} ? '' : ' hidden'">
-        <p class="font-bold">안내</p>
-        <p>선택하신 자녀는 오늘 이미 데일리 문진을 작성했습니다.</p>
-        <p class="text-sm mt-2">
-            이전 기록은
-            <a id="historyLink"
-               class="underline text-blue-600"
-               href="#">문진 이력</a>
-            에서 확인하세요.
-        </p>
+        <!-- 2) 이미 작성했으면 이 메시지만 보이고, 나머지는 숨김 -->
+        <div id="alreadyMessage"
+             class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 hidden"
+             th:classappend="${isAlreadyWritten} ? '' : ' hidden'">
+            <p class="font-bold">안내</p>
+            <p>선택하신 자녀는 오늘 이미 데일리 문진을 작성했습니다.</p>
+            <p class="text-sm mt-2">
+                이전 기록은
+                <a id="historyLink"
+                   class="underline text-blue-600"
+                   href="#">문진 이력</a>
+                에서 확인하세요.
+            </p>
+        </div>
+
+        <!-- 3) 자녀 정보 (항상 렌더링, hidden 클래스 토글) -->
+        <div id="child-info"
+             class="mb-4 p-4 border rounded bg-gray-50 hidden"
+             th:classappend="${isAlreadyWritten} ? ' hidden' : ''">
+            <!-- JS 로 채울 예정 -->
+        </div>
+
+        <!-- 4) 설문 영역 -->
+        <div id="survey-container"
+             class="mb-4 hidden"
+             th:classappend="${isAlreadyWritten} ? ' hidden' : ''">
+            <!-- JS 로 채울 예정 -->
+        </div>
+
+        <!-- 5) 제출 버튼 -->
+        <button id="submitBtn"
+                class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded hidden"
+                th:classappend="${isAlreadyWritten} ? ' hidden' : ''">
+            제출하기
+        </button>
     </div>
-
-    <!-- 3) 자녀 정보 (항상 렌더링, hidden 클래스 토글) -->
-    <div id="child-info"
-         class="mb-4 p-4 border rounded bg-gray-50 hidden"
-         th:classappend="${isAlreadyWritten} ? ' hidden' : ''">
-        <!-- JS 로 채울 예정 -->
-    </div>
-
-    <!-- 4) 설문 영역 -->
-    <div id="survey-container"
-         class="mb-4 hidden"
-         th:classappend="${isAlreadyWritten} ? ' hidden' : ''">
-        <!-- JS 로 채울 예정 -->
-    </div>
-
-    <!-- 5) 제출 버튼 -->
-    <button id="submitBtn"
-            class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded hidden"
-            th:classappend="${isAlreadyWritten} ? ' hidden' : ''">
-        제출하기
-    </button>
 
     <!-- 초기 Thymeleaf 변수 전달 -->
     <script th:inline="javascript">

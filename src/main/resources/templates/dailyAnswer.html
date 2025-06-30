@@ -10,53 +10,55 @@
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
-    <h1 class="text-2xl font-bold mb-4">데일리 문진 응답 조회</h1>
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-4">데일리 문진 응답 조회</h1>
 
-    <!-- 필터 -->
-    <div class="flex space-x-4 mb-4">
-        <!-- 자녀 -->
-        <div>
-            <label class="block mb-1">자녀 선택</label>
-            <select id="childSelect" class="border p-2 rounded">
-                <option value="">전체</option>
-                <option th:each="c : ${children}"
-                        th:value="${c.id}"
-                        th:text="${c.name + ' ('+c.nickname+')'}">
-                </option>
-            </select>
+        <!-- 필터 -->
+        <div class="flex space-x-4 mb-4">
+            <!-- 자녀 -->
+            <div>
+                <label class="block mb-1">자녀 선택</label>
+                <select id="childSelect" class="border p-2 rounded">
+                    <option value="">전체</option>
+                    <option th:each="c : ${children}"
+                            th:value="${c.id}"
+                            th:text="${c.name + ' ('+c.nickname+')'}">
+                    </option>
+                </select>
+            </div>
+            <!-- 카테고리 -->
+            <div>
+                <label class="block mb-1">카테고리</label>
+                <select id="categorySelect" class="border p-2 rounded">
+                    <option value="">전체</option>
+                    <option th:each="cat : ${categories}"
+                            th:value="${cat.name()}"
+                            th:text="${cat.displayName}">
+                    </option>
+                </select>
+            </div>
+            <!-- 연령대 -->
+            <div>
+                <label class="block mb-1">연령대</label>
+                <select id="ageGroupSelect" class="border p-2 rounded">
+                    <option value="">전체</option>
+                    <option th:each="ag : ${ageGroups}"
+                            th:value="${ag.name()}"
+                            th:text="${ag.displayName}">
+                    </option>
+                </select>
+            </div>
+            <button onclick="loadAnswers(0)"
+                    class="self-end bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                조회
+            </button>
         </div>
-        <!-- 카테고리 -->
-        <div>
-            <label class="block mb-1">카테고리</label>
-            <select id="categorySelect" class="border p-2 rounded">
-                <option value="">전체</option>
-                <option th:each="cat : ${categories}"
-                        th:value="${cat.name()}"
-                        th:text="${cat.displayName}">
-                </option>
-            </select>
-        </div>
-        <!-- 연령대 -->
-        <div>
-            <label class="block mb-1">연령대</label>
-            <select id="ageGroupSelect" class="border p-2 rounded">
-                <option value="">전체</option>
-                <option th:each="ag : ${ageGroups}"
-                        th:value="${ag.name()}"
-                        th:text="${ag.displayName}">
-                </option>
-            </select>
-        </div>
-        <button onclick="loadAnswers(0)"
-                class="self-end bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
-            조회
-        </button>
+
+        <!-- 결과 -->
+        <div id="answersContainer" class="space-y-4"></div>
+        <!-- 페이지네이션 -->
+        <div id="pagination" class="flex space-x-2 mt-4"></div>
     </div>
-
-    <!-- 결과 -->
-    <div id="answersContainer" class="space-y-4"></div>
-    <!-- 페이지네이션 -->
-    <div id="pagination" class="flex space-x-2 mt-4"></div>
 
     <script>
         function loadAnswers(page = 0) {

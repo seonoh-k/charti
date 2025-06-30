@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Slf4j
 public class MainController {
 
-    @GetMapping("/")
+    @GetMapping({"/", "/main"})
     public String index() {
         return "index";
     }
@@ -22,11 +22,17 @@ public class MainController {
 
     @GetMapping("/admin/surveys/special")
     public String manageSpecialSurveyPage() {
-        return "/admin/surveys/manage-specialSurvey";
+        return "/admin/surveys/manageSpecialSurvey";
     }
 
     @GetMapping("/admin/surveys/group")
     public String manageGroupSurveyPage() {
-        return "/admin/surveys/manage-groupSurvey";
+        return "/admin/surveys/manageGroupSurvey";
     }
+
+    @GetMapping("/survey/history")
+    public String surveyHistoryPage() { return  "surveyHistory"; }
+
+    @GetMapping("/about")
+    public String aboutPage() { return  "about"; }
 }
