@@ -159,12 +159,15 @@ public class SpecialSurveyService {
                     .filter(ans -> ans != null && !ans.isBlank())
                     .count();
 
-            // [수정] 수정된 getMultiplier 호출 (long을 int로 캐스팅)
-            double multiplier = getMultiplier(answer, (int)totalOptions);
-                    .count();
-
             // 클라이언트가 보낸 텍스트 응답
-            String answerText = ansDto.getAnswerText();
+            String answerText = switch (answer) {
+                case 1 -> survey.getAnswer1();
+                case 2 -> survey.getAnswer2();
+                case 3 -> survey.getAnswer3();
+                case 4 -> survey.getAnswer4();
+                case 5 -> survey.getAnswer5();
+                default -> throw new IllegalArgumentException();
+            };
 
             // 옵션 리스트로 변환
             List<String> options = Stream.of(
@@ -183,9 +186,6 @@ public class SpecialSurveyService {
                 );
             }
             int answerIndex = idx + 1; // 1-based index
-
-            categoryMultiplierSum.merge(cat, multiplier, Double::sum);
-            categoryQuestionCount.merge(cat, 1, Integer::sum);
           
             // multiplier 계산
             double multiplier = getMultiplier(answerIndex, (int) totalOptions);
@@ -216,10 +216,6 @@ public class SpecialSurveyService {
         if (needsMatching) {
             result.put("childId", dto.getChildId());
             result.put("category", sc.name());
-            List<Long> answerIds = dto.getAnswers().stream()
-                    .map(SpecialSurveyRequestDto.AnswerDto::getSurveyId)
-                    .collect(Collectors.toList());
-            result.put("answerIds", answerIds);
         }
 
         return result;

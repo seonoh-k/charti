@@ -130,7 +130,7 @@ public class SpecialAnswerService {
             SpecialSurvey s = surveyRepo.findById(dto.getSurveyId()).get();
 
             int idx = answerMap.get(s.getId());
-            String text = switch(idx) {
+            String text = switch (idx) {
                 case 1 -> s.getAnswer1();
                 case 2 -> s.getAnswer2();
                 case 3 -> s.getAnswer3();
@@ -138,12 +138,10 @@ public class SpecialAnswerService {
                 case 5 -> s.getAnswer5();
                 default -> throw new IllegalArgumentException("1~5 사이 값 필요");
             };
-          
-        List<SpecialAnswer> saved = new ArrayList<>();
-        for (SpecialSurveyRequestDto.AnswerDto dto : answers) {
+
             // 2) SurveySet 조회 (FK)
-            SurveySet set = surveySetRepo.findById(dto.getSurveySetId())
-                    .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
+            SurveySet set = surveySetRepo.findById(dto.getSurveyId())
+                    .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveyId()));
 
             // 3) SpecialAnswer 엔티티 채우기
             SpecialAnswer ans = new SpecialAnswer();
@@ -152,21 +150,6 @@ public class SpecialAnswerService {
             ans.setCategory(category);
             ans.setQuestion(dto.getQuestion());
             ans.setAnswer(text);
-
-
-            // 2) SurveySet 조회 (FK)
-//            if(dto.getSurveySetId() != null) {
-//                SurveySet set = surveySetRepo.findById(dto.getSurveySetId())
-//                        .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
-//                ans.setSurveySet(set);
-//            }
-
-            ans.setSurveySet(set);
-            ans.setAgeGroup(ageGroup);
-            ans.setCategory(category);
-            ans.setQuestion(dto.getQuestion());
-            ans.setAnswer(dto.getAnswerText());
-
 
             // 4) 저장
             saved.add(answerRepo.save(ans));
