@@ -91,11 +91,10 @@ public class ExpertController {
     public String showExpertMyPage(Model model) {
         log.info("[GET] 👨‍💼 request manager Page");
         UserDTO userDTO = authService.getLoginUser();
-
+        ExpertDTO expertDTO = expertService.getExpertByIdWithAddress(userDTO.getId());
         AddressDTO address = addressService.getAddressByUid(userDTO.getUuid());
-
-        userDTO.setAddress(address);
-        model.addAttribute("userInfo", userDTO);
+        expertDTO.setAddress(address);
+                model.addAttribute("userInfo", expertDTO);
 
         return "expert/myPage";
     }

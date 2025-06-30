@@ -51,6 +51,14 @@ public class ExpertService {
         }
         return byId.get();
     }
+    public ExpertDTO getExpertByIdWithAddress(Long id) throws UserNotFoundException {
+        Optional<ExpertDTO> byId = expertQueryRepository.getExpertByIdWithAddress(id);
+
+        if (byId.isEmpty()) {
+            throw new UserNotFoundException();
+        }
+        return byId.get();
+    }
 
     // 승인 상태의 전문가 페이징으로 가져오기
     public PagingResultDTO getApprovedExpertList(Pageable pageable) {

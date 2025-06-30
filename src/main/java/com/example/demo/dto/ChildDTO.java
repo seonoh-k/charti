@@ -36,6 +36,9 @@ public class ChildDTO {
     private String groupName;
     private String groupEmail;
     private String groupPhone;
+    private String targetGroup; // 타겟 그룹명
+    private String ageDisplay;  // "4세" 같은 나이 표기
+    private Long groupId;
 
     private LocalDateTime birthday;
 
@@ -52,6 +55,23 @@ public class ChildDTO {
                 .riskGroup(child.getRiskGroup())
                 .birthday(child.getBirthday())
                 .build();
+    }
+    public static ChildDTO fromEntityWithDetails(Child child) {
+        ChildDTO dto = fromEntity(child); // 기존 fromEntity 호출해서 기본값 세팅
+
+        // 상세 정보 필드 추가로 세팅
+        if (child.getGroup() != null) {
+            dto.setGroupName(child.getGroup().getGroupName());
+            dto.setGroupEmail(child.getGroup().getGroupEmail());
+            dto.setGroupPhone(child.getGroup().getGroupPhoneNumber());
+            dto.setGroupId(child.getGroup().getId());
+            if (child.getGroup().getTargetGroup() != null) {
+                dto.setTargetGroup(child.getGroup().getTargetGroup().getDisplayName());
+            }
+        }
+        dto.setAgeDisplay(child.getAgeDisplay());
+        // 필요하면 더 추가...
+        return dto;
     }
 
     public AgeGroup getAgeGroup() {

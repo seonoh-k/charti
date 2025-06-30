@@ -1,6 +1,8 @@
 package com.example.demo.users.repository;
 
+import com.example.demo.dto.AddressDTO;
 import com.example.demo.dto.ExpertDTO;
+import com.example.demo.entity.QAddress;
 import com.example.demo.users.entity.QExpert;
 import com.example.demo.users.entity.QUsers;
 import com.example.demo.users.entity.Role;
@@ -46,6 +48,45 @@ public class ExpertQueryRepositoryImpl implements ExpertQueryRepository {
                 ))
                 .from(e)
                 .join(e.users, u)
+                .where(u.id.eq(userId))
+                .fetchOne();
+
+        return Optional.ofNullable(dto);
+    }
+
+    @Override
+    public Optional<ExpertDTO> getExpertByIdWithAddress(Long userId) {
+        QExpert e = QExpert.expert;
+        QUsers u = QUsers.users;
+        QAddress a = QAddress.address;
+
+        ExpertDTO dto = queryFactory
+                .select(Projections.constructor(
+                        ExpertDTO.class,
+                        u.id,                  // users_id
+                        u.name,                // 이름
+                        u.nickname,            // 닉네임
+                        u.username,            // 이메일(username)
+                        u.phoneNumber,         // 전화번호
+                        e.license,             // 자격증
+                        e.major,               // 전공
+                        e.career,              // 경력
+                        u.createdAt,           // 가입일시
+                        e.isApproved,          // 승인여부
+                        u.deleted,             // 삭제여부
+                        Projections.constructor(
+                                AddressDTO.class,
+                                a.id,           // AddressDTO 생성자에 맞는 순서!
+                                a.zipNum,
+                                a.sido,
+                                a.gugun,
+                                a.dong,
+                                a.bunji
+                        )
+                ))
+                .from(e)
+                .join(e.users, u)
+                .leftJoin(e.address, a) // Expert → Address!
                 .where(u.id.eq(userId))
                 .fetchOne();
 

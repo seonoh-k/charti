@@ -28,7 +28,7 @@ public interface ChildRepository extends JpaRepository<Child, Long> {
 
     // Member → Child 관계에서, 현재 로그인한 유저의 Member.id 로 조회
     // child.parent.users.id = ? 인 자녀들을 모두 가져옴
-    List<Child> findByParentUsersId(Long usersId);
+    List<Child> findByParentUsersIdAndDeletedFalse(Long usersId);
 
     /**
      * 특정 기관(Group) ID에 속한 모든 자녀 목록을 조회합니다.

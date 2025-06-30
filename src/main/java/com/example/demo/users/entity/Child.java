@@ -39,6 +39,8 @@ public class Child {
     private Integer birthOrder;
     private Boolean riskGroup;
 
+    private Boolean deleted = false;
+
     @ManyToOne
     @JoinColumn(name = "group_id")
     private Group group;
