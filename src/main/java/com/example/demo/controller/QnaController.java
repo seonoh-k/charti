@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.AdminDTO;
 import com.example.demo.dto.QnaDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.entity.Qna;
@@ -48,8 +49,8 @@ public class QnaController {
                            @RequestParam(value = "category", required=false) QnaCategory category,
                            Model model) {
 
-        UserDTO userDTO = authService.getLoginUser();
-        boolean isAdmin = userDTO.getRole().equals(Role.ROLE_ADMIN.getKey());
+        AdminDTO adminDTO = authService.getLoginAdmin();
+        boolean isAdmin = adminDTO.getRole().equals(Role.ROLE_ADMIN.getKey());
 
         if(!isAdmin) {
             return "redirect:/qna";

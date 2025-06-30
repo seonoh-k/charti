@@ -71,18 +71,18 @@ public class GroupSurveyController {
     }
 
     // 7. 문항 답변 제출
-    @PostMapping("/submit")
-    public ResponseEntity<Map<String,Object>> submitAndSave(
-            @RequestBody GroupSurveyRequestDto dto) {
-
-        // dto에 이제 setId 필드를 추가했다고 가정
-        groupAnswerService.saveAnswers(
-                dto.getChildId(),
-                dto.getSetId(),
-                dto.getAnswers()
-        );
-
-        Map<String,Object> result = groupSurveyService.evaluate(dto);
-        return ResponseEntity.ok(result);
-    }
+//    @PostMapping("/submit")
+//    public ResponseEntity<Map<String,Object>> submitAndSave(
+//            @RequestBody GroupSurveyRequestDto dto) {
+//
+//        // dto에 이제 setId 필드를 추가했다고 가정
+//        groupAnswerService.saveAnswers(
+//                dto.getChildId(),
+//                dto.getSetId(),
+//                dto.getAnswers()
+//        );
+//
+//        Map<String,Object> result = groupSurveyService.evaluate(dto);
+//        return ResponseEntity.ok(result);
+//    }
 }

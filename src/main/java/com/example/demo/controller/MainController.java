@@ -20,11 +20,6 @@ public class MainController {
         return "dailySurveyResult";
     }
 
-
-    @GetMapping("/albums/create")
-    public String getAlbumsPage() { return "albumsCreate";}
-
-
     @GetMapping("/admin/surveys/special")
     public String manageSpecialSurveyPage() {
         return "/admin/surveys/manage-specialSurvey";
