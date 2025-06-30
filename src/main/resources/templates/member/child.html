@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layout/default_layout}">
+    <th:block layout:fragment="content">
+        <div class="max-w-3xl mx-auto py-12">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-2xl font-bold flex items-center">
+                    <span class="mr-2">👶</span> 내 자녀 목록
+                </h1>
+                <a href="/child/add" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">자녀 추가</a>
+            </div>
+            
+            <!-- 자녀가 있을 때: 카드 반복 -->
+            <div th:if="${children != null and #lists.size(children) > 0}" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div th:each="child : ${children}" class="bg-white shadow rounded-2xl p-6 flex flex-col gap-2">
+                    <div class="font-bold text-xl" th:text="${child.name}">이름</div>
+                    <div class="text-sm text-gray-600">나이: <span th:text="${child.ageDisplay}">2세</span></div>
+                    <div class="text-sm">성별: <span th:text="${child.gender}">남</span></div>
+                    <div class="text-sm">
+                        소속: 
+                        <span th:text="${child.group != null ? child.group.groupName : '-'}"></span>
+                        (
+                        <span th:text="${child.group != null ? child.group.targetGroup.displayName : '-'}"></span>
+                        )
+                    </div>
+                    <div class="text-sm">키/몸무게: <span th:text="${child.height}">85</span>cm / <span th:text="${child.weight}">11</span>kg</div>
+                    <div class="text-sm">위험군: 
+                        <span th:text="${child.riskGroup} ? 'O' : 'X'" th:classappend="${child.riskGroup} ? 'text-red-500 font-semibold' : ''"></span>
+                    </div>
+                    <div class="flex gap-3 mt-4">
+                        <a th:href="@{'/member/child/' + ${child.id}}" class="text-indigo-600 hover:underline text-sm">상세보기</a>
+                        <!-- 필요시 수정/삭제 버튼 추가 가능 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 자녀가 없을 때 -->
+            <div th:if="${children == null or #lists.size(children) == 0}" class="flex flex-col items-center text-gray-400 py-16">
+                <span class="text-3xl mb-3">😶</span>
+                <span>등록된 자녀가 없습니다.</span>
+                <a href="/child/add" class="mt-4 px-4 py-2 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200">자녀 추가</a>
+            </div>
+        </div>
+    </th:block>
+</html>

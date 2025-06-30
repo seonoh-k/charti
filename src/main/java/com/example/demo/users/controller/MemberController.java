@@ -1,13 +1,16 @@
 package com.example.demo.users.controller;
 
 import com.example.demo.dto.AddressDTO;
+import com.example.demo.dto.ChildDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.request.UserUpdateRequest;
 import com.example.demo.service.AddressService;
+import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.AuthService;
+import com.example.demo.users.service.ChildService;
 import com.example.demo.users.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,6 +24,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 @Log4j2
@@ -29,6 +34,7 @@ public class MemberController {
     private final UserService userService;
     private final AuthService authService;
     private final AddressService addressService;
+    private final ChildService childService;
 
     @GetMapping("/member")
     public String showMemberPage() {
@@ -54,14 +60,27 @@ public class MemberController {
     public String showMemberMyPage(Model model) {
         log.info("[GET] 👨‍💼 request member Page");
         UserDTO userDTO = authService.getLoginUser();
-
+        List<Child> children = childService.findByUsersId(userDTO.getId());
         AddressDTO address =  addressService.getAddressByUid(userDTO.getUuid());
 
         userDTO.setAddress(address);
         model.addAttribute("userInfo", userDTO);
-
+        model.addAttribute("children", children);
         return "member/myPage";
     }
+    @GetMapping("/member/child")
+    public String showMemberChild(Model model) {
+        log.info("[GET] 👨‍💼 request member Child");
+        UserDTO userDTO = authService.getLoginUser();
+
+        List<Child> children = childService.findByUsersId(userDTO.getId());
+
+        model.addAttribute("userInfo", userDTO);
+        model.addAttribute("children", children);
+        return "member/child";
+    }
+
+
     @PostMapping("/member/update")
     public String updateMemberInfo(
             @ModelAttribute UserUpdateRequest req,
@@ -83,7 +102,7 @@ public class MemberController {
         // 3. 서비스 호출 (실제 정보 수정)
         try {
             userService.updateMember(req, uid);
-            rttr.addFlashAttribute("msg", "정보가 수정되었습니다.");
+            rttr.addFlashAttribute("msg", "정보가 성공적으로 수정되었습니다.");
         } catch (Exception e) {
             rttr.addFlashAttribute("msg", "수정 중 오류 발생: " + e.getMessage());
         }

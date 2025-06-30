@@ -5,7 +5,9 @@ import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.paging.PagingRequest;
 import com.example.demo.dto.paging.PagingResultDTO;
+import com.example.demo.dto.request.ExpertUpdateRequest;
 import com.example.demo.dto.request.IdsRequest;
+import com.example.demo.dto.request.ManagerUpdateRequest;
 import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.enums.MatchingStatus;
 import com.example.demo.matching.entity.Matching;
@@ -29,6 +31,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -95,6 +98,31 @@ public class ExpertController {
         model.addAttribute("userInfo", userDTO);
 
         return "expert/myPage";
+    }
+
+    @PostMapping("/expert/update")
+    public String updateManager(
+            @ModelAttribute ExpertUpdateRequest req,
+            Authentication authentication,
+            RedirectAttributes rttr) {
+
+        String uid = authentication.getPrincipal().toString();
+        log.info("📞 /manager/update정보 이름 : {}", req.getName());
+        log.info("📞 /manager/update정보 닉네임 : {}", req.getNickname());
+        log.info("📞 /manager/update정보 전화번호 : {}", req.getPhoneNumber());
+        try {
+            expertService.updateExpert(req, uid);
+            rttr.addFlashAttribute("msg", "정보가 성공적으로 수정되었습니다.");
+        } catch (FirebaseAuthException e) {
+            // Firebase  업데이트 실패 시
+            log.error("❌ Firebase 업데이트 실패: {}", e.getMessage(), e);
+            rttr.addFlashAttribute("error", "Firebase 업데이트 실패: " + "정보 수정 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요");
+        } catch (Exception e) {
+            // 기타 예외 처리 (Optional)
+            log.error("❌ 정보 수정 중 오류 발생", e);
+            rttr.addFlashAttribute("error", "정보 수정 중 오류가 발생했습니다.");
+        }
+        return "redirect:/expert/myPage";
     }
 
 
