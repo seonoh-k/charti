@@ -112,7 +112,7 @@ public class ChildService extends BaseService<Child, ChildRepository> {
         Child child = repository.findById(childId)
                 .orElseThrow(() -> new RuntimeException("자녀 정보가 없습니다."));
 
-        child.setGroup(null); // 그룹과의 연관 해제!
-        repository.save(child); // 변경사항 저장 (JPA 변경감지라 생략해도 됨)
+        child.setGroup(null); // 그룹과의 연관 해제
+        repository.save(child);
     }
 }

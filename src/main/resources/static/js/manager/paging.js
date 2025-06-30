@@ -28,10 +28,8 @@ function renderParentCards(cards) {
                         data-child-name="${child.childName || ''}"
                         data-gender="${child.gender || ''}"
                         data-birthday="${child.birthday ? child.birthday.substring(0, 10) : ''}"
-                        data-nickname="${child.nickname || ''}"
                         data-height="${child.height || ''}"
                         data-weight="${child.weight || ''}"
-                        data-birth-order="${child.birthOrder || ''}"
                         data-risk-group="${child.riskGroup || ''}"
                         onclick="openChildDetailModal(this)">
                         <div class="font-semibold mb-1">${child.childName}</div>
