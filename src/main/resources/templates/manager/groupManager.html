@@ -110,29 +110,60 @@
                 </button>
             </div>
         </div>
+                        </div>
+                    </div>
 
-        <!-- 📍 주소 검색 모달 -->
-        <div id="addressModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded shadow-lg p-6 w-full max-w-xl animate-fade-in">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">주소 검색</h2>
-                <div class="flex gap-2 mb-4">
-                    <input id="dongInput" type="text" placeholder="동 이름 입력 (최소 2자 이상)"
-                        class="flex-1 border border-gray-300 text-gray-900 rounded px-4 py-2 focus:ring-2 focus:ring-purple-500" />
-                    <button onclick="searchAddress()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">검색</button>
                 </div>
-                <div id="addressResult" class="max-h-60 overflow-y-auto border-t border-gray-200 pt-2 space-y-2"></div>
-                <div class="flex justify-end mt-4">
-                    <button onclick="closeAddressModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">닫기</button>
+                <!-- 자녀 상세정보 모달 (hidden: 기본 숨김) -->
+                <div id="childDetailModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+                    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-xs relative">
+                        <!-- 닫기 버튼 -->
+                        <button onclick="closeChildDetailModal()" class="absolute right-4 top-4 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+                        <h2 class="text-lg font-bold mb-4">자녀 상세정보</h2>
+                        <div class="mb-2"><b>이름:</b> <span id="modalChildName"></span></div>
+                        <div class="mb-2"><b>성별:</b> <span id="modalChildGender"></span></div>
+                        <div class="mb-2"><b>생년월일:</b> <span id="modalChildBirthday"></span></div>
+                        <div class="mb-2"><b>신장:</b> <span id="modalChildHeight"></span></div>
+                        <div class="mb-2"><b>체중:</b> <span id="modalChildWeight"></span></div>
+                        <div class="mb-2"><b>고위험군 여부:</b> <span id="modalChildRiskGroup"></span></div>
+                        <!-- 필요하면 더 추가 가능! -->
+                        <button id="removeChildBtn" class="mt-6 w-full bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2">
+                        그룹에서 제외
+                        </button>
+                    </div>
+                </div>
+
+
+                            <!-- 📍 주소 검색 모달 -->
+            <div id="addressModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white rounded shadow-lg p-6 w-full max-w-xl animate-fade-in">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">주소 검색</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input id="dongInput" type="text" placeholder="동 이름 입력 (최소 2자 이상)"
+                            class="flex-1 border border-gray-300 text-gray-900 rounded px-4 py-2 focus:ring-2 focus:ring-purple-500" />
+                        <button onclick="searchAddress()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">검색</button>
+                    </div>
+                    <div id="addressResult" class="max-h-60 overflow-y-auto border-t border-gray-200 pt-2 space-y-2"></div>
+                    <div class="flex justify-end mt-4">
+                        <button onclick="closeAddressModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">닫기</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <script>
-          const groupId = [[${groupInfo.groupId}]];
-        </script>
+            <script>
+                const groupId = [[${groupInfo.groupId}]];
+            </script>
 
-        <script src="/js/addressSearch.js"></script>
-        <script src="/js/manager/groupManager.js"></script>
-        <script src="/js/manager/paging.js"></script>
-    </main>
-</th:block>
+            <script src="/js/addressSearch.js"></script>
+            <script src="/js/manager/groupManager.js"></script>
+            <script src="/js/manager/paging.js"></script>
+            <script src="/js/flashMsg.js"></script>
+
+            </th:block>
+        </main>
+    </div>
+
+    
+
+    <script th:src="@{/js/manager/managerSideBar.js}"></script>
+</body>
 </html>

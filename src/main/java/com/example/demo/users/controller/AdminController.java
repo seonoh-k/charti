@@ -12,19 +12,24 @@ import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.jwt.JwtUtil;
 import com.example.demo.users.entity.*;
 import com.example.demo.users.exception.AdminAlreadyExistsException;
+import com.example.demo.users.exception.AdminNotFoundException;
 import com.example.demo.users.exception.UserIsNotDeletedException;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.*;
 import com.example.demo.util.AuthStatus;
 import com.example.demo.util.GlobalStatus;
+import com.example.demo.util.UserStatus;
+import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuthException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -140,7 +145,7 @@ public class AdminController {
                                                    Model model) {
         try{
             // 파이어 베이스 계정 생성
-            String uuid = firebaseService.createMember(request);
+            String uuid = firebaseService.createAdmin(request);
             request.setUuid(uuid);
 
             boolean isExistInDB = userService.existsByEmail(request.getUsername());
@@ -162,8 +167,19 @@ public class AdminController {
                     .body(new ApiResponse(GlobalStatus.USERNAME_VALIDATION_FAILED));
         } catch (FirebaseAuthException fe){
             // Firebase에 계정 생성하다가 실패 시 발생
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(AuthStatus.ADMIN_JOIN_REQUEST_FAIL));
+            // PHONE_NUMBER_ALREADY_EXISTS :
+            // EMAIL_ALREADY_EXISTS
+            if (AuthErrorCode.EMAIL_ALREADY_EXISTS == fe.getAuthErrorCode()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(GlobalStatus.USERNAME_VALIDATION_FAILED));
+            } else if(AuthErrorCode.PHONE_NUMBER_ALREADY_EXISTS == fe.getAuthErrorCode()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(GlobalStatus.PHONENUMBER_VALIDATION_FAILED));
+            } else{
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse(GlobalStatus.FIREBASE_ERROR));
+            }
+
         } catch (FirebaseAuthenticationException fae){
             // Role Claims에 저장하다가 실패 시 발생
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -187,8 +203,14 @@ public class AdminController {
                 ? userService.searchDeletedUsers(type, keyword, pageable)
                 : userService.getDeletedUserList(pageable);
 
+        log.info("탈퇴 회원 수 {}" ,result.getTotalElements());
+        log.info("회원 이 있죠? {} ", !result.getDtoList().isEmpty());
+
+        model.addAttribute("hasDeletedUser",!result.getDtoList().isEmpty());
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("direction", pagingRequest.getDirection());
+        model.addAttribute("sort", pagingRequest.getSort());
         model.addAttribute("result",result);
 
         return "admin/users/deletedUserList"; // 뷰 파일
@@ -206,9 +228,11 @@ public class AdminController {
         PagingResultDTO<MemberDTO, Member> result = (type != null && keyword != null && !keyword.isBlank())
                         ? memberService.searchMemberList(type, keyword, pageable)
                         : memberService.getMemberList(pageable);
-
+        model.addAttribute("hasMember", !result.getDtoList().isEmpty());
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("direction", pagingRequest.getDirection());
+        model.addAttribute("sort", pagingRequest.getSort());
         model.addAttribute("result",result);
 
         return "admin/member/memberList"; // 뷰 파일
@@ -227,8 +251,11 @@ public class AdminController {
                         ? expertService.searchApprovedExpertList(type, keyword, pageable)
                         : expertService.getApprovedExpertList(pageable);
 
+        model.addAttribute("hasExpert", !result.getDtoList().isEmpty());
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("direction", pagingRequest.getDirection());
+        model.addAttribute("sort", pagingRequest.getSort());
         model.addAttribute("result",result);
 
         return "admin/expert/expertList"; // 뷰 파일
@@ -247,11 +274,54 @@ public class AdminController {
                         ? managerService.searchApprovedManagerList(type, keyword, pageable)
                         : managerService.getApprovedManagerList(pageable);
 
+        model.addAttribute("hasManager", !result.getDtoList().isEmpty());
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("direction", pagingRequest.getDirection());
+        model.addAttribute("sort", pagingRequest.getSort());
         model.addAttribute("result", result);
 
         return "admin/manager/managerList"; // 뷰 파일
+    }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_ADMIN_LIST)
+    @GetMapping("/admin/admin/all")
+    public String showAdminListPage(@ModelAttribute PagingRequest pagingRequest,
+                                           @RequestParam(required = false) String type,
+                                           @RequestParam(required = false) String keyword,
+                                           Model model){
+
+        Pageable pageable = pagingRequest.toPageable();
+
+        PagingResultDTO<AdminDTO, Admin> result =
+                (type != null && keyword != null && !keyword.isBlank())
+                        ? adminService.searchAdminList(type, keyword, pageable)
+                        : adminService.getAdminList(pageable);
+
+        model.addAttribute("hasAdmin", !result.getDtoList().isEmpty());
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("direction", pagingRequest.getDirection());
+        model.addAttribute("sort", pagingRequest.getSort());
+        model.addAttribute("result", result);
+
+        return "admin/admin/adminList"; // 뷰 파일
+    }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_ADMIN)
+    @GetMapping("/admin/admin/all/search")
+    public ResponseEntity<ApiResponse> searchAdminListPage(@ModelAttribute PagingRequest pagingRequest,
+                                                                      @RequestParam(required = false) String type,
+                                                                      @RequestParam(required = false) String keyword,
+                                                                      Model model){
+
+        Pageable pageable = pagingRequest.toPageable();
+        PagingResultDTO<AdminDTO, Admin> result = adminService.searchAdminList(type, keyword, pageable);
+        model.addAttribute("sort", pagingRequest.getSort());
+        if (result.getTotalElements() <= 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
     }
 
     @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_USERS_DELETED)
@@ -262,8 +332,8 @@ public class AdminController {
                                                Model model){
 
         Pageable pageable = pagingRequest.toPageable();
-
         PagingResultDTO<UserDTO, Users> result = userService.searchDeletedUsers(type, keyword, pageable);
+        model.addAttribute("sort", pagingRequest.getSort());
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
                     .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
@@ -280,7 +350,7 @@ public class AdminController {
         Pageable pageable = pagingRequest.toPageable();
 
         PagingResultDTO<MemberDTO, Member> result = memberService.searchMemberList(type, keyword, pageable);
-
+        model.addAttribute("sort", pagingRequest.getSort());
 
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -300,6 +370,8 @@ public class AdminController {
 
         PagingResultDTO result = expertService.searchApprovedExpertList(type,keyword,pageable);
 
+        model.addAttribute("sort", pagingRequest.getSort());
+
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
                     .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
@@ -317,14 +389,39 @@ public class AdminController {
 
         Pageable pageable = pagingRequest.toPageable();
         PagingResultDTO<ManagerDTO, Manager> result = managerService.searchApprovedManagerList(type, keyword, pageable);
-
+        model.addAttribute("sort", pagingRequest.getSort());
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
                     .body(new ApiResponse<>(GlobalStatus.NO_CONTENT));
         }
 
+
         return ResponseEntity.ok(ApiResponse.success(GlobalStatus.SUCCESS_WITH_DATA, result));
     }
+
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_ADMIN_UPDATE_FORM)
+    @GetMapping("/admin/admin/{id:[0-9]+}")
+    public String showAdminUpdatePage(@ModelAttribute PagingRequest pagingRequest,
+                                            @PathVariable Long id,
+                                            RedirectAttributes redirectAttribute,
+                                            Model model){
+        AdminDTO adminDTO;
+
+        try{
+            adminDTO = adminService.getAdminDTOById(id);
+
+        } catch (UserNotFoundException userNotFoundException){
+            redirectAttribute.addAttribute("page",pagingRequest.getPage());
+            redirectAttribute.addAttribute("size",pagingRequest.getSize());
+            redirectAttribute.addAttribute("sort",pagingRequest.getSort());
+            redirectAttribute.addAttribute("direction",pagingRequest.getDirection());
+            return "redirect:/admin/admin/all";
+        }
+        model.addAttribute("adminDTO",adminDTO);
+
+        return "admin/admin/updateForm";
+    }
+
     @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_USERS_DELETED_RESTORE_FORM)
     @GetMapping("/admin/users/deleted/{id:[0-9]+}")
     public String showAdminDeletedUserUpdatePage(@PathVariable Long id,
@@ -673,6 +770,7 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse(GlobalStatus.OK));
     }
+
     @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.ACCESS_EXPERT_UNAPPROVE_LIST)
     @GetMapping("/admin/expert-applicants")
     public String showExpertApplicants(
@@ -687,8 +785,11 @@ public class AdminController {
                         ? expertService.searchUnapprovedExpertList(type, keyword, pageable)
                         : expertService.getUnapprovedExpertList(pageable);
 
+        model.addAttribute("hasExpertApplicant", !result.getDtoList().isEmpty());
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("direction", pagingRequest.getDirection());
+        model.addAttribute("sort", pagingRequest.getSort());
         model.addAttribute("result", result);
 
         return "admin/expertApplicants";
@@ -699,10 +800,13 @@ public class AdminController {
     public ResponseEntity<ApiResponse<?>> searchExpertApplicants(
             @RequestParam String type,
             @RequestParam String keyword,
-            @ModelAttribute PagingRequest pagingRequest) {
+            @ModelAttribute PagingRequest pagingRequest,
+            Model model) {
 
         Pageable pageable = pagingRequest.toPageable();
         PagingResultDTO<ExpertDTO, Expert> result = expertService.searchUnapprovedExpertList(type, keyword, pageable);
+
+        model.addAttribute("sort", pagingRequest.getSort());
 
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -777,9 +881,11 @@ public class AdminController {
                 (type != null && keyword != null && !keyword.isBlank())
                         ? managerService.searchUnapprovedManagerList(type, keyword, pageable)
                         : managerService.getUnapprovedManagerList(pageable);
-
+        model.addAttribute("hasManagerApplicant", !result.getDtoList().isEmpty());
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("direction", pagingRequest.getDirection());
+        model.addAttribute("sort", pagingRequest.getSort());
         model.addAttribute("result", result);
 
         return "admin/managerApplicants"; // 뷰 파일
@@ -789,10 +895,13 @@ public class AdminController {
     public ResponseEntity<ApiResponse<?>> searchManagerApplicants(
             @RequestParam String type,
             @RequestParam String keyword,
-            @ModelAttribute PagingRequest pagingRequest) {
+            @ModelAttribute PagingRequest pagingRequest,
+            Model model) {
 
         Pageable pageable = pagingRequest.toPageable();
         PagingResultDTO<ManagerDTO, Manager> result = managerService.searchUnapprovedManagerList(type, keyword, pageable);
+
+        model.addAttribute("sort", pagingRequest.getSort());
 
         if (result.getTotalElements() <= 0) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -840,6 +949,35 @@ public class AdminController {
                 .body(new ApiResponse(GlobalStatus.OK));
     }
 
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.INITIALIZE_ADMIN_PASSWORD)
+    @PostMapping("/admin/admin/init/{id:[0-9]+}")
+    public ResponseEntity<ApiResponse> initializeAdminPassword(@PathVariable Long id, HttpServletRequest request){
+
+        try{
+            String uuid = adminService.getAdminUUIDById(id);
+            boolean isSuccess = adminService.initializePassword(id);
+            if (isSuccess){
+                firebaseService.initFirebasePassword(uuid);
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(new ApiResponse(GlobalStatus.OK));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND));
+            }
+
+        } catch (AdminNotFoundException ade){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(GlobalStatus.ENTITY_NOT_FOUND));
+        } catch (FirebaseAuthException firebaseAuthException){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(GlobalStatus.FIREBASE_ERROR));
+        }
+
+
+
+
+
+    }
 
     @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.SEARCH_MANAGER_UNAPPROVE)
     @PostMapping("/api/admin/manager-applicants")

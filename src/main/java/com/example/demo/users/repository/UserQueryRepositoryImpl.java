@@ -42,19 +42,59 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
     @Override
     public Page<UserDTO> searchDeletedUsers(String type, String keyword, Pageable pageable) {
         QUsers u = QUsers.users;
-        // 1) 동적 검색 조건 빌드
+        // 동적 검색 조건 빌드
         BooleanBuilder builder = new BooleanBuilder(u.deleted.isTrue());
+
         if (type != null && keyword != null && !keyword.isBlank()) {
             String kw = "%" + keyword.toLowerCase() + "%";
             switch (type) {
                 case "name" -> builder.and(u.name.lower().like(kw));
                 case "email" -> builder.and(u.username.lower().like(kw));
                 case "phoneNumber" -> builder.and(u.phoneNumber.lower().like(kw));
+                case "nickname" -> builder.and(u.nickname.lower().like(kw));
                 // 필요시 다른 타입 추가
             }
         }
-        // 2) 고정 정렬: deletedAt 내림차순
-        OrderSpecifier<?> order = u.deletedAt.desc();
+        // 정렬 기준만 꺼내고 방향은 레포지토리에서 고정 처리
+        String sortProp = pageable.getSort().isSorted()
+                ? pageable.getSort().iterator().next().getProperty()
+                : "deletedAt";
+
+        OrderSpecifier<?>[] orders;
+        switch (sortProp) {
+            case "name":
+                // 이름은 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.name.asc()
+                };
+                break;
+            case "email":
+                // 이메일 → 이름 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.username.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "phoneNumber":
+                orders = new OrderSpecifier<?>[]{
+                        u.phoneNumber.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "nickname":
+                orders = new OrderSpecifier<?>[]{
+                        u.nickname.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "deletedAt":
+            default:
+                // 생성일은 내림차순
+                orders = new OrderSpecifier<?>[]{
+                        u.deletedAt.desc()
+                };
+                break;
+        }
         // 3) content 조회
         List<UserDTO> content = queryFactory
                 .select(Projections.constructor(
@@ -69,7 +109,7 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
                 ))
                 .from(u)
                 .where(builder)
-                .orderBy(order)
+                .orderBy(orders)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

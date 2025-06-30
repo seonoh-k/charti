@@ -8,6 +8,7 @@ import com.example.demo.users.entity.QUsers;
 import com.example.demo.users.entity.Role;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -148,6 +149,46 @@ public class MemberQueryRepositoryImpl implements MemberQueryRepository{
             default:
                 // 필요 시 예외 처리
         }
+        // 정렬 기준만 꺼내고 방향은 레포지토리에서 고정 처리
+        String sortProp = pageable.getSort().isSorted()
+                ? pageable.getSort().iterator().next().getProperty()
+                : "createdAt";
+
+        OrderSpecifier<?>[] orders;
+        switch (sortProp) {
+            case "name":
+                // 이름은 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.name.asc()
+                };
+                break;
+            case "email":
+                // 이메일 → 이름 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.username.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "phoneNumber":
+                orders = new OrderSpecifier<?>[]{
+                        u.phoneNumber.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "nickname":
+                orders = new OrderSpecifier<?>[]{
+                        u.nickname.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "createdAt":
+            default:
+                // 생성일은 내림차순
+                orders = new OrderSpecifier<?>[]{
+                        u.createdAt.desc()
+                };
+                break;
+        }
 
         JPAQuery<MemberDTO> query = queryFactory
                 .select(Projections.constructor(MemberDTO.class,
@@ -158,7 +199,8 @@ public class MemberQueryRepositoryImpl implements MemberQueryRepository{
                         u.deleted))
                 .from(u)
                 .join(u.member, m)
-                .where(builder);
+                .where(builder)
+                .orderBy(orders);
 
         long total = query.fetchCount();
         List<MemberDTO> content = query

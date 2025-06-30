@@ -105,10 +105,28 @@ public class MemberController {
 
     @GetMapping("/member/myPage")
     public String showMemberMyPage(Model model) {
+        log.info("[GET] 👨‍💼 request member Page");
+        UserDTO userDTO = authService.getLoginUser();
+        List<Child> children = childService.findByUsersId(userDTO.getId());
+        AddressDTO address =  addressService.getAddressByUid(userDTO.getUuid());
 
-
+        userDTO.setAddress(address);
+        model.addAttribute("userInfo", userDTO);
+        model.addAttribute("children", children);
         return "member/myPage";
     }
+    @GetMapping("/member/child")
+    public String showMemberChild(Model model) {
+        log.info("[GET] 👨‍💼 request member Child");
+        UserDTO userDTO = authService.getLoginUser();
+
+        List<Child> children = childService.findByUsersId(userDTO.getId());
+
+        model.addAttribute("userInfo", userDTO);
+        model.addAttribute("children", children);
+        return "member/child";
+    }
+
 
     @PostMapping("/member/update")
     public String updateMemberInfo(
@@ -131,7 +149,7 @@ public class MemberController {
         // 3. 서비스 호출 (실제 정보 수정)
         try {
             userService.updateMember(req, uid);
-            rttr.addFlashAttribute("msg", "정보가 수정되었습니다.");
+            rttr.addFlashAttribute("msg", "정보가 성공적으로 수정되었습니다.");
         } catch (Exception e) {
             rttr.addFlashAttribute("msg", "수정 중 오류 발생: " + e.getMessage());
         }

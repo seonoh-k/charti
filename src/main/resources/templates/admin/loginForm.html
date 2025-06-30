@@ -50,7 +50,7 @@
                     </div>
         
                     <button id="loginBtn"
-                            type="button"
+                            type="submit"
                             onclick="login()"
                             class="w-full bg-gray-600 hover:bg-gray-400 text-white font-semibold py-2 rounded-lg transition">
                         로그인
@@ -79,7 +79,10 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('loginBtn').addEventListener('click',(e) => {
+            e.preventDefault();
+            login();
+        });
 
         async function login() {
             const username = document.getElementById("username").value;

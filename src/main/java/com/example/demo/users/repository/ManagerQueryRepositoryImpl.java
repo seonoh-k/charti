@@ -14,6 +14,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
 
     private final JPAQueryFactory queryFactory;
@@ -130,10 +132,46 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
             }
         }
 
-        // 동적 정렬 (예: createdAt 기준 내림차순)
-        OrderSpecifier<?> order = u.createdAt.desc();
-        if (pageable.getSort().isSorted()) {
-            // 필요시 Sort.Order 에 따라 분기 처리
+
+
+        String sortProp = pageable.getSort().isSorted()
+                ? pageable.getSort().iterator().next().getProperty()
+                : "createdAt";
+
+        OrderSpecifier<?>[] orders;
+        switch (sortProp) {
+            case "name":
+                // 이름은 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.name.asc()
+                };
+                break;
+            case "email":
+                // 이메일 → 이름 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.username.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "phoneNumber":
+                orders = new OrderSpecifier<?>[]{
+                        u.phoneNumber.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "groupName":
+                orders = new OrderSpecifier<?>[]{
+                        g.groupName.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "createdAt":
+            default:
+                // 생성일은 내림차순
+                orders = new OrderSpecifier<?>[]{
+                        u.createdAt.desc()
+                };
+                break;
         }
 
         // 조회할 컬럼 매핑
@@ -157,7 +195,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                 .join(u.manager, m)
                 .join(m.group, g)
                 .where(builder)
-                .orderBy(order)
+                .orderBy(orders)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -179,6 +217,12 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
         QUsers u = QUsers.users;
         QManager m = QManager.manager;
         QGroup g = QGroup.group;
+
+
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(u.role.eq(Role.ROLE_MEMBER));      // ROLE_MEMBER
+        builder.and(u.deleted.isFalse());              // 삭제되지 않은 사용자
+        builder.and(m.isApproved.isFalse());        // 미승인
 
         // 1) Sort 처리 (기본: Manager 생성일 내림차순)
         OrderSpecifier<?> orderBy = u.createdAt.desc();
@@ -210,11 +254,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                 .from(u)
                 .join(u.manager, m)
                 .join(m.group, g)
-                .where(
-                        u.role.eq(Role.ROLE_MEMBER), // ROLE => MEMBER
-                        m.isApproved.isFalse(),      // 미승인
-                        u.deleted.isFalse()          // 삭제되지 않은 사용자
-                )
+                .where(builder)
                 .orderBy(orderBy)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -226,76 +266,100 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                 .from(u)
                 .join(u.manager, m)
                 .join(m.group, g)
-                .where(
-                        u.role.eq(Role.ROLE_MEMBER), // ROLE => MEMBER
-                        m.isApproved.isFalse(),      // 미승인
-                        u.deleted.isFalse()          // 삭제되지 않은 사용자
-                )
+                .where(builder)
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total);
     }
 
     @Override
-    public Page<ManagerDTO> searchApprovedManagerList(String type, String keyword, Pageable pageable) {
+    public Page<ManagerDTO> searchApprovedManagerList(
+            String type, String keyword, Pageable pageable) {
+
         QUsers u = QUsers.users;
         QManager m = QManager.manager;
         QGroup g = QGroup.group;
 
-        // 조건 빌더
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(u.role.eq(Role.ROLE_MANAGER));      // ROLE_MANAGER
-        builder.and(u.deleted.isFalse());              // 삭제되지 않은 사용자
-        builder.and(m.isApproved.isTrue());           // 승인된 매니저
-        // join 관계는 from/join 절에서 처리할 것이므로 여기에 따로 eq()는 불필요
+        // 1) 검색조건 빌더
+        BooleanBuilder builder = new BooleanBuilder()
+                .and(u.role.eq(Role.ROLE_MANAGER))
+                .and(u.deleted.isFalse())
+                .and(m.isApproved.isTrue());
 
         if (type != null && keyword != null && !keyword.isBlank()) {
             String kw = "%" + keyword.toLowerCase() + "%";
             switch (type) {
-                case "name" ->
-                        builder.and(u.name.lower().like(kw));
-                case "email" ->
-                        builder.and(u.username.lower().like(kw));
-                case "phoneNumber" ->
-                        builder.and(u.phoneNumber.lower().like(kw));
-                case "groupName" ->
-                        builder.and(g.groupName.lower().like(kw));
+                case "name":
+                    builder.and(u.name.lower().like(kw));
+                    break;
+                case "email":
+                    builder.and(u.username.lower().like(kw));
+                    break;
+                case "phoneNumber":
+                    builder.and(u.phoneNumber.lower().like(kw));
+                    break;
+                case "groupName":
+                    builder.and(g.groupName.lower().like(kw));
+                    break;
             }
         }
 
-        // 동적 정렬 (예: createdAt 기준 내림차순)
-        OrderSpecifier<?> order = u.createdAt.desc();
-        if (pageable.getSort().isSorted()) {
-            // 필요시 Sort.Order 에 따라 분기 처리
+        // 정렬 기준만 꺼내고 방향은 레포지토리에서 고정 처리
+        String sortProp = pageable.getSort().isSorted()
+                ? pageable.getSort().iterator().next().getProperty()
+                : "createdAt";
+
+        OrderSpecifier<?>[] orders;
+        switch (sortProp) {
+            case "name":
+                // 이름은 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.name.asc()
+                };
+                break;
+            case "email":
+                // 이메일 → 이름 오름차순
+                orders = new OrderSpecifier<?>[]{
+                        u.username.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "phoneNumber":
+                orders = new OrderSpecifier<?>[]{
+                        u.phoneNumber.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "groupName":
+                orders = new OrderSpecifier<?>[]{
+                        g.groupName.asc(),
+                        u.name.asc()
+                };
+                break;
+            case "createdAt":
+            default:
+                // 생성일은 내림차순
+                orders = new OrderSpecifier<?>[]{
+                        u.createdAt.desc()
+                };
+                break;
         }
 
-        // 조회할 컬럼 매핑
+        // 3) 쿼리 실행
         List<ManagerDTO> content = queryFactory
-                .select(Projections.constructor(
-                        ManagerDTO.class,
-                        u.id,
-                        u.name,
-                        u.username,
-                        u.nickname,
-                        u.phoneNumber,
-                        g.id,                       // 그룹 아이디
-                        g.groupName,                // 그룹 이름
-                        g.groupEmail,               // 그룹 이메일
-                        g.targetGroup.stringValue(), // 그룹 분류
-                        m.isApproved,
-                        u.createdAt,
-                        u.deleted                   // 탈퇴 여부
-                ))
+                .select(Projections.constructor(ManagerDTO.class,
+                        u.id, u.name, u.username, u.nickname, u.phoneNumber,
+                        g.id, g.groupName, g.groupEmail, g.targetGroup.stringValue(),
+                        m.isApproved, u.createdAt, u.deleted))
                 .from(u)
                 .join(u.manager, m)
                 .join(m.group, g)
                 .where(builder)
-                .orderBy(order)
+                .orderBy(orders)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        // 전체 카운트
         Long total = queryFactory
                 .select(u.count())
                 .from(u)
@@ -313,7 +377,11 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
         QManager m = QManager.manager;
         QGroup g = QGroup.group;
 
-        // 1) Sort 처리 (기본: Manager 생성일 내림차순)
+        BooleanBuilder builder = new BooleanBuilder()
+                .and(u.role.eq(Role.ROLE_MANAGER))
+                .and(u.deleted.isFalse())
+                .and(m.isApproved.isTrue());
+
         OrderSpecifier<?> orderBy = u.createdAt.desc();
         if (pageable.getSort().isSorted()) {
             Sort.Order sortOrder = pageable.getSort().iterator().next();
@@ -343,11 +411,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                 .from(u)
                 .join(u.manager, m)
                 .join(m.group, g)
-                .where(
-                        u.role.eq(Role.ROLE_MANAGER), // ROLE => MANAGER
-                        u.deleted.isFalse(),          // 삭제되지 않은 사용자
-                        m.isApproved.isTrue()         // 승인
-                )
+                .where(builder)
                 .orderBy(orderBy)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -359,11 +423,7 @@ public class ManagerQueryRepositoryImpl implements ManagerQueryRepository{
                 .from(u)
                 .join(u.manager, m)
                 .join(m.group, g)
-                .where(
-                        u.role.eq(Role.ROLE_MANAGER), // ROLE => MANAGER
-                        u.deleted.isFalse(),          // 삭제되지 않은 사용자
-                        m.isApproved.isTrue()         // 승인
-                )
+                .where(builder)
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total);

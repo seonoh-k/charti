@@ -97,7 +97,6 @@ public class ManagerController {
         log.info("📞 managerDTO.getPhoneNumber = {}", managerDTO.getPhoneNumber());
         log.info("📞 managerDTO.getGroupId = {}", managerDTO.getGroupId());
         model.addAttribute("userInfo", managerDTO);
-        model.addAttribute("hasChildren", !managerDTO.getChildren().isEmpty());
 
         return "manager/myPage";
     }

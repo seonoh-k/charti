@@ -145,17 +145,24 @@
             });
 
             const createResult = await adminRes.json();
-            console.log(`createResult.status : ${createResult.status}`);
+            
             if(createResult.code === "OK"){
-                showToast("회원가입 절차 진행 중", 'success',3000);
+                showToast("계정 생성 절차 진행 중", 'success',3000);
 
                 setTimeout(() => {
                     window.location.href = `/admin/main`;
                 }, 1500);
-            } else if(createResult.status === 500){
-                showToast(result.message || '생성 중 오류 발생','error',3000);
+            } else if(createResult.code === "UVF"){
+                showToast(createResult.message || '생성 중 오류 발생','error',3000);
+
+                const p = document.getElementById(`username-error-message`);
+                p.textContent = createResult.message;
+            } else if(createResult.code === "PVF"){
+                showToast(createResult.message || '생성 중 오류 발생','error',3000);
+                const p = document.getElementById(`phoneNumber-error-message`);
+                p.textContent = createResult.message;
             } else{
-                showToast(result.message || '생성 중 오류 발생','error',3000);
+                showToast(createResult.message || '생성 중 오류 발생','error',3000);
             }
 
 
@@ -166,11 +173,6 @@
             ['name','position','username','password','phoneNumber'].forEach(field => {
                 const p = document.getElementById(`${field}-error-message`);
                 if (p) p.textContent = '';
-            });
-
-            result.data.forEach(err => {
-                console.log(`${err.field}  :  ${err.message}`);
-
             });
 
             // 2) error 배열 순회, 같은 필드에 메시지 여러 개면 첫 번째만 출력

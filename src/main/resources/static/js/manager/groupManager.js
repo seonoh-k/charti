@@ -1,48 +1,37 @@
-let originalGroupData = {};
+// 폼의 원본값을 모두 저장해둘 객체
+let originalGroupForm = {};
 
-// 수정 모드 진입
-function enableGroupEditMode() {
-    const editableFields = ['groupName', 'groupEmail', 'groupPhoneNumber'];
-    originalGroupData = {};
+// 보기/수정 모드 전환 전용 함수
+function toggleGroupEdit(editMode) {
+    const viewSection = document.getElementById('groupViewSection');
+    const editForm = document.getElementById('groupEditForm');
 
-    // 기존 값 저장 및 readonly 해제
-    editableFields.forEach(id => {
-        const field = document.getElementById(id);
-        if (!field) return;
-        originalGroupData[id] = field.value;
-        if (field.hasAttribute('readonly')) {
-            field.removeAttribute('readonly');
-            field.classList.remove('bg-gray-100');
-        }
-    });
-    // 그룹 분류: input 대신 select 보이게
-    document.getElementById('targetGroupDisplayBox').classList.add('hidden');
-    document.getElementById('targetGroupSelectBox').classList.remove('hidden');
-    // 주소 검색 버튼 보이게
-    document.getElementById('addressSearchBtn').classList.remove('hidden');
+    viewSection.classList.toggle('hidden', editMode);
+    editForm.classList.toggle('hidden', !editMode);
 
-    document.getElementById('groupEditButtonBox').classList.add('hidden');
-    document.getElementById('groupActionButtonBox').classList.remove('hidden');
+    // 수정모드 진입 시 원본값 저장
+    if (editMode) {
+        originalGroupForm = {
+            groupName: document.getElementById('groupName').value,
+            groupEmail: document.getElementById('groupEmail').value,
+            groupPhoneNumber: document.getElementById('groupPhoneNumber').value,
+            targetGroup: document.getElementById('targetGroup').value,
+            zipNum: document.getElementById('zipNum').value,
+            addr1: document.getElementById('addr1').value,
+            addressId: document.getElementById('addressId').value,
+        };
+    } else {
+        // 취소시 원본값을 복원
+        document.getElementById('groupName').value = originalGroupForm.groupName;
+        document.getElementById('groupEmail').value = originalGroupForm.groupEmail;
+        document.getElementById('groupPhoneNumber').value = originalGroupForm.groupPhoneNumber;
+        document.getElementById('targetGroup').value = originalGroupForm.targetGroup;
+        document.getElementById('zipNum').value = originalGroupForm.zipNum;
+        document.getElementById('addr1').value = originalGroupForm.addr1;
+        document.getElementById('addressId').value = originalGroupForm.addressId;
+    }
 }
 
-// 취소 시 값 복원 및 readonly
-function cancelGroupEdit() {
-    Object.entries(originalGroupData).forEach(([id, value]) => {
-        const field = document.getElementById(id);
-        if (!field) return;
-        field.value = value;
-        field.setAttribute('readonly', true);
-        field.classList.add('bg-gray-100');
-    });
-    // 분류는 다시 input만
-    document.getElementById('targetGroupDisplayBox').classList.remove('hidden');
-    document.getElementById('targetGroupSelectBox').classList.add('hidden');
-    // 주소 검색 버튼 숨기기
-    document.getElementById('addressSearchBtn').classList.add('hidden');
-
-    document.getElementById('groupEditButtonBox').classList.remove('hidden');
-    document.getElementById('groupActionButtonBox').classList.add('hidden');
-}
 
 // 저장 (submit)
 function submitGroupEdit() {
@@ -54,10 +43,8 @@ function openChildDetailModal(cardElem) {
     document.getElementById('modalChildName').textContent = cardElem.dataset.childName || '';
     document.getElementById('modalChildGender').textContent = cardElem.dataset.gender || '';
     document.getElementById('modalChildBirthday').textContent = cardElem.dataset.birthday || '';
-    document.getElementById('modalChildNickname').textContent = cardElem.dataset.nickname || '';
     document.getElementById('modalChildHeight').textContent = cardElem.dataset.height || '';
     document.getElementById('modalChildWeight').textContent = cardElem.dataset.weight || '';
-    document.getElementById('modalChildBirthOrder').textContent = cardElem.dataset.birthOrder || '';
     document.getElementById('modalChildRiskGroup').textContent = cardElem.dataset.riskGroup === "true" ? "예" : "아니오";
 
     const childId = cardElem.dataset.childId;
@@ -73,7 +60,6 @@ function closeChildDetailModal() {
     document.getElementById('childDetailModal').classList.add('hidden');
 }
 
-// 제외는 네가 준거 그대로!
 function removeChildFromGroup(childId, childName) {
     if (!confirm(`${childName} 자녀를 그룹에서 제외하시겠습니까?`)) return;
 
@@ -86,7 +72,7 @@ function removeChildFromGroup(childId, childName) {
     .then(data => {
         alert(data.message || "자녀가 그룹에서 제외되었습니다.");
         closeChildDetailModal();
-        // 새로고침 또는 ajax로 해당 카드만 지우기 가능
+        // 새로고침
         location.reload();
     })
     .catch(() => alert("제외에 실패했습니다."));
