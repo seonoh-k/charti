@@ -11,8 +11,12 @@ import com.example.demo.survey.entity.SpecialSurvey;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.SpecialSurveyRepository;
 import com.example.demo.survey.repository.SurveySetRepository;
+import com.example.demo.users.entity.Child;
+import com.example.demo.users.repository.ChildRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +33,7 @@ public class SpecialSurveyService {
 
     private final SpecialSurveyRepository specialSurveyRepository;
     private final SurveySetRepository surveySetRepository;
+    private final ChildRepository childRepository;
 
     @Transactional(readOnly = true)
     public Map<String,Object> evaluate(SpecialSurveyRequestDto dto) {
@@ -120,6 +125,10 @@ public class SpecialSurveyService {
                     .map(SpecialSurveyRequestDto.AnswerDto::getSurveyId)
                     .collect(Collectors.toList());
             result.put("answerIds", answerIds);
+
+            Child child = childRepository.findById(dto.getChildId()).get();
+            child.setRiskGroup(true);
+            childRepository.save(child);
         }
 
         return result;
@@ -216,6 +225,10 @@ public class SpecialSurveyService {
         if (needsMatching) {
             result.put("childId", dto.getChildId());
             result.put("category", sc.name());
+
+            Child child = childRepository.findById(dto.getChildId()).get();
+            child.setRiskGroup(true);
+            childRepository.save(child);
         }
 
         return result;
@@ -309,5 +322,33 @@ public class SpecialSurveyService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID 없음: " + id));
         entity.markAsDeleted();
         specialSurveyRepository.save(entity);
+    }
+
+    public List<SurveyCategory> getDistinctCategories() {
+        return specialSurveyRepository.findDistinctCategories();
+    }
+
+    public Page<SpecialSurvey> findAllSurveys(Pageable pageable) {
+        return specialSurveyRepository.findAllByDeletedFalse(pageable);
+    }
+
+    public Page<SpecialSurvey> getSurveysByAgeGroup(AgeGroup ageGroup, Pageable pageable) {
+        return specialSurveyRepository.findByAgeGroupAndDeletedFalse(ageGroup, pageable);
+    }
+
+    public Page<SpecialSurvey> getSurveysByCategory(SurveyCategory category, Pageable pageable) {
+        return specialSurveyRepository.findAllByCategoryAndDeletedFalse(category, pageable);
+    }
+
+    public Page<SpecialSurvey> getSurveysByAgeAndCategory(AgeGroup ageGroup, SurveyCategory category, Pageable pageable) {
+        return specialSurveyRepository.findByAgeGroupAndCategoryAndDeletedFalse(ageGroup, category, pageable);
+    }
+
+    public void save(SpecialSurvey survey) {
+        specialSurveyRepository.save(survey);
+    }
+
+    public SpecialSurvey findById(Long id) {
+        return specialSurveyRepository.findById(id).orElse(null);
     }
 }

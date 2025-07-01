@@ -13,6 +13,7 @@ import com.example.demo.fcm.repository.NoticeRepository;
 import com.example.demo.fcm.repository.UserFcmTokenRepository;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.service.SurveySetService;
+import com.example.demo.users.entity.Admin;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Users;
@@ -49,7 +50,53 @@ public class FcmService {
      * [역할 명확화] 특정 사용자 한 명에게 알림을 보내고, Notice와 History를 모두 저장하는 핵심 메소드.
      * 스케줄러, 상담 배정 등 개별 알림에서만 사용합니다.
      */
-    public int sendNotification(Users sender, Users recipient, String title, String body, FcmCategory category, String url) {
+    public int sendNotification(Admin sender, Users recipient, String title, String body, FcmCategory category, String url) {
+        if (recipient == null || recipient.isDeleted()) {
+            log.warn("유효하지 않은 수신자에게 알림을 보낼 수 없습니다. recipientId: {}", recipient != null ? recipient.getId() : "null");
+            return 0;
+        }
+
+        // 1. Notice를 먼저 저장합니다.
+        noticeRepository.save(
+                Notice.builder()
+                        .user(recipient).title(title).body(body)
+                        .category(category).url(url).sentAt(LocalDateTime.now())
+                        .build()
+        );
+
+        // 2. FCM 발송을 시도합니다.
+        boolean sentSuccessfully = false;
+        try {
+            List<UserFcmToken> tokens = tokenRepository.findByUserAndIsActiveTrue(recipient);
+            if (!tokens.isEmpty()) {
+                for (UserFcmToken token : tokens) {
+                    firebaseMessagingService.sendMessageToToken(token.getFcmToken(), title, body, url);
+                    sentSuccessfully = true; // 한 번이라도 예외 없이 호출되면 성공으로 간주
+                }
+            } else {
+                log.info("수신자에게 등록된 활성 토큰이 없어 FCM을 보내지 않습니다. recipientId: {}", recipient.getId());
+            }
+        } catch (Exception e) {
+            log.error("FCM 발송 처리 중 오류 발생", e);
+        }
+
+        // 3. 발송 이력을 저장합니다.
+        try {
+            historyRepository.save(
+                    FcmSendHistory.builder()
+                            .adminSender(sender).title(title).body(body).category(category)
+                            .targetCondition("userId=" + recipient.getId()).targetCount(1)
+                            .successCount(sentSuccessfully ? 1 : 0).sentAt(LocalDateTime.now()).link(url)
+                            .build()
+            );
+        } catch (Exception e) {
+            log.error("FCM 발송 이력 저장 실패", e);
+        }
+
+        return sentSuccessfully ? 1 : 0;
+    }
+
+    public int sendMatchingNotification(Users sender, Users recipient, String title, String body, FcmCategory category, String url) {
         if (recipient == null || recipient.isDeleted()) {
             log.warn("유효하지 않은 수신자에게 알림을 보낼 수 없습니다. recipientId: {}", recipient != null ? recipient.getId() : "null");
             return 0;
@@ -95,11 +142,10 @@ public class FcmService {
         return sentSuccessfully ? 1 : 0;
     }
 
-
     /**
      * [수정] '전체' 또는 '연령/카테고리' 대상 발송 메소드
      */
-    public AdminFcmSendResultDto sendNotificationToTarget(Users sender, String title, String body, FcmCategory category, AgeGroup ageGroup) {
+    public AdminFcmSendResultDto sendNotificationToTarget(Admin sender, String title, String body, FcmCategory category, AgeGroup ageGroup) {
         // TODO: 이 메소드는 현재 성능 이슈(findAll)가 있습니다. 추후 개선이 필요합니다.
         List<Users> targetUsers = userRepository.findAll().stream()
                 .filter(user -> !user.isDeleted())
@@ -128,7 +174,7 @@ public class FcmService {
 
         // History를 단 1건만 저장합니다.
         historyRepository.save(FcmSendHistory.builder()
-                .sender(sender)
+                .adminSender(sender)
                 .title(title).body(body).category(category)
                 .targetCondition("ageGroup=" + (ageGroup != null ? ageGroup.name() : "ALL"))
                 .targetCount(targetUsers.size()).successCount(successCount).sentAt(LocalDateTime.now())
@@ -144,7 +190,7 @@ public class FcmService {
     /**
      * [수정] '위험군' 대상 발송 메소드
      */
-    public AdminFcmSendResultDto sendNotificationToRiskGroupChildren(Users sender) {
+    public AdminFcmSendResultDto sendNotificationToRiskGroupChildren(Admin sender) {
         // TODO: 이 메소드는 현재 성능 이슈(findAll)가 있습니다. 추후 개선이 필요합니다.
         List<Users> allUsers = userRepository.findAll();
 
@@ -183,7 +229,7 @@ public class FcmService {
         noticeRepository.saveAll(noticesToSave);
 
         historyRepository.save(FcmSendHistory.builder()
-                .sender(sender).title(title).body("위험군 자녀 대상 특별문진 요청")
+                .adminSender(sender).title(title).body("위험군 자녀 대상 특별문진 요청")
                 .category(FcmCategory.SPECIAL).targetCondition("riskGroup=true")
                 .targetCount(targetUsers.size()).successCount(successfulNames.size())
                 .sentAt(LocalDateTime.now()).link(link).build());
@@ -197,7 +243,7 @@ public class FcmService {
     /**
      * [수정] '특정 기관 그룹' 대상 발송 메소드
      */
-    public AdminFcmSendResultDto sendNotificationToGroupChildren(Users sender, TargetGroup targetGroup) {
+    public AdminFcmSendResultDto sendNotificationToGroupChildren(Admin sender, TargetGroup targetGroup) {
         // TODO: userRepository.findParentsWithChildrenInGroup(groupId) 같은 최적화된 쿼리 필요
         List<Users> allUsers = userRepository.findAll();
 
@@ -231,7 +277,7 @@ public class FcmService {
         noticeRepository.saveAll(noticesToSave);
 
         historyRepository.save(FcmSendHistory.builder()
-                .sender(sender)
+                .adminSender(sender)
                 .title(title).body("그룹 문진 요청 알림")
                 .category(FcmCategory.GROUP).targetCondition("group=" + targetGroup.name())
                 .targetCount(targetUsers.size()).successCount(successfulNames.size())

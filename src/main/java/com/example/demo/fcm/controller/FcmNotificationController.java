@@ -1,13 +1,17 @@
 package com.example.demo.fcm.controller;
 
+import com.example.demo.dto.AdminDTO;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.FcmCategory;
 import com.example.demo.enums.TargetGroup;
 import com.example.demo.fcm.dto.AdminFcmSendResultDto;
 import com.example.demo.fcm.service.FcmService;
 import com.example.demo.repository.GroupRepository;
+import com.example.demo.users.entity.Admin;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.repository.UserRepository;
+import com.example.demo.users.service.AdminService;
+import com.example.demo.users.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,6 +35,8 @@ public class FcmNotificationController {
     private final FcmService fcmService;
     private final GroupRepository groupRepo;
     private final UserRepository userRepository;
+    private final AuthService authService;
+    private final AdminService adminService;
 
     /**
      * 알림 작성 폼 페이지를 보여줍니다.
@@ -69,19 +75,22 @@ public class FcmNotificationController {
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
-        Users adminUser = userRepository.findByUuid(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("관리자 정보를 찾을 수 없습니다."));
+        AdminDTO adminDTO = authService.getLoginAdmin();
+        Admin admin = adminService.getAdminById(adminDTO.getId());
+
+//        Users adminUser = userRepository.findByUuid(authentication.getName())
+//                .orElseThrow(() -> new RuntimeException("관리자 정보를 찾을 수 없습니다."));
 
         AdminFcmSendResultDto result;
 
         if ("SPECIAL_RISK".equals(target)) {
-            result = fcmService.sendNotificationToRiskGroupChildren(adminUser);
+            result = fcmService.sendNotificationToRiskGroupChildren(admin);
         } else if (target.startsWith("GROUP_")) {
             String enumName = target.substring("GROUP_".length());
             TargetGroup tg = TargetGroup.valueOf(enumName);
-            result = fcmService.sendNotificationToGroupChildren(adminUser, tg);
+            result = fcmService.sendNotificationToGroupChildren(admin, tg);
         } else {
-            result = fcmService.sendNotificationToTarget(adminUser, title, body, category, ageGroup);
+            result = fcmService.sendNotificationToTarget(admin, title, body, category, ageGroup);
         }
 
         redirectAttributes.addFlashAttribute("sendResult", result);
