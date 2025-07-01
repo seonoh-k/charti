@@ -10,8 +10,10 @@ import com.example.demo.survey.service.DailyAnswerService;
 import com.example.demo.survey.service.DailySurveyService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
+import com.example.demo.users.entity.RiskCategory;
 import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.service.ChildService;
+import com.example.demo.users.service.RiskCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,7 @@ public class DailySurveyController {
     private final DailyAnswerRepository answerRepository;
     private final ChildService childService;
     private final MemberRepository memberRepository;
+    private final RiskCategoryService riskCategoryService;
 
     @GetMapping("/{ageGroup}")
     @ResponseBody
@@ -118,9 +121,28 @@ public class DailySurveyController {
         result.put("totalRiskScore", totalRisk);
         result.put("categoryScores", dailySurveyService.calculateCategoryRiskScore(dto.getAnswers(), surveys));
 
-        boolean needsSpecial = result.get("categoryScores") != null
-                && ((Map<SurveyCategory,Double>)result.get("categoryScores")).values().stream()
-                .anyMatch(score -> score >= 60.0);
+//        boolean needsSpecial = result.get("categoryScores") != null
+//                && ((Map<SurveyCategory,Double>)result.get("categoryScores")).values().stream()
+//                .anyMatch(score -> score >= 60.0);
+        boolean needsSpecial = false;
+
+        Map<SurveyCategory, Double> categoryScores = (Map<SurveyCategory, Double>) result.get("categoryScores");
+        for (SurveyCategory category : categoryScores.keySet()) {
+            Double score = categoryScores.get(category);
+            if(score >= 60.0) {
+                needsSpecial = true;
+
+                RiskCategory riskCategory = new RiskCategory();
+                riskCategory.setChild(child);
+                riskCategory.setSurveyCategory(category);
+                RiskCategory riskCategory1 = riskCategoryService.createRiskCategory(riskCategory);
+                child.setRiskGroup(true);
+                child.getRiskCategories().add(riskCategory1);
+                childService.update(child);
+            }
+        }
+
+
         result.put("needsSpecialSurvey", needsSpecial);
 
         return ResponseEntity.ok(result);
