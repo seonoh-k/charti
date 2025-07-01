@@ -2,6 +2,7 @@ package com.example.demo.survey.controller;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.survey.entity.BaseSurvey;
 import com.example.demo.survey.service.SurveySetService;
 import lombok.RequiredArgsConstructor;
@@ -18,14 +19,31 @@ import java.util.List;
 public class SurveyApiController {
     private final SurveySetService service;
 
+    /**
+     * 문진 목록 조회 API
+     *
+     * @param type        "GROUP" 또는 "SPECIAL"
+     * @param age         AgeGroup enum (ALL 포함)
+     * @param category    SurveyCategory enum (ALL 포함)
+     * @param targetGroup TargetGroup enum (ALL 포함, GROUP일 때만 적용)
+     * @return BaseSurvey 타입의 문진 리스트
+     */
     @GetMapping
     public List<? extends BaseSurvey> getSurveys(
             @RequestParam String type,
             @RequestParam(defaultValue = "ALL") AgeGroup age,
-            @RequestParam(defaultValue = "ALL") SurveyCategory category
+            @RequestParam(defaultValue = "ALL") SurveyCategory category,
+            @RequestParam(defaultValue = "ALL") String targetGroup
     ) {
-        return "SPECIAL".equals(type)
-                ? service.allSpecial(age, category)
-                : service.allGroup(age, category);
+
+        TargetGroup tg = TargetGroup.fromValue(targetGroup);
+
+        if ("SPECIAL".equalsIgnoreCase(type)) {
+            // 특별 문진은 targetGroup 무시
+            return service.allSpecial(age, category);
+        } else {
+            // 그룹 문진만 targetGroup 필터 적용
+            return service.allGroup(age, category, tg);
+        }
     }
 }

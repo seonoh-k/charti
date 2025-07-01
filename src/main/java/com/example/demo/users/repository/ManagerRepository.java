@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ManagerRepository extends JpaRepository<Manager, Long> {
 
@@ -22,5 +23,7 @@ public interface ManagerRepository extends JpaRepository<Manager, Long> {
 
 
     boolean existsByGroupId(Long groupId);
-  
+
+    Optional<Manager> findByUsers_Uuid(String uuid);
+
 }

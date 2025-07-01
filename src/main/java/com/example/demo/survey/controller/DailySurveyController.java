@@ -67,7 +67,7 @@ public class DailySurveyController {
                     .body(Map.of("message", "오늘 이미 데일리 문진을 작성했습니다."));
         }
 
-        // 2) 설문 목록 조회 & 검증 (기존 로직 그대로)
+        // 2) 설문 목록 조회 & 검증
         List<DailySurvey> surveys = dailySurveyService.getSurveysByAgeGroup(dto.getAgeGroup());
         if (surveys == null || surveys.isEmpty()) {
             throw new IllegalArgumentException("문진 데이터가 없습니다.");
@@ -79,7 +79,7 @@ public class DailySurveyController {
             throw new IllegalArgumentException("응답 배열과 설문 데이터 크기가 일치하지 않습니다.");
         }
 
-        // 3) 답변 저장 (기존 로직)
+        // 3) 답변 저장
         for (int i = 0; i < surveys.size(); i++) {
             DailySurvey s = surveys.get(i);
             int answerIdx = dto.getAnswers().get(i);
@@ -104,7 +104,7 @@ public class DailySurveyController {
             answerRepository.save(da);
         }
 
-        // 4) 포인트 적립 (기존 로직)
+        // 4) 포인트 적립
         Member parent = child.getParent();
         if (parent.getTotalPoint() == null) {
             parent.setTotalPoint(0);
@@ -112,7 +112,7 @@ public class DailySurveyController {
         parent.setTotalPoint(parent.getTotalPoint() + 500);
         memberRepository.save(parent);
 
-        // 5) 위험도 계산 및 결과 반환 (기존 로직)
+        // 5) 위험도 계산 및 결과 반환
         double totalRisk = dailySurveyService.calculateRiskScore(dto.getAnswers(), surveys);
         Map<String,Object> result = new HashMap<>();
         result.put("totalRiskScore", totalRisk);

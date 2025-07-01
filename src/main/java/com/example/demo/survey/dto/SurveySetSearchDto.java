@@ -2,6 +2,7 @@ package com.example.demo.survey.dto;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
+import com.example.demo.enums.TargetGroup;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,4 +16,5 @@ public class SurveySetSearchDto {
     private AgeGroup ageGroup = AgeGroup.ALL;  // all, 0~12,1~2,3~4,5
     private SurveyCategory category = SurveyCategory.ALL;  // all, 의사소통,인지/운동,생활습관,정서/사회성
     private String type     = "all";  // all, GROUP,SPECIAL
+    private TargetGroup targetGroup = TargetGroup.ALL;
 }

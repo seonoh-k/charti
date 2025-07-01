@@ -54,8 +54,15 @@ public class SurveySetService {
                     cb.equal(root.get("category"), dto.getCategory())
             );
         }
+
         if (!"all".equals(dto.getType())) {
             spec = spec.and((r, q, cb) -> cb.equal(r.get("type"), dto.getType()));
+        }
+        if (dto.getTargetGroup() != null
+                && dto.getTargetGroup() != TargetGroup.ALL) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("targetGroup"), dto.getTargetGroup())
+            );
         }
         return surveySetRepo.findAll(spec, pageable);
     }
@@ -121,14 +128,37 @@ public class SurveySetService {
         } else {
             surveys.forEach(s -> entity.getSpecialSurveys().add((SpecialSurvey) s));
         }
+
+        if ("GROUP".equals(form.getType())) {
+            entity.setTargetGroup(form.getTargetGroup());
+        } else {
+            entity.setTargetGroup(null);
+        }
+
         return surveySetRepo.save(entity);
     }
 
     /** 폼용 전체 설문 조회 (필터 적용 가능) */
-    public List<GroupSurvey> allGroup(AgeGroup age, SurveyCategory category) {
+    public List<GroupSurvey> allGroup(
+            AgeGroup age,
+            SurveyCategory category,
+            TargetGroup targetGroup
+    ) {
         return groupRepo.findAll().stream()
-                .filter(s -> (age == AgeGroup.ALL || s.getAgeGroup() == age))
-                .filter(s -> (category == SurveyCategory.ALL || s.getCategory() == category))
+                // 연령대 필터
+                .filter(s -> age == AgeGroup.ALL || s.getAgeGroup() == age)
+                // 카테고리 필터
+                .filter(s -> category == SurveyCategory.ALL || s.getCategory() == category)
+                // 대상 그룹 필터: ALL 또는 null 이면 모두 통과, 그렇지 않으면 Optional 안 값과 비교
+                .filter(s -> {
+                    if (targetGroup == null || targetGroup == TargetGroup.ALL) {
+                        return true;
+                    }
+                    // Optional<TargetGroup> 안의 값을 꺼내 비교
+                    return s.getTargetGroup()
+                            .map(tg -> tg == targetGroup)
+                            .orElse(false);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -180,5 +210,22 @@ public class SurveySetService {
     public SurveySet getById(Long setId) {
         return surveySetRepo.findById(setId)
                 .orElseThrow(() -> new EntityNotFoundException("설문 세트 없음: " + setId));
+    }
+
+    /** 문진 세트 삭제 */
+    public void deleteById(Long setId) {
+        SurveySet set = surveySetRepo.findById(setId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 세트: " + setId));
+
+//        // 1) 그룹 문진 세트에 연결된 group_answer 먼저 삭제
+//        groupAnswerRepo.deleteBySurveySetId(setId);
+//
+//        // 2) 특별 문진 세트에 연결된 special_answer 먼저 삭제
+//        specialAnswerRepo.deleteBySurveySetId(setId);
+
+        set.getGroupSurveys().clear();
+        set.getSpecialSurveys().clear();
+
+        surveySetRepo.delete(set);
     }
 }
