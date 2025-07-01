@@ -1,13 +1,16 @@
 package com.example.demo.matching.controller;
 
+import com.example.demo.dto.AdminDTO;
 import com.example.demo.enums.MatchingStatus;
 import com.example.demo.fcm.service.FcmService;
 import com.example.demo.matching.entity.Matching;
 import com.example.demo.matching.entity.MatchingAnswer;
 import com.example.demo.matching.service.MatchingAnswerService;
 import com.example.demo.matching.service.MatchingService;
+import com.example.demo.users.entity.Admin;
 import com.example.demo.users.entity.Expert;
 import com.example.demo.users.entity.Users;
+import com.example.demo.users.repository.AdminRepository;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,7 @@ public class AdminMatchingController {
     private final ExpertRepository      expertRepository;
     private final FcmService            fcmService;
     private final UserRepository        userRepository;
+    private final AdminRepository       adminRepository;
 
     /** 관리자용 목록 조회 */
     @GetMapping
@@ -112,11 +116,14 @@ public class AdminMatchingController {
         m.setStatus(MatchingStatus.MATCHED);
         matchingService.save(m);
 
-        Users adminUser = userRepository.findByUuid(authentication.getName())
-                            .orElseThrow(() -> new RuntimeException("관리자 정보를 찾을 수 없습니다."));
+        AdminDTO adminDTO = adminRepository.getAdminDTOByUUIDToAuth(authentication.getName()).get();
+        Admin admin = adminRepository.findById(adminDTO.getId()).get();
+
+//        Users adminUser = userRepository.findByUuid(authentication.getName())
+//                            .orElseThrow(() -> new RuntimeException("관리자 정보를 찾을 수 없습니다."));
 
         fcmService.sendNotification(
-                adminUser,
+                admin,
                 expert.getUsers(),
                 "새 상담이 배정되었습니다",
                 String.format("[%s] %s 자녀(%s세) 상담 — \"%s\"",

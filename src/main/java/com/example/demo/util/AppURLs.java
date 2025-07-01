@@ -15,6 +15,8 @@ public class AppURLs {
      */
     public static final String[] PUBLIC_URLS = {
             // TODO: 인증 자체가 필요 없는 url을 정확하게 작성
+            "/",
+            "/main",
             "/loginForm",
             "/joinForm",
             "/oauth2/login",

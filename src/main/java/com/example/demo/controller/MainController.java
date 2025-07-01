@@ -20,15 +20,15 @@ public class MainController {
         return "dailySurveyResult";
     }
 
-    @GetMapping("/admin/surveys/special")
-    public String manageSpecialSurveyPage() {
-        return "/admin/surveys/manageSpecialSurvey";
-    }
+//    @GetMapping("/admin/surveys/special")
+//    public String manageSpecialSurveyPage() {
+//        return "/admin/surveys/manageSpecialSurvey";
+//    }
 
-    @GetMapping("/admin/surveys/group")
-    public String manageGroupSurveyPage() {
-        return "/admin/surveys/manageGroupSurvey";
-    }
+//    @GetMapping("/admin/surveys/group")
+//    public String manageGroupSurveyPage() {
+//        return "/admin/surveys/manageGroupSurvey";
+//    }
 
     @GetMapping("/survey/history")
     public String surveyHistoryPage() { return  "surveyHistory"; }

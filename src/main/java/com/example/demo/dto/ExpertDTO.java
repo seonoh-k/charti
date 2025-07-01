@@ -26,6 +26,21 @@ public class ExpertDTO {
     private Boolean isApproved;
     private Boolean deleted;
     private AddressDTO address;
+
+    public ExpertDTO(Long id, String name, String nickname, String username, String phoneNumber, String license, String major, String career, LocalDateTime createdAt, Boolean isApproved, Boolean deleted) {
+        this.id = id;
+        this.name = name;
+        this.nickname = nickname;
+        this.username = username;
+        this.phoneNumber = phoneNumber;
+        this.license = license;
+        this.major = major;
+        this.career = career;
+        this.createdAt = createdAt;
+        this.isApproved = isApproved;
+        this.deleted = deleted;
+    }
+
     // 엔티티 → DTO 변환 메서드
     public static ExpertDTO fromEntity(Expert expert) {
         // 추가로 필요한 데이터 작성

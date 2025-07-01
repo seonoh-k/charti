@@ -1,6 +1,7 @@
 package com.example.demo.fcm.entity;
 
 import com.example.demo.enums.FcmCategory;
+import com.example.demo.users.entity.Admin;
 import com.example.demo.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.*;
@@ -69,6 +70,9 @@ public class FcmSendHistory {
     @JoinColumn(name = "sender_id")
     private Users sender;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_sender_id")
+    private Admin adminSender;
     /**
      * [이동 링크]
      * 이 알림을 클릭했을 때 이동하게 될 공통 URL.

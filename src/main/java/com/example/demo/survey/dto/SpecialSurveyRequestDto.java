@@ -24,6 +24,7 @@ public class SpecialSurveyRequestDto {
     private List<AnswerDto> answers;
 
     @Getter @Setter
+    @NoArgsConstructor @AllArgsConstructor
     public static class AnswerDto {
         private Long surveyId;              // SpecialSurvey PK
         @JsonIgnore
