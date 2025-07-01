@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 - 데일리 문진 목록</title>
+    <title>관리자 - 그룹 문진 목록</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -11,17 +11,9 @@
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
-        <div class="flex justify-center mt-3 mb-5 space-x-6">
-            <a href="/admin/surveys/daily" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
-                문진 목록
-            </a>
-            <a href="/dailyAnswer/history" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
-                문진 이력
-            </a>
-        </div>
-        <h1 class="text-2xl font-semibold mb-4">관리자 - 데일리 문진 목록</h1>
+        <h1 class="text-2xl font-semibold mb-4">관리자 - 그룹 문진 목록</h1>
 
-        <form th:action="@{/admin/surveys/daily}" method="get" class="flex gap-4 items-center mb-6">
+        <form th:action="@{/admin/surveys/group}" method="get" class="flex gap-4 items-center mb-6">
             <label class="flex items-center gap-2">
                 <span>연령대:</span>
                 <select name="ageGroup" class="border p-2 rounded">
@@ -56,9 +48,9 @@
                 검색
             </button>
 
-            <a th:href="@{/admin/surveys/daily/new}"
+            <a th:href="@{/admin/surveys/group/new}"
                class="bg-green-600 text-white px-4 py-1 rounded">
-                데일리 문진 추가
+                그룹 문진 추가
             </a>
 
         </form>
@@ -69,7 +61,6 @@
                 <th class="border p-2">연령대</th>
                 <th class="border p-2">카테고리</th>
                 <th class="border p-2">질문</th>
-                <th class="border p-2">가중치</th>
                 <th class="border p-2">수정/삭제</th>
             </tr>
             </thead>
@@ -78,11 +69,10 @@
                 <td class="border p-2" th:text="${s.ageGroup.displayName}"></td>
                 <td class="border p-2" th:text="${s.category.displayName}"></td>
                 <td class="border p-2" th:text="${s.question}"></td>
-                <td class="border p-2" th:text="${s.weight}"></td>
                 <td class="border p-2">
-                    <a th:href="@{/admin/surveys/daily/{id}/edit(id=${s.id})}"
+                    <a th:href="@{/admin/surveys/group/{id}/edit(id=${s.id})}"
                        class="text-blue-600 mr-3 hover:underline">수정</a>
-                    <form th:action="@{/admin/surveys/daily/{id}/delete(id=${s.id})}"
+                    <form th:action="@{/admin/surveys/group/{id}/delete(id=${s.id})}"
                           method="post" class="inline"
                           onsubmit="return confirm('삭제하시겠습니까?');">
                         <button type="submit" class="text-red-600 hover:underline">
@@ -97,7 +87,7 @@
         <!-- 페이징 내비 -->
         <div class="mt-4 flex justify-center gap-2">
             <a th:if="${surveys.hasPrevious()}"
-               th:href="@{/admin/surveys/daily(
+               th:href="@{/admin/surveys/group(
                      ageGroup=${ageGroup},
                      category=${category},
                      page=${surveys.number-1})}"
@@ -106,7 +96,7 @@
             <span th:each="i : ${#numbers.sequence(0, surveys.totalPages-1)}"
                   class="px-2"
                   th:classappend="${i == surveys.number} ? 'font-bold underline'">
-                <a th:href="@{/admin/surveys/daily(
+                <a th:href="@{/admin/surveys/group(
                              ageGroup=${ageGroup},
                              category=${category},
                              page=${i})}"
@@ -114,7 +104,7 @@
             </span>
 
             <a th:if="${surveys.hasNext()}"
-               th:href="@{/admin/surveys/daily(
+               th:href="@{/admin/surveys/group(
                      ageGroup=${ageGroup},
                      category=${category},
                      page=${surveys.number+1})}"

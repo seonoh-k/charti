@@ -17,8 +17,8 @@
             class="text-2xl font-semibold mb-6"></h1>
 
         <form th:action="${survey.id} == null
-                         ? @{/admin/surveys/daily}
-                         : @{/admin/surveys/daily/{id}(id=${survey.id})}"
+                         ? @{/admin/surveys/special}
+                         : @{/admin/surveys/special/{id}(id=${survey.id})}"
               method="post" class="space-y-4 max-w-lg">
             <!-- 연령대 -->
             <label class="block">
@@ -51,15 +51,6 @@
                        th:value="${survey.question}"
                        class="border p-2 rounded w-full"
                        required/>
-            </label>
-
-            <!-- 가중치 -->
-            <label class="block">
-                <span class="block mb-1">가중치</span>
-                <input type="number" name="weight"
-                       th:value="${survey.weight}"
-                       class="border p-2 rounded w-full"
-                       min="1" required/>
             </label>
 
             <!-- 답변 1~5 -->

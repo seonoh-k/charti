@@ -6,14 +6,19 @@ import com.example.demo.enums.TargetGroup;
 import com.example.demo.survey.dto.GroupSurveyRequestDto;
 import com.example.demo.survey.dto.GroupSurveyResponseDto;
 import com.example.demo.survey.dto.SurveySetSubmitRequestDto;
+import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.entity.GroupSurvey;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.GroupSurveyRepository;
 import com.example.demo.survey.repository.SurveySetRepository;
+import com.example.demo.users.entity.Child;
+import com.example.demo.users.repository.ChildRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -27,6 +32,7 @@ public class GroupSurveyService {
 
     private final GroupSurveyRepository groupSurveyRepository;
     private final SurveySetRepository surveySetRepository;
+    private final ChildRepository childRepository;
 
     public GroupSurveyResponseDto getSurveyById(Long id) {
         return groupSurveyRepository.findById(id)
@@ -57,10 +63,11 @@ public class GroupSurveyService {
                     .collect(Collectors.toList());
         }
 
-        TargetGroup tg = TargetGroup.fromValue(targetGroup);
-        return groupSurveyRepository.findByTargetGroupPrefix(tg.getDisplayName()).stream()
-                .map(GroupSurveyResponseDto::fromEntity)
-                .collect(Collectors.toList());
+//        TargetGroup tg = TargetGroup.fromValue(targetGroup);
+//        return groupSurveyRepository.findByTargetGroupPrefix(tg.getDisplayName()).stream()
+//                .map(GroupSurveyResponseDto::fromEntity)
+//                .collect(Collectors.toList());
+        return null;
     }
 
     @Transactional
@@ -180,6 +187,10 @@ public class GroupSurveyService {
             result.put("childId", dto.getChildId());
             result.put("ageGroup", dto.getAgeGroup());
             result.put("specialCategories", specialCategories);
+
+            Child child = childRepository.findById(dto.getChildId()).get();
+            child.setRiskGroup(true);
+            childRepository.save(child);
         }
         log.info(result.toString());
         return result;
@@ -222,5 +233,33 @@ public class GroupSurveyService {
 
     public boolean needsSpecialSurvey(double categoryScore) {
         return categoryScore >= 60.0; // 위험도 60% 이상 시 특별 문진
+    }
+
+    public List<SurveyCategory> getDistinctCategories() {
+        return groupSurveyRepository.findDistinctCategories();
+    }
+
+    public Page<GroupSurvey> findAllSurveys(Pageable pageable) {
+        return groupSurveyRepository.findAllByDeletedFalse(pageable);
+    }
+
+    public Page<GroupSurvey> getSurveysByAgeGroup(AgeGroup ageGroup, Pageable pageable) {
+        return groupSurveyRepository.findByAgeGroupAndDeletedFalse(ageGroup, pageable);
+    }
+
+    public Page<GroupSurvey> getSurveysByCategory(SurveyCategory category, Pageable pageable) {
+        return groupSurveyRepository.findAllByCategoryAndDeletedFalse(category, pageable);
+    }
+
+    public Page<GroupSurvey> getSurveysByAgeAndCategory(AgeGroup ageGroup, SurveyCategory category, Pageable pageable) {
+        return groupSurveyRepository.findByAgeGroupAndCategoryAndDeletedFalse(ageGroup, category, pageable);
+    }
+
+    public void save(GroupSurvey survey) {
+        groupSurveyRepository.save(survey);
+    }
+
+    public GroupSurvey findById(Long id) {
+        return groupSurveyRepository.findById(id).orElse(null);
     }
 }

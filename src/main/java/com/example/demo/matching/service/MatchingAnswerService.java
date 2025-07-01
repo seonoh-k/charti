@@ -104,7 +104,7 @@ public class MatchingAnswerService {
         String body  = "전문가 " + expertUser.getName() + " 님이 답변을 남겼습니다.";
         String url   = "/matching/detail/" + m.getId();
 
-        fcmService.sendNotification(
+        fcmService.sendMatchingNotification(
                 expertUser,
                 parentUser,
                 title,

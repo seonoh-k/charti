@@ -145,4 +145,9 @@ public class GroupAnswerService {
         answerRepo.save(a);
     }
 
+    // 전체조회
+    public List<GroupAnswer> getList() {
+        return answerRepo.findAll();
+    }
+
 }
