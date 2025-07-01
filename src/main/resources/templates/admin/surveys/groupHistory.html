@@ -1,17 +1,514 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 - 그룹 문진 목록</title>
+    <title>그룹 문진 이력</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Poppins', sans-serif; } </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .loading-message, .no-data-message, .error-message { text-align: center; padding: 10px; font-style: italic; color: #666; }
+        .error-message { color: #ef4444; }
+        details > summary::-webkit-details-marker { display: none; }
+        details > summary { list-style: none; }
+        .summary-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .summary-content i { margin-left: 10px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: white; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transform: translateY(-20px); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: translateY(0); opacity: 1; }
+        .toast-message { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: #333; color: white; padding: 10px 20px; border-radius: 5px; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 1001; font-size: 0.9rem; }
+        .toast-message.show { opacity: 1; visibility: visible; }
+    </style>
 </head>
+
 <th:block layout:fragment="content">
-    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
-        <h1 class="text-2xl font-bold mb-6">그룹 문진 이력</h1>
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 rounded" id="record-view-container" th:data-api-base-url="@{/admin/surveys/group/api}" th:data-user-search-url="@{/api/user/search}">
+        <div class="flex justify-center mt-3 mb-5 space-x-6">
+            <a href="/admin/surveys/record" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+                문진 목록
+            </a>
+            <a href="/admin/surveys/record/history" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+                문진 이력
+            </a>
+        </div>
+        <h1 class="text-2xl font-bold mb-6">그룹 문진 이력 조회 (관리자)</h1>
+
+        <div class="mb-6">
+            <label for="searchInput" class="font-semibold">보호자 이름 :</label>
+            <input type="text" id="searchInput" class="border rounded p-2 ml-2" />
+            <button onclick="searchParent()" class="ml-2 bg-blue-600 text-white px-4 py-1 rounded">검색</button>
+        </div>
+        <div id="resultBox" class="mb-6 hidden">
+            <label for="parentSelect" class="font-semibold">검색 결과:</label>
+            <select id="parentSelect" class="border rounded p-2 ml-2"></select>
+            <button onclick="goToHistory()" class="ml-2 bg-green-600 text-white px-4 py-1 rounded">이력 보기</button>
+        </div>
+
+        <div th:if="${member != null}">
+            <h2 class="text-xl font-bold mb-4" th:text="'보호자: ' + ${member.name} + ' (' + ${member.email} + ')'"></h2>
+            <div th:if="${hasNoChildren}" class="text-lg text-gray-600 mb-8 p-4 border rounded bg-yellow-50">
+                <span th:text="${member.name}"></span>님은 등록된 자녀가 없습니다.
+            </div>
+            <div th:each="childSummary : ${childrenSummaries}">
+                <div class="mb-8">
+                    <details class="border rounded" th:data-child-id="${childSummary.childId}">
+                        <summary class="text-lg font-semibold bg-gray-100 px-4 py-2 cursor-pointer">
+                            <div class="summary-content">
+                                <span th:text="|자녀: ${childSummary.childName} (${childSummary.childAge}세), [총 ${childSummary.totalRecordDatesCount}건]|"></span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </summary>
+                        <div class="p-4" th:id="${'child-dates-content-' + childSummary.childId}"></div>
+                        <div class="flex justify-center gap-2 px-4 mt-2" th:id="${'pagination-container-' + childSummary.childId}"></div>
+                    </details>
+                </div>
+            </div>
+        </div>
+        <div th:if="${errorMessage != null}" class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+            <span class="font-medium">오류:</span> <span th:text="${errorMessage}"></span>
+        </div>
     </div>
+
+    <div id="editModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">문진 답변 수정</h2>
+            <form id="editSurveyForm">
+                <input type="hidden" id="editChildId" name="childId">
+                <input type="hidden" id="editRecordDate" name="recordDate">
+                <div id="editAnswerArea"></div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="cancelEditButton" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">취소</button>
+                    <button type="submit" id="saveEditButton" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toastMessage" class="toast-message"></div>
+
+    <script>
+        const container = document.getElementById('record-view-container');
+        const API_BASE_URL = container.dataset.apiBaseUrl;
+        const USER_SEARCH_API_URL = container.dataset.userSearchUrl;
+
+        const dateAnswersCache = new Map();
+        const loadedChildDates = new Set();
+
+        /**
+         * 페이지 로딩이 완료되면 실행되는 초기화 로직입니다.
+         * 모든 핵심 이벤트 리스너를 등록합니다.
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('details[data-child-id]').forEach(detailsElement => {
+                detailsElement.addEventListener('toggle', async (event) => {
+                    const childId = detailsElement.dataset.childId;
+                    if (detailsElement.open) {
+                        detailsElement.querySelector('.summary-content i').className = 'fas fa-chevron-up';
+                        if (!loadedChildDates.has(childId)) {
+                            await loadChildDates(childId, 0);
+                        }
+                    } else {
+                        detailsElement.querySelector('.summary-content i').className = 'fas fa-chevron-down';
+                    }
+                });
+            });
+
+            document.addEventListener('click', handleDynamicClicks);
+            document.addEventListener('toggle', handleDynamicToggles, true);
+
+            document.getElementById('cancelEditButton').addEventListener('click', closeEditModal);
+            document.getElementById('editSurveyForm').addEventListener('submit', handleEditFormSubmit);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && document.getElementById('editModal').classList.contains('active')) {
+                    closeEditModal();
+                }
+            });
+        });
+
+        /**
+         * 동적으로 생성된 날짜별 아코디언의 토글 이벤트를 처리합니다. (이벤트 위임)
+         * @param {Event} event - 토글 이벤트 객체
+         */
+        async function handleDynamicToggles(event) {
+            const detailsElement = event.target.closest('details[data-record-date]');
+            if (!detailsElement) return;
+
+            const childId = detailsElement.dataset.childId;
+            const recordDate = detailsElement.dataset.recordDate;
+            const answersContainer = document.getElementById(`answers-${childId}-${recordDate}`);
+            const icon = detailsElement.querySelector('.summary-content i');
+            const cacheKey = `${childId}-${recordDate}`;
+
+            if (detailsElement.open) {
+                icon.className = 'fas fa-chevron-up';
+                if (!dateAnswersCache.has(cacheKey)) {
+                    answersContainer.innerHTML = '<p class="loading-message">답변을 로딩 중...</p>';
+                    await loadDateAnswers(childId, recordDate, answersContainer);
+                }
+            } else {
+                icon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        /**
+         * 동적으로 생성된 수정/삭제 버튼의 클릭 이벤트를 처리합니다. (이벤트 위임)
+         * @param {Event} event - 클릭 이벤트 객체
+         */
+        async function handleDynamicClicks(event) {
+            const target = event.target;
+            const childId = target.dataset.childId;
+            const recordDate = target.dataset.recordDate;
+
+            if (target.classList.contains('edit-record-btn')) {
+                await openEditModal(childId, recordDate);
+            } else if (target.classList.contains('delete-record-btn')) {
+                await deleteRecord(childId, recordDate);
+            }
+        }
+
+        /**
+         * 입력한 이름으로 보호자를 검색하고 결과를 드롭다운에 표시합니다.
+         */
+        async function searchParent() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) {
+                showToast("검색어를 입력하세요.", "error");
+                return;
+            }
+            try {
+                const url = `${USER_SEARCH_API_URL}?type=name&value=${encodeURIComponent(keyword)}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`사용자 검색 실패: ${res.status}`);
+
+                const results = await res.json();
+                const select = document.getElementById('parentSelect');
+                select.innerHTML = '';
+
+                if (!results || results.length === 0) {
+                    showToast('검색 결과가 없습니다.', 'info');
+                    document.getElementById('resultBox').classList.add('hidden');
+                    return;
+                }
+
+                results.forEach(user => {
+                    const opt = document.createElement('option');
+                    opt.value = user.id;
+                    opt.textContent = user.username ? `${user.name} (${user.username})` : user.name;
+                    select.appendChild(opt);
+                });
+                document.getElementById('resultBox').classList.remove('hidden');
+            } catch (error) {
+                console.error("보호자 검색 중 오류 발생:", error);
+                showToast("보호자 검색 중 오류가 발생했습니다.", "error");
+            }
+        }
+
+        /**
+         * 드롭다운에서 선택된 보호자의 이력 조회 페이지로 이동합니다.
+         */
+        function goToHistory() {
+            const id = document.getElementById('parentSelect').value;
+            if (id) {
+                window.location.href = `/admin/surveys/group/history?memberId=${id}`;
+            } else {
+                showToast("이력을 볼 보호자를 선택해주세요.", "error");
+            }
+        }
+
+        /**
+         * 특정 자녀의 '기록 날짜' 목록을 페이징하여 가져와 화면에 렌더링합니다.
+         * @param {string} childId
+         * @param {number} pageNum
+         */
+        async function loadChildDates(childId, pageNum = 0) {
+            const datesContainer = document.getElementById(`child-dates-content-${childId}`);
+            const paginationContainer = document.getElementById(`pagination-container-${childId}`);
+            if (pageNum === 0) datesContainer.innerHTML = '<p class="loading-message">날짜 목록을 로딩 중...</p>';
+            paginationContainer.innerHTML = '';
+
+            for (const key of dateAnswersCache.keys()) {
+                if (key.startsWith(`${childId}-`)) dateAnswersCache.delete(key);
+            }
+
+            try {
+                const url = `${API_BASE_URL}/child/${childId}/dates?page=${pageNum}&size=5`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`날짜 목록 로드 실패: ${res.status}`);
+
+                const apiResponse = await res.json();
+                if (apiResponse.code !== 'SWD') throw new Error(apiResponse.message || '데이터 로드 실패');
+
+                const pageData = apiResponse.data;
+                const dates = pageData.result;
+                const totalPages = pageData.totalPages;
+                const currentPage = pageData.page - 1;
+
+                datesContainer.innerHTML = '';
+                if (!dates || dates.length === 0) {
+                    datesContainer.innerHTML = '<p class="no-data-message">기록된 문진 이력이 없습니다.</p>';
+                } else {
+                    dates.forEach(dateSummary => {
+                        datesContainer.innerHTML += createDateDetailsHtml(childId, dateSummary.recordDate);
+                    });
+                }
+                createPagination(paginationContainer, pageData, (p) => loadChildDates(childId, p));
+                loadedChildDates.add(childId);
+            } catch (error) {
+                console.error("Error loading child dates:", error);
+                datesContainer.innerHTML = `<p class="error-message">날짜 목록을 로드하는 데 실패했습니다.</p>`;
+            }
+        }
+
+        /**
+         * 특정 날짜에 해당하는 상세 답변 목록을 비동기적으로 가져와 표시합니다.
+         * @param {string} childId
+         * @param {string} dateStr
+         * @param {HTMLElement} answersContainer
+         */
+        async function loadDateAnswers(childId, dateStr, answersContainer) {
+            try {
+                const url = `${API_BASE_URL}/child/${childId}/date/${dateStr}/answers`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`답변 상세 로드 실패: ${res.status}`);
+
+                const apiResponse = await res.json();
+                if (apiResponse.code !== 'SWD') throw new Error(apiResponse.message || '데이터 로드 실패');
+
+                const answers = apiResponse.data;
+                dateAnswersCache.set(`${childId}-${dateStr}`, answers);
+
+                answersContainer.innerHTML = '';
+                if (answers.length === 0) {
+                    answersContainer.innerHTML = '<p class="no-data-message">이 날짜에 기록된 답변이 없습니다.</p>';
+                } else {
+                    const ul = document.createElement('ul');
+                    answers.forEach(qa => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<span class="font-semibold">${qa.question}</span><br/><span class="text-gray-700">→ ${qa.answer}</span>`;
+                        ul.appendChild(li);
+                    });
+                    answersContainer.appendChild(ul);
+                }
+            } catch (error) {
+                console.error("Error loading answers for date:", error);
+                answersContainer.innerHTML = `<p class="error-message">답변을 로드하는 데 실패했습니다.</p>`;
+            }
+        }
+
+        /**
+         * 답변 수정을 위한 모달을 열고, 해당 날짜의 데이터를 미리 채워 넣습니다.
+         * @param {string} childId
+         * @param {string} recordDate
+         */
+        async function openEditModal(childId, recordDate) {
+            document.getElementById('editChildId').value = childId;
+            document.getElementById('editRecordDate').value = recordDate;
+            document.getElementById('editAnswerArea').innerHTML = '<p class="loading-message">답변을 불러오는 중...</p>';
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('active');
+
+            const cacheKey = `${childId}-${recordDate}`;
+            let answers;
+
+            if (dateAnswersCache.has(cacheKey)) {
+                answers = dateAnswersCache.get(cacheKey);
+            } else {
+                try {
+                    const url = `${API_BASE_URL}/child/${childId}/date/${recordDate}/answers`;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(`답변 상세 로드 실패: ${res.status}`);
+
+                    const apiResponse = await res.json();
+                    if(apiResponse.code !== 'SWD') throw new Error(apiResponse.message || '데이터 로드 실패');
+
+                    answers = apiResponse.data;
+                    dateAnswersCache.set(cacheKey, answers);
+                } catch (error) {
+                    console.error("Error loading answers for edit:", error);
+                    document.getElementById('editAnswerArea').innerHTML = `<p class="error-message">답변을 불러오는 데 실패했습니다.</p>`;
+                    document.getElementById('saveEditButton').disabled = true;
+                    return;
+                }
+            }
+            populateEditModal(answers);
+        }
+
+        /**
+         * API에서 받아온 답변 데이터로 수정 모달의 폼을 채웁니다.
+         * @param {Array} answers
+         */
+        function populateEditModal(answers) {
+            const editAnswerArea = document.getElementById('editAnswerArea');
+            editAnswerArea.innerHTML = '';
+            if (!answers || answers.length === 0) {
+                editAnswerArea.innerHTML = '<p class="no-data-message">수정할 답변이 없습니다.</p>';
+                document.getElementById('saveEditButton').disabled = true;
+            } else {
+                answers.forEach((qa, index) => {
+                    if (qa.questionId === undefined || qa.questionId === null) {
+                        editAnswerArea.innerHTML += `<p class="error-message">${index + 1}. ${qa.question} - 질문 ID를 불러올 수 없어 수정이 불가능합니다.</p>`;
+                        return;
+                    }
+                    editAnswerArea.innerHTML += createEditFormHtml(qa, index);
+                });
+                document.getElementById('saveEditButton').disabled = false;
+            }
+        }
+
+        /**
+         * 수정 모달의 '저장' 버튼 클릭 시, 폼 데이터를 서버로 전송합니다.
+         * @param {Event} event
+         */
+        async function handleEditFormSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const childId = form.elements.childId.value;
+            const recordDate = form.elements.recordDate.value;
+            const textareas = form.querySelectorAll('textarea[data-question-id]');
+
+            const updatedAnswers = Array.from(textareas).map(ta => {
+                const questionId = Number(ta.dataset.questionId);
+                if (isNaN(questionId)) return null;
+                return { questionId: questionId, answer: ta.value.trim(), childId: Number(childId) };
+            }).filter(Boolean);
+
+            if (updatedAnswers.length !== textareas.length) {
+                showToast('일부 질문 ID가 유효하지 않아 제출할 수 없습니다.', 'error');
+                return;
+            }
+
+            try {
+                const url = `${API_BASE_URL}/child/${childId}/date/${recordDate}/answers`;
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedAnswers)
+                });
+
+                const apiResponse = await response.json();
+                if (response.ok && apiResponse.code === 'NC') {
+                    showToast(apiResponse.message || '성공적으로 수정되었습니다!', 'success');
+                    closeEditModal();
+                    const answersContainer = document.getElementById(`answers-${childId}-${recordDate}`);
+                    if (answersContainer) {
+                        dateAnswersCache.delete(`${childId}-${recordDate}`);
+                        await loadDateAnswers(childId, recordDate, answersContainer);
+                    }
+                } else {
+                    throw new Error(apiResponse.message || '수정에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('문진 답변 수정 중 오류 발생:', error);
+                showToast(error.message, 'error');
+            }
+        }
+
+        /**
+         * 특정 날짜의 문진 기록 전체를 삭제합니다.
+         * @param {string} childId
+         * @param {string} recordDate
+         */
+        async function deleteRecord(childId, recordDate) {
+            if (!confirm(`정말로 ${recordDate}일자 문진 기록을 삭제하시겠습니까?`)) return;
+
+            try {
+                const url = `${API_BASE_URL}/child/${childId}/date/${recordDate}/answers`;
+                const response = await fetch(url, { method: 'DELETE' });
+                const apiResponse = await response.json();
+
+                if (response.ok && apiResponse.code === 'NC') {
+                    showToast(apiResponse.message || '성공적으로 삭제되었습니다!', 'success');
+                    dateAnswersCache.delete(`${childId}-${recordDate}`);
+                    await loadChildDates(childId, 0);
+                } else {
+                    throw new Error(apiResponse.message || '삭제에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('문진 기록 삭제 중 오류 발생:', error);
+                showToast(error.message, 'error');
+            }
+        }
+
+        /**
+         * 날짜 하나에 대한 아코디언 UI 요소의 HTML 문자열을 생성합니다.
+         * @param {string} childId
+         * @param {string} dateStr
+         * @returns {string} 생성된 HTML 문자열
+         */
+        function createDateDetailsHtml(childId, dateStr) {
+            return `<details class="mb-2 p-2 bg-gray-50 rounded" data-child-id="${childId}" data-record-date="${dateStr}"><summary class="cursor-pointer"><div class="summary-content"><span>📅 ${dateStr}</span><div class="flex items-center space-x-2"><button class="bg-yellow-500 text-white px-3 py-1 text-sm rounded hover:bg-yellow-600 edit-record-btn" data-child-id="${childId}" data-record-date="${dateStr}">수정</button><button class="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600 delete-record-btn" data-child-id="${childId}" data-record-date="${dateStr}">삭제</button><i class="fas fa-chevron-down"></i></div></div></summary><div class="mt-2 p-2" id="answers-${childId}-${dateStr}"></div></details>`;
+        }
+
+        /**
+         * 수정 모달 안의 질문-답변 폼 요소에 대한 HTML 문자열을 생성합니다.
+         * @param {object} qa - 질문과 답변이 담긴 객체
+         * @param {number} index - 반복 인덱스
+         * @returns {string} 생성된 HTML 문자열
+         */
+        function createEditFormHtml(qa, index) {
+            return `<div class="mb-4"><label for="edit_answer_${index}" class="block font-semibold mb-1">${index + 1}. ${qa.question}</label><textarea id="edit_answer_${index}" data-question-id="${qa.questionId}" class="w-full border p-2 rounded" rows="3" required>${qa.answer || ''}</textarea></div>`;
+        }
+
+        /**
+         * 페이징 데이터를 기반으로 페이지네이션 버튼 UI를 생성합니다.
+         * @param {HTMLElement} container
+         * @param {object} pageData
+         * @param {Function} loadFn
+         */
+        function createPagination(container, pageData, loadFn) {
+            container.innerHTML = '';
+            const totalPages = pageData.totalPages;
+            const currentPage = pageData.page - 1;
+            if (totalPages <= 1) return;
+
+            const renderButton = (text, pageNum, disabled = false, isCurrent = false) => {
+                const button = document.createElement('button');
+                button.textContent = text;
+                button.disabled = disabled;
+                let classes = 'page-btn px-2 py-1 text-sm rounded mx-0.5 ';
+                classes += isCurrent ? 'bg-blue-500 text-white cursor-default' : (disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300');
+                button.className = classes;
+                if (!disabled) button.onclick = () => loadFn(pageNum);
+                return button;
+            };
+
+            container.appendChild(renderButton('이전', currentPage - 1, currentPage === 0));
+
+            const pageList = pageData.pageList;
+            if(pageList) {
+                pageList.forEach(p => {
+                    const pageNum = p - 1;
+                    container.appendChild(renderButton(p, pageNum, false, pageNum === currentPage));
+                });
+            }
+
+            container.appendChild(renderButton('다음', currentPage + 1, currentPage >= totalPages - 1));
+        }
+
+        /**
+         * 수정 모달을 닫습니다.
+         */
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        /**
+         * 화면 하단에 잠시 나타나는 알림 메시지(토스트)를 표시합니다.
+         * @param {string} message - 표시할 메시지
+         * @param {string} type - 메시지 타입 ('info', 'success', 'error')
+         */
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toastMessage');
+            toast.textContent = message;
+            toast.className = 'toast-message show';
+            if (type === 'error') toast.style.backgroundColor = '#ef4444';
+            else if (type === 'success') toast.style.backgroundColor = '#22c55e';
+            else toast.style.backgroundColor = '#333';
+            setTimeout(() => { toast.className = 'toast-message'; }, 3000);
+        }
+    </script>
 </th:block>
 </html>

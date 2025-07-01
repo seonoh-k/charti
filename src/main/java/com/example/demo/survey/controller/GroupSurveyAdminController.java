@@ -121,11 +121,4 @@ public class GroupSurveyAdminController {
         return "redirect:/admin/surveys/group";
     }
 
-    @GetMapping("/history")
-    public String getGroupHistory(Model model) {
-        List<GroupAnswer> groupHistory = groupAnswerService.getList();
-
-        model.addAttribute("groupHistory", groupHistory);
-        return "admin/surveys/groupHistory";
-    }
 }
