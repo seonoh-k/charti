@@ -155,7 +155,7 @@ public class FirebaseService {
      *  </ul>
      * </p>
      *
-     * @param memberJoinRequest : 유저 정보를 담는 dto
+     * @param commonInfo : 유저 정보를 담는 dto
      * @throws FirebaseAuthException
      * @see <a href="https://firebase.google.com/docs/auth/admin/custom-claims?hl=ko#java">Firebase SDK Document</a>
      */

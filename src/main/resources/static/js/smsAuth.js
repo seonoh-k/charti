@@ -1,8 +1,7 @@
-// 📁 /js/sms-auth.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-// 🔐 Firebase config (환경에 맞게 수정)
+//  Firebase config (환경에 맞게 수정)
     const firebaseConfig = {
         apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
         authDomain: "charti-5da7d.firebaseapp.com",
@@ -25,7 +24,7 @@ size: 'invisible'
 let confirmationResult = null;
 let smsIdToken = null;
 let verifiedPhoneNumber = ''; // 인증 성공 시 저장될 전화번호
-let newUid = ''; // ✅ 새 UID 저장용
+let newUid = ''; //  새 UID 저장용
 // 🔹 인증번호 요청
 async function sendSmsOtp(mode = 'signup') {
     
@@ -38,7 +37,6 @@ async function sendSmsOtp(mode = 'signup') {
         return;
     }
         verifiedPhoneNumber = `+82${p1.substring(1)}${p2}${p3}`;
-    console.log("👉 verifiedPhoneNumber:", verifiedPhoneNumber);
 
     if (mode === 'signup') {
         // 중복 체크 예시 (옵션) 
@@ -90,7 +88,7 @@ async function verifySmsOtp(mode = 'signup') {
 
         alert('인증 성공');
         if (mode === 'signup') {
-            // ✅ 인증된 전화번호 입력란에 자동 삽입
+            //  인증된 전화번호 입력란에 자동 삽입
             document.getElementById('phoneNumber').value = verifiedPhoneNumber;
 
             // 입력필드 비활성화
@@ -110,7 +108,7 @@ async function verifySmsOtp(mode = 'signup') {
     }
 }
 
-// ✅ 외부 접근 가능하게 내보냄
+//  외부 접근 가능하게 내보냄
 window.sendSmsOtp = sendSmsOtp;
 window.verifySmsOtp = verifySmsOtp;
 window.getVerifiedSmsToken = () => smsIdToken;

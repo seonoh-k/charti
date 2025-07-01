@@ -22,7 +22,7 @@ export function showErrorModal(message = "에러", onClose) {
   const errorIconEl = document.getElementById("error-icon");
 
   if (!modal || !messageEl || !spinnerEl || !errorIconEl) return;
-  // 0.8초간 로딩 상태 유지 → 자연스러운 전환
+  // 1초간 로딩 상태 유지 → 자연스러운 전환
   setTimeout(() => {
     spinnerEl.classList.add("hidden");         // 로딩 스피너 숨김
     errorIconEl.classList.remove("hidden");   // ❌ 아이콘 표시
@@ -36,7 +36,7 @@ export function showErrorModal(message = "에러", onClose) {
 
       if (typeof onClose === "function") onClose();
     }, 1500);
-  }, 800);
+  }, 1000);
 }
 
 export function showSuccessModal(message = "가입 완료!", onClose) {

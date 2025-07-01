@@ -268,9 +268,9 @@
     signInWithPhoneNumber
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    import { showLoadingModal } from "/js/loadingModal.js"; // ✅  모달 동작 함수
-    import { showErrorModal } from "/js/loadingModal.js"; // ✅  에러 모달 동작 함수
-     import { showSuccessModal } from "/js/loadingModal.js"; // ✅  성공 모달 동작 함수
+    import { showLoadingModal } from "/js/loadingModal.js"; //   모달 동작 함수
+    import { showErrorModal } from "/js/loadingModal.js"; //   에러 모달 동작 함수
+     import { showSuccessModal } from "/js/loadingModal.js"; //   성공 모달 동작 함수
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
@@ -389,13 +389,13 @@
         const position = document.getElementById('position').value.trim();
         const groupId = document.getElementById('groupId').value.trim();
 
-        if (!name || !username || !password) {
+        if (!name || !username || !password || !nickname || !groupName || !groupPhoneNumber || !groupEmail) {
             alert('모든 필드를 입력해주세요.');
             return;
         }
 
         try {
-            // // 🔵 먼저 로딩 모달 표시
+            // //  먼저 로딩 모달 표시
             showLoadingModal("회원가입 진행중...");      
 
             const response = await fetch(joinURL, {
@@ -427,7 +427,6 @@
                 }
                 })
             });
-console.log(addressId)
            // 여기서 응답 body를 JSON으로 파싱 시도
             let data = null;
             try {
@@ -438,20 +437,13 @@ console.log(addressId)
             }
 
             if (response.ok) {
-              // 서버에서 반환한 메시지를 보여 줍니다.
-                // const msg = data && data.message ? data.message : '가입 완료';
-                // alert('회원가입 성공: ' + msg);
-
-                // window.location.href = /*[[@{/loginForm}]]*/ '/loginForm';
-                // 🔵 로딩 메시지를 완료 메시지로 변경
+                //  로딩 메시지를 완료 메시지로 변경
                 showSuccessModal("회원가입 완료!", () => {
                     window.location.href = "/loginForm";
                 });
                 return;
-
-            }    else if (data.code === "VF") {     // 🔴 유효성 검사 실패
-                // alert("회원가입 실패 : " + data.message);
-
+            } 
+            if (data.code === "VF") {     //  유효성 검사 실패
                 const fieldName = data.fieldName;
                 console.log(data);
                 console.log(fieldName);
@@ -467,18 +459,31 @@ console.log(addressId)
                         }, { once: true });
                     }
                 });
+                return;
+            }else if (data.code === "DU") {
+                console.log(data);
+                showErrorModal("이미 가입된 이메일입니다.", () => {
+                    const inputField = document.getElementById('username');
+                    if (inputField) {
+                        inputField.focus();
+                    }
+                });
+                return;
+            }else if (data.code === "AIU") {
+                console.log(data);
+                showErrorModal("사용할수 없는 주소입니다.") 
+                return;
             }else {
                // 400, 500 등 에러 코드인 경우
                 const errorMsg = data && data.message ? data.message :
-                                '서버 오류 코드 ' + response.status;
-                                showErrorModal(data.message);
+                '서버 오류 코드 ' + response.status;
+                showErrorModal(data.message);
+                return;
             }
         } catch (err) {
             console.error('Fetch 통신 중 오류 발생:', err);
             showErrorModal(data.message);
             alert('통신 오류: ' + err.message);
-        }finally {
-            hideLoadingModal(); // 로딩 모달 닫기 함수
         }
     });
 </script>

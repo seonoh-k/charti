@@ -24,4 +24,6 @@ public interface ExpertRepository extends JpaRepository<Expert,Long> {
     List<Expert> findByMajor(String major);
 
     Optional<Expert> findByUsersUuid(String uuid);
+
+    Boolean existsByAddressId(Long addressId);
 }

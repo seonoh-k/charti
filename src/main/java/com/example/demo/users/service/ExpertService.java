@@ -177,10 +177,12 @@ public class ExpertService {
 
         expertRepository.save(expert);
     }
-
     // 람다 도우미
     private void updateIfPresent(String newValue, Consumer<String> setter) {
         if (StringUtils.hasText(newValue)) setter.accept(newValue);
     }
 
+    public boolean existsByAddressId(Long addressId) {
+        return expertRepository.existsByAddressId(addressId);
+    }
 }

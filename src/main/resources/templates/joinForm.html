@@ -176,7 +176,7 @@
     </div>
 
 
-<!-- th:inline="javascript"를 추가하여 Thymeleaf가 @{/join}을 치환 -->
+
 <script  type="module" th:inline="javascript">
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
@@ -186,9 +186,9 @@
     signInWithPhoneNumber
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    import { showLoadingModal } from "/js/loadingModal.js"; // ✅  모달 동작 함수
-    import { showErrorModal } from "/js/loadingModal.js"; // ✅  에러 모달 동작 함수
-     import { showSuccessModal } from "/js/loadingModal.js"; // ✅  성공 모달 동작 함수
+    import { showLoadingModal } from "/js/loadingModal.js"; //   모달 동작 함수
+    import { showErrorModal } from "/js/loadingModal.js"; //   에러 모달 동작 함수
+    import { showSuccessModal } from "/js/loadingModal.js"; //   성공 모달 동작 함수
 
     const firebaseConfig = {
         apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
@@ -216,47 +216,45 @@
 
       // 3) SMS 전송 함수
     window.sendSmsOtp = async () => {
- //       const phone = document.getElementById('phone').value.trim();
- //       if (!phone) { alert('전화번호를 입력하세요.'); return; }
 
-    // 각 부분의 값을 가져옴
-    const p1 = document.getElementById('phone1').value;
-    const p2 = document.getElementById('phone2').value.trim();
-    const p3 = document.getElementById('phone3').value.trim();
+        // 각 부분의 값을 가져옴
+        const p1 = document.getElementById('phone1').value;
+        const p2 = document.getElementById('phone2').value.trim();
+        const p3 = document.getElementById('phone3').value.trim();
 
-    // 숫자 검사
-    if (!/^\d{4}$/.test(p2) || !/^\d{4}$/.test(p3)) {
-        alert('휴대폰 번호를 정확히 입력하세요 (4자리씩).');
-        return;
-    }
+        // 숫자 검사
+        if (!/^\d{4}$/.test(p2) || !/^\d{4}$/.test(p3)) {
+            alert('휴대폰 번호를 정확히 입력하세요 (4자리씩).');
+            return;
+        }
 
-    // 국제 전화번호로 변환
-    // 01012345678 → +821012345678
-    const phoneNumber = `+82${p1.substring(1)}${p2}${p3}`;
+        // 국제 전화번호로 변환
+        // 01012345678 → +821012345678
+        const phoneNumber = `+82${p1.substring(1)}${p2}${p3}`;
 
-    // 1. 먼저 서버에 중복 체크 요청
-    const checkRes = await fetch('/api/check-phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({phoneNumber})
-    });
-    const checkData = await checkRes.json();
-    if (!checkRes.ok || checkData.exists) {
-        alert('이미 가입된 전화번호입니다.');
-        return;
-    }
+        // 1. 먼저 서버에 중복 체크 요청
+        const checkRes = await fetch('/api/check-phone', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({phoneNumber})
+        });
+        const checkData = await checkRes.json();
+        if (!checkRes.ok || checkData.exists) {
+            alert('이미 가입된 전화번호입니다.');
+            return;
+        }
 
-    try {
-        confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
-        alert('인증번호가 전송되었습니다.');
-        // 인증 입력란 활성화
-        document.getElementById('otp').disabled         = false;
-        document.getElementById('verify-otp-btn').disabled = false;
-    } catch (err) {
-        console.error(err);
-        alert('인증번호 전송 실패: ' + err.message);
-    }
-};
+        try {
+            confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+            alert('인증번호가 전송되었습니다.');
+            // 인증 입력란 활성화
+            document.getElementById('otp').disabled         = false;
+            document.getElementById('verify-otp-btn').disabled = false;
+        } catch (err) {
+            console.error(err);
+            alert('인증번호 전송 실패: ' + err.message);
+        }
+    };
 
     // 4) OTP 확인 함수
     window.verifySmsOtp = async () => {
@@ -283,7 +281,6 @@
     document.getElementById('send-otp-btn').addEventListener('click', sendSmsOtp);
     document.getElementById('verify-otp-btn').addEventListener('click', verifySmsOtp);
 
-    const joinURL = '/join/member';
 
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -300,11 +297,8 @@
         const nickname = document.getElementById('nickname').value.trim();
         const addressId = document.getElementById('addressId').value.trim();
         
-        // const nickname = document.getElementById('nickname').value.trim();
-        // const nickname = document.getElementById('nickname').value.trim();
-        // const nickname = document.getElementById('nickname').value.trim();
 
-        if (!name || !username || !password) {
+        if (!name || !username || !password || !nickname) {
             alert('모든 필드를 입력해주세요.');
             return;
         }
@@ -313,28 +307,27 @@
             // // 🔵 먼저 로딩 모달 표시
             showLoadingModal("회원가입 진행중...");      
 
-            const response = await fetch(joinURL, {
+            const response = await fetch('/join/member', {
                 method: 'POST',
                 headers: {
                     'Content-Type': "application/json"
                 },
                 body: JSON.stringify({
-                commonInfo: {
-                    name,
-                    username,
-                    password,
-                    nickname,
-                    smsIdToken
-                }
-                // memberInfo: {
-                // }
-                ,
-                addressInfo: {
-                    addressId
-                }
+                    commonInfo: {
+                        name,
+                        username,
+                        password,
+                        nickname,
+                        smsIdToken
+                    },
+                    memberInfo: {
+                    }
+                    ,
+                    addressInfo: {
+                        addressId
+                    }
                 })
             });
-console.log(addressId)
            // 여기서 응답 body를 JSON으로 파싱 시도
             let data = null;
             try {
@@ -345,18 +338,18 @@ console.log(addressId)
             }
 
             if (response.ok) {
-                // 🔵 로딩 메시지를 완료 메시지로 변경
+                //  로딩 메시지를 완료 메시지로 변경
                 showSuccessModal("회원가입 완료!", () => {
                     window.location.href = "/loginForm";
                 });
                 return;
+            } 
 
-            }    else if (data.code === "VF") {     // 🔴 유효성 검사 실패
-
+            if (data.code === "VF") {     //  유효성 검사 실패
                 const fieldName = data.fieldName;
                 console.log(data);
                 console.log(fieldName);
-
+                // 모달 띄우고 필드 포커싱
                 showErrorModal(data.message, () => {
                     const inputField = document.getElementById(fieldName);
                     if (inputField) {
@@ -368,18 +361,31 @@ console.log(addressId)
                         }, { once: true });
                     }
                 });
+                return;
+            }else if (data.code === "DU") {
+                console.log(data);
+                showErrorModal("이미 가입된 이메일입니다.", () => {
+                    const inputField = document.getElementById('username');
+                    if (inputField) {
+                        inputField.focus();
+                    }
+                });
+                return;
+            }else if (data.code === "AIU") {
+                console.log(data);
+                showErrorModal("사용할수 없는 주소입니다.") 
+                return;
             }else {
                // 400, 500 등 에러 코드인 경우
                 const errorMsg = data && data.message ? data.message :
-                                '서버 오류 코드 ' + response.status;
-                                showErrorModal(data.message);
+                '서버 오류 코드 ' + response.status;
+                showErrorModal(errorMsg);
+                return;     
             }
         } catch (err) {
             console.error('Fetch 통신 중 오류 발생:', err);
             showErrorModal(data.message);
             alert('통신 오류: ' + err.message);
-        }finally {
-            hideLoadingModal(); // 로딩 모달 닫기 함수
         }
     });
 </script>

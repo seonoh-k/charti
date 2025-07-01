@@ -59,6 +59,9 @@ public class MemberService extends BaseService<Member, MemberRepository> {
         Page<MemberDTO> result = memberQueryRepository.searchMemberList(type,keyword,pageable);
         return new PagingResultDTO(result);
     }
+    public Boolean existsByAddressId(Long id){
+        return memberQueryRepository.existsByAddressId(id);
+    }
 
 
 

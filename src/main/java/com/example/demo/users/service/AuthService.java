@@ -18,6 +18,7 @@ import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.LoginHistoryRepository;
 import com.example.demo.service.AddressService;
 import com.example.demo.users.entity.*;
+import com.example.demo.users.exception.AddressAlreadyInUseException;
 import com.example.demo.users.exception.AdminNotFoundException;
 import com.example.demo.users.exception.UserAlreadyExistsException;
 import com.example.demo.users.exception.UserNotFoundException;
@@ -230,21 +231,13 @@ public class AuthService {
 
     @Transactional
     public AuthStatus createMemberJoinRequest(MemberJoinRequest memberJoinRequest,CommonInfo commonInfo) {
-
-        // Users 생성 (role = ROLE_MEMBER)
-//        CommonInfo commonInfo = memberJoinRequest.getCommonInfo();
-
-        boolean isExist = userService.existsByEmail(commonInfo.getUsername());
-        if(isExist){
-            throw new UserAlreadyExistsException();
-        }
-        // users 저장 (isApproved = false)
-
+        // users 저장
         Users users = this.commonInfoToEntity(commonInfo);
         userService.createMember(users);
 
 //        // Address 저장
         AddressInfo addressInfo = memberJoinRequest.getAddressInfo();
+        Long addressId = addressInfo.getAddressId();
         //  주소 조회 (addressId 기반)
         Address address = addressService.getAddressById(addressInfo.getAddressId());    // AddressNotFoundException
 
