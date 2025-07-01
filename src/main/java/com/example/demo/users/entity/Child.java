@@ -10,7 +10,8 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "child")
@@ -45,6 +46,8 @@ public class Child {
     @JoinColumn(name = "group_id")
     private Group group;
 
+    @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<RiskCategory> riskCategories = new ArrayList<>();
 
     /**
      * 자녀의 생일을 기준으로 연령대를 계산하여 {@link AgeGroup} 열거형으로 반환

@@ -12,7 +12,9 @@ import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.GroupSurveyRepository;
 import com.example.demo.survey.repository.SurveySetRepository;
 import com.example.demo.users.entity.Child;
+import com.example.demo.users.entity.RiskCategory;
 import com.example.demo.users.repository.ChildRepository;
+import com.example.demo.users.repository.RiskCategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class GroupSurveyService {
     private final GroupSurveyRepository groupSurveyRepository;
     private final SurveySetRepository surveySetRepository;
     private final ChildRepository childRepository;
+    private final RiskCategoryRepository riskCategoryRepository;
 
     public GroupSurveyResponseDto getSurveyById(Long id) {
         return groupSurveyRepository.findById(id)
@@ -109,6 +112,7 @@ public class GroupSurveyService {
     @Transactional
     public Map<String,Object> evaluate(SurveySetSubmitRequestDto dto) {
         AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
+        Child child = childRepository.findById(dto.getChildId()).get();
 //        String tgt = dto.getTargetGroup();
 //        boolean allTargets = (tgt == null || tgt.isBlank() || "all".equalsIgnoreCase(tgt));
 //        TargetGroup tg = allTargets
@@ -176,6 +180,12 @@ public class GroupSurveyService {
             if (needsSpecialSurvey(averageRiskPercentage)) {
                 needsSpecialSurvey = true;
                 specialCategories.add(cat.name());
+
+                RiskCategory riskCategory = new RiskCategory();
+                riskCategory.setChild(child);
+                riskCategory.setSurveyCategory(cat);
+                RiskCategory riskCategory1 = riskCategoryRepository.save(riskCategory);
+                child.getRiskCategories().add(riskCategory1);
             }
         }
 
@@ -188,7 +198,6 @@ public class GroupSurveyService {
             result.put("ageGroup", dto.getAgeGroup());
             result.put("specialCategories", specialCategories);
 
-            Child child = childRepository.findById(dto.getChildId()).get();
             child.setRiskGroup(true);
             childRepository.save(child);
         }
