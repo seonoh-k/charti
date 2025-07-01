@@ -5,11 +5,11 @@
     layout:decorate="~{layout/default_layout}">
 <th:block layout:fragment="content">
     <div class="flex gap-6 m-10">
-        <aside class="w-[15%] p-4">
+        <aside class="w-[20%] p-4">
             <th:block th:replace="~{fragments/subMenu :: subMenuFragment}"></th:block>
         </aside>
 
-        <main class="w-full md:w-[70%] m-4 p-8 space-y-8 bg-white rounded-2xl shadow flex flex-col">
+        <main class="w-full md:w-[75%] p-6 space-y-8 bg-white rounded-2xl shadow flex flex-col">
             <!-- 메시지 영역 -->
             <div class="min-h-[48px] mb-2">
                 <div id="flashMsg" th:if="${msg}" class="bg-green-100 border border-green-300 p-2 rounded text-green-700 mb-2 text-sm">
@@ -99,7 +99,7 @@
 
                 <!--  SMS 인증 -->
                 <div id="smsSection" class="my-2">
-                    <label for="phone" class="block mb-1 text-sm font-medium">휴대전화</label>
+                    <label class="block mb-1 text-sm font-medium">휴대전화</label>
                     <div class="flex gap-2">
                         <select id="phone1" class="p-2 rounded border w-20">
                             <option value="010">010</option>

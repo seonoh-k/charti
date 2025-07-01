@@ -3,49 +3,38 @@ package com.example.demo.users.controller;
 import com.example.demo.dto.AddressDTO;
 import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.UserDTO;
-import com.example.demo.dto.paging.PagingRequest;
-import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.ExpertUpdateRequest;
-import com.example.demo.dto.request.IdsRequest;
-import com.example.demo.dto.request.ManagerUpdateRequest;
-import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.enums.MatchingStatus;
 import com.example.demo.matching.entity.Matching;
 import com.example.demo.matching.service.MatchingService;
 import com.example.demo.service.AddressService;
-import com.example.demo.exception.FirebaseAuthenticationException;
-import com.example.demo.users.entity.Expert;
-import com.example.demo.users.entity.Users;
-import com.example.demo.users.exception.UserNotFoundException;
+import com.example.demo.service.PresignedUrlService;
 import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.*;
-import com.example.demo.util.AuthStatus;
-import com.example.demo.util.GlobalStatus;
 import com.google.firebase.auth.FirebaseAuthException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
-@Log4j2
+@Slf4j
 public class ExpertController {
 
     private final ExpertService expertService;
@@ -55,6 +44,7 @@ public class ExpertController {
     private final AuthService authService;
     private final AddressService addressService;
     private final MatchingService matchingService;
+    private final PresignedUrlService urlService;
 
     @GetMapping("/expert/main")
     public String showExpertPage(Model model) {
@@ -84,7 +74,7 @@ public class ExpertController {
         model.addAttribute("matchingCount", matchingCount);
         model.addAttribute("endCount", endCount);
 
-        return "/expert/expert";
+        return "/expert/main";
     }
 
     @GetMapping("/expert/myPage")
@@ -103,12 +93,27 @@ public class ExpertController {
     public String updateManager(
             @ModelAttribute ExpertUpdateRequest req,
             Authentication authentication,
-            RedirectAttributes rttr) {
+            RedirectAttributes rttr,
+            @RequestParam("file") MultipartFile file) throws IOException {
 
         String uid = authentication.getPrincipal().toString();
         log.info("📞 /manager/update정보 이름 : {}", req.getName());
         log.info("📞 /manager/update정보 닉네임 : {}", req.getNickname());
         log.info("📞 /manager/update정보 전화번호 : {}", req.getPhoneNumber());
+
+        if(!file.isEmpty()) {
+            urlService.deleteFile("license/" + req.getLicense());
+
+            String originalFilename = file.getOriginalFilename();
+            String mimetype = file.getContentType();
+            String filename = UUID.randomUUID() + "_" + originalFilename;
+
+            byte[] bytes = file.getBytes();
+            InputStream inputStream = new ByteArrayInputStream(bytes);
+            urlService.imageUpload("license/" + filename, inputStream, mimetype);
+            req.setLicense(filename);
+        }
+
         try {
             expertService.updateExpert(req, uid);
             rttr.addFlashAttribute("msg", "정보가 성공적으로 수정되었습니다.");

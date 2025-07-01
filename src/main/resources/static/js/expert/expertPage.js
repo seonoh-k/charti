@@ -17,7 +17,7 @@ function toggleUserEdit(editMode) {
             addr1: document.getElementById('addr1').value,
             major: document.getElementById('major').value,
             career: document.getElementById('career').value,
-            license: document.getElementById('license').value,
+            license: document.querySelector("#hiddenLicense").value,
             // 주소 id, 있으면 저장
             addressId: document.getElementById('addressId') ? document.getElementById('addressId').value : ''
         };
@@ -47,7 +47,7 @@ function toggleUserEdit(editMode) {
         document.getElementById('addr1').value = originalUserForm.addr1;
         document.getElementById('major').value = originalUserForm.major;
         document.getElementById('career').value = originalUserForm.career;
-        document.getElementById('license').value = originalUserForm.license;
+        document.querySelector("#hiddenLicense").value = originalUserForm.license;
 
         // 주소id가 있으면 복원 (없으면 무시)
         if (document.getElementById('addressId')) {

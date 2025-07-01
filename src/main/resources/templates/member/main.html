@@ -2,14 +2,14 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
 <th:block layout:fragment="content">
     <div class="flex gap-6 m-10">
-        <aside class="w-[15%] p-4">
+        <aside class="w-[20%] p-4">
             <th:block th:replace="~{fragments/subMenu :: subMenuFragment}"></th:block>
         </aside>
 
-        <main class="w-[70%] m-4 space-y-6 bg-white rounded-lg shadow">
+        <main class="w-[75%] p-6 space-y-6 bg-white rounded-lg shadow">
             <!-- 회원 정보 -->
-            <div class="p-6">
-                <h2 th:text="|반갑습니다 ${member.name}님|" class="text-2xl font-bold text-gray-800 mb-4"></h2>
+            <div>
+                <h2 th:text="|반갑습니다 ${member.name}님|" class="text-3xl font-bold text-gray-800 mb-4"></h2>
                 <ul class="flex space-x-4 mb-6 text-gray-700">
                     <li th:text="|닉네임 : ${member.nickname}|"></li>
                     <li th:text="|소지 포인트 : ${member.totalPoint}|"></li>
@@ -20,7 +20,7 @@
 
             <div class="space-y-4">
                 <!-- 아이 정보 -->
-                <div th:each="child : ${childList}" class="p-4">
+                <div th:each="child : ${childList}">
                     <div class="flex flex-col justify-between mb-4">
                         <h3 th:text="${child.name}" class="text-xl font-semibold text-gray-700"></h3>
                         <p th:text="${child.birthdate}" class="text-sm text-gray-500"></p>

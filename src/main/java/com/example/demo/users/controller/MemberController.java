@@ -5,6 +5,7 @@ import com.example.demo.dto.request.ChildCreateRequest;
 import com.example.demo.dto.request.ChildUpdateRequest;
 import com.example.demo.dto.request.UserUpdateRequest;
 import com.example.demo.service.AddressService;
+import com.example.demo.service.PointService;
 import com.example.demo.survey.dto.DailyAnswerDto;
 import com.example.demo.survey.dto.RecordAnswerResponse;
 import com.example.demo.survey.service.DailyAnswerService;
@@ -12,7 +13,6 @@ import com.example.demo.survey.service.RecordAnswerService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.entity.Role;
-import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.ChildService;
 import com.example.demo.users.service.MemberService;
@@ -44,6 +44,7 @@ public class MemberController {
     private final DailyAnswerService dailyAnswerService;
     private final RecordAnswerService recordAnswerService;
     private final MemberService memberService;
+    private final PointService pointService;
 
     @GetMapping("/member")
     public String showMemberPage() {
@@ -59,8 +60,8 @@ public class MemberController {
         // ✅ 권한에 따라 마이페이지 리다이렉트
         return switch (role) {
             case ROLE_MEMBER -> "redirect:/member/main";
-            case ROLE_EXPERT -> "redirect:/expert/myPage";
-            case ROLE_MANAGER -> "redirect:/manager/myPage";
+            case ROLE_EXPERT -> "redirect:/expert/main";
+            case ROLE_MANAGER -> "redirect:/manager/main";
             default -> "redirect:/error";
         };
     }
@@ -203,33 +204,50 @@ public class MemberController {
         return "redirect:/member/myPage";
     }
 
-    @GetMapping("/main")
-    public String showMainPage(Model model){
+    @GetMapping("/member/surveyHistory")
+    public String surveyHistory() { return "member/surveyHistory"; }
 
-        log.info("[GET] 🟢 AuthController.showMainPage");
+    @GetMapping("/member/pointHistory")
+    public String pointHistory(Model model) {
 
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        String uuid = (String) authentication.getPrincipal();
-//        log.info(uuid);
+        UserDTO userDTO = authService.getLoginUser();
 
-//        String role = authentication.getAuthorities()
-//                .stream()
-//                .findFirst()
-//                .get()
-//                .toString();
+        int point = pointService.getCurrentPoint(userDTO.getId());
+        List<PointHistoryView> pointHistory = pointService.getFormattedHistory(userDTO.getId());
 
-        try{
+        model.addAttribute("point", point);
+        model.addAttribute("pointHistory", pointHistory);
 
-            UserDTO userDTO = authService.getLoginUser();
-            model.addAttribute("email", userDTO.getName());
-            model.addAttribute("role",userDTO.getRole());
-
-        } catch (UserNotFoundException e){
-            log.info(" ⚠ AuthController.showMainPage MemberNotFoundException ");
-        }
-        return "main";
-
+        return "member/pointHistory";
     }
+
+//    @GetMapping("/main")
+//    public String showMainPage(Model model){
+//
+//        log.info("[GET] 🟢 AuthController.showMainPage");
+//
+////        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+////        String uuid = (String) authentication.getPrincipal();
+////        log.info(uuid);
+//
+////        String role = authentication.getAuthorities()
+////                .stream()
+////                .findFirst()
+////                .get()
+////                .toString();
+//
+//        try{
+//
+//            UserDTO userDTO = authService.getLoginUser();
+//            model.addAttribute("email", userDTO.getName());
+//            model.addAttribute("role",userDTO.getRole());
+//
+//        } catch (UserNotFoundException e){
+//            log.info(" ⚠ AuthController.showMainPage MemberNotFoundException ");
+//        }
+//        return "main";
+//
+//    }
 
 
 }

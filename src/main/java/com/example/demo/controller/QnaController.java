@@ -128,13 +128,12 @@ public class QnaController {
                              @RequestParam(value = "category", required=false) QnaCategory category,
                              Model model) {
         UserDTO user = authService.getLoginUser();
-        Page<Qna> qnaPage = qnaService.getPagedList(user.getId(), null, page-1);
+        Page<Qna> qnaPage = qnaService.getPagedList(user.getId(), category, page-1);
 
         List<QnaDTO> qnaList = getQnaList(qnaPage);
 
-        if(category != null) {
-            model.addAttribute("category", QnaCategory.values());
-        }
+
+        model.addAttribute("category", QnaCategory.values());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", qnaPage.getTotalPages());
         model.addAttribute("selectedCategory", category);

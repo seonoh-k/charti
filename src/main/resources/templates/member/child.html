@@ -5,10 +5,10 @@
         layout:decorate="~{layout/default_layout}">
 <th:block layout:fragment="content">
     <div class="flex gap-6 m-10">
-        <aside class="w-[15%] p-4">
+        <aside class="w-[20%] p-4">
             <th:block th:replace="~{fragments/subMenu :: subMenuFragment}"></th:block>
         </aside>
-        <main class="w-[70%] m-4 space-y-6 bg-white rounded-lg shadow">
+        <main class="w-[75%] p-6 space-y-6 bg-white rounded-lg shadow">
             
             <div class="flex items-center justify-between min-h-[48px] mb-2 px-2">
                 <!-- 왼쪽: 제목 -->
@@ -35,7 +35,7 @@
             
             
             <!-- 자녀가 있을 때: 카드 반복 -->
-            <div th:if="${children != null and #lists.size(children) > 0}" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+            <div th:if="${children != null and #lists.size(children) > 0}" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
                 <div th:each="child : ${children}" class="bg-white shadow rounded-2xl p-6 flex flex-col gap-2">
                     <div class="font-bold text-xl" th:text="${child.name}">이름</div>
                     <div class="text-sm text-gray-600">나이: <span th:text="${child.ageDisplay}">2세</span></div>
