@@ -12,7 +12,9 @@ import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.SpecialSurveyRepository;
 import com.example.demo.survey.repository.SurveySetRepository;
 import com.example.demo.users.entity.Child;
+import com.example.demo.users.entity.RiskCategory;
 import com.example.demo.users.repository.ChildRepository;
+import com.example.demo.users.repository.RiskCategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,11 +36,13 @@ public class SpecialSurveyService {
     private final SpecialSurveyRepository specialSurveyRepository;
     private final SurveySetRepository surveySetRepository;
     private final ChildRepository childRepository;
+    private final RiskCategoryRepository riskCategoryRepository;
 
     @Transactional(readOnly = true)
     public Map<String,Object> evaluate(SpecialSurveyRequestDto dto) {
         AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
         SurveyCategory sc = SurveyCategory.fromValue(dto.getCategory());
+        Child child = childRepository.findById(dto.getChildId()).get();
 
         // 1) DB에서 연령대와 카테고리 기준으로 설문 문항 조회
 
@@ -110,6 +114,12 @@ public class SpecialSurveyService {
             finalCategoryScores.put(cat.getDisplayName(), avgPercent);
             if (needsMatching(avgPercent)) {
                 needsMatching = true;
+
+                RiskCategory riskCategory = new RiskCategory();
+                riskCategory.setChild(child);
+                riskCategory.setSurveyCategory(cat);
+                RiskCategory riskCategory1 = riskCategoryRepository.save(riskCategory);
+                child.getRiskCategories().add(riskCategory1);
             }
         }
 
@@ -126,7 +136,6 @@ public class SpecialSurveyService {
                     .collect(Collectors.toList());
             result.put("answerIds", answerIds);
 
-            Child child = childRepository.findById(dto.getChildId()).get();
             child.setRiskGroup(true);
             childRepository.save(child);
         }
@@ -139,6 +148,7 @@ public class SpecialSurveyService {
     public Map<String,Object> evaluate2(SurveySetSubmitRequestDto dto) {
         AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
         SurveyCategory sc = SurveyCategory.fromValue(dto.getCategory());
+        Child child = childRepository.findById(dto.getChildId()).get();
 
         // 1) DB에서 설문 문항 조회
         List<SpecialSurvey> surveys = specialSurveyRepository.findBySurveySetId(dto.getSetId());
@@ -214,6 +224,12 @@ public class SpecialSurveyService {
             finalCategoryScores.put(cat.getDisplayName(), avgPercent);
             if (needsMatching(avgPercent)) {
                 needsMatching = true;
+
+                RiskCategory riskCategory = new RiskCategory();
+                riskCategory.setChild(child);
+                riskCategory.setSurveyCategory(cat);
+                RiskCategory riskCategory1 = riskCategoryRepository.save(riskCategory);
+                child.getRiskCategories().add(riskCategory1);
             }
         }
 
@@ -226,7 +242,6 @@ public class SpecialSurveyService {
             result.put("childId", dto.getChildId());
             result.put("category", sc.name());
 
-            Child child = childRepository.findById(dto.getChildId()).get();
             child.setRiskGroup(true);
             childRepository.save(child);
         }

@@ -11,8 +11,10 @@ import com.example.demo.survey.service.DailyAnswerService;
 import com.example.demo.survey.service.DailySurveyService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
+import com.example.demo.users.entity.RiskCategory;
 import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.service.ChildService;
+import com.example.demo.users.service.RiskCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,7 @@ public class DailySurveyController {
     private final DailyAnswerRepository answerRepository;
     private final ChildService childService;
     private final MemberRepository memberRepository;
+    private final RiskCategoryService riskCategoryService;
     private final PointService pointService;
 
     @GetMapping("/{ageGroup}")
@@ -107,15 +110,6 @@ public class DailySurveyController {
         }
 
         // 4) 포인트 적립 (기존 로직)
-//        Member parent = child.getParent();
-//        if (parent.getTotalPoint() == null) {
-//            parent.setTotalPoint(0);
-//        }
-//        parent.setTotalPoint(parent.getTotalPoint() + 500);
-//        memberRepository.save(parent);
-
-//        giveDailySurveyPointIfEligible 메서드 이용해서 포인트 중복지급방지+관리자 이력확인용 기록남기기
-//        giveDailySurveyPointIfEligible 는 기존 giveRecordSurveyPointIfEligible 이용해서 추가,수정함
         Member parent = child.getParent();
         pointService.giveDailySurveyPointIfEligible(parent, child);
 
@@ -125,9 +119,28 @@ public class DailySurveyController {
         result.put("totalRiskScore", totalRisk);
         result.put("categoryScores", dailySurveyService.calculateCategoryRiskScore(dto.getAnswers(), surveys));
 
-        boolean needsSpecial = result.get("categoryScores") != null
-                && ((Map<SurveyCategory,Double>)result.get("categoryScores")).values().stream()
-                .anyMatch(score -> score >= 60.0);
+//        boolean needsSpecial = result.get("categoryScores") != null
+//                && ((Map<SurveyCategory,Double>)result.get("categoryScores")).values().stream()
+//                .anyMatch(score -> score >= 60.0);
+        boolean needsSpecial = false;
+
+        Map<SurveyCategory, Double> categoryScores = (Map<SurveyCategory, Double>) result.get("categoryScores");
+        for (SurveyCategory category : categoryScores.keySet()) {
+            Double score = categoryScores.get(category);
+            if(score >= 60.0) {
+                needsSpecial = true;
+
+                RiskCategory riskCategory = new RiskCategory();
+                riskCategory.setChild(child);
+                riskCategory.setSurveyCategory(category);
+                RiskCategory riskCategory1 = riskCategoryService.createRiskCategory(riskCategory);
+                child.setRiskGroup(true);
+                child.getRiskCategories().add(riskCategory1);
+                childService.update(child);
+            }
+        }
+
+
         result.put("needsSpecialSurvey", needsSpecial);
 
         return ResponseEntity.ok(result);
