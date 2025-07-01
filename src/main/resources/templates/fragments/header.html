@@ -112,19 +112,7 @@
 
             // 로그아웃 처리
             const logoutBtn = document.getElementById("logoutBtn");
-            if (logoutBtn) {
-                logoutBtn.addEventListener("click", function (e) {
-                    e.preventDefault();
-                    // 서버 요청
-                    fetch("/api/users/delete", {
-                        method: "DELETE",
-                        credentials: "include"
-                    }).then(() => {
-                        document.cookie = "token=; Path=/; Max-Age=0";
-                        window.location.href = "/";
-                    });
-                });
-            }
+
         });
     </script>
 
