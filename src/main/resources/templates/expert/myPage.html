@@ -18,7 +18,7 @@
                     </div>
                 </div>
 
-                <h1 class="text-2xl font-bold mb-8 text-center">회원 정보 수정</h1>
+                <h1 class="text-3xl font-bold mb-8 text-center">회원 정보 수정</h1>
 
                 <!--  보기용(일반모드, '수정하기' 누르기 전) -->
                 <div id="userViewSection">
@@ -97,7 +97,8 @@
 
 
                 <!--  수정모드(폼) -->
-                <form id="userEditForm" action="/expert/update" method="post" class="space-y-4 hidden" autocomplete="off">
+                <form id="userEditForm" action="/expert/update" method="post" enctype="multipart/form-data" class="space-y-4 hidden" autocomplete="off">
+                    <input type="hidden" name="license" id="hiddenLicense" th:value="${userInfo.license}">
                     <!-- 이름 -->
                     <div>
                         <label class="block mb-1 text-sm font-medium">이름</label>
@@ -128,7 +129,7 @@
                     </div>
                     <!--  SMS 인증: 수정모드에서만 보임 -->
                     <div id="smsSection">
-                        <label for="phone" class="block mb-1 text-sm font-medium">휴대전화</label>
+                        <label class="block mb-1 text-sm font-medium">휴대전화</label>
                         <div class="flex gap-2">
                             <select id="phone1" class="p-2 rounded border w-20">
                                 <option value="010">010</option>
@@ -181,10 +182,10 @@
                     </div>
                     <!-- 자격증파일 -->
                     <div>
-                        <label class="block mb-1 text-sm font-medium">자격증파일</label>
-                        <input type="text" name="license" id="license"
-                            th:value="${userInfo.license}"
-                            class="w-full border border-gray-300 rounded px-3 py-2 text-gray-900" />
+                        <label class="block mb-1 text-sm font-medium">자격증파일
+                            <input type="file" name="file" id="license" class="hidden" />
+                            <span id="fileInputLabel" class="w-full border border-gray-300 rounded px-3 py-2 text-gray-900"></span>
+                        </label>
                     </div>
 
                     <div class="flex flex-row justify-end gap-2 pb-2">
@@ -246,6 +247,10 @@
 
         <script>
             const downloadBtn = document.querySelector(".download-btn");
+            const fileInputLabel = document.querySelector("#fileInputLabel");
+            const licenseName = downloadBtn.dataset.filename
+            const parts = licenseName.split("_");
+            fileInputLabel.textContent = parts.length > 1 ? parts.slice(1).join("_") : licenseName;
             downloadBtn.addEventListener("click", async () => {
 
                 let licenseURL = downloadBtn.dataset.filename;

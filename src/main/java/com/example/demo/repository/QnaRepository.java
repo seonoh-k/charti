@@ -12,7 +12,7 @@ public interface QnaRepository extends JpaRepository<Qna, Long> {
     Page<Qna> findAllByDeletedFalse(Pageable pageable);
     Page<Qna> findAllByCategory(QnaCategory category, Pageable pageable);
     Page<Qna> findByCategoryAndDeletedFalse(QnaCategory category, Pageable pageable);
-    Page<Qna> findAllById(Long id, Pageable pageable);
+    Page<Qna> findAllByUsers_Id(Long id, Pageable pageable);
 
-    Page<Qna> findAllByIdAndCategory(Long id, QnaCategory category, Pageable pageable);
+    Page<Qna> findAllByUsers_IdAndCategory(Long id, QnaCategory category, Pageable pageable);
 }

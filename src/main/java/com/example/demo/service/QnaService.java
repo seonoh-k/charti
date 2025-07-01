@@ -20,10 +20,10 @@ public class QnaService extends BaseService<Qna, QnaRepository> {
         Pageable pageable = PageRequest.of(page, 10, Sort.Direction.DESC, "createdAt");
 
         if(id != null && category == null) {
-            return repository.findAllById(id, pageable);
-        }else if(id != null && category != null) {
-            return repository.findAllByIdAndCategory(id, category, pageable);
-        }else if(id == null && category != null) {
+            return repository.findAllByUsers_Id(id, pageable);
+        }else if(id != null) {
+            return repository.findAllByUsers_IdAndCategory(id, category, pageable);
+        }else if(category != null) {
             return repository.findByCategoryAndDeletedFalse(category, pageable);
         }else {
             return repository.findAllByDeletedFalse(pageable);

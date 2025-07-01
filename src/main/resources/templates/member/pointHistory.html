@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
+<th:block layout:fragment="content">
+    <div class="flex gap-6 m-10">
+        <aside class="w-[20%] p-4">
+            <th:block th:replace="~{fragments/subMenu :: subMenuFragment}"></th:block>
+        </aside>
+
+        <main class="w-[75%] p-6 space-y-6 bg-white rounded-lg shadow">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">포인트 조회</h2>
+            <hr class="mb-4 border-gray-300">
+
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
+                <h2 th:text="|현재 포인트 : ${point}|" class="text-xl font-semibold p-4"></h2>
+                <table class="min-w-full divide-y divide-gray-200 table-fixed">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="w-[30%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            일시
+                        </th>
+                        <th class="w-[30%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            포인트 변동
+                        </th>
+                        <th class="w-[40%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            변동 내용
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tr th:each="ph : ${pointHistory}">
+                        <td th:text="${ph.created}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
+                        <td th:text="|${ph.beforePoint} ➡ ${ph.afterPoint}|"
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
+                        <td th:text="|${ph.changeAmount > 0 ? '+' + ph.changeAmount : ph.changeAmount} [${ph.description}]|"
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</th:block>
+</html>

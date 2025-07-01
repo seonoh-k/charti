@@ -1,27 +1,13 @@
 package com.example.demo.users.controller;
 
 import com.example.demo.dto.*;
-import com.example.demo.dto.paging.PagingRequest;
-import com.example.demo.dto.paging.PagingResponse;
-import com.example.demo.dto.paging.PagingResultDTO;
-import com.example.demo.dto.request.IdsRequest;
 import com.example.demo.dto.request.ManagerUpdateRequest;
-import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.fcm.dto.FcmHistorySearchDto;
 import com.example.demo.fcm.entity.FcmSendHistory;
 import com.example.demo.fcm.service.FcmHistoryService;
 import com.example.demo.service.AddressService;
-import com.example.demo.exception.FirebaseAuthenticationException;
 import com.example.demo.service.GroupService;
-import com.example.demo.users.entity.Manager;
-import com.example.demo.users.entity.Member;
-import com.example.demo.users.entity.Role;
-import com.example.demo.users.entity.Users;
-import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.service.*;
-import com.example.demo.users.exception.UserNotFoundException;
-import com.example.demo.util.AuthStatus;
-import com.example.demo.util.GlobalStatus;
 import com.google.firebase.auth.FirebaseAuthException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -29,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -39,9 +24,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -62,7 +44,7 @@ public class ManagerController {
         log.info("[GET] 👨‍💼 request manager Page");
         return "manager";
     }
-    @GetMapping("/manager/home")
+    @GetMapping("/manager/main")
     public String showMangerHome(Model model) {
         log.info("[GET] 👨‍💼 request managerHome");
         // 현재 로그인한 담당자 id
@@ -81,7 +63,7 @@ public class ManagerController {
         model.addAttribute("dashboardInfo", dashboardInfo);
         model.addAttribute("recentNotices", recentNotices);
 
-        return "manager/managerHome";
+        return "manager/main";
     }
 
     @GetMapping("/manager/myPage")
