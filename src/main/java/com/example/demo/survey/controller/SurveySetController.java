@@ -2,6 +2,7 @@ package com.example.demo.survey.controller;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.survey.dto.SurveySetForm;
 import com.example.demo.survey.dto.SurveySetSearchDto;
 import com.example.demo.survey.entity.BaseSurvey;
@@ -32,11 +33,12 @@ public class SurveySetController {
             .filter(ag -> ag != AgeGroup.ALL && ag != AgeGroup.VARIOUS)
             .collect(Collectors.toList());
 
-    // 실제 선택 가능한 카테고리만
+    // 실제 선택 가능한 카테고리만 (ALL, VARIOUS 제외)
     private final List<SurveyCategory> categoryOptions = Arrays.stream(SurveyCategory.values())
             .filter(sc -> sc != SurveyCategory.ALL && sc != SurveyCategory.VARIOUS)
             .collect(Collectors.toList());
 
+    // 관리자 리스트 + 필터
     @GetMapping
     public String list(
             @ModelAttribute("search") SurveySetSearchDto search,
@@ -44,9 +46,7 @@ public class SurveySetController {
             Model model
     ) {
         Page<SurveySet> page = service.list(search, pageable);
-
         model.addAttribute("page", page);
-        // 뷰에 넘겨줄 필터용 옵션
         model.addAttribute("ageOptions", ageOptions);
         model.addAttribute("categoryOptions", categoryOptions);
         return "admin/surveys/setList";
@@ -57,10 +57,8 @@ public class SurveySetController {
     public String detail(@PathVariable Long id, Model model) {
         SurveySet set = service.getDetail(id);
         model.addAttribute("set", set);
-
         List<? extends BaseSurvey> surveys = service.getSurveysBySetId(id);
         model.addAttribute("surveys", surveys);
-
         return "admin/surveys/setDetail";
     }
 
@@ -69,12 +67,20 @@ public class SurveySetController {
     public String createForm(@RequestParam(defaultValue = "GROUP") String type, Model model) {
         SurveySetForm form = new SurveySetForm();
         form.setType(type);
+
         model.addAttribute("form", form);
         model.addAttribute("surveys",
                 "SPECIAL".equals(type)
                         ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
-                        : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
+                        : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL, TargetGroup.ALL)
         );
+        model.addAttribute("targetOptions",
+                Arrays.stream(TargetGroup.values())
+                        .filter(t -> t != TargetGroup.ALL)
+                        .collect(Collectors.toList())
+        );
+        model.addAttribute("ageOptions", ageOptions);
+        model.addAttribute("categoryOptions", categoryOptions);
         return "admin/surveys/setForm";
     }
 
@@ -86,34 +92,57 @@ public class SurveySetController {
         form.setId(set.getSetId());
         form.setSetTitle(set.getSetTitle());
         form.setType(set.getType());
+        form.setTargetGroup(set.getTargetGroup());
 
-        // 이 세트에 이미 연결된 문진들을 service에서 직접 조회
+        // 이미 연결된 문진 ID
         List<? extends BaseSurvey> linked = service.getSurveysBySetId(id);
         form.setSurveyIds(linked.stream()
                 .map(BaseSurvey::getId)
-                .collect(Collectors.toList())
-        );
+                .collect(Collectors.toList()));
 
         model.addAttribute("form", form);
         model.addAttribute("surveys",
                 "SPECIAL".equals(set.getType())
                         ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
-                        : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
+                        : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL, set.getTargetGroup())
         );
+        model.addAttribute("targetOptions",
+                Arrays.stream(TargetGroup.values())
+                        .filter(t -> t != TargetGroup.ALL)
+                        .collect(Collectors.toList())
+        );
+        model.addAttribute("ageOptions", ageOptions);
+        model.addAttribute("categoryOptions", categoryOptions);
         return "admin/surveys/setForm";
     }
 
     // 저장 처리
     @PostMapping("/save")
-    public String save(@Valid @ModelAttribute("form") SurveySetForm form,
-                       BindingResult br, Model model) {
+    public String save(
+            @Valid @ModelAttribute("form") SurveySetForm form,
+            BindingResult br,
+            Model model
+    ) {
+        // 바인딩 에러 시 다시 폼
         if (br.hasErrors()) {
             model.addAttribute("surveys",
                     "SPECIAL".equals(form.getType())
                             ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
-                            : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
+                            : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL, form.getTargetGroup())
             );
+            model.addAttribute("targetOptions",
+                    Arrays.stream(TargetGroup.values())
+                            .filter(t -> t != TargetGroup.ALL)
+                            .collect(Collectors.toList())
+            );
+            model.addAttribute("ageOptions", ageOptions);
+            model.addAttribute("categoryOptions", categoryOptions);
             return "admin/surveys/setForm";
+        }
+
+        // SPECIAL 타입인 경우 targetGroup 무시
+        if ("SPECIAL".equals(form.getType())) {
+            form.setTargetGroup(null);
         }
 
         try {
@@ -123,12 +152,25 @@ public class SurveySetController {
             model.addAttribute("surveys",
                     "SPECIAL".equals(form.getType())
                             ? service.allSpecial(AgeGroup.ALL, SurveyCategory.ALL)
-                            : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL)
+                            : service.allGroup(AgeGroup.ALL, SurveyCategory.ALL, form.getTargetGroup())
             );
+            model.addAttribute("targetOptions",
+                    Arrays.stream(TargetGroup.values())
+                            .filter(t -> t != TargetGroup.ALL)
+                            .collect(Collectors.toList())
+            );
+            model.addAttribute("ageOptions", ageOptions);
+            model.addAttribute("categoryOptions", categoryOptions);
             return "admin/surveys/setForm";
         }
 
         return "redirect:/admin/surveySet";
     }
 
+    // 삭제 처리
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id) {
+        service.deleteById(id);
+        return "redirect:/admin/surveySet";
+    }
 }

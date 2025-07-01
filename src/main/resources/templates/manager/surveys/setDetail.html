@@ -34,14 +34,6 @@
         <span>종류:
       <strong th:text="${set.type=='GROUP'?'그룹문진':'특별문진'}"></strong>
     </span>
-
-    <span>대상 그룹:
-      <strong th:text="${set.type=='GROUP'
-                            ? set.targetGroup.displayName
-                            : '—'}">
-      </strong>
-    </span>
-
         <span>작성일:
       <strong th:text="${#temporals.format(set.createdAt,'yyyy.MM.dd')}"></strong>
     </span>
@@ -55,10 +47,10 @@
         </li>
     </ul>
     <div class="mt-6 space-x-2">
-        <a th:href="@{|/admin/surveySet/${set.setId}/edit|}"
+        <a th:href="@{|/manager/surveySet/${set.setId}/edit|}"
            class="bg-yellow-500 text-white px-4 py-1 rounded">수정</a>
 
-        <form th:action="@{|/admin/surveySet/${set.setId}/delete|}"
+        <form th:action="@{|/manager/surveySet/${set.setId}/delete|}"
               method="post"
               onsubmit="return confirm('정말 이 문진 세트를 삭제하시겠습니까? 삭제 시 복구할 수 없습니다.');"
               class="inline">
@@ -68,7 +60,7 @@
             </button>
         </form>
 
-        <a th:href="@{/admin/surveySet}"
+        <a th:href="@{/manager/surveySet}"
            class="bg-gray-500 text-white px-4 py-1 rounded">목록</a>
     </div>
 </div>

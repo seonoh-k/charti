@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/managerLayout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그룹 문진 세트 목록</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+        <h1 class="text-2xl font-bold mb-4">그룹 문진 세트</h1>
+
+        <!-- 필터 & 검색 -->
+        <form th:action="@{/manager/surveySet}" th:object="${search}" method="get"
+              class="flex flex-wrap gap-4 mb-6 items-center">
+            <input type="text"
+                   th:field="*{keyword}"
+                   placeholder="제목 검색"
+                   class="border rounded px-2 py-1"/>
+
+            <!-- 카테고리 필터 -->
+            <select th:field="*{category}" class="border rounded px-2 py-1">
+                <!-- 전체 카테고리 -->
+                <option th:value="${T(com.example.demo.enums.SurveyCategory).ALL}"
+                        th:text="'전체 카테고리'">
+                </option>
+                <!-- 통합 -->
+                <option th:value="${T(com.example.demo.enums.SurveyCategory).VARIOUS}"
+                        th:text="'통합'">
+                </option>
+                <!-- 실제 카테고리 옵션 (ALL, VARIOUS 제외) -->
+                <option th:each="cat : ${categoryOptions}"
+                        th:if="${cat != T(com.example.demo.enums.SurveyCategory).ALL
+                 and cat != T(com.example.demo.enums.SurveyCategory).VARIOUS}"
+                        th:value="${cat}"
+                        th:text="${cat.displayName}">
+                </option>
+            </select>
+
+            <button type="submit"
+                    class="bg-blue-600 text-white px-4 py-1 rounded">
+                검색
+            </button>
+            <a th:href="@{/manager/surveySet/create}"
+               class="bg-green-600 text-white px-4 py-1 rounded">
+                세트 생성
+            </a>
+        </form>
+
+        <!-- 그룹 문진 세트 테이블 -->
+        <table class="min-w-full table-auto border-collapse">
+            <thead>
+            <tr class="bg-gray-100">
+                <th class="px-2 py-1 border">번호</th>
+                <th class="px-2 py-1 border">제목</th>
+                <th class="px-2 py-1 border">연령대</th>
+                <th class="px-2 py-1 border">그룹</th>
+                <th class="px-2 py-1 border">카테고리</th>
+                <th class="px-2 py-1 border">작성일</th>
+                <th class="px-2 py-1 border">액션</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="set, stat : ${page.content}" class="hover:bg-gray-50">
+                <td class="px-2 py-1 border" th:text="${stat.index + 1}">1</td>
+                <td class="px-2 py-1 border">
+                    <a th:href="@{|/manager/surveySet/${set.setId}|}"
+                       class="text-blue-600 hover:underline"
+                       th:text="${set.setTitle}">세트명</a>
+                </td>
+                <td class="px-2 py-1 border"
+                    th:text="${set.ageGroup.displayName}">연령대</td>
+                <td class="px-2 py-1 border"
+                    th:text="${set.groupSurveys.size() > 0
+                   ? set.groupSurveys[0].targetGroup.get().displayName
+                   : '-'}">
+                </td>
+                <td class="px-2 py-1 border"
+                    th:text="${set.category.displayName}">카테고리</td>
+                <td class="px-2 py-1 border"
+                    th:text="${#temporals.format(set.createdAt,'yyyy.MM.dd')}">작성일</td>
+                <td class="px-2 py-1 border space-x-2">
+                    <a th:href="@{|/manager/surveySet/${set.setId}/edit|}"
+                       class="bg-yellow-500 text-white px-3 py-1 rounded">
+                        수정
+                    </a>
+                    <form th:action="@{|/manager/surveySet/${set.setId}/delete|}"
+                          method="post"
+                          onsubmit="return confirm('정말 삭제하시겠습니까?');"
+                          class="inline">
+                        <input type="hidden" sec:csrfInput/>
+                        <button type="submit"
+                                class="bg-red-500 text-white px-3 py-1 rounded">
+                            삭제
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- 페이징 -->
+        <div class="mt-4 flex justify-center space-x-2">
+            <a th:if="${page.hasPrevious()}"
+               th:href="@{/manager/surveySet(page=${page.number-1},
+                                             keyword=${search.keyword},
+                                             ageGroup=${search.ageGroup},
+                                             category=${search.category},
+                                             targetGroup=${selectedTarget})}"
+               class="px-2 py-1 border rounded">이전</a>
+            <span th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+                <a th:href="@{/manager/surveySet(page=${i},
+                                                  keyword=${search.keyword},
+                                                  ageGroup=${search.ageGroup},
+                                                  category=${search.category},
+                                                  targetGroup=${selectedTarget})}"
+                   th:text="${i + 1}"
+                   th:classappend="${i == page.number} ? 'font-bold underline' : ''"
+                   class="px-2 py-1 border rounded">
+                </a>
+            </span>
+            <a th:if="${page.hasNext()}"
+               th:href="@{/manager/surveySet(page=${page.number+1},
+                                             keyword=${search.keyword},
+                                             ageGroup=${search.ageGroup},
+                                             category=${search.category},
+                                             targetGroup=${selectedTarget})}"
+               class="px-2 py-1 border rounded">다음</a>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
