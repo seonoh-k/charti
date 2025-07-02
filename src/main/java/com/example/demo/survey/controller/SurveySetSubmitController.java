@@ -2,7 +2,6 @@ package com.example.demo.survey.controller;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
-import com.example.demo.survey.dto.SpecialSurveyRequestDto;
 import com.example.demo.survey.dto.SurveySetSubmitRequestDto;
 import com.example.demo.survey.entity.SpecialAnswer;
 import com.example.demo.survey.entity.SurveySet;
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,7 +45,7 @@ public class SurveySetSubmitController {
                 AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
                 SurveyCategory sc = SurveyCategory.fromValue(dto.getCategory());
 
-                List<SpecialAnswer> savedAnswers = specialAnswerService.saveAndGetAnswers2(dto.getChildId(), ag, sc, dto.getAnswerList());
+                List<SpecialAnswer> savedAnswers = specialAnswerService.saveAndGetAnswers2(dto.getChildId(), set, ag, sc, dto.getAnswerList());
                 Map<String,Object> result = specialSurveyService.evaluate2(dto);
 
                 if((boolean) result.get("needsMatching")) {

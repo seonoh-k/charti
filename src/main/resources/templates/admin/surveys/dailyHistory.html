@@ -4,7 +4,7 @@
       layout:decorate="~{layout/admin_layout}">
 <head>
     <meta charset="UTF-8">
-    <title>그룹 문진 이력</title>
+    <title>데일리 문진 이력</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -24,16 +24,16 @@
 </head>
 
 <th:block layout:fragment="content">
-    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 rounded" id="record-view-container" th:data-api-base-url="@{/admin/surveys/group/api}" th:data-user-search-url="@{/api/user/search}">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 rounded" id="record-view-container" th:data-api-base-url="@{/admin/surveys/daily/api}" th:data-user-search-url="@{/api/user/search}">
         <div class="flex justify-center mt-3 mb-5 space-x-6">
-            <a href="/admin/surveys/record" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+            <a href="/admin/surveys/daily" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
                 문진 목록
             </a>
-            <a href="/admin/surveys/record/history" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+            <a href="/admin/surveys/daily/history" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
                 문진 이력
             </a>
         </div>
-        <h1 class="text-2xl font-bold mb-6">그룹 문진 이력 조회 (관리자)</h1>
+        <h1 class="text-2xl font-bold mb-6">데일리 문진 이력 조회 (관리자)</h1>
 
         <div class="mb-6">
             <label for="searchInput" class="font-semibold">보호자 이름 :</label>
@@ -211,7 +211,7 @@
         function goToHistory() {
             const id = document.getElementById('parentSelect').value;
             if (id) {
-                window.location.href = `/admin/surveys/group/history?memberId=${id}`;
+                window.location.href = `/admin/surveys/daily/history?memberId=${id}`;
             } else {
                 showToast("이력을 볼 보호자를 선택해주세요.", "error");
             }

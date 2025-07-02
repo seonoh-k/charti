@@ -10,6 +10,8 @@ import com.example.demo.enums.TargetGroup;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +20,12 @@ import java.util.List;
 @Table(name = "survey_set")
 @Getter
 @Setter
+@SQLDelete(sql = """
+    UPDATE survey_set
+       SET deleted = true, deleted_at = now()
+     WHERE set_id = ?
+""")
+@Where(clause = "deleted = false")
 public class SurveySet extends BaseEntity {
 
     @Id

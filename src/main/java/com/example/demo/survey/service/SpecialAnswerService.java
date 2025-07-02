@@ -2,8 +2,9 @@
 package com.example.demo.survey.service;
 
 import com.example.demo.enums.SurveyCategory;
-import com.example.demo.survey.dto.SpecialSurveyRequestDto;
-import com.example.demo.survey.dto.SurveySetSubmitRequestDto;
+import com.example.demo.exception.RecordAnswerNotFoundException;
+import com.example.demo.exception.RecordHistoryNotFoundException;
+import com.example.demo.survey.dto.*;
 import com.example.demo.survey.entity.SpecialAnswer;
 import com.example.demo.survey.entity.SpecialSurvey;
 import com.example.demo.enums.AgeGroup;
@@ -11,18 +12,28 @@ import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.SpecialAnswerRepository;
 import com.example.demo.survey.repository.SpecialSurveyRepository;
 import com.example.demo.survey.repository.SurveySetRepository;
+import com.example.demo.users.dto.ChildHistorySummaryDto;
+import com.example.demo.users.dto.ChildRecordCountDto;
 import com.example.demo.users.entity.Child;
+import com.example.demo.users.entity.Member;
+import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.repository.ChildRepository;
+import com.example.demo.users.repository.MemberRepository;
 import com.example.demo.users.service.ChildService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,8 +43,8 @@ public class SpecialAnswerService {
     private final ChildService childService;
     private final SurveySetRepository surveySetRepo;
     private final SpecialSurveyRepository surveyRepo;
-    private final SpecialSurveyRepository surveyRepository;
     private final ChildRepository childRepo;
+    private final MemberRepository memberRepo;
 
     @Transactional
     public void saveAnswers(Long childId,
@@ -88,21 +99,18 @@ public class SpecialAnswerService {
 
         List<SpecialAnswer> saved = new ArrayList<>();
         for (SpecialSurveyRequestDto.AnswerDto dto : answers) {
+            // 2) SurveySet 조회 (FK)
+            SurveySet set = surveySetRepo.findById(dto.getSurveySetId())
+                    .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
 
             // 3) SpecialAnswer 엔티티 채우기
             SpecialAnswer ans = new SpecialAnswer();
             ans.setChild(child);
+            ans.setSurveySet(set);
             ans.setAgeGroup(ageGroup);
             ans.setCategory(category);
             ans.setQuestion(dto.getQuestion());
             ans.setAnswer(dto.getAnswerText());
-
-            // 2) SurveySet 조회 (FK)
-            if(dto.getSurveySetId() != null) {
-                SurveySet set = surveySetRepo.findById(dto.getSurveySetId())
-                        .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveySetId()));
-                ans.setSurveySet(set);
-            }
 
             // 4) 저장
             saved.add(answerRepo.save(ans));
@@ -113,6 +121,7 @@ public class SpecialAnswerService {
     @Transactional
     public List<SpecialAnswer> saveAndGetAnswers2(
             Long childId,
+            SurveySet set,
             AgeGroup ageGroup,
             SurveyCategory category,
             List<SurveySetSubmitRequestDto.AnswerDto> answers
@@ -139,13 +148,10 @@ public class SpecialAnswerService {
                 default -> throw new IllegalArgumentException("1~5 사이 값 필요");
             };
 
-            // 2) SurveySet 조회 (FK)
-            SurveySet set = surveySetRepo.findById(dto.getSurveyId())
-                    .orElseThrow(() -> new EntityNotFoundException("SurveySet을 찾을 수 없습니다: " + dto.getSurveyId()));
-
             // 3) SpecialAnswer 엔티티 채우기
             SpecialAnswer ans = new SpecialAnswer();
             ans.setChild(child);
+            ans.setSurveySet(set);
             ans.setAgeGroup(ageGroup);
             ans.setCategory(category);
             ans.setQuestion(dto.getQuestion());
@@ -212,5 +218,94 @@ public class SpecialAnswerService {
                 .orElseThrow(() -> new EntityNotFoundException("답변없음 "+id));
         a.markAsDeleted();
         answerRepo.save(a);
+    }
+
+    /**
+     * 보호자 ID 기준으로 자녀별 기록 문진 이력 요약 정보를 반환합니다.
+     */
+    @Transactional(readOnly = true)
+    public List<ChildHistorySummaryDto> getChildrenWithHistorySummary(Long memberId) {
+        Member member = memberRepo.findById(memberId)
+                .orElseThrow(() -> new UserNotFoundException("해당 ID의 멤버를 찾을 수 없습니다. ID: " + memberId));
+
+        List<Child> children = childService.getChildrenByMember(member);
+        if (children.isEmpty()) return new ArrayList<>();
+
+        Map<Long, Long> countsByChildId = answerRepo.countDistinctSpecialDatesByChildren(children).stream()
+                .collect(Collectors.toMap(ChildRecordCountDto::getChildId, ChildRecordCountDto::getRecordCount));
+
+        return children.stream()
+                .map(child -> ChildHistorySummaryDto.builder()
+                        .childId(child.getId())
+                        .childName(child.getName())
+                        .childAge(child.getAge())
+                        .totalRecordDatesCount(countsByChildId.getOrDefault(child.getId(), 0L))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 특정 자녀의 기록 문진 날짜 목록을 페이징하여 조회합니다.
+     */
+    @Transactional(readOnly = true)
+    public Page<SpecialDateSummaryDto> getSpecialDatesPagedByChild(Long childId, Pageable pageable) {
+        Child child = childService.findById(childId);
+        Page<Object[]> rawPage = answerRepo.findDistinctSpecialDatesByChild(child, pageable);
+        return rawPage.map(row -> new SpecialDateSummaryDto((Date) row[0], (Long) row[1]));
+    }
+
+    /**
+     * 특정 자녀의 특정 날짜에 대한 질문/답변 목록을 반환합니다.
+     */
+    @Transactional(readOnly = true)
+    public List<SpecialAnswerResponse> getQuestionsAndAnswersForDate(Long childId, LocalDate date) {
+        Child child = childService.findById(childId);
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(LocalTime.MAX);
+        return answerRepo.findByChildAndCreatedAtBetween(child, start, end)
+                .stream().map(SpecialAnswerResponse::fromEntity).collect(Collectors.toList());
+    }
+
+    /**
+     * 특정 자녀의 특정 날짜에 기록된 답변을 수정합니다. (관리자용)
+     */
+    @Transactional
+    public void updateSpecialAnswers(Long childId, LocalDate recordDate, List<UpdateAnswerRequestDto> updatedAnswers) {
+        LocalDateTime start = recordDate.atStartOfDay();
+        LocalDateTime end = recordDate.atTime(LocalTime.MAX);
+
+        List<SpecialAnswer> existingAnswers = answerRepo.findByChild_IdAndCreatedAtBetween(childId, start, end);
+        if (existingAnswers.isEmpty()) {
+            throw new RecordHistoryNotFoundException("해당 날짜에 기록된 문진 답변이 없습니다.");
+        }
+
+        Map<Long, SpecialAnswer> answerMap = existingAnswers.stream()
+                .collect(Collectors.toMap(ra -> ra.getSurveySet().getSetId(), ra -> ra));
+
+        List<SpecialAnswer> answersToUpdate = new ArrayList<>();
+        for (UpdateAnswerRequestDto updateDto : updatedAnswers) {
+            SpecialAnswer answerToUpdate = answerMap.get(updateDto.getQuestionId());
+            if (answerToUpdate == null) {
+                throw new RecordAnswerNotFoundException("질문 ID " + updateDto.getQuestionId() + " 에 해당하는 기존 답변을 찾을 수 없습니다.");
+            }
+            answerToUpdate.setAnswer(updateDto.getAnswer());
+            answersToUpdate.add(answerToUpdate);
+        }
+        answerRepo.saveAll(answersToUpdate);
+    }
+
+    /**
+     * 특정 자녀의 특정 날짜에 기록된 답변을 모두 삭제합니다. (관리자용)
+     */
+    @Transactional
+    public void deleteSpecialAnswers(Long childId, LocalDate recordDate) {
+        LocalDateTime start = recordDate.atStartOfDay();
+        LocalDateTime end = recordDate.atTime(LocalTime.MAX);
+
+        List<SpecialAnswer> answersToDelete = answerRepo.findByChild_IdAndCreatedAtBetween(childId, start, end);
+        if (answersToDelete.isEmpty()) {
+            throw new RecordHistoryNotFoundException("삭제할 문진 기록이 존재하지 않습니다.");
+        }
+        answerRepo.deleteAll(answersToDelete);
     }
 }

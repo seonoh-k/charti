@@ -3,13 +3,14 @@ package com.example.demo.survey.service;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.enums.TargetGroup;
+import com.example.demo.survey.dto.SpecialSurveyResponseDto;
+import com.example.demo.survey.dto.SurveySetDTO;
 import com.example.demo.survey.dto.SurveySetSearchDto;
 import com.example.demo.survey.dto.SurveySetForm;
 import com.example.demo.survey.entity.*;
 import com.example.demo.survey.repository.*;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.repository.ManagerRepository;
-import com.example.demo.users.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import com.example.demo.exception.SurveySetNotFoundException;
 import jakarta.persistence.criteria.Predicate;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,8 +57,15 @@ public class SurveySetService {
                     cb.equal(root.get("category"), dto.getCategory())
             );
         }
+
         if (!"all".equals(dto.getType())) {
             spec = spec.and((r, q, cb) -> cb.equal(r.get("type"), dto.getType()));
+        }
+        if (dto.getTargetGroup() != null
+                && dto.getTargetGroup() != TargetGroup.ALL) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("targetGroup"), dto.getTargetGroup())
+            );
         }
         return surveySetRepo.findAll(spec, pageable);
     }
@@ -125,14 +132,37 @@ public class SurveySetService {
         } else {
             surveys.forEach(s -> entity.getSpecialSurveys().add((SpecialSurvey) s));
         }
+
+        if ("GROUP".equals(form.getType())) {
+            entity.setTargetGroup(form.getTargetGroup());
+        } else {
+            entity.setTargetGroup(null);
+        }
+
         return surveySetRepo.save(entity);
     }
 
     /** 폼용 전체 설문 조회 (필터 적용 가능) */
-    public List<GroupSurvey> allGroup(AgeGroup age, SurveyCategory category) {
+    public List<GroupSurvey> allGroup(
+            AgeGroup age,
+            SurveyCategory category,
+            TargetGroup targetGroup
+    ) {
         return groupRepo.findAll().stream()
-                .filter(s -> (age == AgeGroup.ALL || s.getAgeGroup() == age))
-                .filter(s -> (category == SurveyCategory.ALL || s.getCategory() == category))
+                // 연령대 필터
+                .filter(s -> age == AgeGroup.ALL || s.getAgeGroup() == age)
+                // 카테고리 필터
+                .filter(s -> category == SurveyCategory.ALL || s.getCategory() == category)
+                // 대상 그룹 필터: ALL 또는 null 이면 모두 통과, 그렇지 않으면 Optional 안 값과 비교
+                .filter(s -> {
+                    if (targetGroup == null || targetGroup == TargetGroup.ALL) {
+                        return true;
+                    }
+                    // Optional<TargetGroup> 안의 값을 꺼내 비교
+                    return s.getTargetGroup()
+                            .map(tg -> tg == targetGroup)
+                            .orElse(false);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -185,6 +215,7 @@ public class SurveySetService {
                 .orElseThrow(() -> new EntityNotFoundException("설문 세트 없음: " + setId));
     }
 
+
     /**
      *  동적 조건에 따라 문진 세트를 조회하는 메소드
      * - 관리자 알림 발송 시, 필터 조건에 맞는 세트 목록을 실시간으로 조회하기 위해 사용됩니다.
@@ -218,5 +249,40 @@ public class SurveySetService {
 
         // 5. 완성된 조건(spec)으로 JpaRepository에 조회 요청을 보냅니다.
         return surveySetRepo.findAll(spec);
+    }
+
+    /** 문진 세트 삭제 */
+    public void deleteById(Long setId) {
+        SurveySet set = surveySetRepo.findById(setId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 세트: " + setId));
+
+//        // 1) 그룹 문진 세트에 연결된 group_answer 먼저 삭제
+//        groupAnswerRepo.deleteBySurveySetId(setId);
+//
+//        // 2) 특별 문진 세트에 연결된 special_answer 먼저 삭제
+//        specialAnswerRepo.deleteBySurveySetId(setId);
+
+        set.getGroupSurveys().clear();
+        set.getSpecialSurveys().clear();
+
+        surveySetRepo.delete(set);
+    }
+
+    @Transactional
+    public SurveySetDTO getSurveySet(AgeGroup age, SurveyCategory category) {
+        String title = age.getDisplayName() + " " + category.getDisplayName();
+        SurveySet surveySet = surveySetRepo.findBySetTitleAndType(title, "SPECIAL");
+
+        List<SpecialSurvey> specialSurveys = surveySet.getSpecialSurveys();
+        List<SpecialSurveyResponseDto> specialSurveyResponseDtos = new ArrayList<>();
+        for(SpecialSurvey specialSurvey : specialSurveys) {
+            specialSurveyResponseDtos.add(new SpecialSurveyResponseDto(specialSurvey));
+        }
+
+        SurveySetDTO surveySetDTO = new SurveySetDTO();
+        surveySetDTO.setSetId(surveySet.getSetId());
+        surveySetDTO.setSurveyList(specialSurveyResponseDtos);
+        return surveySetDTO;
+
     }
 }

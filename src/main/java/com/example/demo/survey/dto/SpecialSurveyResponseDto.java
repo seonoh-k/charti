@@ -1,14 +1,10 @@
 package com.example.demo.survey.dto;
 
 import com.example.demo.survey.entity.SpecialSurvey;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.*;
 
 @Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 public class SpecialSurveyResponseDto {
     private Long id;
     private String question;
@@ -40,5 +36,15 @@ public class SpecialSurveyResponseDto {
             dto.setSurveySetId(e.getSurveySets().iterator().next().getSetId());
         }
         return dto;
+    }
+
+    public SpecialSurveyResponseDto(SpecialSurvey survey) {
+        this.id = survey.getId();
+        this.question = survey.getQuestion();
+        this.answer1 = survey.getAnswer1();
+        this.answer2 = survey.getAnswer2();
+        this.answer3 = survey.getAnswer3();
+        this.answer4 = survey.getAnswer4();
+        this.answer5 = survey.getAnswer5();
     }
 }

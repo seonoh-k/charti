@@ -6,7 +6,6 @@ import com.example.demo.enums.SurveyCategory;
 import com.example.demo.survey.dto.SpecialSurveyRequestDto;
 import com.example.demo.survey.dto.SpecialSurveyResponseDto;
 import com.example.demo.survey.dto.SurveySetSubmitRequestDto;
-import com.example.demo.survey.entity.GroupSurvey;
 import com.example.demo.survey.entity.SpecialSurvey;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.SpecialSurveyRepository;
@@ -22,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +36,7 @@ public class SpecialSurveyService {
     private final ChildRepository childRepository;
     private final RiskCategoryRepository riskCategoryRepository;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Map<String,Object> evaluate(SpecialSurveyRequestDto dto) {
         AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
         SurveyCategory sc = SurveyCategory.fromValue(dto.getCategory());
@@ -144,7 +142,7 @@ public class SpecialSurveyService {
     }
 
 
-    @jakarta.transaction.Transactional
+    @Transactional
     public Map<String,Object> evaluate2(SurveySetSubmitRequestDto dto) {
         AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
         SurveyCategory sc = SurveyCategory.fromValue(dto.getCategory());

@@ -56,6 +56,17 @@
             </select>
         </div>
 
+        <div th:if="${form.type == 'GROUP'}" class="mb-4">
+            <label class="block mb-1">대상 그룹</label>
+            <select id="targetFilter" th:field="*{targetGroup}"
+                    class="border rounded px-2 py-1">
+                <option th:each="tg : ${targetOptions}"
+                        th:value="${tg.name()}"
+                        th:text="${tg.displayName}">
+                </option>
+            </select>
+        </div>
+
         <!-- Survey 체크박스 리스트 (JS로 비동기 로드) -->
         <div id="surveyContainer"
              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-auto border rounded p-2">
@@ -100,44 +111,44 @@
     <!-- 2) 실제 비동기 필터링 및 체크 상태 반영 -->
     <script th:inline="javascript">
         /*<![CDATA[*/
-        document.addEventListener('DOMContentLoaded', function () {
-          const surveyContainer = document.getElementById('surveyContainer');
+          document.addEventListener('DOMContentLoaded', function () {
+            const surveyContainer = document.getElementById('surveyContainer');
+            const ageFilter       = document.getElementById('ageFilter');
+            const categoryFilter  = document.getElementById('categoryFilter');
+            const targetFilter    = document.getElementById('targetFilter');  // ← 추가
 
-          function loadSurveys() {
-            const age      = document.getElementById('ageFilter').value;
-            const category = document.getElementById('categoryFilter').value;
-
-            // ★ URL을 문자열로 묶어서 fetch 호출
-            fetch(`/api/surveys?type=${type}&age=${age}&category=${category}`)
-              .then(res => res.json())
-              .then(data => {
-                surveyContainer.innerHTML = '';
-                data.forEach(s => {
-                  const isChecked = selectedIds.includes(s.id) ? 'checked' : '';
-                  const div = document.createElement('div');
-                  div.className = 'flex items-center';
-                  // ★ innerHTML 도 백틱 템플릿 리터럴로
-                  div.innerHTML = `
-                    <input type="checkbox" name="surveyIds"
-                           value="${s.id}" class="mr-2" ${isChecked}/>
-                    <span>${s.question}
-                      <span class="text-xs text-gray-500">
-                        [${s.ageGroup} | ${s.category}]
-                      </span>
-                    </span>
-                  `;
-                  surveyContainer.appendChild(div);
+            function loadSurveys() {
+              const age   = ageFilter.value;
+              const cat   = categoryFilter.value;
+              const tgt   = targetFilter ? targetFilter.value : '';
+              fetch(`/api/surveys?type=${type}&age=${age}&category=${cat}&targetGroup=${tgt}`)
+                .then(res => res.json())
+                .then(data => {
+                  surveyContainer.innerHTML = '';
+                  data.forEach(s => {
+                    const isChecked = selectedIds.includes(s.id) ? 'checked' : '';
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center';
+                    div.innerHTML = `
+                      <input type="checkbox" name="surveyIds" value="${s.id}"
+                             class="mr-2" ${isChecked}/>
+                      <span>${s.question}
+                        <span class="text-xs text-gray-500">
+                          [${s.ageGroup}|${s.category}]
+                        </span>
+                      </span>`;
+                    surveyContainer.appendChild(div);
+                  });
                 });
-              })
-              .catch(err => {
-                console.error('문진 로드 오류', err);
-              });
-          }
+            }
 
-          document.getElementById('ageFilter').addEventListener('change', loadSurveys);
-          document.getElementById('categoryFilter').addEventListener('change', loadSurveys);
-          loadSurveys();
-        });
+            // 필터 변경 시 다시 로드
+            ageFilter.addEventListener('change', loadSurveys);
+            categoryFilter.addEventListener('change', loadSurveys);
+            if (targetFilter) targetFilter.addEventListener('change', loadSurveys);
+
+            loadSurveys();
+          });
         /*]]>*/
     </script>
 </th:block>

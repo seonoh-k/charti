@@ -79,6 +79,7 @@
             <th class="px-2 py-1 border">연령대</th>
             <th class="px-2 py-1 border">카테고리</th>
             <th class="px-2 py-1 border">종류</th>
+            <th class="px-2 py-1 border">대상 그룹</th>
             <th class="px-2 py-1 border">작성일</th>
         </tr>
         </thead>
@@ -103,6 +104,9 @@
             </td>
             <td class="px-2 py-1 border"
                 th:text="${set.type=='GROUP'? '그룹문진':'특별문진'}">
+            </td>
+            <td class="px-2 py-1 border"
+                th:text="${set.targetGroup != null ? set.targetGroup.displayName : '-'}">
             </td>
             <td class="px-2 py-1 border"
                 th:text="${#temporals.format(set.createdAt,'yyyy.MM.dd')}">

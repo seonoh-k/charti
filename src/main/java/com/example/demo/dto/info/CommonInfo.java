@@ -2,6 +2,7 @@ package com.example.demo.dto.info;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 //{
@@ -17,9 +18,10 @@ public class CommonInfo {
     // 이메일 입니다.
     @NotBlank(message = "아이디는 필수 입력값입니다.")
     @Pattern(
-            regexp = "^\\S{4,30}$",
-            message = "4~30자, 공백 없이 입력해주세요."
+            regexp = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z]{2,}$",
+            message = "올바른 이메일 주소를 입력해주세요. (예: example@domain.com)"
     )
+    @Size(min=4, max=30, message = "아이디는 4~30자 이내로 입력해주세요.")
     private String username;
     private String uuid;
     @NotBlank(message = "비밀번호는 필수 입력값입니다.")
