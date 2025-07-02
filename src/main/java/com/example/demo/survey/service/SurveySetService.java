@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import com.example.demo.exception.SurveySetNotFoundException;
+import jakarta.persistence.criteria.Predicate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,6 +122,7 @@ public class SurveySetService {
         entity.setType(form.getType());
         entity.setAgeGroup(ag);
         entity.setCategory(ca);
+        entity.setTargetGroup(form.getTargetGroup());
 
         // 4) 연관관계 설정
         entity.getGroupSurveys().clear();
@@ -177,30 +179,29 @@ public class SurveySetService {
      * @param managerId 현재 로그인한 담당자 ID
      * @return 문진 세트 목록
      */
-//    public List<SurveySet> getSetsForManager(Long managerId) {
-//        Manager manager = managerRepo.findById(managerId)
-//                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저입니다."));
-//        TargetGroup targetGroup = manager.getGroup().getTargetGroup();
-//
-//        return surveySetRepo.findAllByTargetGroupForManager(targetGroup);
-//    }
     public List<SurveySet> getSetsForManager(Long managerId) {
         Manager manager = managerRepo.findById(managerId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저입니다."));
 
-        log.info("매니저 ID: {}", manager.getId());
-        log.info("소속 그룹 ID: {}", manager.getGroup() != null ? manager.getGroup().getId() : "null");
+        if (manager.getGroup() == null || manager.getGroup().getTargetGroup() == null) {
+            return new ArrayList<>();
+        }
+        TargetGroup targetGroup = manager.getGroup().getTargetGroup();
 
-        TargetGroup targetGroup = manager.getGroup() != null ? manager.getGroup().getTargetGroup() : null;
-        log.info("타겟 그룹: {}", targetGroup != null ? targetGroup.getDisplayName() : "null");
-
-        List<SurveySet> result = surveySetRepo.findByType("GROUP");
-        log.info("조회된 세트 수: {}", result.size());
-
-        return result;
+        return surveySetRepo.findAllByTargetGroupForManager(targetGroup);
     }
-
-
+//    public List<SurveySet> getSetsForManager(Long managerId) {
+//        Manager manager = managerRepo.findById(managerId)
+//                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저입니다."));
+//
+//        if (manager.getGroup() == null || manager.getGroup().getTargetGroup() == null) {
+//            return new ArrayList<>();
+//        }
+//
+//        TargetGroup targetGroup = manager.getGroup().getTargetGroup();
+//
+//        return surveySetRepo.findAllByTargetGroupAndType(targetGroup, "GROUP");
+//    }
 
     /**
      * [문진 세트 ID로 단일 조회]
@@ -212,6 +213,42 @@ public class SurveySetService {
     public SurveySet getById(Long setId) {
         return surveySetRepo.findById(setId)
                 .orElseThrow(() -> new EntityNotFoundException("설문 세트 없음: " + setId));
+    }
+
+
+    /**
+     *  동적 조건에 따라 문진 세트를 조회하는 메소드
+     * - 관리자 알림 발송 시, 필터 조건에 맞는 세트 목록을 실시간으로 조회하기 위해 사용됩니다.
+     */
+    public List<SurveySet> findByCriteria(String type, AgeGroup ageGroup, TargetGroup targetGroup, SurveyCategory category) {
+
+        // 1. Specification: '검색 조건' 자체를 객체로 만드는 방법입니다.
+        Specification<SurveySet> spec = (root, query, criteriaBuilder) -> {
+
+            // 2. 여러 조건들을 담을 리스트를 준비합니다.
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 3. 각 파라미터 값이 존재할 때만, 검색 조건을 리스트에 추가합니다.
+            if (StringUtils.hasText(type)) {
+                predicates.add(criteriaBuilder.equal(root.get("type"), type));
+            }
+            if (ageGroup != null) {
+                predicates.add(criteriaBuilder.equal(root.get("ageGroup"), ageGroup));
+            }
+            if (targetGroup != null) {
+                // SurveySet 엔티티에 targetGroup 필드가 추가되어 있어야 합니다.
+                predicates.add(criteriaBuilder.equal(root.get("targetGroup"), targetGroup));
+            }
+            if (category != null) {
+                predicates.add(criteriaBuilder.equal(root.get("category"), category));
+            }
+
+            // 4. 모든 조건들을 'AND'로 묶어서 최종 쿼리를 생성합니다.
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // 5. 완성된 조건(spec)으로 JpaRepository에 조회 요청을 보냅니다.
+        return surveySetRepo.findAll(spec);
     }
 
     /** 문진 세트 삭제 */
@@ -246,5 +283,6 @@ public class SurveySetService {
         surveySetDTO.setSetId(surveySet.getSetId());
         surveySetDTO.setSurveyList(specialSurveyResponseDtos);
         return surveySetDTO;
+
     }
 }

@@ -268,4 +268,31 @@ public class GroupSurveyService {
     public GroupSurvey findById(Long id) {
         return groupSurveyRepository.findById(id).orElse(null);
     }
+
+    /**
+     * 연령·카테고리·TargetGroup 조건으로 페이징 조회
+     */
+    public Page<GroupSurvey> findByFilters(
+            AgeGroup ageGroup,
+            SurveyCategory category,
+            TargetGroup targetGroup,
+            Pageable pageable
+    ) {
+        if (ageGroup == AgeGroup.ALL && category == SurveyCategory.ALL) {
+            return groupSurveyRepository
+                    .findByTargetGroupAndDeletedFalse(targetGroup, pageable);
+        }
+        if (ageGroup != AgeGroup.ALL && category == SurveyCategory.ALL) {
+            return groupSurveyRepository
+                    .findByAgeGroupAndTargetGroupAndDeletedFalse(ageGroup, targetGroup, pageable);
+        }
+        if (ageGroup == AgeGroup.ALL && category != SurveyCategory.ALL) {
+            return groupSurveyRepository
+                    .findByCategoryAndTargetGroupAndDeletedFalse(category, targetGroup, pageable);
+        }
+        // 둘 다 필터
+        return groupSurveyRepository
+                .findByAgeGroupAndCategoryAndTargetGroupAndDeletedFalse(
+                        ageGroup, category, targetGroup, pageable);
+    }
 }

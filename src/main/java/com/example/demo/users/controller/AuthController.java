@@ -109,8 +109,8 @@ public class AuthController {
 
         } catch (IllegalStateException e) {
 
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ApiResponse(AuthStatus.USER_DELETED));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse(AuthStatus.USER_DELETED));
 
         }catch (JwtTokenNotFoundException jwtTokenNotFoundException){
 

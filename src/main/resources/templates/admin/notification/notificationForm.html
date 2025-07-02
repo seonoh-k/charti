@@ -7,108 +7,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Charti - 알림 발송</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
-          rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
-        .content-area {
-            display: none; /* 기본적으로 내용을 숨김 */
-        }
-        .content-area.open {
-            display: block; /* 펼쳐질 때 보이도록 변경 */
-        }
-        .chevron-icon.rotate-180 {
-            transform: rotate(180deg);
-            transition: transform 0.3s ease-in-out;
-        }
-        .chevron-icon {
-            transition: transform 0.3s ease-in-out;
-        }
+        .content-area { display: none; }
+        .content-area.open { display: block; }
+        .chevron-icon { transition: transform 0.3s ease-in-out; }
+        .chevron-icon.rotate-180 { transform: rotate(180deg); }
     </style>
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
         <h1 class="text-2xl font-bold mb-6">📢 알림 발송 (관리자)</h1>
 
-        <!-- 성공/실패 메시지 표시 영역 -->
         <div th:if="${message}" class="mb-4 p-3 rounded text-sm"
-             th:classappend="${message.startsWith('❌')} ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'"
+             th:classappend="${message.startsWith('❌') ? 'bg-red-100 text-red-700' : (message.startsWith('ℹ️') ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700')}"
              th:text="${message}">
         </div>
 
         <form th:action="@{/admin/notification/send}" method="post" id="notificationForm">
-            <!-- 1) 수신 대상 -->
             <div class="mb-4">
                 <label for="target" class="block font-semibold mb-1">수신 대상</label>
                 <select name="target" id="target" class="w-full border p-2 rounded">
-                    <option value="ALL">전체</option>
-                    <option value="SPECIAL_RISK">위험군 속한 자녀 대상자</option>
-                    <!-- 그룹 대상자 옵션 -->
+                    <option value="ALL">전체 (필터링)</option>
+                    <option value="SPECIAL_RISK">위험군 (문진 발송)</option>
                     <option th:each="tg : ${targetGroups}"
                             th:value="${'GROUP_' + tg.name()}"
-                            th:text="${tg.displayName + ' 그룹 대상자'}">
-                    </option>
+                            th:text="${tg.displayName + ' 그룹 (문진 발송)'}"></option>
                 </select>
             </div>
 
-            <!-- 2) 연령대 -->
-            <div class="mb-4" id="ageGroupWrapper">
-                <label for="ageGroup" class="block font-semibold mb-1">연령대</label>
-                <select name="ageGroup" id="ageGroup" class="w-full border p-2 rounded">
-                    <option value="">전체</option>
-                    <option th:each="a : ${ageGroups}"
-                            th:value="${a}"
-                            th:text="${a.displayName}"></option>
+            <div id="filterSection" style="display: none;">
+                <div class="mb-4" id="ageGroupWrapper">
+                    <label for="ageGroup" class="block font-semibold mb-1">연령대 필터</label>
+                    <select name="ageGroup" id="ageGroup" class="w-full border p-2 rounded">
+                        <option value="">전체</option>
+                        <option th:each="a : ${ageGroups}" th:value="${a.name()}" th:text="${a.displayName}"></option>
+                    </select>
+                </div>
+                <div class="mb-4" id="surveyCategoryWrapper" style="display: none;">
+                    <label for="surveyCategory" class="block font-semibold mb-1">위험 카테고리 필터</label>
+                    <select name="surveyCategory" id="surveyCategory" class="w-full border p-2 rounded">
+                        <option value="">전체</option>
+                        <option th:each="sc : ${surveyCategories}" th:value="${sc.name()}" th:text="${sc.displayName}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-4" id="surveySetWrapper" style="display: none;">
+                <label for="surveySet" class="block font-semibold mb-1">문진 세트 선택</label>
+                <select name="setId" id="surveySet" class="w-full border p-2 rounded">
+                    <option value="">-- 위 조건을 먼저 선택해주세요 --</option>
                 </select>
             </div>
 
-            <!-- 3) 카테고리 -->
-            <div class="mb-4" id="categoryWrapper">
-                <label for="category" class="block font-semibold mb-1">카테고리</label>
-                <select name="category" id="category" class="w-full border p-2 rounded">
-                    <option value="">전체</option>
-                    <option th:each="c : ${categories}"
-                            th:value="${c.name()}"
-                            th:text="${c.label}"></option>
-                </select>
+            <div id="messageContentWrapper" style="display: none;">
+                <div class="mb-4" id="fcmCategoryWrapper">
+                    <label for="fcmCategory" class="block font-semibold mb-1">알림 카테고리</label>
+                    <select name="fcmCategory" id="fcmCategory" class="w-full border p-2 rounded">
+                        <option value="">-- 카테고리 선택 --</option>
+                        <option th:each="c : ${fcmCategories}" th:value="${c.name()}" th:text="${c.label}"></option>
+                    </select>
+                    <input type="hidden" name="fcmCategory" id="fcmCategoryHidden">
+                </div>
+                <div class="mb-4" id="titleWrapper">
+                    <label for="title" class="block font-semibold mb-1">제목</label>
+                    <input type="text" name="title" id="title" class="w-full border p-2 rounded">
+                </div>
+                <div class="mb-6" id="bodyWrapper">
+                    <label for="body" class="block font-semibold mb-1">내용</label>
+                    <textarea name="body" id="body" rows="4" class="w-full border p-2 rounded"></textarea>
+                </div>
             </div>
 
-            <!-- 4) 제목 -->
-            <div class="mb-4" id="titleWrapper">
-                <label for="title" class="block font-semibold mb-1">제목</label>
-                <input type="text" name="title" id="title"
-                       class="w-full border p-2 rounded" required>
-            </div>
-
-            <!-- 5) 내용 -->
-            <div class="mb-6" id="bodyWrapper">
-                <label for="body" class="block font-semibold mb-1">내용</label>
-                <textarea name="body" id="body" rows="4"
-                          class="w-full border p-2 rounded" required></textarea>
-            </div>
-
-            <button type="submit"
-                    class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-                    onclick="this.disabled=true; this.innerText='발송 중...'; document.getElementById('notificationForm').submit();">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
                 알림 발송
             </button>
         </form>
 
-        <!-- 발송 결과 표시 영역 -->
         <div th:if="${sendResult}" class="mt-8 border-t pt-6">
             <h2 class="text-xl font-bold mb-4">🚀 발송 결과</h2>
-
-            <!-- 요약 카운트 (항상 표시) -->
             <div class="p-4 border rounded bg-gray-50 mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <p class="font-semibold text-gray-800">✅ 성공: <span class="text-green-600 font-bold" th:text="${sendResult.successCount}">0</span> 명</p>
-                <p class="font-semibold text-gray-800">❌ 실패: <span class="text-red-600 font-bold" th:text="${sendResult.failedRecipientNames.size()}">0</span> 명</p>
+                <p class="font-semibold text-gray-800">✅ 성공: <span class="text-green-600 font-bold" th:text="${sendResult.successCount}">0</span> 건</p>
+                <p class="font-semibold text-gray-800">❌ 실패: <span class="text-red-600 font-bold" th:text="${sendResult.failedRecipients.size()}">0</span> 건</p>
             </div>
 
-            <!-- [조건부] 상세 명단 영역 (특정 그룹 대상일 때만 표시) -->
-            <div th:if="${sendResult.targetType == 'RISK' || sendResult.targetType == 'GROUP'}">
-                <!-- 성공 내역 아코디언 -->
+            <div th:if="${sendResult.targetType == 'SPECIAL_RISK' || sendResult.targetType == 'GROUP'}">
                 <div id="success-accordion" class="border rounded mb-3">
                     <div class="accordion-header cursor-pointer bg-gray-100 p-3 flex justify-between items-center hover:bg-gray-200 transition">
                         <span class="font-semibold text-gray-700">성공 내역 확인하기</span>
@@ -118,11 +103,11 @@
                         <ul class="data-list list-disc pl-5 space-y-2 text-gray-600"></ul>
                         <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
                         <div class="hidden-data" style="display:none;">
-                            <span th:each="name : ${sendResult.successfulRecipientNames}" th:text="${name}"></span>
+                            <span th:each="res : ${sendResult.successfulRecipients}"
+                                  th:text="${res.parentName + ' 님 [자녀: ' + #strings.listJoin(res.childNames, ', ') + ']'}"></span>
                         </div>
                     </div>
                 </div>
-                <!-- 실패 내역 아코디언 -->
                 <div id="failure-accordion" class="border rounded border-red-200">
                     <div class="accordion-header cursor-pointer bg-red-50 p-3 flex justify-between items-center hover:bg-red-100 transition">
                         <span class="font-semibold text-red-700">실패 내역 확인하기</span>
@@ -132,23 +117,22 @@
                         <ul class="data-list list-disc pl-5 space-y-2 text-red-600"></ul>
                         <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
                         <div class="hidden-data" style="display:none;">
-                            <span th:each="name : ${sendResult.failedRecipientNames}" th:text="${name}"></span>
+                            <span th:each="res : ${sendResult.failedRecipients}"
+                                  th:text="${res.parentName + ' 님 [자녀: ' + #strings.listJoin(res.childNames, ', ') + ']'}"></span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- [조건부] 전체 대상 발송 시 안내 메시지 -->
-            <div th:if="${sendResult.targetType == 'ALL' || sendResult.targetType == 'FILTER'}">
+            <div th:if="${sendResult.targetType == 'ALL'}">
                 <p class="p-3 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded">
-                    ※ '전체' 또는 '필터' 대상 발송의 경우, 시스템 부하를 고려하여 상세 명단은 제공되지 않습니다.
+                    ※ '전체' 대상 발송의 경우, 시스템 부하를 고려하여 상세 명단은 제공되지 않습니다.
                 </p>
             </div>
         </div>
     </div>
 
     <script>
-        // 순수 자바스크립트로 아코디언과 페이지네이션 기능 구현
         function setupAccordionAndPagination(containerId, suffix = '') {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -158,7 +142,6 @@
             const chevronIcon = container.querySelector('.chevron-icon');
             const dataList = container.querySelector('.data-list');
             const paginationControls = container.querySelector('.pagination-controls');
-
             const hiddenDataContainer = container.querySelector('.hidden-data');
             const dataSpans = hiddenDataContainer.querySelectorAll('span');
             const data = Array.from(dataSpans).map(span => span.textContent);
@@ -217,53 +200,136 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 관리자 알림 발송 폼 UI 제어 로직
-            const targetSelect    = document.getElementById("target");
-            const ageGroupWrapper = document.getElementById("ageGroupWrapper");
-            const categoryWrapper = document.getElementById("categoryWrapper");
-            const titleWrapper    = document.getElementById("titleWrapper");
-            const bodyWrapper     = document.getElementById("bodyWrapper");
-            const ageGroupSelect  = document.getElementById("ageGroup");
-            const categorySelect  = document.getElementById("category");
-            const titleInput      = document.getElementById("title");
-            const bodyTextarea    = document.getElementById("body");
+            const targetSelect = document.getElementById('target');
+            const ageGroupSelect = document.getElementById('ageGroup');
+            const surveyCategorySelect = document.getElementById('surveyCategory');
+            const surveySetSelect = document.getElementById('surveySet');
+            const fcmCategorySelect = document.getElementById('fcmCategory');
+            const titleInput = document.getElementById('title');
+            const bodyTextarea = document.getElementById('body');
 
-            const titles = { DAILY:"오늘의 문진 안내", SPECIAL:"특별 문진 요청", NOTICE:"공지사항 안내", SYSTEM:"시스템 알림" };
-            const bodies = { DAILY:"오늘의 데일리 문진을 진행해주세요! 📋", SPECIAL:"아이의 건강 상태가 평소와 다르다면 특별 문진을 작성해주세요.", NOTICE:"Charti의 새로운 소식을 알려드립니다! 📢", SYSTEM:"시스템 점검 안내: 서비스 이용에 참고 바랍니다." };
+            const filterSection = document.getElementById('filterSection');
+            const surveyCategoryWrapper = document.getElementById('surveyCategoryWrapper');
+            const surveySetWrapper = document.getElementById('surveySetWrapper');
+            const messageContentWrapper = document.getElementById('messageContentWrapper');
 
-            categorySelect.addEventListener("change", () => {
-                const sel = categorySelect.value;
-                titleInput.value = titles[sel]||"";
-                bodyTextarea.value = bodies[sel]||"";
+            const defaultTitles = {
+                DAILY: "오늘의 데일리 문진 안내", SPECIAL: "특별 문진 요청", RECORD: "기록 문진 안내",
+                GROUP: "그룹 문진 안내", NOTICE: "공지사항 안내", SYSTEM: "시스템 점검 안내"
+            };
+            const defaultBodies = {
+                DAILY: "오늘의 데일리 문진을 진행해주세요! 📋", SPECIAL: "아이의 건강 상태가 평소와 다르다면 특별 문진을 작성해주세요.",
+                RECORD: "꾸준한 기록으로 아이의 성장 과정을 남겨보세요!", GROUP: "소속 그룹의 새로운 문진을 확인해주세요.",
+                NOTICE: "Charti의 새로운 소식을 알려드립니다! 📢", SYSTEM: "시스템 점검 안내: 서비스 이용에 참고 바랍니다."
+            };
+
+            fcmCategorySelect.addEventListener('change', () => {
+                if (targetSelect.value === 'ALL') {
+                    const selectedCategory = fcmCategorySelect.value;
+                    titleInput.value = defaultTitles[selectedCategory] || "";
+                    bodyTextarea.value = defaultBodies[selectedCategory] || "";
+                }
             });
 
-            function onTargetChange() {
-                const t = targetSelect.value;
-                if (t === 'SPECIAL_RISK' || t.startsWith('GROUP_')) {
-                  ageGroupWrapper.style.display    = 'none';
-                  categoryWrapper.style.display    = 'none';
-                  titleWrapper.style.display       = 'none';
-                  bodyWrapper.style.display        = 'none';
-                  ageGroupSelect.disabled          = true;
-                  categorySelect.disabled          = true;
-                  titleInput.required             = false;
-                  bodyTextarea.required           = false;
+            async function fetchAndRenderSurveySets() {
+                const target = targetSelect.value;
+                const ageGroup = ageGroupSelect.value;
+                const surveyCategory = surveyCategorySelect.value;
+
+                let type = '';
+                let targetGroup = '';
+
+                if (target === 'SPECIAL_RISK') {
+                    type = 'SPECIAL';
+                } else if (target.startsWith('GROUP_')) {
+                    type = 'GROUP';
+                    targetGroup = target.substring('GROUP_'.length);
                 } else {
-                  ageGroupWrapper.style.display    = '';
-                  categoryWrapper.style.display    = '';
-                  titleWrapper.style.display       = '';
-                  bodyWrapper.style.display        = '';
-                  ageGroupSelect.disabled          = false;
-                  categorySelect.disabled          = false;
-                  titleInput.required             = true;
-                  bodyTextarea.required           = true;
+                    return;
+                }
+
+                surveySetWrapper.style.display = 'block';
+                surveySetSelect.innerHTML = '<option value="">불러오는 중...</option>';
+
+                const url = `/api/admin/survey-sets?type=${type}&ageGroup=${ageGroup}&targetGroup=${targetGroup}&category=${surveyCategory}`;
+                try {
+                    const response = await fetch(url);
+                    const sets = await response.json();
+
+                    surveySetSelect.innerHTML = '<option value="">-- 문진 세트를 선택하세요 --</option>';
+                    if (sets.length > 0) {
+                        sets.forEach(set => {
+                            const option = document.createElement('option');
+                            option.value = set.setId;
+                            option.textContent = set.setTitle;
+                            surveySetSelect.appendChild(option);
+                        });
+                    } else {
+                        surveySetSelect.innerHTML = '<option value="">-- 조건에 맞는 세트가 없습니다 --</option>';
+                    }
+                } catch (error) {
+                    console.error("Error fetching survey sets:", error);
+                    alert('문진 세트 목록을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+                    surveySetSelect.innerHTML = '<option value="">-- 조회 중 오류 발생 --</option>';
                 }
             }
 
-            targetSelect.addEventListener("change", onTargetChange);
-            onTargetChange();
+            surveySetSelect.addEventListener('change', () => {
+                const selectedOption = surveySetSelect.options[surveySetSelect.selectedIndex];
+                if (surveySetSelect.value) {
+                    messageContentWrapper.style.display = 'block';
+                    titleInput.value = selectedOption.textContent;
+                    bodyTextarea.value = `[${selectedOption.textContent}] 문진을 확인하고 답변을 부탁드립니다.`;
 
-            // 결과 아코디언 설정
+                    const targetValue = targetSelect.value;
+                    if (targetValue === 'SPECIAL_RISK') fcmCategorySelect.value = 'SPECIAL';
+                    else if (targetValue.startsWith('GROUP_')) fcmCategorySelect.value = 'GROUP';
+                } else {
+                    messageContentWrapper.style.display = 'none';
+                }
+            });
+
+            function updateFormVisibility() {
+                const target = targetSelect.value;
+                const fcmCategoryHiddenInput = document.getElementById('fcmCategoryHidden');
+
+                filterSection.style.display = 'none';
+                surveyCategoryWrapper.style.display = 'none';
+                surveySetWrapper.style.display = 'none';
+                messageContentWrapper.style.display = 'none';
+                titleInput.value = '';
+                bodyTextarea.value = '';
+                fcmCategorySelect.disabled = false;
+                fcmCategoryHiddenInput.value = '';
+
+                if (target === 'ALL') {
+                    filterSection.style.display = 'block';
+                    messageContentWrapper.style.display = 'block';
+                    titleInput.required = true;
+                    bodyTextarea.required = true;
+                    fcmCategorySelect.required = true;
+                } else if (target === 'SPECIAL_RISK') {
+                    filterSection.style.display = 'block';
+                    surveyCategoryWrapper.style.display = 'block';
+                    fcmCategorySelect.value = 'SPECIAL';
+                    fcmCategorySelect.disabled = true;
+                    fcmCategoryHiddenInput.value = 'SPECIAL';
+                    fetchAndRenderSurveySets();
+                } else if (target.startsWith('GROUP_')) {
+                    filterSection.style.display = 'block';
+                    fcmCategorySelect.value = 'GROUP';
+                    fcmCategorySelect.disabled = true;
+                    fcmCategoryHiddenInput.value = 'GROUP';
+                    fetchAndRenderSurveySets();
+                }
+            }
+
+            targetSelect.addEventListener('change', updateFormVisibility);
+            ageGroupSelect.addEventListener('change', fetchAndRenderSurveySets);
+            surveyCategorySelect.addEventListener('change', fetchAndRenderSurveySets);
+
+            updateFormVisibility();
+
             if (document.getElementById('success-accordion')) {
                 setupAccordionAndPagination('success-accordion', ' 님');
             }

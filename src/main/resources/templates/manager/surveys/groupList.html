@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin_layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/managerLayout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
     <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
         <h1 class="text-2xl font-semibold mb-4">담당자 - 그룹 문진 목록</h1>
 
-        <form th:action="@{/admin/manager/surveys/group}" method="get" class="flex gap-4 items-center mb-6">
+        <form th:action="@{/manager/surveys/group}" method="get" class="flex gap-4 items-center mb-6">
             <label class="flex items-center gap-2">
                 <span>연령대:</span>
                 <select name="ageGroup" class="border p-2 rounded">
@@ -48,7 +48,7 @@
                 검색
             </button>
 
-            <a th:href="@{/admin/manager/surveys/group/new}"
+            <a th:href="@{/manager/surveys/group/new}"
                class="bg-green-600 text-white px-4 py-1 rounded">
                 그룹 문진 추가
             </a>
@@ -65,14 +65,21 @@
             </tr>
             </thead>
             <tbody>
+
+            <tr th:if="${surveys.totalElements == 0}">
+                <td class="border p-2 text-center" colspan="4">
+                    검색 결과가 없습니다.
+                </td>
+            </tr>
+
             <tr th:each="s : ${surveys}" class="hover:bg-gray-50">
                 <td class="border p-2" th:text="${s.ageGroup.displayName}"></td>
                 <td class="border p-2" th:text="${s.category.displayName}"></td>
                 <td class="border p-2" th:text="${s.question}"></td>
                 <td class="border p-2">
-                    <a th:href="@{/admin/manager/surveys/group/{id}/edit(id=${s.id})}"
+                    <a th:href="@{/manager/surveys/group/{id}/edit(id=${s.id})}"
                        class="text-blue-600 mr-3 hover:underline">수정</a>
-                    <form th:action="@{/admin/manager/surveys/group/{id}/delete(id=${s.id})}"
+                    <form th:action="@{/manager/surveys/group/{id}/delete(id=${s.id})}"
                           method="post" class="inline"
                           onsubmit="return confirm('삭제하시겠습니까?');">
                         <button type="submit" class="text-red-600 hover:underline">
@@ -87,7 +94,7 @@
         <!-- 페이징 내비 -->
         <div class="mt-4 flex justify-center gap-2">
             <a th:if="${surveys.hasPrevious()}"
-               th:href="@{/admin/manager/surveys/group(
+               th:href="@{/manager/surveys/group(
                      ageGroup=${ageGroup},
                      category=${category},
                      page=${surveys.number-1})}"
@@ -96,7 +103,7 @@
             <span th:each="i : ${#numbers.sequence(0, surveys.totalPages-1)}"
                   class="px-2"
                   th:classappend="${i == surveys.number} ? 'font-bold underline'">
-                <a th:href="@{/admin/manager/surveys/group(
+                <a th:href="@{/manager/surveys/group(
                              ageGroup=${ageGroup},
                              category=${category},
                              page=${i})}"
@@ -104,7 +111,7 @@
             </span>
 
             <a th:if="${surveys.hasNext()}"
-               th:href="@{/admin/manager/surveys/group(
+               th:href="@{/manager/surveys/group(
                      ageGroup=${ageGroup},
                      category=${category},
                      page=${surveys.number+1})}"

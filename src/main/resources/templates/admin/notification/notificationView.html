@@ -76,16 +76,19 @@
                                 <input type="hidden" class="history-data" th:value="${history.body}">
                                 <p class="text-gray-900 whitespace-no-wrap" th:text="${#temporals.format(history.sentAt, 'yyyy-MM-dd HH:mm')}"></p>
                             </td>
+<!--                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">-->
+<!--                                <th:block th:if="${history.sender == null}">-->
+<!--                                    <span class="relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight">-->
+<!--                                        <span aria-hidden class="absolute inset-0 bg-green-200 opacity-50 rounded-full"></span>-->
+<!--                                        <span class="relative">시스템</span>-->
+<!--                                    </span>-->
+<!--                                </th:block>-->
+<!--                                <th:block th:unless="${history.sender == null}">-->
+<!--                                    <p class="text-gray-900 whitespace-no-wrap" th:text="${history.sender.name}"></p>-->
+<!--                                </th:block>-->
+<!--                            </td>-->
                             <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                <th:block th:if="${history.sender == null}">
-                                    <span class="relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight">
-                                        <span aria-hidden class="absolute inset-0 bg-green-200 opacity-50 rounded-full"></span>
-                                        <span class="relative">시스템</span>
-                                    </span>
-                                </th:block>
-                                <th:block th:unless="${history.sender == null}">
-                                    <p class="text-gray-900 whitespace-no-wrap" th:text="${history.sender.name}"></p>
-                                </th:block>
+                                <span th:text="${history.senderName}" class="text-gray-800"></span>
                             </td>
                             <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap font-bold" th:text="${history.category.label}"></p>
@@ -93,14 +96,7 @@
                             </td>
                             <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                 <!-- targetCondition 파싱 후 읽기 쉬운 텍스트로 매핑 -->
-                                <th:block th:if="${history.targetCondition != null}" th:switch="${history.targetCondition.split('=')[0]}">
-                                    <span th:case="'riskGroup'" class="text-gray-800">위험군 자녀 대상</span>
-                                    <span th:case="'group'" class="text-gray-800">특정 그룹 대상</span>
-                                    <span th:case="'groupId'" class="text-gray-800">담당자 그룹 대상</span>
-                                    <span th:case="'ageGroup'" class="text-gray-800">연령대 필터</span>
-                                    <span th:case="'userId'" class="text-gray-800">특정 사용자</span>
-                                    <span th:case="*" class="text-gray-600 italic" th:text="${history.targetCondition}"></span>
-                                </th:block>
+                                <span th:text="${history.displayCondition}" class="text-gray-800"></span>
                             </td>
                             <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap" th:text="${history.targetCount + ' 명 중 ' + history.successCount + ' 명 성공'}"></p><br>

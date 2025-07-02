@@ -21,13 +21,30 @@
         <!-- 1) 자녀 선택 -->
         <label for="childSelect" class="block mb-2 font-semibold">자녀 선택:</label>
         <select id="childSelect" class="border p-2 rounded mb-4">
-            <option value="">-- 자녀를 선택하세요 --</option>
+
+            <!-- 자녀가 한 명도 없으면 -->
+            <option th:if="${children.empty}"
+                    value=""
+                    disabled
+                    selected>
+                등록된 자녀가 없습니다.
+            </option>
+
+            <!-- 자녀가 있으면 -->
+            <option th:if="${!children.empty}"
+                    value=""
+                    th:selected="${selectedChildId == null}">
+                -- 자녀를 선택하세요 --
+            </option>
+
             <option th:each="c : ${children}"
                     th:value="${c.id}"
                     th:selected="${c.id == selectedChildId}"
                     th:text="${c.name + ' (' + c.ageDisplay + ')'}">
             </option>
         </select>
+
+        <a href="/member/child" class="text-sm text-blue-600 px-4 hover:underline">+ 자녀 추가하기</a>
 
         <!-- 2) 이미 작성했으면 이 메시지만 보이고, 나머지는 숨김 -->
         <div id="alreadyMessage"

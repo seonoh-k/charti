@@ -1,6 +1,9 @@
 package com.example.demo.users.repository;
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.enums.SurveyCategory;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.users.entity.Expert;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.entity.Role;
@@ -67,6 +70,37 @@ public interface UserRepository extends JpaRepository<Users,Long> {
     @Query("SELECT DISTINCT u FROM Users u JOIN u.member.children c WHERE c.group.id = :groupId AND u.deleted = false")
     List<Users> findParentsWithChildrenInGroup(@Param("groupId") Long groupId);
 
+    /**
+     *  위험군(riskGroup=true) 자녀를 한 명 이상 둔 모든 부모(Users)를 조회합니다.
+     * - 중복된 부모가 없도록 DISTINCT를 사용합니다.
+     */
+    @Query("SELECT DISTINCT c.parent.users FROM Child c WHERE c.riskGroup = true AND c.parent.users.deleted = false")
+    List<Users> findUsersByChildrenInRiskGroup();
+
+    /**
+     * 특정 기관 그룹(TargetGroup)에 속한 자녀를 한 명 이상 둔 모든 부모(Users)를 조회합니다.
+     */
+    @Query("SELECT DISTINCT c.parent.users FROM Child c WHERE c.group.targetGroup = :targetGroup AND c.parent.users.deleted = false")
+    List<Users> findUsersByChildrenInTargetGroup(@Param("targetGroup") TargetGroup targetGroup);
+
+//    /**
+//     * 특정 연령대(AgeGroup)의 자녀를 한 명 이상 둔 모든 부모(Users)를 조회합니다.
+//     */
+//    @Query("SELECT DISTINCT c.parent.users FROM Child c WHERE c.ageGroup = :ageGroup AND c.parent.users.deleted = false")
+//    List<Users> findUsersByChildrenInAgeGroup(@Param("ageGroup") AgeGroup ageGroup);
+
+    /**
+     * 특정 설문 카테고리(SurveyCategory)에서 위험 판정을 받은 자녀를
+     * 한 명 이상 둔 모든 부모(Users)를 조회합니다.
+     */
+    @Query("SELECT DISTINCT c.parent.users " +
+            "  FROM Child c JOIN c.riskCategories rc " +
+            " WHERE rc.surveyCategory = :surveyCategory " +
+            "   AND c.parent.users.deleted = false")
+    List<Users> findUsersByChildRiskCategory(@Param("surveyCategory") SurveyCategory surveyCategory);
+
+    // 삭제되지 않은 모든 사용자를 조회합니다.
+    List<Users> findAllByDeletedFalse();
     /**
      * Soft-Deleted 사용자를 복구합니다.
      * <br/>- deleted = false

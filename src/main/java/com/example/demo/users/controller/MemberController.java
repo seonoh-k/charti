@@ -175,10 +175,26 @@ public class MemberController {
         return "redirect:/member/child";
     }
     @PostMapping("/member/child/update")
-    public String updateChild(ChildUpdateRequest dto, RedirectAttributes ra) {
+    public String updateChild(
+            @ModelAttribute @Valid ChildUpdateRequest dto,
+            BindingResult bindingResult,
+            RedirectAttributes ra
+    ) {
+        if (bindingResult.hasErrors()) {
+            List<String> errorMessages = bindingResult.getFieldErrors().stream()
+                    .map(e -> e.getDefaultMessage())
+                    .toList();
+            ra.addFlashAttribute("error", errorMessages);
+            return "redirect:/member/child";
+        }
+        // 생일 오늘 이후 체크
+        if (dto.getBirthday() != null && dto.getBirthday().isAfter(LocalDate.now())) {
+            ra.addFlashAttribute("error", "생일은 오늘보다 이후일 수 없습니다.");
+            return "redirect:/member/child";
+        }
         childService.updateChild(dto.getId(), dto);
         ra.addFlashAttribute("msg", "수정 완료!");
-        return "redirect:/member/child"; // 목록 또는 상세로 리다이렉트
+        return "redirect:/member/child";
     }
     @PostMapping("/member/child/delete")
     public String deleteChild(@RequestParam Long id, RedirectAttributes ra) {

@@ -16,12 +16,30 @@
         <div class="mb-4">
             <label for="childSelect" class="font-semibold mr-2">자녀 선택:</label>
             <select id="childSelect" class="border p-2 rounded w-64">
-                <option value="" disabled selected>자녀를 선택하세요</option>
+
+                <!-- 자녀가 한 명도 없으면 -->
+                <option th:if="${children.empty}"
+                        value=""
+                        disabled
+                        selected>
+                    등록된 자녀가 없습니다.
+                </option>
+
+                <!-- 자녀가 있으면 -->
+                <option th:if="${!children.empty}"
+                        value=""
+                        th:selected="${selectedChildId == null}">
+                    -- 자녀를 선택하세요 --
+                </option>
+
                 <option th:each="c : ${children}"
                         th:value="${c.id}"
                         th:text="${c.name + ' (' + c.nickname + ')'}">
                 </option>
             </select>
+
+            <a href="/member/child" class="text-sm text-blue-600 px-4 hover:underline">+ 자녀 추가하기</a>
+
         </div>
 
         <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
@@ -136,7 +154,7 @@
               historyData = data;
               answerList.innerHTML = '';
               if (data.length === 0) {
-                answerList.innerHTML = `<p class="text-gray-500">답변 이력이 없습니다.</p>`;
+                answerList.innerHTML = `<p class="text-gray-500 text-center italic">답변 이력이 없습니다.</p>`;
                 return;
               }
               const byDate = {};

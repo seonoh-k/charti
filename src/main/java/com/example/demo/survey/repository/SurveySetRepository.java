@@ -30,18 +30,26 @@ public interface SurveySetRepository
      * @param targetGroup 담당자의 그룹 종류 (KINDERGARTEN, DAYCARE 등)
      * @return 해당 그룹 대상 문진 세트 목록
      */
+
+//    // SURVEYSET에 타겟그룹 추가되어서 변경함.
+//    @Query("SELECT s FROM SurveySet s WHERE s.type = 'GROUP' AND s.targetGroup = :targetGroup")
+//    List<SurveySet> findAllByTargetGroupForManager(@Param("targetGroup") TargetGroup targetGroup);
+
     @Query("""
     SELECT DISTINCT s FROM SurveySet s
     JOIN s.groupSurveys gs
     WHERE s.type = 'GROUP' AND gs.targetGroup = :targetGroup
 """)
     List<SurveySet> findAllByTargetGroupForManager(@Param("targetGroup") TargetGroup targetGroup);
-
     /**
      *  타입이 'GROUP'인 모든 문진 세트를 조회합니다.
      * 담당자의 소속 그룹과 관계 없이, 모든 그룹 문진 세트를 가져옵니다.
      */
     List<SurveySet> findByType(String type);
 
-    SurveySet findBySetTitleAndType(String title, String type);
+    /**
+     * 특정 TargetGroup과 Type에 해당하는 모든 문진 세트를 조회합니다.
+     */
+    List<SurveySet> findAllByTargetGroupAndType(TargetGroup targetGroup, String type);
+           
 }

@@ -148,11 +148,23 @@ const firebaseConfig = {
             });
 
             const recordResult = await recordAttemptFailRes.json();
+
+                // 2) 사용자에게 보여주는 안내문구 커스텀
+            if (error.code === 'auth/invalid-email') {
+                alert('이메일 형식이 올바르지 않습니다.\n이메일 주소를 정확히 입력해주세요.');
+            } else if (error.code === 'auth/user-not-found') {
+                alert('입력하신 이메일로 등록된 계정이 없습니다.');
+            } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-login-credentials') {
+                alert('아이디 또는 비밀번호가 틀렸습니다');
+            } else if (error.code === 'auth/user-disabled') {
+                alert('이 계정은 비활성화(정지) 상태입니다.\n관리자에게 문의해주세요.');
+            } else {
+                alert('Firebase 로그인 오류: ' + error.message);
+            }
             console.group('❌ fetch 에러');
             console.log('error.name   :', error.name);      // 예: TypeError, HTTPError
             console.log('error.message:', error.message);   // 예: “Failed to fetch” 또는 “HTTP 401 Unauthorized: …”
             console.log('error.stack  :', error.stack);     // 스택 트레이스
-            alert('Firebase 로그인 오류: ' + error.message);
 
         }
     }
@@ -166,6 +178,19 @@ const firebaseConfig = {
     } else {
         console.error("로그인 폼 (id='loginForm')을 찾을 수 없습니다.");
     }
+</script>
+
+<script>
+
+// URL 파라미터에서 error 체크 (/loginForm?error=withdrawn)
+document.addEventListener("DOMContentLoaded", function() {
+    const params = new URLSearchParams(window.location.search);
+    if(params.get("error") === "withdrawn") {
+        alert("탈퇴한 회원입니다.");
+         window.location.replace('/loginForm')
+    }
+});
+
 </script>
 
 </body>

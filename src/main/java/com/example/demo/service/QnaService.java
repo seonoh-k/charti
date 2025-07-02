@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,13 +31,35 @@ public class QnaService extends BaseService<Qna, QnaRepository> {
         }
     }
 
-    public Page<Qna> getAdminPagedList(QnaCategory category, int page) {
+    public Page<Qna> getAdminPagedList(
+            QnaCategory category,
+            String status,
+            String keyword,
+            int page
+    ) {
         Pageable pageable = PageRequest.of(page, 10, Sort.Direction.DESC, "createdAt");
 
-        if(category == null) {
-            return repository.findAll(pageable);
+        Specification<Qna> spec = Specification.where(null);
+
+        if (category != null) {
+            spec = spec.and((root, q, cb) -> cb.equal(root.get("category"), category));
         }
-        return repository.findAllByCategory(category, pageable);
+
+        if (status != null) {
+            if (status.equals("waiting")) {
+                spec = spec.and((r, q, cb) -> cb.isFalse(r.get("isAnswered")));
+            } else if (status.equals("done")) {
+                spec = spec.and((r, q, cb) -> cb.isTrue(r.get("isAnswered")));
+            }
+        }
+
+        if (keyword != null && !keyword.isBlank()) {
+            spec = spec.and((r, q, cb) ->
+                    cb.like(cb.lower(r.get("title")), "%" + keyword.toLowerCase() + "%")
+            );
+        }
+
+        return repository.findAll(spec, pageable);
     }
 
     public Long createQna(Qna qna) {

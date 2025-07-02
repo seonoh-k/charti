@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <title>Charti</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Pretendard & Inter 폰트 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
@@ -101,12 +99,7 @@
                 method: "GET",
                 credentials: "include"  // 쿠키 자동 전송
             })
-<!--            .then(response => {-->
-<!--                if (!response.ok) throw new Error("Not logged in");-->
-<!--                return response.json();-->
-<!--            })-->
                 .then(response => {
-                    console.log("응답:", response); // ✅ 추가
                     if (!response.ok) throw new Error("Not logged in");
                     return response.json();
                 })

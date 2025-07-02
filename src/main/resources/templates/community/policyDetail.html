@@ -36,33 +36,46 @@
         <!-- 댓글 섹션 -->
         <h3 class="text-2xl font-semibold text-gray-800 mb-4">댓글</h3>
         <div class="space-y-4 mb-6">
-            <div th:each="c,stat : ${commentsPage.content}" class="border-b pb-2">
-                <p>
-                    <strong class="text-[#7CA48C]"
-                            th:text="${commentNicknames[stat.index]}">닉네임</strong>:
-                    <span th:text="${c.content}">댓글 내용</span>
-                    <small class="text-gray-500 ml-2"
-                           th:text="${#temporals.format(c.createdAt,'yyyy.MM.dd HH:mm')}">시간</small>
+            <div th:each="c,stat : ${commentsPage.content}" class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                    <!-- 좌측: 작성자·내용·시간 -->
+                    <div class="flex-1">
+                        <p class="text-gray-800 break-words">
+                            <span class="font-semibold text-[#7CA48C]" th:text="${commentNicknames[stat.index]}">닉네임</span>
+                            <span>·</span>
+                            <span class="text-gray-600" th:text="${c.content}">댓글 내용</span>
+                        </p>
+                        <p class="text-xs text-gray-400 mt-1" th:text="${#temporals.format(c.createdAt,'yyyy.MM.dd HH:mm')}">
+                            2025.06.27 19:13
+                        </p>
+                    </div>
 
-                    <!-- ★★ 내 댓글에만 수정/삭제 버튼 -->
-                    <span th:if="${currentUserId != null
-                        and currentUserId == commentUserIds[stat.index]}"
-                          class="ml-4 space-x-2">
-            <!-- 수정 (모달 열기) -->
-            <a href="#"
-               class="text-blue-600 hover:underline"
-               onclick="openEditModal([[${c.id}]], '[[${c.content}]]')">수정</a>
-                        <!-- 삭제 -->
-            <form th:action="@{/community/policy/{boardId}/comments/{commentId}/delete(
-                                boardId=${board.communityId},
-                                commentId=${c.id})}"
-                  method="post" style="display:inline"
-                  onsubmit="return confirm('정말 삭제하시겠습니까?');">
-              <button type="submit"
-                      class="text-red-600 hover:underline">삭제</button>
-            </form>
-          </span>
-                </p>
+                    <!-- 우측: 내 댓글일 때만 버튼 그룹 -->
+                    <div th:if="${c.usersId eq currentUserId}" class="ml-4 flex-shrink-0 flex space-x-2">
+                        <!-- 수정 버튼 -->
+                        <button type="button"
+                                class="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800"
+                                th:attr="data-comment-id=${c.id}, data-comment-content=${c.content}"
+                                onclick="openEditModal(
+                          this.getAttribute('data-comment-id'),
+                          this.getAttribute('data-comment-content')
+                        )">
+                            <i class="fas fa-pencil-alt"></i>
+                            <span>수정</span>
+                        </button>
+                        <!-- 삭제 버튼 -->
+                        <form th:action="@{/community/policy/{b}/comments/{c}/delete(
+                          b=${board.communityId},c=${c.id})}"
+                              method="post"
+                              class="flex items-center space-x-1"
+                              onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                            <i class="fas fa-trash-alt text-red-500"></i>
+                            <button type="submit" class="text-sm text-red-500 hover:text-red-700">
+                                삭제
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -88,21 +101,79 @@
             </div>
         </div>
 
-        <!-- (이하 댓글 페이징 / 댓글등록 폼 / 본문 수정·삭제 버튼 생략) -->
+        <!-- 댓글 페이징 -->
+        <nav th:if="${commentsPage.totalElements > 0}" class="flex justify-center space-x-2 mb-6">
+            <span th:if="${commentsPage.hasPrevious()}">
+                <a th:href="@{/community/policy/{id}(id=${board.communityId},commentPage=${commentsPage.number-1})}"
+                   class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-gray-300">&lt; 이전</a>
+            </span>
+            <span th:each="i : ${#numbers.sequence(0,commentsPage.totalPages-1)}">
+                <a th:href="@{/community/policy/{id}(id=${board.communityId},commentPage=${i})}"
+                   th:text="${i+1}"
+                   th:classappend="${i == commentsPage.number}
+                                   ? ' bg-[#E3A67A] text-white'
+                                   : ' bg-gray-200 text-[#E3A67A]'"
+                   class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white"></a>
+            </span>
+            <span th:if="${commentsPage.hasNext()}">
+                <a th:href="@{/community/policy/{id}(id=${board.communityId},commentPage=${commentsPage.number+1})}"
+                   class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-gray-300">다음 &gt;</a>
+            </span>
+        </nav>
+
+        <!-- 댓글 입력 폼 -->
+        <form th:action="@{/community/policy/{id}/comments(id=${board.communityId})}" method="post" class="mb-6">
+            <textarea name="content" rows="3" placeholder="댓글을 입력하세요."
+                      class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      required></textarea>
+            <button type="submit"
+                    class="mt-2 bg-[#E3A67A] text-white font-semibold px-5 py-2 rounded hover:opacity-90">
+                등록하기
+            </button>
+        </form>
+
+        <!-- 수정/삭제 버튼: 작성자 본인만 -->
+        <div class="flex gap-4 mb-6"
+             th:if="${currentUserId != null and currentUserId == board.usersId}">
+            <a th:href="@{/community/policy/{id}/edit(id=${board.communityId})}"
+               class="inline-flex items-center bg-[#7CA48C] text-white px-5 py-2 rounded hover:opacity-90">
+                <i class="fas fa-edit mr-2"></i>수정
+            </a>
+            <form th:action="@{/community/policy/{id}/delete(id=${board.communityId})}" method="post"
+                  onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                <button type="submit"
+                        class="inline-flex items-center bg-red-500 text-white px-5 py-2 rounded hover:bg-red-600">
+                    <i class="fas fa-trash mr-2"></i>삭제
+                </button>
+            </form>
+        </div>
+
+        <a th:href="@{/community/policy/list}"
+           class="inline-block text-[#E3A67A] hover:underline">◀ 목록으로 돌아가기</a>
 
     </div>
 
-    <!-- 모달 스크립트: th:inline 필수 -->
     <script th:inline="javascript">
+
+        // Thymeleaf → JS 변수
+        var boardId = /*[[${board.communityId}]]*/ 0;
+
         function openEditModal(commentId, content) {
+          // 1) textarea 채우기
           document.getElementById('editContent').value = content;
-          const form = document.getElementById('editCommentForm');
-          form.action = /*[[@{'/community/policy/' + ${board.communityId} + '/comments/' + ${commentId}}]]*/'';
+          // 2) form.action 조립
+          document.getElementById('editCommentForm').action
+            = '/community/policy/' + boardId
+            + '/comments/' + commentId;
+          // 3) 모달 열기
           document.getElementById('editModal').classList.remove('hidden');
         }
+
         function closeModal() {
           document.getElementById('editModal').classList.add('hidden');
         }
+
     </script>
+
 </th:block>
 </html>

@@ -2,6 +2,7 @@ package com.example.demo.survey.controller;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
+import com.example.demo.service.PointService;
 import com.example.demo.survey.dto.SurveyRequestDto;
 import com.example.demo.survey.entity.DailyAnswer;
 import com.example.demo.survey.entity.DailySurvey;
@@ -35,6 +36,7 @@ public class DailySurveyController {
     private final ChildService childService;
     private final MemberRepository memberRepository;
     private final RiskCategoryService riskCategoryService;
+    private final PointService pointService;
 
     @GetMapping("/{ageGroup}")
     @ResponseBody
@@ -109,11 +111,7 @@ public class DailySurveyController {
 
         // 4) 포인트 적립
         Member parent = child.getParent();
-        if (parent.getTotalPoint() == null) {
-            parent.setTotalPoint(0);
-        }
-        parent.setTotalPoint(parent.getTotalPoint() + 500);
-        memberRepository.save(parent);
+        pointService.giveDailySurveyPointIfEligible(parent, child);
 
         // 5) 위험도 계산 및 결과 반환
         double totalRisk = dailySurveyService.calculateRiskScore(dto.getAnswers(), surveys);
