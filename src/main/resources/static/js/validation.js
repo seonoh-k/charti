@@ -1,23 +1,29 @@
-// validation.js
 (() => {
     const rules = {
         name: {
+            label: '이름',
             regex: /^[가-힣]{2,8}$/,
             message: '2~8자 한글만 가능합니다. 공백은 불가.'
         },
         nickname: {
+            label: '닉네임',
             regex: /^[가-힣A-Za-z0-9_-]{2,10}$/,
             message: '2~10자: 한글·영문·숫자·_,- 만 가능합니다. 공백 금지.'
         },
         username: {
-            regex: /^\S{4,30}$/,
-            message: '4~30자, 공백 없이 입력해주세요.'
+            label: '아이디',
+            regex: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/,
+            min: 4,
+            max: 30,
+            message: '올바른 이메일 주소를 4~30자 이내로 입력해 주세요.'
         },
         password: {
+            label: '비밀번호',
             regex: /^(?=.{8,16}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)[^\s]+$/,
             message: '8~16자, 대문자·소문자·특수문자 모두 1개 이상 포함. 공백 금지.'
         },
         newPassword: {
+            label: '비밀번호 확인',
             regex: /^(?=.{8,16}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)[^\s]+$/,
             message: '8~16자, 대문자·소문자·특수문자 모두 1개 이상 포함. 공백 금지.'
         }
@@ -67,9 +73,17 @@
             el.setCustomValidity('');
             const value = el.value;
 
-            if (!rule.regex.test(value)) {
+            // [1] 길이 제한 검사
+            if (rule.min && value.length < rule.min) {
+                el.setCustomValidity(`${rule.label}는 ${rule.min}자 이상 입력해야 합니다.`);
+            } else if (rule.max && value.length > rule.max) {
+                el.setCustomValidity(`${rule.label}는 ${rule.max}자 이내로 입력해야 합니다.`);            }
+            // [2] 정규식 검사
+            else if (!rule.regex.test(value)) {
                 el.setCustomValidity(rule.message);
-            } else if (el.id === 'name' && containsAbnormalSyllables(value)) {
+            }
+            // [3] 이름 비정상 음절 검사
+            else if (el.id === 'name' && containsAbnormalSyllables(value)) {
                 el.setCustomValidity('이름에 올바르지 않은 음절이 포함되어 있습니다.');
             }
         });
@@ -86,7 +100,7 @@
         });
     }
 
-    // 폼 submit 시 최종 검증
+        // 폼 submit 시 최종 검증
     function attachFormValidation(form) {
         form.addEventListener('submit', e => {
             let allValid = true;
@@ -94,17 +108,36 @@
                 const el = form.querySelector(`#${key}`);
                 if (!el) return;
                 el.value = el.value.trim();
-                if (!rule.regex.test(el.value)) {
+
+                // [1] 길이 체크
+                if (rule.min && el.value.length < rule.min) {
+                    el.setCustomValidity(`${el.getAttribute('placeholder') || el.id}는 ${rule.min}자 이상 입력해야 합니다.`);
+                    el.reportValidity();
+                    allValid = false;
+                } else if (rule.max && el.value.length > rule.max) {
+                    el.setCustomValidity(`${el.getAttribute('placeholder') || el.id}는 ${rule.max}자 이내로 입력해야 합니다.`);
+                    el.reportValidity();
+                    allValid = false;
+                }
+                // [2] 정규식 체크
+                else if (!rule.regex.test(el.value)) {
                     el.setCustomValidity(rule.message);
+                    el.reportValidity();
+                    allValid = false;
+                }
+                // [3] 이름 비정상 음절 체크
+                else if (el.id === 'name' && containsAbnormalSyllables(el.value)) {
+                    el.setCustomValidity('이름에 올바르지 않은 음절이 포함되어 있습니다.');
                     el.reportValidity();
                     allValid = false;
                 } else {
                     el.setCustomValidity('');
                 }
             });
-            // if (!allValid) e.preventDefault();
+            // if (!allValid) e.preventDefault(); // 검증 실패 시 폼 전송 중단(주석 해제 필요)
         });
     }
+
 
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('signupForm');
