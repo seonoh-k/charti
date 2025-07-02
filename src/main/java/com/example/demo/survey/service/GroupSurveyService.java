@@ -2,6 +2,7 @@ package com.example.demo.survey.service;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.survey.dto.GroupSurveyResponseDto;
 import com.example.demo.survey.dto.SurveySetSubmitRequestDto;
 import com.example.demo.survey.entity.GroupSurvey;

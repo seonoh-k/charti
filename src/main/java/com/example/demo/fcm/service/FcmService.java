@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class FcmService {
-    @Value("${app.domain}")
+//    @Value("${app.domain}")
     private String appDomain;
 
     private final UserRepository userRepository;

@@ -51,5 +51,6 @@ public interface SurveySetRepository
      * 특정 TargetGroup과 Type에 해당하는 모든 문진 세트를 조회합니다.
      */
     List<SurveySet> findAllByTargetGroupAndType(TargetGroup targetGroup, String type);
-           
+
+    SurveySet findBySetTitleAndType(String title, String type);
 }
