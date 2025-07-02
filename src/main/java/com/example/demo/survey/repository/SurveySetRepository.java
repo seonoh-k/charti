@@ -43,4 +43,5 @@ public interface SurveySetRepository
      */
     List<SurveySet> findByType(String type);
 
+    SurveySet findBySetTitleAndType(String title, String type);
 }

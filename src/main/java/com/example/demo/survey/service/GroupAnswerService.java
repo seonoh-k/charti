@@ -4,7 +4,6 @@ import com.example.demo.exception.RecordAnswerNotFoundException;
 import com.example.demo.exception.RecordHistoryNotFoundException;
 import com.example.demo.survey.dto.*;
 import com.example.demo.survey.entity.GroupAnswer;
-import com.example.demo.survey.entity.RecordAnswer;
 import com.example.demo.survey.entity.SurveySet;
 import com.example.demo.survey.repository.GroupAnswerRepository;
 import com.example.demo.survey.entity.GroupSurvey;
@@ -45,10 +44,10 @@ public class GroupAnswerService {
     public void saveAnswers(Long childId,
                             Long setId,
                             List<SurveySetSubmitRequestDto.AnswerDto> answerList) {
-                Child child = childService.findById(childId);
-                        SurveySet set = surveySetRepo.findById(setId)
+        Child child = childService.findById(childId);
+        SurveySet set = surveySetRepo.findById(setId)
                                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 세트: " + setId));
-                List<GroupSurvey> surveys = set.getGroupSurveys();
+        List<GroupSurvey> surveys = set.getGroupSurveys();
         if (surveys.size() != answerList.size()) {
             throw new IllegalArgumentException("문진 항목 수와 응답 수 불일치");
         }

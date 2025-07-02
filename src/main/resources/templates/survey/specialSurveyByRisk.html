@@ -77,11 +77,19 @@
                 `;
 
                 // 2. 문항 조회
-                const surveyRes = await fetch(`/api/special-surveys/by-age/${encodeURIComponent(ageGroupDisplayName)}`);
+                const searchData = new FormData();
+                searchData.append("age", ageGroupDisplayName);
+                searchData.append("category", categoryDisplayName);
+
+                const surveyRes = await fetch("/api/surveys/findSet", {
+                    method: "POST",
+                    body: searchData
+                });
+
                 if(!surveyRes.ok) throw new Error('Survey fetch failed');
                 const surveyData = await surveyRes.json();
-
-                const filteredSurveys = surveyData.filter(s => s.category === categoryDisplayName);
+                const surveySetId = surveyData.data.setId;
+                const filteredSurveys = surveyData.data.surveyList;
 
                 if (filteredSurveys.length === 0) {
                      throw new Error('No questions found for this category.');
@@ -102,6 +110,7 @@
                     });
                     questionCard.innerHTML = `
                         <p class="question font-semibold mb-2">${index + 1}. ${q.question || ''}</p>
+                        <input type="hidden" class="setId" value=${surveySetId} />
                         <div class="space-y-1">${optionsHtml}</div>`;
                     questionContainer.appendChild(questionCard);
                 });
@@ -119,10 +128,12 @@
                 // surveyId와 answerValue를 함께 수집
                 questionContainer.querySelectorAll('input[type="radio"]:checked').forEach(input => {
                     const questionCard = input.closest(".questionCard");
+                    const setId = questionCard.querySelector(".setId").value;
                     const question = questionCard.querySelector(".question").textContent.trim();
                     const answerText = input.nextElementSibling.textContent.trim();
                     answers.push({
                         surveyId: Number(input.name),
+                        surveySetId: Number(setId),
                         question: question,
                         answerText: answerText
                     });
