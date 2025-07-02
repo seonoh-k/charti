@@ -63,7 +63,7 @@ public class SecurityConfig {
                         .logoutUrl("/logout")
                         .deleteCookies("token")
                         .addLogoutHandler(new CookieClearingLogoutHandler("token"))
-                        .logoutSuccessUrl("/loginForm")
+                        .logoutSuccessUrl("/")
                 )
                 /**
                  * 현재 View 를 반환하는 형태 -> 데이터를 반환하는 형식으로 변경할 예정

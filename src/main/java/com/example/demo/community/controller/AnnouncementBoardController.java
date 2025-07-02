@@ -4,9 +4,11 @@ import com.example.demo.community.entity.Comment;
 import com.example.demo.community.entity.CommunityBoard;
 import com.example.demo.community.service.CommentService;
 import com.example.demo.community.service.CommunityBoardService;
+import com.example.demo.dto.AdminDTO;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
+import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
@@ -26,15 +28,18 @@ public class AnnouncementBoardController {
     private final CommunityBoardService boardService;
     private final CommentService commentService;
     private final UserService userService;
+    private final AuthService authService;
 
     public AnnouncementBoardController(
             CommunityBoardService boardService,
             CommentService commentService,
-            UserService userService
+            UserService userService,
+            AuthService authService
     ) {
         this.boardService   = boardService;
         this.commentService = commentService;
         this.userService    = userService;
+        this.authService  = authService;
     }
 
     private final List<String> subCategories = Arrays.asList(
@@ -67,42 +72,28 @@ public class AnnouncementBoardController {
     }
 
     @GetMapping("/new")
-    public String form(Model model, Authentication auth) {
-        if (auth == null || !auth.isAuthenticated()) {
-            return "redirect:/loginForm";
-        }
-        String principal = auth.getName();
-        Users me;
-        try {
-            me = userService.findByUsernameEntity(principal);
-        } catch (UserNotFoundException e) {
-            me = userService.findByUuidEntity(principal);
-        }
+    public String form(Model model) {
+        AdminDTO admin = authService.getLoginAdmin();
+
         model.addAttribute("board",        new CommunityBoard());
         model.addAttribute("subCategories",subCategories);
-        model.addAttribute("currentUser",  me);
-        return "community/announcementForm";
+        model.addAttribute("currentUser",  admin);
+        return "admin/admin/announcementForm";
     }
 
     @PostMapping("")
     public String create(
-            @ModelAttribute CommunityBoard board,
-            Authentication auth
+            @ModelAttribute CommunityBoard board
     ) {
-        String principal = auth.getName();
-        Users me;
-        try {
-            me = userService.findByUsernameEntity(principal);
-        } catch (UserNotFoundException e) {
-            me = userService.findByUuidEntity(principal);
-        }
-        board.setUsersId(me.getId());
+        AdminDTO admin = authService.getLoginAdmin();
+
+        board.setAdminId(admin.getId());
         board.setCategory("announcement");
         board.setAgeGroup(AgeGroup.ALL);
         board.setStatus("Y");
         board.setCreatedAt(LocalDateTime.now());
         boardService.save(board);
-        return "redirect:/community/announcement/list";
+        return "redirect:/admin/announcement";
     }
 
     @GetMapping("/{id:[0-9]+}")
@@ -146,22 +137,14 @@ public class AnnouncementBoardController {
     }
 
     @GetMapping("/{id:[0-9]+}/edit")
-    public String editForm(@PathVariable Long id, Model model, Authentication auth) {
-        if (auth == null || !auth.isAuthenticated()) {
-            return "redirect:/loginForm";
-        }
-        String principal = auth.getName();
-        Users me;
-        try {
-            me = userService.findByUsernameEntity(principal);
-        } catch (UserNotFoundException e) {
-            me = userService.findByUuidEntity(principal);
-        }
+    public String editForm(@PathVariable Long id, Model model) {
+        AdminDTO admin = authService.getLoginAdmin();
+
         CommunityBoard board = boardService.findById(id);
         model.addAttribute("board",        board);
         model.addAttribute("subCategories",subCategories);
-        model.addAttribute("currentUser",  me);
-        return "community/announcementForm";
+        model.addAttribute("currentUser",  admin);
+        return "admin/admin/announcementForm";
     }
 
     @PostMapping("/{id:[0-9]+}")
@@ -170,19 +153,19 @@ public class AnnouncementBoardController {
             @ModelAttribute CommunityBoard board
     ) {
         CommunityBoard old = boardService.findById(id);
-        board.setUsersId(old.getUsersId());
+        board.setAdminId(old.getAdminId());
         old.setCategory2(board.getCategory2());
         old.setAgeGroup(AgeGroup.ALL);
         old.setTitle(board.getTitle());
         old.setContent(board.getContent());
         boardService.save(old);
-        return "redirect:/community/announcement/" + id;
+        return "redirect:/admin/announcement/" + id;
     }
 
     @PostMapping("/{id:[0-9]+}/delete")
     public String delete(@PathVariable Long id) {
         boardService.delete(id);
-        return "redirect:/community/announcement/list";
+        return "redirect:/admin/announcement";
     }
 
     // 댓글 작성 처리

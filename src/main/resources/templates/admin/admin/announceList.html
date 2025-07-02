@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/admin_layout">
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+        <div class="flex justify-between">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">공지사항</h1>
+            <a th:href="@{/community/announcement/new}"
+               class="inline-flex mt-2 p-2 h-10 items-center bg-[#7CA48C] active:bg-[#628C73] text-white font-semibold rounded hover:opacity-90 transition">
+                <i class="fas fa-plus mr-2"></i>새 공지 작성
+            </a>
+        </div>
+        <hr class="mb-8 border-gray-300">
+
+        <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full divide-y divide-gray-200 table-fixed">
+                <thead class="bg-gray-50">
+                <tr>
+                    <th class="w-[10%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        번호
+                    </th>
+                    <th class="w-[60%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        제목
+                    </th>
+                    <th class="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        작성일
+                    </th>
+                </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                <tr th:each="anc : ${boardList}">
+                    <td th:text="${anc.id}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <a th:href="@{/admin/announcement/{id}(id=${anc.id})}" th:text="${anc.title}"
+                           class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></a>
+                    </td>
+                    <td th:text="${anc.createdAt}"
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-center mt-6">
+            <nav id="pagination"
+                 th:data-current-page="${currentPage}"
+                 th:data-total-pages="${totalPages}"
+                 class="inline-flex -space-x-px">
+
+            </nav>
+        </div>
+    </div>
+    <script>
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const nav = document.querySelector("#pagination");
+            const current = Number(nav.dataset.currentPage);
+            const total = Number(nav.dataset.totalPages);
+
+            function pageBtn(label, page, option = {}) {
+                const {active = false, disabled = false, rounded = ""} = option;
+                const a = document.createElement("a");
+
+                if(typeof label === "number") {
+                    a.textContent = label;
+                }else {
+                    const i = document.createElement("i");
+                    i.className = label === "left" ? "fa-solid fa-angle-left" : "fa-solid fa-angle-right";
+                    a.appendChild(i)
+                }
+
+                a.className = "px-3 py-1 border";
+
+                if(active) {
+                    a.classList.add("bg-blue-500", "text-white", "border-blue-500");
+                }else {
+                    a.classList.add("bg-white", "text-gray-500", "border-gray-300", "hover:bg-gray-100");
+                }
+
+                if(disabled) {
+                    a.href = "javascript:;";
+                    a.classList.add("cursor-not-allowed", "opacity-50");
+                }else {
+                    a.href = `?page=${page}`;
+                }
+
+                if(rounded === "left") a.classList.add("rounded-l-lg");
+                if(rounded === "right") a.classList.add("rounded-r-lg");
+
+                return a;
+            }
+
+            nav.appendChild(pageBtn("left", current-1, {
+                disabled: current === 1,
+                rounded: "left",
+            }));
+
+            for(let p=1; p<=total; p++) {
+                nav.appendChild(pageBtn(p, p, {
+                    active: p === current,
+                }));
+            }
+
+            nav.appendChild(pageBtn("right", current+1, {
+                disabled: current === total,
+                rounded: "right",
+            }));
+        })
+    </script>
+</th:block>
+</html>

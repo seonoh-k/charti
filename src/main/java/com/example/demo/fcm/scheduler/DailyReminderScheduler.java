@@ -28,7 +28,7 @@ public class DailyReminderScheduler {
      * 매일 오후 9시(Asia/Seoul)마다 실행
      * 0 0 21 -> 초 분 시
      */
-    @Scheduled(cron = "0 0 21 * * *", zone = "Asia/Seoul")
+//    @Scheduled(cron = "0 0 21 * * *", zone = "Asia/Seoul")
     @Transactional
     public void remindMissedDailyPerChild() {
         log.info("[DailyReminder] 스케줄러 실행 확인: {}", LocalDateTime.now());
