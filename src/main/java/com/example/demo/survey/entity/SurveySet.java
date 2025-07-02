@@ -1,5 +1,6 @@
 package com.example.demo.survey.entity;
 
+import com.example.demo.converter.TargetGroupConverter;
 import com.example.demo.entity.BaseEntity;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.converter.AgeGroupConverter;
@@ -43,7 +44,11 @@ public class SurveySet extends BaseEntity {
     @Column(nullable = false)
     private String type; // 예: "GROUP" / "SPECIAL"
 
-    @Column(name = "target_group", length = 20)
+//    @Enumerated(EnumType.STRING)
+//    @Column(name = "target_group", nullable = true)
+//    private TargetGroup targetGroup;
+    @Convert(converter = TargetGroupConverter.class)
+    @Column(name = "target_group", nullable = true)
     private TargetGroup targetGroup;
 
     @ManyToMany

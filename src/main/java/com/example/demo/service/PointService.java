@@ -173,6 +173,31 @@ public class PointService {
         log.info("자녀 '{}' (ID: {})에게 기록 문진 포인트 10점 지급 완료", child.getName(), child.getId());
         return true;
     }
+    /**
+     * [데일리 문진 포인트 지급]
+     * - 동일 자녀에 대해 같은 날짜에 이미 포인트가 지급된 경우 중복 방지
+     *
+     * @param member 보호자
+     * @param child  자녀
+     * @return 새로 지급되었으면 true, 이미 지급된 경우 false
+     */
+    @Transactional
+    public boolean giveDailySurveyPointIfEligible(Member member, Child child) {
+        LocalDate today = LocalDate.now();
+
+        boolean alreadyGiven = historyRepository.existsByMemberAndPointTypeAndChildAndPointDate(
+                member, PointType.DAILY_SURVEY, child, today);
+
+        if (alreadyGiven) {
+            log.info("자녀 '{}'에게 오늘 이미 데일리 문진 포인트 지급 완료", child.getName());
+            return false;
+        }
+
+        String description = "데일리 문진 포인트 지급: " + child.getName();
+        givePoint(member, 10, description, PointType.DAILY_SURVEY, child);
+        return true;
+    }
+
 
     /**
      * [포인트 차감 처리]
