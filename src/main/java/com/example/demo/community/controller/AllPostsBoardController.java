@@ -14,6 +14,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Controller
 @RequestMapping("/community/allPosts")
 public class AllPostsBoardController {
@@ -58,16 +61,39 @@ public class AllPostsBoardController {
     public String detail(
             @PathVariable Long id,
             @RequestParam(defaultValue = "0") int commentPage,
-            Model model
+            Model model,
+            Authentication auth
     ) {
+        // 게시글 + 조회수
         CommunityBoard board = boardService.findById(id);
-        board.setViews(board.getViews() + 1);
+        board.setViews(board.getViews()+1);
         boardService.save(board);
 
+        // 글 작성자 닉네임
+        String authorNickname = userService.findNicknameOrDefault(board.getUsersId());
+
+        // 댓글 페이징
         Page<Comment> commentsPage = commentService.getCommentsPage(id, commentPage);
 
-        model.addAttribute("board",        board);
-        model.addAttribute("commentsPage", commentsPage);
+        // 댓글 작성자 닉네임 리스트
+        List<String> commentNicknames = commentsPage.getContent().stream()
+                .map(c -> userService.findNicknameOrDefault(c.getUsersId()))
+                .collect(Collectors.toList());
+
+        // 댓글별 usersId 리스트
+        List<Long> commentUserIds = commentsPage.getContent().stream()
+                .map(Comment::getUsersId)
+                .collect(Collectors.toList());
+
+        // 로그인한 사용자 ID
+        Long currentUserId = getCurrentUserId(auth);
+
+        model.addAttribute("board",             board);
+        model.addAttribute("authorNickname", authorNickname);
+        model.addAttribute("commentsPage",      commentsPage);
+        model.addAttribute("commentNicknames",  commentNicknames);
+        model.addAttribute("commentUserIds",    commentUserIds);
+        model.addAttribute("currentUserId",     currentUserId);
         return "community/allPostsDetail";
     }
 
@@ -96,4 +122,51 @@ public class AllPostsBoardController {
         commentService.save(comment);
         return "redirect:/community/allPosts/" + id;
     }
+
+    // 댓글 수정
+    @PostMapping("/{boardId:[0-9]+}/comments/{commentId:[0-9]+}")
+    public String updateComment(
+            @PathVariable Long boardId,
+            @PathVariable Long commentId,
+            @RequestParam String content,
+            Authentication auth
+    ) {
+        Comment c = commentService.findById(commentId);
+        Long me = getCurrentUserId(auth);
+        if (me != null && me.equals(c.getUsersId())) {
+            c.setContent(content);
+            commentService.save(c);
+        }
+        return "redirect:/community/allPosts/" + boardId;
+    }
+
+    // 댓글 삭제
+    @PostMapping("/{boardId:[0-9]+}/comments/{commentId:[0-9]+}/delete")
+    public String deleteComment(
+            @PathVariable Long boardId,
+            @PathVariable Long commentId,
+            Authentication auth
+    ) {
+        Comment c = commentService.findById(commentId);
+        Long me = getCurrentUserId(auth);
+        if (me != null && me.equals(c.getUsersId())) {
+            commentService.delete(commentId);
+        }
+        return "redirect:/community/allPosts/" + boardId;
+    }
+
+    // 인증 객체 → Users ID 꺼내는 헬퍼
+    private Long getCurrentUserId(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) return null;
+        String p = auth.getName();
+        Users me = null;
+        try { me = userService.findByUsernameEntity(p); }
+        catch (UserNotFoundException ignored) { }
+        if (me == null) {
+            try { me = userService.findByUuidEntity(p); }
+            catch (UserNotFoundException ignored) { }
+        }
+        return me != null ? me.getId() : null;
+    }
+
 }

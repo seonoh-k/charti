@@ -126,47 +126,36 @@ public class PolicyBoardController {
             Model model,
             Authentication auth
     ) {
-        // 1) 게시글 + 조회수
+        // 게시글 + 조회수
         CommunityBoard board = boardService.findById(id);
-        board.setViews(board.getViews() + 1);
+        board.setViews(board.getViews()+1);
         boardService.save(board);
 
-        // 2) 댓글 페이징
-        Page<Comment> commentsPage = commentService.getCommentsPage(id, commentPage);
-
-        // 3) 작성자 닉네임
+        // 글 작성자 닉네임
         String authorNickname = userService.findNicknameOrDefault(board.getUsersId());
 
-        // 4-1) 댓글 작성자 닉네임 리스트 (
+        // 댓글 페이징
+        Page<Comment> commentsPage = commentService.getCommentsPage(id, commentPage);
+
+        // 댓글 작성자 닉네임 리스트
         List<String> commentNicknames = commentsPage.getContent().stream()
                 .map(c -> userService.findNicknameOrDefault(c.getUsersId()))
                 .collect(Collectors.toList());
 
-        // 4-2) 댓글별 usersId 리스트
+        // 댓글별 usersId 리스트
         List<Long> commentUserIds = commentsPage.getContent().stream()
                 .map(Comment::getUsersId)
                 .collect(Collectors.toList());
 
-        // 5) 로그인한 사용자 ID
-        Long currentUserId = null;
-        if (auth != null && auth.isAuthenticated()) {
-            String p = auth.getName();
-            Users me = null;
-            try { me = userService.findByUsernameEntity(p); }
-            catch (UserNotFoundException ignored) { }
-            if (me == null) {
-                try { me = userService.findByUuidEntity(p); }
-                catch (UserNotFoundException ignored) { }
-            }
-            if (me != null) currentUserId = me.getId();
-        }
+        // 로그인한 사용자 ID
+        Long currentUserId = getCurrentUserId(auth);
 
-        model.addAttribute("board",            board);
-        model.addAttribute("commentsPage",     commentsPage);
-        model.addAttribute("authorNickname",   authorNickname);
-        model.addAttribute("commentNicknames", commentNicknames);
-        model.addAttribute("commentUserIds",   commentUserIds);
-        model.addAttribute("currentUserId",    currentUserId);
+        model.addAttribute("board",             board);
+        model.addAttribute("authorNickname", authorNickname);
+        model.addAttribute("commentsPage",      commentsPage);
+        model.addAttribute("commentNicknames",  commentNicknames);
+        model.addAttribute("commentUserIds",    commentUserIds);
+        model.addAttribute("currentUserId",     currentUserId);
         return "community/policyDetail";
     }
 
@@ -237,9 +226,7 @@ public class PolicyBoardController {
         return "redirect:/community/policy/" + id;
     }
 
-    /**
-     * 댓글 수정 처리
-     */
+    // 댓글 수정
     @PostMapping("/{boardId:[0-9]+}/comments/{commentId:[0-9]+}")
     public String updateComment(
             @PathVariable Long boardId,
@@ -247,24 +234,16 @@ public class PolicyBoardController {
             @RequestParam String content,
             Authentication auth
     ) {
-        // 1) DB에서 댓글을 가져온 뒤
         Comment c = commentService.findById(commentId);
-
-        // 2) 현재 로그인한 유저 ID와 댓글 작성자 ID를 비교
-        Long currentUserId = getCurrentUserId(auth);
-        if (currentUserId != null && currentUserId.equals(c.getUsersId())) {
-            // 3) 본인이 작성한 댓글이면 내용 업데이트
+        Long me = getCurrentUserId(auth);
+        if (me != null && me.equals(c.getUsersId())) {
             c.setContent(content);
             commentService.save(c);
         }
-
-        // 4) 상세 페이지로 리다이렉트
         return "redirect:/community/policy/" + boardId;
     }
 
-    /**
-     * 댓글 삭제 처리
-     */
+    // 댓글 삭제
     @PostMapping("/{boardId:[0-9]+}/comments/{commentId:[0-9]+}/delete")
     public String deleteComment(
             @PathVariable Long boardId,
@@ -272,23 +251,25 @@ public class PolicyBoardController {
             Authentication auth
     ) {
         Comment c = commentService.findById(commentId);
-        Long currentUserId = getCurrentUserId(auth);
-        if (currentUserId != null && currentUserId.equals(c.getUsersId())) {
+        Long me = getCurrentUserId(auth);
+        if (me != null && me.equals(c.getUsersId())) {
             commentService.delete(commentId);
         }
         return "redirect:/community/policy/" + boardId;
     }
 
-    /**
-     * 인증 객체에서 Users ID를 꺼내는 헬퍼
-     */
+    // 인증 객체 → Users ID 꺼내는 헬퍼
     private Long getCurrentUserId(Authentication auth) {
         if (auth == null || !auth.isAuthenticated()) return null;
-        String principal = auth.getName();
-        try {
-            return userService.findByUsernameEntity(principal).getId();
-        } catch (UserNotFoundException e) {
-            return userService.findByUuidEntity(principal).getId();
+        String p = auth.getName();
+        Users me = null;
+        try { me = userService.findByUsernameEntity(p); }
+        catch (UserNotFoundException ignored) { }
+        if (me == null) {
+            try { me = userService.findByUuidEntity(p); }
+            catch (UserNotFoundException ignored) { }
         }
+        return me != null ? me.getId() : null;
     }
+
 }

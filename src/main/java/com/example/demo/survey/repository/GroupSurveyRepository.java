@@ -2,6 +2,7 @@ package com.example.demo.survey.repository;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.survey.entity.GroupSurvey;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,4 +45,16 @@ public interface GroupSurveyRepository extends JpaRepository<GroupSurvey, Long> 
     Page<GroupSurvey> findAllByCategoryAndDeletedFalse(SurveyCategory category, Pageable pageable);
 
     Page<GroupSurvey> findByAgeGroupAndCategoryAndDeletedFalse(AgeGroup ageGroup, SurveyCategory category, Pageable pageable);
+
+    Page<GroupSurvey> findByTargetGroupAndDeletedFalse(
+            TargetGroup tg, Pageable p);
+
+    Page<GroupSurvey> findByAgeGroupAndTargetGroupAndDeletedFalse(
+            AgeGroup ag, TargetGroup tg, Pageable p);
+
+    Page<GroupSurvey> findByCategoryAndTargetGroupAndDeletedFalse(
+            SurveyCategory sc, TargetGroup tg, Pageable p);
+
+    Page<GroupSurvey> findByAgeGroupAndCategoryAndTargetGroupAndDeletedFalse(
+            AgeGroup ag, SurveyCategory sc, TargetGroup tg, Pageable p);
 }

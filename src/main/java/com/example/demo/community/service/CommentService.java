@@ -21,7 +21,7 @@ public class CommentService {
      * 지정된 게시글 ID에 달린 댓글 전체를 조회하여 오름차순(등록 시간 순)으로 반환합니다.
      */
     public List<Comment> getComments(Long communityId) {
-        return repo.findByCommunityIdOrderByCreatedAtAsc(communityId);
+        return repo.findByCommunityIdAndDeletedFalseOrderByCreatedAtAsc(communityId);
     }
 
     /**
@@ -31,7 +31,7 @@ public class CommentService {
      */
     public Page<Comment> getCommentsPage(Long communityId, int page) {
         Pageable pageable = PageRequest.of(page, 5, Sort.by(Sort.Order.asc("createdAt")));
-        return repo.findByCommunityId(communityId, pageable);
+        return repo.findAllByCommunityIdAndDeletedFalse(communityId, pageable);
     }
     /** 단일 댓글 조회 (수정/삭제 전 권한 체크 등에 사용) */
     public Comment findById(Long commentId) {

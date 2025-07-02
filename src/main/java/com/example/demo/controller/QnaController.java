@@ -47,6 +47,8 @@ public class QnaController {
     @GetMapping("/admin/qna")
     public String adminQna(@RequestParam(value = "page", defaultValue = "1", required=false) int page,
                            @RequestParam(value = "category", required=false) QnaCategory category,
+                           @RequestParam(value = "status", required = false) String status,
+                           @RequestParam(value = "keyword", required = false) String keyword,
                            Model model) {
 
         AdminDTO adminDTO = authService.getLoginAdmin();
@@ -56,14 +58,15 @@ public class QnaController {
             return "redirect:/qna";
         }
 
-        Page<Qna> qnaPage = qnaService.getAdminPagedList(category, page-1);
+        Page<Qna> qnaPage = qnaService.getAdminPagedList(category, status, keyword, page-1);
+        List<QnaDTO>   qnaList = getQnaList(qnaPage);
 
-        List<QnaDTO> qnaList = getQnaList(qnaPage);
-
-        model.addAttribute("category", QnaCategory.values());
+        model.addAttribute("category",         QnaCategory.values());
+        model.addAttribute("selectedCategory", category);
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("keyword", keyword);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", qnaPage.getTotalPages());
-        model.addAttribute("selectedCategory", category);
         model.addAttribute("qnaList", qnaList);
         return "admin/adminQnaList";
     }
