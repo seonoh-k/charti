@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="noticeBell">
+    <div class="relative" id="noticeComponent">
+        <!-- 벨 아이콘 + 배지 -->
+        <button id="bellIcon" class="relative focus:outline-none">
+            <i class="fa fa-bell text-2xl text-[#E3A67A]"></i>
+            <span id="bellBadge"
+                  class="absolute top-0 right-0 bg-[#56846C] text-white text-xs rounded-full px-1"
+                  th:classappend="${unreadCount > 0} ? '' : ' hidden'"
+                  th:text="${unreadCount}"></span>
+        </button>
+
+        <!-- 알림 패널 -->
+        <div id="noticePanel"
+             class="hidden absolute right-0 mt-2 bg-white rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 border"
+             style="width: 500px;">
+            <!-- 패널 헤더: 카테고리 탭과 모두 삭제 버튼 -->
+            <div class="p-2 sticky top-0 bg-white z-10">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-bold text-sm text-gray-800">알림 목록</h3>
+                    <!-- [수정] '모든 알림 삭제' 버튼으로 변경 -->
+                    <button id="deleteAllBtn" class="text-xs text-gray-500 hover:text-red-600">모두 지우기</button>
+                </div>
+                <!-- 카테고리 탭 동적 생성 -->
+                <div id="categoryTabs" class="flex border-b text-sm">
+                    <button data-cat="" class="category-btn flex-1 py-2 hover:bg-gray-100 font-semibold text-blue-600 border-b-2 border-blue-600">전체</button>
+                    <button th:each="cat : ${fcmCategories}"
+                            th:data-cat="${cat.name()}"
+                            th:text="${cat.label}"
+                            class="category-btn flex-1 py-2 hover:bg-gray-100"></button>
+                </div>
+            </div>
+
+            <!-- 알림 리스트 -->
+            <ul id="noticeList" class="divide-y divide-gray-100"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const noticeComponent = document.getElementById("noticeComponent");
+            if (!noticeComponent) return;
+
+            const bellIcon = document.getElementById("bellIcon");
+            const noticePanel = document.getElementById("noticePanel");
+            const bellBadge = document.getElementById("bellBadge");
+            const noticeList = document.getElementById("noticeList");
+            const categoryTabs = document.getElementById("categoryTabs");
+            const deleteAllBtn = document.getElementById("deleteAllBtn");
+
+            // 벨 클릭 이벤트
+            bellIcon.addEventListener("click", (event) => {
+                event.stopPropagation();
+                const isHidden = noticePanel.classList.toggle("hidden");
+                if (!isHidden) {
+                    const activeCatButton = categoryTabs.querySelector('.font-semibold');
+                    loadNotices(activeCatButton ? activeCatButton.dataset.cat : "");
+                    if (bellBadge && !bellBadge.classList.contains('hidden')) {
+                        fetch('/api/notices/mark-read', { method: 'POST' })
+                            .then(() => bellBadge.classList.add('hidden'));
+                    }
+                }
+            });
+
+            // 다른 곳 클릭 시 패널 닫기
+            document.addEventListener("click", (event) => {
+                if (!noticeComponent.contains(event.target)) {
+                    noticePanel.classList.add("hidden");
+                }
+            });
+
+            // 카테고리 필터 버튼
+            categoryTabs.addEventListener("click", (event) => {
+                const button = event.target.closest('.category-btn');
+                if(button) {
+                    categoryTabs.querySelectorAll('.category-btn').forEach(btn => {
+                        btn.classList.remove('font-semibold', 'text-blue-600', 'border-b-2', 'border-blue-600');
+                    });
+                    button.classList.add('font-semibold', 'text-blue-600', 'border-b-2', 'border-blue-600');
+                    loadNotices(button.dataset.cat);
+                }
+            });
+
+            // [수정] '모든 알림 삭제' 버튼 이벤트
+            deleteAllBtn.addEventListener("click", () => {
+                if (confirm("모든 알림을 삭제하시겠습니까? (이 작업은 되돌릴 수 없습니다)")) {
+                    fetch('/api/notices/all', { method: 'DELETE' }) // 새로운 API 호출
+                        .then(res => {
+                            if (res.ok) {
+                                loadNotices(""); // 목록 새로고침 (전체 탭으로)
+                            }
+                        });
+                }
+            });
+
+            // 알림 로드 함수
+            function loadNotices(category) {
+                const url = `/api/notices${category ? "?category=" + category : ""}`;
+                fetch(url)
+                    .then(res => res.json())
+                    .then(list => {
+                        noticeList.innerHTML = "";
+                        if (list.length === 0) {
+                            noticeList.innerHTML = `<li class="p-8 text-center text-gray-500 text-sm">표시할 알림이 없습니다.</li>`;
+                            return;
+                        }
+                        list.forEach(n => {
+                            const li = document.createElement("li");
+                            li.className = "flex justify-between items-start p-3 hover:bg-gray-50";
+
+                            const linkBtn = document.createElement("button");
+                            linkBtn.textContent = "바로가기";
+                            linkBtn.className = "bg-[#7CA48C] hover:bg-[#628C73] text-white px-2 py-1 rounded text-sm transition";
+                            linkBtn.addEventListener("click", () => window.location.href = n.url);
+
+                            const content = document.createElement("div");
+                            content.className = "flex-1 pr-2 cursor-pointer";
+                            content.innerHTML = `
+                              <p class="font-semibold text-gray-800 text-sm pointer-events-none">${n.title}</p>
+                              <p class="text-sm text-gray-600 pointer-events-none">${n.body}</p>
+                              <p class="text-xs text-gray-400 mt-1 pointer-events-none">${new Date(n.sentAt).toLocaleString()}</p>`;
+
+                            // 내용 클릭 시 바로가기 (링크가 있을 경우)
+                            if (n.url) {
+                                content.addEventListener("click", () => {
+                                    fetch(`/api/notices/${n.id}`, { method: 'POST' })
+                                      .finally(() => window.location.href = n.url);
+                                });
+                            }
+
+                            const delBtn = document.createElement("button");
+                            delBtn.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
+                            delBtn.className = "text-gray-400 hover:text-red-500 text-lg p-1";
+                             delBtn.onclick = (e) => {
+                              e.stopPropagation();
+                              if(confirm("이 알림을 삭제하시겠습니까?")){
+                                fetch(`/api/notices/${n.id}`, { method: 'DELETE' })
+                                    .then(resp => { if (resp.ok) li.remove(); });
+                              }
+                            };
+
+                            li.append(content, delBtn);
+                            noticeList.appendChild(li);
+                        });
+                    });
+            }
+        });
+    </script>
+</th:block>
+</html>

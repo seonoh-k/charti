@@ -1,12 +1,88 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
-	
-<th:block th:replace="fragments/header :: headerFragment"></th:block>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Charti</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+        rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+<th:block th:replace="~{fragments/header :: headerFragment}"></th:block>
 
   <body class="bg-gradient-to-br from-indigo-50 via-white to-teal-50 min-h-screen text-gray-800">
     <th:block layout:fragment="content"></th:block>
   </body>
   
-<th:block th:replace="fragments/footer :: footerFragment"></th:block>
+<th:block th:replace="~{fragments/footer :: footerFragment}"></th:block>
+<th:block layout:fragment="script"></th:block>
+
+<!-- FCM 관련 스크립트: 로그인한 사용자에게만 적용 -->
+<th:block sec:authorize="isAuthenticated()">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-messaging.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
+      authDomain: "charti-5da7d.firebaseapp.com",
+      projectId: "charti-5da7d",
+      messagingSenderId: "308166362794",
+      appId: "1:308166362794:web:00035f97aca288228972d3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    // 🔔 알림 권한 요청 + 토큰 발급 + 서버 저장
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then((registration) => {
+        return Notification.requestPermission().then(permission => {
+          if (permission !== "granted") {
+            throw new Error("알림 권한이 거부됨");
+          }
+          console.log("✅ 알림 권한 허용됨");
+
+          return getToken(messaging, {
+            vapidKey: "BCOstAjMQL4pjgMa7JNdlE_TX8zgAB2_Ke2ku53BMIZYVJJDpkMmB00wSMsp5K_H8Fog850yst8s662FLlAvcWY",
+            serviceWorkerRegistration: registration
+          });
+        });
+      })
+      .then((token) => {
+        console.log("🔥 FCM 웹 토큰:", token);
+
+        return fetch("/api/user/fcm-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fcmToken: token })
+        });
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("토큰 저장 실패");
+        console.log("✅ 서버에 FCM 토큰 저장 완료");
+      })
+      .catch((err) => {
+        console.error("❌ 알림 설정 실패:", err);
+      });
+
+    // 📩 포그라운드 수신 처리
+    onMessage(messaging, (payload) => {
+      console.log("📩 Foreground 메시지 수신:", payload);
+      const { title, body } = payload.notification;
+
+      new Notification(title, {
+        body: body,
+        icon: "/images/logo.png"  // 사이트 로고나 알림용 이미지 경로
+      });
+    });
+  </script>
+
+</th:block>
 
 </html>

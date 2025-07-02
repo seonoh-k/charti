@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charti - 문진 알림 발송</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .content-area { display: none; }
+        .content-area.open { display: block; }
+        .chevron-icon.rotate-180 {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease-in-out;
+        }
+        .chevron-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+        <h1 class="text-2xl font-bold mb-6">📮 문진 세트 알림 발송</h1>
+
+        <div th:if="${message}" class="mb-4 p-3 rounded text-sm"
+             th:classappend="${message.startsWith('❌')} ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'"
+             th:text="${message}">
+        </div>
+
+        <form th:action="@{/manager/notification/send}" method="post" id="notificationForm">
+            <div class="mb-4">
+                <label for="setId" class="block font-semibold mb-1">문진 세트</label>
+                <select name="setId" id="setId" class="w-full border p-2 rounded" required>
+                    <option value="">세트를 선택해주세요</option>
+                    <option th:each="s : ${surveySets}"
+                            th:value="${s.setId}"
+                            th:text="${s.setTitle}"></option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block font-semibold mb-1">알림 미리보기</label>
+                <div class="p-4 border rounded bg-gray-50">
+                    <p class="font-bold" id="preview-title">[제목]</p>
+                    <p id="preview-body" class="text-sm text-gray-700">문진 링크가 포함된 안내 메시지가 여기에 표시됩니다.</p>
+                </div>
+            </div>
+            <button type="submit"
+                    class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                    onclick="this.disabled=true; this.innerText='발송 중...'; document.getElementById('notificationForm').submit();">
+                문진 알림 발송
+            </button>
+        </form>
+
+        <div th:if="${sendResult}" class="mt-8 border-t pt-6">
+            <h2 class="text-xl font-bold mb-4">🚀 발송 결과</h2>
+
+            <div class="p-4 border rounded bg-gray-50 mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p class="font-semibold text-gray-800">✅ 성공: <span class="text-green-600 font-bold" th:text="${sendResult.successCount}">0</span> 명</p>
+                <p class="font-semibold text-gray-800">❌ 실패: <span class="text-red-600 font-bold" th:text="${sendResult.failedRecipientNames.size()}">0</span> 명</p>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(sendResult.successfulRecipientNames)}" id="success-accordion" class="border rounded mb-3">
+                <div class="accordion-header cursor-pointer bg-gray-100 p-3 flex justify-between items-center hover:bg-gray-200 transition">
+                    <span class="font-semibold text-gray-700">성공 내역 확인하기</span>
+                    <i class="chevron-icon fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="content-area p-4 border-t">
+                    <ul class="data-list list-disc pl-5 space-y-2 text-gray-600"></ul>
+                    <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
+                    <div class="hidden-data" style="display:none;">
+                        <span th:each="name : ${sendResult.successfulRecipientNames}" th:text="${name}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(sendResult.failedRecipientNames)}" id="failure-accordion" class="border rounded border-red-200">
+                <div class="accordion-header cursor-pointer bg-red-50 p-3 flex justify-between items-center hover:bg-red-100 transition">
+                    <span class="font-semibold text-red-700">실패 내역 확인하기</span>
+                    <i class="chevron-icon fa-solid fa-chevron-down text-red-700"></i>
+                </div>
+                <div class="content-area p-4 border-t border-red-200">
+                    <ul class="data-list list-disc pl-5 space-y-2 text-red-600"></ul>
+                    <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
+                    <div class="hidden-data" style="display:none;">
+                        <span th:each="name : ${sendResult.failedRecipientNames}" th:text="${name}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setupAccordionAndPagination(containerId, suffix = '') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const header = container.querySelector('.accordion-header');
+            const contentArea = container.querySelector('.content-area');
+            const chevronIcon = container.querySelector('.chevron-icon');
+            const dataList = container.querySelector('.data-list');
+            const paginationControls = container.querySelector('.pagination-controls');
+            const hiddenDataContainer = container.querySelector('.hidden-data');
+            const dataSpans = hiddenDataContainer.querySelectorAll('span');
+            const data = Array.from(dataSpans).map(span => span.textContent);
+
+            if (data.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            let currentPage = 1;
+            const itemsPerPage = 10;
+            const totalPages = Math.ceil(data.length / itemsPerPage);
+
+            function render() {
+                dataList.innerHTML = '';
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                const pageData = data.slice(start, end);
+
+                pageData.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item + suffix;
+                    dataList.appendChild(li);
+                });
+
+                paginationControls.innerHTML = '';
+                if (totalPages > 1) {
+                    const prevButton = document.createElement('button');
+                    prevButton.innerHTML = '&laquo; 이전';
+                    prevButton.className = 'px-3 py-1 rounded bg-gray-200 disabled:opacity-50';
+                    prevButton.disabled = currentPage === 1;
+                    prevButton.onclick = (e) => {
+                        e.stopPropagation();
+                        if (currentPage > 1) { currentPage--; render(); }
+                    };
+
+                    const pageInfo = document.createElement('span');
+                    pageInfo.textContent = `페이지 ${currentPage} / ${totalPages}`;
+
+                    const nextButton = document.createElement('button');
+                    nextButton.innerHTML = '다음 &raquo;';
+                    nextButton.className = 'px-3 py-1 rounded bg-gray-200 disabled:opacity-50';
+                    nextButton.disabled = currentPage === totalPages;
+                    nextButton.onclick = (e) => {
+                        e.stopPropagation();
+                        if (currentPage < totalPages) { currentPage++; render(); }
+                    };
+
+                    paginationControls.appendChild(prevButton);
+                    paginationControls.appendChild(pageInfo);
+                    paginationControls.appendChild(nextButton);
+                }
+            }
+
+            header.addEventListener('click', () => {
+                const isOpen = contentArea.classList.toggle('open');
+                chevronIcon.classList.toggle('rotate-180');
+                if (isOpen && dataList.children.length === 0) {
+                    render();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('success-accordion')) {
+                setupAccordionAndPagination('success-accordion', ' 어린이');
+            }
+            if (document.getElementById('failure-accordion')) {
+                setupAccordionAndPagination('failure-accordion');
+            }
+
+            const select = document.getElementById("setId");
+            const titleEl = document.getElementById("preview-title");
+            const bodyEl = document.getElementById("preview-body");
+
+            select.addEventListener("change", () => {
+                if (select.value === "") {
+                    titleEl.textContent = `[제목]`;
+                    bodyEl.textContent = `문진 링크가 포함된 안내 메시지가 여기에 표시됩니다.`;
+                    return;
+                }
+                const selectedTitle = select.options[select.selectedIndex].text;
+                titleEl.textContent = `[문진 알림] ${selectedTitle}`;
+                bodyEl.textContent = `지금 바로 '${selectedTitle}' 문진을 작성해주세요.\n문진 링크는 알림에 포함되어 있습니다.`;
+            });
+        });
+    </script>
+</th:block>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${form.id == null ? '새 문진 세트 생성' : '문진 세트 수정'}">폼</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+
+        <h1 class="text-2xl font-bold mb-4"
+            th:text="${form.id == null ? '새 문진 세트 생성' : '문진 세트 수정'}">폼</h1>
+
+        <form th:action="@{/manager/surveySet/save}"
+              th:object="${form}"
+              method="post"
+              class="space-y-4">
+            <!-- 숨김 필드: ID, 타입, 매니저 그룹 -->
+            <input type="hidden" th:field="*{id}"/>
+            <input type="hidden" th:field="*{type}"/>
+            <input type="hidden" th:field="*{targetGroup}"/>
+
+            <!-- 세트명 -->
+            <div>
+                <label class="block mb-1">세트명</label>
+                <input th:field="*{setTitle}"
+                       class="w-full border rounded px-2 py-1"/>
+                <p th:if="${#fields.hasErrors('setTitle')}"
+                   th:errors="*{setTitle}"
+                   class="text-red-600 text-sm"></p>
+            </div>
+
+            <!-- 카테고리 필터 (클라이언트 사이드 전용) -->
+            <div class="flex gap-4 mb-4">
+                <label class="block">카테고리</label>
+                <select id="categoryFilter"
+                        class="border rounded px-2 py-1">
+                    <!-- 전체 카테고리 -->
+                    <option th:value="${T(com.example.demo.enums.SurveyCategory).ALL}"
+                            th:text="'전체 카테고리'">
+                    </option>
+                    <!-- 통합 -->
+                    <option th:value="${T(com.example.demo.enums.SurveyCategory).VARIOUS}"
+                            th:text="'통합'">
+                    </option>
+                    <!-- 실제 카테고리 옵션 (ALL, VARIOUS 제외) -->
+                    <option th:each="cat : ${categoryOptions}"
+                            th:if="${cat != T(com.example.demo.enums.SurveyCategory).ALL
+                 and cat != T(com.example.demo.enums.SurveyCategory).VARIOUS}"
+                            th:value="${cat}"
+                            th:text="${cat.displayName}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- 문진 리스트: 서버 렌더링 + 비동기 업데이트 -->
+            <div id="surveyContainer"
+                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-auto border rounded p-2">
+                <div th:each="s : ${surveys}" class="flex items-center">
+                    <input type="checkbox"
+                           th:field="*{surveyIds}"
+                           th:value="${s.id}"
+                           th:checked="${#lists.contains(form.surveyIds, s.id)}"
+                           class="mr-2"/>
+                    <span th:text="${s.question}">질문</span>
+                    <span class="text-xs text-gray-500"
+                          th:text="${'[' + s.ageGroup.displayName + ' | ' + s.category.displayName + ']'}">
+          </span>
+                </div>
+            </div>
+
+            <!-- 글로벌 에러 -->
+            <div th:if="${#fields.hasGlobalErrors()}" class="text-red-600">
+                <ul>
+                    <li th:each="err : ${#fields.globalErrors()}"
+                        th:text="${err}">글로벌 에러</li>
+                </ul>
+            </div>
+
+            <!-- 저장 / 취소 -->
+            <div class="flex gap-2">
+                <button type="submit"
+                        class="bg-blue-600 text-white px-4 py-1 rounded">저장</button>
+                <a th:href="@{/manager/surveySet}"
+                   class="bg-gray-500 text-white px-2 py-1 rounded">취소</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- JS: 카테고리 변경 시 /api 호출로 업데이트 -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+          const type = /*[[${form.type}]]*/ 'GROUP';
+          const tgt  = /*[[${form.targetGroup}]]*/ 'ALL';
+          let selectedIds = /*[[${form.surveyIds}]]*/ [];
+
+          document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('surveyContainer');
+            const catSel    = document.getElementById('categoryFilter');
+
+            function loadSurveys() {
+              const category = catSel.value;
+              fetch(`/api/surveys?type=${type}&age=ALL&category=${category}&targetGroup=${tgt}`)
+                .then(res => res.json())
+                .then(data => {
+                  container.innerHTML = '';
+                  data.forEach(s => {
+                    const checked = selectedIds.includes(s.id) ? 'checked' : '';
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center';
+                    div.innerHTML = `
+                      <input type="checkbox" name="surveyIds" value="${s.id}"
+                             class="mr-2" ${checked}/>
+                      <span>${s.question}
+                        <span class="text-xs text-gray-500">
+                          [${s.ageGroup} | ${s.category}]
+                        </span>
+                      </span>`;
+                    container.appendChild(div);
+                  });
+                });
+            }
+
+            catSel.addEventListener('change', loadSurveys);
+            loadSurveys();
+          });
+        /*]]>*/
+    </script>
+
+</th:block>
+</html>

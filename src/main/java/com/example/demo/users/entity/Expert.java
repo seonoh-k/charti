@@ -1,0 +1,42 @@
+package com.example.demo.users.entity;
+
+import com.example.demo.entity.Address;
+import com.example.demo.entity.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Expert{
+
+    @Id
+    @Column(name = "users_id")
+    private Long id;
+
+    @OneToOne()
+    @MapsId()
+    @JoinColumn(name = "users_id")
+    private Users users;
+    // 전공
+    private String major;
+    // 자격증파일
+    private String license;
+    // 경력사항
+    private String career;
+    // 승인여부
+    @Column(nullable = false)
+    private Boolean isApproved = false;
+
+    @OneToOne()
+    @JoinColumn(name = "address_id")
+    private Address address;
+
+
+
+
+
+}

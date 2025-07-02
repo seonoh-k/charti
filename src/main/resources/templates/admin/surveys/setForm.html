@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${form.id==null?'새 문진 세트 생성':'문진 세트 수정'}">폼</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+    <h1 class="text-2xl font-bold mb-4"
+        th:text="${form.id==null?'새 문진 세트 생성':'문진 세트 수정'}">제목</h1>
+
+    <form th:action="@{/admin/surveySet/save}" th:object="${form}" method="post" class="space-y-4">
+        <input type="hidden" th:field="*{id}"/>
+        <input type="hidden" th:field="*{type}"/>
+
+        <!-- 세트명, 에러처리 -->
+        <div>
+            <label class="block mb-1">세트명</label>
+            <input th:field="*{setTitle}" class="w-full border rounded px-2 py-1"/>
+            <p th:if="${#fields.hasErrors('setTitle')}"
+               th:errors="*{setTitle}"
+               class="text-red-600 text-sm"></p>
+        </div>
+
+        <!-- 필터: ALL + 실제 옵션(ageOptions, categoryOptions) -->
+        <div class="flex gap-4 mb-4">
+            <!-- 연령대 필터 -->
+            <select id="ageFilter" class="border px-2 py-1 rounded">
+                <!-- ALL(전체 연령대) -->
+                <option value="ALL">전체 연령대</option>
+                <!-- 실제 enum 값들만 반복 -->
+                <option th:each="age : ${T(com.example.demo.enums.AgeGroup).values()}"
+                        th:if="${age != T(com.example.demo.enums.AgeGroup).ALL
+                    and age != T(com.example.demo.enums.AgeGroup).VARIOUS}"
+                        th:value="${age.name()}"
+                        th:text="${age.displayName}">
+                </option>
+            </select>
+
+            <!-- 카테고리 필터 -->
+            <select id="categoryFilter" class="border px-2 py-1 rounded">
+                <!-- ALL(전체 카테고리) -->
+                <option value="ALL">전체 카테고리</option>
+                <!-- 실제 enum 값들만 반복 -->
+                <option th:each="cat : ${T(com.example.demo.enums.SurveyCategory).values()}"
+                        th:if="${cat != T(com.example.demo.enums.SurveyCategory).ALL
+                    and cat != T(com.example.demo.enums.SurveyCategory).VARIOUS}"
+                        th:value="${cat.name()}"
+                        th:text="${cat.displayName}">
+                </option>
+            </select>
+        </div>
+
+        <div th:if="${form.type == 'GROUP'}" class="mb-4">
+            <label class="block mb-1">대상 그룹</label>
+            <select id="targetFilter" th:field="*{targetGroup}"
+                    class="border rounded px-2 py-1">
+                <option th:each="tg : ${targetOptions}"
+                        th:value="${tg.name()}"
+                        th:text="${tg.displayName}">
+                </option>
+            </select>
+        </div>
+
+        <!-- Survey 체크박스 리스트 (JS로 비동기 로드) -->
+        <div id="surveyContainer"
+             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-auto border rounded p-2">
+            <!-- initial rendering (변경 없음) -->
+            <div th:each="s : ${surveys}" class="flex items-center">
+                <input type="checkbox"
+                       th:field="*{surveyIds}"
+                       th:value="${s.id}"
+                       class="mr-2"/>
+                <span th:text="${s.question}"></span>
+                <span class="text-xs text-gray-500"
+                      th:text="${'[' + s.ageGroup.displayName + ' | ' + s.category.displayName + ']'}"></span>
+            </div>
+        </div>
+
+        <!-- 글로벌 에러, 버튼 등 (변경 없음) -->
+        <div th:if="${#fields.hasGlobalErrors()}" class="text-red-600">
+            <ul>
+                <li th:each="err : ${#fields.globalErrors()}"
+                    th:text="${err}">글로벌 에러</li>
+            </ul>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">저장</button>
+            <a th:href="@{/admin/surveySet}" class="bg-gray-500 text-white px-2 py-1 rounded">취소</a>
+        </div>
+    </form>
+    </div>
+
+    <!-- 1) Thymeleaf 변수 치환용 inline 스크립트 -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        let selectedIds = /*[[${form.surveyIds}]]*/ null;
+        let type        = /*[[${form.type}]]*/ 'GROUP';
+
+        if (!Array.isArray(selectedIds)) {
+            selectedIds = [];
+        }
+        /*]]>*/
+    </script>
+
+    <!-- 2) 실제 비동기 필터링 및 체크 상태 반영 -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+          document.addEventListener('DOMContentLoaded', function () {
+            const surveyContainer = document.getElementById('surveyContainer');
+            const ageFilter       = document.getElementById('ageFilter');
+            const categoryFilter  = document.getElementById('categoryFilter');
+            const targetFilter    = document.getElementById('targetFilter');  // ← 추가
+
+            function loadSurveys() {
+              const age   = ageFilter.value;
+              const cat   = categoryFilter.value;
+              const tgt   = targetFilter ? targetFilter.value : '';
+              fetch(`/api/surveys?type=${type}&age=${age}&category=${cat}&targetGroup=${tgt}`)
+                .then(res => res.json())
+                .then(data => {
+                  surveyContainer.innerHTML = '';
+                  data.forEach(s => {
+                    const isChecked = selectedIds.includes(s.id) ? 'checked' : '';
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center';
+                    div.innerHTML = `
+                      <input type="checkbox" name="surveyIds" value="${s.id}"
+                             class="mr-2" ${isChecked}/>
+                      <span>${s.question}
+                        <span class="text-xs text-gray-500">
+                          [${s.ageGroup}|${s.category}]
+                        </span>
+                      </span>`;
+                    surveyContainer.appendChild(div);
+                  });
+                });
+            }
+
+            // 필터 변경 시 다시 로드
+            ageFilter.addEventListener('change', loadSurveys);
+            categoryFilter.addEventListener('change', loadSurveys);
+            if (targetFilter) targetFilter.addEventListener('change', loadSurveys);
+
+            loadSurveys();
+          });
+        /*]]>*/
+    </script>
+</th:block>
+</html>

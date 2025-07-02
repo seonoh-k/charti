@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기록 문진 질문 관리</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <h2 class="text-2xl font-bold mb-4">기록 문진 질문 관리 (관리자)</h2>
+
+        <!-- 등록 폼 -->
+        <div class="bg-white border rounded-lg p-4 mb-6">
+            <h3 class="text-lg font-semibold mb-2">새 질문 등록</h3>
+            <div class="mb-3">
+                <label class="block mb-1">연령대</label>
+                <select id="ageGroup" class="border rounded px-3 py-2 w-full">
+                    <option value="0~12개월">0~12개월</option>
+                    <option value="1~2세">1~2세</option>
+                    <option value="3~4세">3~4세</option>
+                    <option value="5세">5세</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="block mb-1">질문 내용</label>
+                <input type="text" id="question" class="border rounded px-3 py-2 w-full" placeholder="예: 밤에 깨는 횟수가 많았나요?">
+            </div>
+            <button onclick="submitSurvey()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">질문 등록</button>
+        </div>
+
+        <!-- 필터 / 정렬 -->
+        <div class="mb-4">
+            <label class="font-semibold">연령대 필터:</label>
+            <select id="filterAgeGroup" onchange="loadSurveys(0)" class="border rounded px-2 py-1 ml-2">
+                <option value="전체">전체 보기</option>
+                <option value="0~12개월">0~12개월</option>
+                <option value="1~2세">1~2세</option>
+                <option value="3~4세">3~4세</option>
+                <option value="5세">5세</option>
+            </select>
+
+            <label class="font-semibold ml-4">정렬 기준:</label>
+            <select id="sortOption" onchange="loadSurveys(0)" class="border rounded px-2 py-1 ml-2">
+                <option value="createdAt">등록일순</option>
+                <option value="ageGroup">연령대순</option>
+            </select>
+        </div>
+
+        <!-- 목록 테이블 -->
+        <table class="table-auto w-full border text-sm text-center">
+            <thead>
+            <tr class="bg-gray-100">
+                <th class="border px-2 py-1">#</th>
+                <th class="border px-2 py-1">연령대</th>
+                <th class="border px-2 py-1">질문</th>
+                <th class="border px-2 py-1">등록일</th>
+                <th class="border px-2 py-1">관리</th>
+            </tr>
+            </thead>
+            <tbody id="surveyList"></tbody>
+        </table>
+
+        <!-- 페이징 -->
+        <div id="pagination" class="mt-6 flex justify-center"></div>
+
+        <!-- 수정 폼 -->
+        <div id="editForm" class="bg-gray-50 border mt-8 p-4 rounded hidden">
+            <h3 class="text-lg font-semibold mb-2">질문 수정</h3>
+            <div class="mb-2">
+                <label class="block mb-1">연령대</label>
+                <select id="editAgeGroup" class="border rounded px-3 py-2 w-full">
+                    <option value="0~12개월">0~12개월</option>
+                    <option value="1~2세">1~2세</option>
+                    <option value="3~4세">3~4세</option>
+                    <option value="5세">5세</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="block mb-1">질문 내용</label>
+                <input type="text" id="editQuestion" class="border rounded px-3 py-2 w-full" placeholder="수정할 질문을 입력하세요.">
+            </div>
+            <button onclick="submitEditForm()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">수정 저장</button>
+            <button onclick="cancelEdit()" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 ml-2">취소</button>
+        </div>
+    </div>
+
+    <script>
+        let editingId = null;
+        const pageSize = 20;
+        let currentPage = 0;
+
+        document.addEventListener("DOMContentLoaded", () => loadSurveys());
+
+        async function loadSurveys(page = 0) {
+            const ageGroup = document.getElementById("filterAgeGroup")?.value || "";
+            const sortOption = document.getElementById("sortOption")?.value || "createdAt";
+            const sortDir = sortOption === "ageGroup" ? "asc" : "desc";
+            let url = `/api/admin/record-surveys?page=${page}&size=${pageSize}&sortBy=${sortOption}&direction=${sortDir}`;
+            if (ageGroup && ageGroup !== "전체") url += `&ageGroup=${encodeURIComponent(ageGroup)}`;
+
+            const res = await fetch(url);
+            const { content, totalPages, currentPage: cp } = await res.json();
+
+            currentPage = cp;
+            const tbody = document.getElementById("surveyList");
+            tbody.innerHTML = content.length === 0
+                ? "<tr><td colspan='5'>등록된 질문이 없습니다.</td></tr>"
+                : content.map((s, idx) => `
+                    <tr>
+                        <td>${page * pageSize + idx + 1}</td>
+                        <td>${s.ageGroup || '-'}</td>
+                        <td>${s.question}</td>
+                        <td>${s.createdAt?.substring(0, 10) || '-'}</td>
+                        <td>
+                            <button onclick="showEditForm(${s.id}, '${s.ageGroup}', \`${s.question}\`)" class="text-blue-600 hover:underline">수정</button>
+                            <button onclick="deleteSurvey(${s.id})" class="text-red-600 hover:underline ml-2">삭제</button>
+                        </td>
+                    </tr>`).join("");
+
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            const container = document.getElementById("pagination");
+            container.innerHTML = "";
+            for (let i = 0; i < totalPages; i++) {
+                const btn = document.createElement("button");
+                btn.innerText = i + 1;
+                btn.className = `mx-1 px-3 py-1 rounded border ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-white text-black border-gray-300 hover:bg-gray-100'}`;
+                btn.onclick = () => loadSurveys(i);
+                container.appendChild(btn);
+            }
+        }
+
+        async function submitSurvey() {
+            const ageGroup = document.getElementById("ageGroup").value;
+            const question = document.getElementById("question").value.trim();
+            if (!ageGroup || !question) return alert("모든 항목을 입력해주세요.");
+
+            const res = await fetch("/api/admin/record-surveys", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ageGroup, question })
+            });
+
+            if (res.ok) {
+                alert("질문이 등록되었습니다.");
+                document.getElementById("question").value = "";
+                loadSurveys(currentPage);
+            } else alert("등록 실패");
+        }
+
+        async function deleteSurvey(id) {
+            if (!confirm("정말 삭제하시겠습니까?")) return;
+            const res = await fetch(`/api/admin/record-surveys/${id}`, { method: "DELETE" });
+            if (res.ok) loadSurveys(currentPage);
+            else alert("삭제 실패");
+        }
+
+        function showEditForm(id, ageGroup, question) {
+            editingId = id;
+            document.getElementById("editForm").style.display = "block";
+            document.getElementById("editAgeGroup").value = ageGroup;
+            document.getElementById("editQuestion").value = question;
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        async function submitEditForm() {
+            const ageGroup = document.getElementById("editAgeGroup").value;
+            const question = document.getElementById("editQuestion").value.trim();
+            if (!question || !ageGroup) return alert("모든 항목을 입력해주세요.");
+
+            const res = await fetch(`/api/admin/record-surveys/${editingId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ageGroup, question })
+            });
+
+            if (res.ok) {
+                alert("수정 완료");
+                document.getElementById("editForm").style.display = "none";
+                loadSurveys(currentPage);
+            } else alert("수정 실패");
+        }
+
+        function cancelEdit() {
+            document.getElementById("editForm").style.display = "none";
+            editingId = null;
+        }
+    </script>
+</th:block>
+</html>

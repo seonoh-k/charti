@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그룹 문진</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <!-- 설문 제목 -->
+        <h1 class="text-3xl font-bold mb-4"
+            th:text="${surveySet.setTitle}">설문 제목</h1>
+
+        <!-- 자녀 기본 정보 -->
+        <div class="mb-4 space-y-1">
+            <p>
+                <strong>자녀 이름 / 별명:</strong>
+                <span th:text="${child.name + ' (' + child.nickname + ')'}">홍길동 (길동이)</span>
+            </p>
+            <p>
+                <strong>나이:</strong>
+                <span th:text="${child.birthOrder}">1</span>세
+            </p>
+            <p>
+                <strong>성별:</strong>
+                <span th:text="${child.gender}">여자</span>
+            </p>
+            <p>
+                <strong>키:</strong>
+                <span th:text="${child.height}">85</span>
+            </p>
+            <p>
+                <strong>몸무게:</strong>
+                <span th:text="${child.weight}">12</span>
+            </p>
+        </div>
+
+        <!-- 설문 세트 메타 정보 -->
+        <div class="mb-6 space-y-1">
+            <p><strong>연령대:</strong> <span id="ageGroup" th:text="${ageGroup}">0~12개월</span></p>
+            <p><strong>카테고리:</strong> <span id="category" th:text="${category}">의사소통/정서/심리</span></p>
+            <p><strong>타입:</strong> <span id="typeLabel" th:text="${typeLabel}">그룹 문진</span></p>
+        </div>
+
+        <!-- 문항별 라디오 버튼 폼 -->
+        <form id="surveyForm">
+            <input type="hidden" name="childId" id="childId" th:value="${child.id}" />
+            <input type="hidden" name="setId" id="setId" th:value="${surveySet.setId}" />
+
+            <div th:each="q, idx : ${questions}"
+                 class="question-block mb-5 p-4 border rounded">
+                <p class="font-semibold mb-2">
+                    Q<span th:text="${idx.count}">1</span>.
+                    <span th:text="${q.question}" class="question">문항 텍스트</span>
+                    <span class="text-sm text-gray-500">
+            ( <span th:text="${q.category.displayName}">카테고리명</span> )
+          </span>
+                </p>
+
+                <!-- 1~5번 선택지 -->
+                <div th:each="v : ${#numbers.sequence(1,5)}">
+                    <label class="block">
+                        <input type="radio"
+                               th:name="${q.id}"
+                               th:value="${v}"
+                               class="mr-2"/>
+                        <span th:switch="${v}">
+              <span th:case="1" th:text="${q.answer1}">전혀 아니다</span>
+              <span th:case="2" th:text="${q.answer2}">거의 아니다</span>
+              <span th:case="3" th:text="${q.answer3}">보통이다</span>
+              <span th:case="4" th:text="${q.answer4}">약간 그렇다</span>
+              <span th:case="5" th:text="${q.answer5}">매우 그렇다</span>
+            </span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="button"
+                    id="submitBtn"
+                    class="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700">
+                제출하기
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('submitBtn').addEventListener('click', () => {
+          const form  = document.getElementById('surveyForm');
+          const ageGroup = document.querySelector("#ageGroup").textContent.trim();
+          const category = document.querySelector("#category").textContent.trim();
+          const childId = document.querySelector("#childId").value;
+          const setId = document.querySelector("#setId").value;
+          const answerList = [];
+          const data  = new FormData(form);
+
+          document.querySelectorAll('.question-block').forEach(block => {
+            const name = block.querySelector('input[type="radio"]').name;
+            const question = block.querySelector(".question").textContent.trim();
+            const sel  = data.get(name);
+            if (!sel) {
+              alert('모든 문항에 답변해주세요');
+              throw '답변 누락';
+            }
+            answerList.push({
+                surveyId: Number(name),
+                question: question,
+                answerValue: Number(sel)
+            });
+          });
+
+          const payload = {
+              childId: Number(childId),
+              setId:   Number(setId),
+              answerList: answerList,
+              ageGroup: ageGroup,
+              category: category
+          };
+
+          fetch('/api/surveySet/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+          .then(r => {
+            if (!r.ok) throw new Error('네트워크 오류');
+            return r.json();
+          })
+          .then(res => {
+              const typeLabel = document.querySelector("#typeLabel").textContent.trim();
+              const payload = encodeURIComponent(JSON.stringify(res));
+              if(typeLabel === '그룹 문진') {
+                  window.location.href = `/groupSurvey/result?data=${payload}`;
+              }else {
+                  window.location.href = `/specialSurvey/result?data=${payload}`;
+              }
+          })
+          .catch(err => alert('저장 중 오류: ' + err.message));
+        });
+    </script>
+</th:block>
+</html>

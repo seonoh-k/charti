@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문진 세트 목록</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+    <h1 class="text-2xl font-bold mb-4">문진 세트</h1>
+
+    <!-- 필터 & 검색 -->
+    <form th:action="@{/admin/surveySet}" th:object="${search}" method="get"
+          class="flex flex-wrap gap-4 mb-6">
+        <input type="text" th:field="*{keyword}"
+               placeholder="제목 검색"
+               class="border rounded px-2 py-1"/>
+
+        <!-- 연령대 필터 -->
+        <select th:field="*{ageGroup}" class="border rounded px-2 py-1">
+            <!-- ALL: 전체 연령대 -->
+            <option th:value="${T(com.example.demo.enums.AgeGroup).ALL.name()}"
+                    th:text="'전체 연령대'">
+            </option>
+            <!-- VARIOUS: 통합 -->
+            <option th:value="${T(com.example.demo.enums.AgeGroup).VARIOUS.name()}"
+                    th:text="'통합'">
+            </option>
+            <!-- 실제 연령 옵션 -->
+            <option th:each="age : ${ageOptions}"
+                    th:value="${age.name()}"
+                    th:text="${age.displayName}">
+            </option>
+        </select>
+
+        <!-- 카테고리 필터 -->
+        <select th:field="*{category}" class="border rounded px-2 py-1">
+            <!-- ALL: 전체 카테고리 -->
+            <option th:value="${T(com.example.demo.enums.SurveyCategory).ALL.name()}"
+                    th:text="'전체 카테고리'">
+            </option>
+            <!-- VARIOUS: 통합 -->
+            <option th:value="${T(com.example.demo.enums.SurveyCategory).VARIOUS.name()}"
+                    th:text="'통합'">
+            </option>
+            <!-- 실제 카테고리 옵션 -->
+            <option th:each="cat : ${categoryOptions}"
+                    th:value="${cat.name()}"
+                    th:text="${cat.displayName}">
+            </option>
+        </select>
+
+        <!-- 타입 필터 (변경 없음) -->
+        <select th:field="*{type}" class="border rounded px-2 py-1">
+            <option value="all">전체 종류</option>
+            <option value="GROUP">그룹문진</option>
+            <option value="SPECIAL">특별문진</option>
+        </select>
+
+        <button type="submit"
+                class="bg-blue-600 text-white px-4 py-1 rounded">검색</button>
+        <a th:href="@{/admin/surveySet/create(type=${search.type=='all'?'GROUP':search.type})}"
+           class="bg-green-600 text-white px-4 py-1 rounded">그룹문진 세트 생성</a>
+        <a th:href="@{/admin/surveySet/create(type=${search.type=='all'?'SPECIAL':search.type})}"
+           class="bg-green-600 text-white px-4 py-1 rounded">특별문진 세트 생성</a>
+    </form>
+
+    <!-- 리스트 테이블 -->
+    <table class="min-w-full table-auto border-collapse">
+        <thead>
+        <tr class="bg-gray-100">
+            <th class="px-2 py-1 border">번호</th>
+            <th class="px-2 py-1 border">제목</th>
+            <th class="px-2 py-1 border">연령대</th>
+            <th class="px-2 py-1 border">카테고리</th>
+            <th class="px-2 py-1 border">종류</th>
+            <th class="px-2 py-1 border">대상 그룹</th>
+            <th class="px-2 py-1 border">작성일</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="set, stat : ${page.content}" class="hover:bg-gray-50">
+            <td class="px-2 py-1 border" th:text="${stat.index+1}">1</td>
+            <td class="px-2 py-1 border">
+                <a th:href="@{|/admin/surveySet/${set.setId}|}"
+                   class="text-blue-600 hover:underline"
+                   th:text="${set.setTitle}">제목</a>
+            </td>
+            <!-- enum.displayName 사용 + VARIOUS는 '통합'으로 -->
+            <td class="px-2 py-1 border"
+                th:text="${set.ageGroup == T(com.example.demo.enums.AgeGroup).VARIOUS
+                    ? '통합'
+                    : set.ageGroup.displayName}">
+            </td>
+            <td class="px-2 py-1 border"
+                th:text="${set.category == T(com.example.demo.enums.SurveyCategory).VARIOUS
+                    ? '통합'
+                    : set.category.displayName}">
+            </td>
+            <td class="px-2 py-1 border"
+                th:text="${set.type=='GROUP'? '그룹문진':'특별문진'}">
+            </td>
+            <td class="px-2 py-1 border"
+                th:text="${set.targetGroup != null ? set.targetGroup.displayName : '-'}">
+            </td>
+            <td class="px-2 py-1 border"
+                th:text="${#temporals.format(set.createdAt,'yyyy.MM.dd')}">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- 페이징 (변경 없음) -->
+    <div class="mt-4 flex justify-center space-x-2">
+        <a th:if="${page.hasPrevious()}"
+           th:href="@{/admin/surveySet(page=${page.number-1},
+                              keyword=${search.keyword},
+                              ageGroup=${search.ageGroup},
+                              category=${search.category},
+                              type=${search.type})}"
+           class="px-2 py-1 border rounded">이전</a>
+        <span th:each="i : ${#numbers.sequence(0, page.totalPages-1)}">
+      <a th:href="@{/admin/surveySet(page=${i},
+                                keyword=${search.keyword},
+                                ageGroup=${search.ageGroup},
+                                category=${search.category},
+                                type=${search.type})}"
+         th:text="${i+1}"
+         th:classappend="${i==page.number}? 'font-bold underline' : ''"
+         class="px-2 py-1 border rounded">1</a>
+    </span>
+        <a th:if="${page.hasNext()}"
+           th:href="@{/admin/surveySet(page=${page.number+1},
+                              keyword=${search.keyword},
+                              ageGroup=${search.ageGroup},
+                              category=${search.category},
+                              type=${search.type})}"
+           class="px-2 py-1 border rounded">다음</a>
+    </div>
+</th:block>
+</body>
+</html>

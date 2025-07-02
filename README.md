@@ -1,9 +1,9 @@
 CHARTI
 
-프로젝트 기한 - 7월 3일까지
-서비스 호스팅 - Amazon AWS EC2
-데이터베이스 - Amazon AWS RDS (MySQL)
-스토리지 - CloudFlare R2 (개체 스토리지)
+- 프로젝트 기한 - 7월 3일까지
+- 서비스 호스팅 - Amazon AWS EC2
+- 데이터베이스 - Amazon AWS RDS (MySQL)
+- 스토리지 - CloudFlare R2 (개체 스토리지)
 
 application.properties 파일에
 spring.datasource.username=user1
@@ -37,7 +37,7 @@ MVP 모듈화
          super.update(child);
        }
      }
-   - 정확히 BaseService 클래스 때문인지는 모르겠지만, 이 클래스를 상속 받았을 때 @RequiredArgsConstructor 어노테이션을 사용할 수 없는 것 같음. 확인 필요
+   - BaseService 때문에 리포지토리 객체 생성이 안되던 문제 해결. @RequiredArgsConstructor 어노테이션은 적용이 안됨.
 3. APIResponse
    - 거의 모든 컨트롤러에서 사용할 수 있는 API 응답 모듈
    - RestController에 작성할 API의 응답을 일관된 방식으로 작성하기 위해 모듈 작성

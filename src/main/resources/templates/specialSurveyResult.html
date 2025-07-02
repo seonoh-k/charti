@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>특별 문진 결과</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">특별 문진 결과</h1>
+
+        <div id="resultContainer" class="space-y-6">
+        </div>
+
+        <div class="mt-8">
+            <button onclick="history.back()"
+                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                다시 문진하기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("▶ 렌더링 시작", window.location.search);
+
+            const params = new URLSearchParams(window.location.search);
+            const dataParam = params.get("data");
+            let result;
+            try {
+                result = JSON.parse(decodeURIComponent(dataParam));
+                console.log("▶ parsed result:", result);
+            } catch (e) {
+                console.error("결과 파싱 실패", e);
+                document.getElementById("resultContainer").innerHTML =
+                    `<p class="text-red-500">결과를 불러오는 데 실패했습니다.</p>`;
+                return;
+            }
+
+            const categoryScores = result.categoryScores ?? {};
+            const needsMatching  = result.needsMatching === true;
+            const childId        = result.childId;
+            const category       = result.category;
+            const answerIds      = Array.isArray(result.answerIds) ? result.answerIds : [];
+
+            const container = document.getElementById("resultContainer");
+            container.innerHTML = "";
+
+            if (!Object.keys(categoryScores).length) {
+                container.innerHTML = `<p class="text-gray-600">평가 항목이 없습니다.</p>`;
+                return;
+            }
+
+            for (const [catName, score] of Object.entries(categoryScores)) {
+                console.log("▶ rendering", catName, score);
+                const isHigh = score >= 60;
+                const wrap = document.createElement("div");
+                wrap.className = `p-4 border rounded-lg ${
+                    isHigh ? "border-red-300 bg-red-50" : "border-gray-200 bg-white"
+                }`;
+
+                let html = `
+              <div class="flex justify-between items-center">
+                <p class="font-semibold text-lg">${catName}</p>
+                <p class="text-2xl font-bold ${
+                    isHigh ? "text-red-600" : "text-green-700"
+                }">${score.toFixed(1)}%</p>
+              </div>
+            `;
+
+                if (needsMatching && answerIds.length) {
+                    const q = answerIds.map(id => `answerId=${id}`).join("&");
+                    const catEnum = result.category;
+                    const url = `/matching/${encodeURIComponent(catEnum)}/request?type=SPECIAL&childId=${childId}&${q}`;
+
+                    html += `
+                <div class="mt-3 pt-3 border-t border-red-200">
+                  <p class="text-sm text-red-800">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    <strong>'${catName}'</strong> 항목에 전문가 상담이 필요할 수 있습니다.
+                  </p>
+                  <a href="${url}" class="mt-2 inline-block bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 text-sm font-bold">
+                    전문가 상담 신청하기
+                  </a>
+                </div>
+              `;
+                }
+
+                wrap.innerHTML = html;
+                container.appendChild(wrap);
+            }
+        });
+    </script>
+</th:block>
+</html>

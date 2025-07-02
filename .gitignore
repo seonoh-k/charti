@@ -150,3 +150,5 @@ application.yml
 
 ### MacOS ###
 .DS_Store
+
+!gradle/wrapper/gradle-wrapper.jar

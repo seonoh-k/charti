@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/expertLayout">
+<th:block layout:fragment="content">
+    <div class="flex flex-1">
+        <div class="flex-1 justify-center items-center p-20">
+            <h1 class="text-3xl font-bold mb-4">내 상담 내역</h1>
+
+
+            <!-- 상태 필터 -->
+            <form th:action="@{/expert/matching}" method="get"
+                  class="mb-6 flex items-center space-x-2">
+                <label for="status" class="font-semibold">상태:</label>
+                <select id="status" name="status"
+                        class="border p-1 rounded">
+                    <option th:value="'ALL'"
+                            th:text="'전체'"
+                            th:selected="${currentStatus=='ALL'}">전체</option>
+                    <option th:value="MATCHED"
+                            th:text="${T(com.example.demo.enums.MatchingStatus).MATCHED.displayName}"
+                            th:selected="${currentStatus=='MATCHED'}">매칭완료</option>
+                    <option th:value="RESPONDED"
+                            th:text="${T(com.example.demo.enums.MatchingStatus).RESPONDED.displayName}"
+                            th:selected="${currentStatus=='RESPONDED'}">답변완료</option>
+                </select>
+
+                <!-- 제목 검색 -->
+                <label for="keyword" class="font-semibold">제목:</label>
+                <input type="text"
+                       id="keyword"
+                       name="keyword"
+                       placeholder="제목 검색"
+                       th:value="${keyword}"
+                       class="border p-1 rounded"/>
+
+                <button type="submit"
+                        class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                    조회
+                </button>
+            </form>
+
+            <table class="min-w-full border-collapse">
+                <thead>
+                <tr class="bg-gray-100">
+                    <th class="border p-2">ID</th>
+                    <th class="border p-2">자녀</th>
+                    <th class="border p-2">카테고리</th>
+                    <th class="border p-2">제목</th>
+                    <th class="border p-2">상태</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${matchings}" class="odd:bg-white even:bg-gray-50">
+                    <td class="border p-2" th:text="${m.id}"></td>
+                    <td class="border p-2" th:text="${m.child.name}"></td>
+                    <td class="border p-2" th:text="${m.category.displayName}"></td>
+                    <td class="border p-2">
+                        <a th:href="@{/expert/matching/{id}(id=${m.id})}"
+                           th:text="${m.title}"
+                           class="text-blue-600 hover:underline"></a>
+                    </td>
+                    <td class="border p-2" th:text="${m.status.displayName}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(matchings)}">
+                    <td class="border p-2 text-center" colspan="5">조회된 상담이 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- 페이징 -->
+            <div class="mt-4 flex justify-center space-x-2">
+                <a th:if="${matchings.hasPrevious()}"
+                   th:href="@{/expert/matching(status=${currentStatus},page=${matchings.number-1})}"
+                   class="px-2 py-1 border rounded">이전</a>
+                <span th:each="i : ${#numbers.sequence(0, matchings.totalPages-1)}">
+                    <a th:href="@{/expert/matching(status=${currentStatus},page=${i})}"
+                       th:text="${i+1}"
+                       th:classappend="${i == matchings.number} ? ' font-bold underline' : ''"
+                       class="px-2 py-1 border rounded"></a>
+                </span>
+                <a th:if="${matchings.hasNext()}"
+                   th:href="@{/expert/matching(status=${currentStatus},page=${matchings.number+1})}"
+                   class="px-2 py-1 border rounded">다음</a>
+            </div>
+        </div>
+    </div>
+</th:block>
+</html>

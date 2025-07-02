@@ -1,0 +1,48 @@
+package com.example.demo.survey.entity;
+
+import com.example.demo.entity.BaseEntity;
+import com.example.demo.enums.AgeGroup;
+import com.example.demo.converter.AgeGroupConverter;
+import com.example.demo.enums.SurveyCategory;
+import com.example.demo.converter.SurveyCategoryConverter;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Table(name = "daily_survey")
+@Getter
+@Setter
+public class DailySurvey extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "age_group", nullable = false)
+    private AgeGroup ageGroup;
+
+    @Column(nullable = false)
+    private SurveyCategory category;
+
+    @Column(nullable = false)
+    private String question;
+
+    @Column(nullable = false)
+    private int weight;
+
+    @Column(nullable = false)
+    private String answer1;
+
+    @Column(nullable = false)
+    private String answer2;
+
+    @Column(nullable = false)
+    private String answer3;
+
+    @Column(nullable = false)
+    private String answer4;
+
+    @Column(nullable = false)
+    private String answer5;
+}

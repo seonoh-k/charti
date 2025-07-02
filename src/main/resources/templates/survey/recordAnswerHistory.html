@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>기록 문진 이력</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .pagination-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .page-number.active {
+            font-weight: bold;
+            color: #2563EB; /* blue-600 */
+            border-color: #2563EB;
+        }
+        .loading-message, .no-data-message {
+            text-align: center;
+            padding: 1rem;
+            font-style: italic;
+            color: #6b7280; /* gray-500 */
+        }
+        .error-message {
+            text-align: center;
+            padding: 1rem;
+            color: #ef4444; /* red-500 */
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">기록 문진 이력</h1>
+
+        <div class="mb-6">
+            <label for="childSelect" class="font-semibold mr-2">자녀 선택:</label>
+            <select id="childSelect" class="border p-2 rounded w-64">
+
+                <!-- 자녀가 한 명도 없으면 -->
+                <option th:if="${children.empty}"
+                        value=""
+                        disabled
+                        selected>
+                    등록된 자녀가 없습니다.
+                </option>
+
+                <!-- 자녀가 있으면 -->
+                <option th:if="${!children.empty}"
+                        value=""
+                        th:selected="${selectedChildId == null}">
+                    -- 자녀를 선택하세요 --
+                </option>
+
+                <option th:each="child : ${children}" th:value="${child.id}" th:text="${child.name}"></option>
+            </select>
+
+            <a href="/member/child" class="text-sm text-blue-600 px-4 hover:underline">+ 자녀 추가하기</a>
+
+        </div>
+
+        <div id="answerListContainer" class="hidden">
+            <div id="dateList" class="space-y-2"></div>
+            <div id="paginationControls" class="flex justify-center items-center space-x-2 mt-8"></div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * 페이지 로딩이 완료되면 실행되는 초기화 로직입니다.
+         */
+        document.addEventListener("DOMContentLoaded", function () {
+            const childSelect = document.getElementById("childSelect");
+            const answerListContainer = document.getElementById("answerListContainer");
+
+            childSelect.addEventListener("change", function () {
+                const childId = this.value;
+                if (!childId) {
+                    answerListContainer.classList.add("hidden");
+                    return;
+                }
+                answerListContainer.classList.remove("hidden");
+                loadRecordDates(childId, 0);
+            });
+
+            if (childSelect.options.length > 1) {
+                childSelect.selectedIndex = 1;
+                childSelect.dispatchEvent(new Event("change"));
+            } else if (childSelect.options.length === 1) {
+                 answerListContainer.innerHTML = `<p class="no-data-message">조회할 자녀를 선택해주세요.</p>`;
+            }
+        });
+
+        /**
+         * 특정 자녀의 '기록 날짜' 목록을 페이징하여 가져와 화면에 렌더링하는 메인 함수입니다.
+         * @param {string} childId - 자녀 ID
+         * @param {number} page - 조회할 페이지 번호 (0-based)
+         */
+        async function loadRecordDates(childId, page = 0) {
+            const dateListDiv = document.getElementById("dateList");
+            dateListDiv.innerHTML = '<p class="loading-message">날짜 목록을 로딩 중...</p>';
+            document.getElementById("paginationControls").innerHTML = '';
+
+            try {
+                const url = `/survey/record/history/${childId}/dates?page=${page}&size=5`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const apiResponse = await response.json();
+                if (apiResponse.code !== 'SWD') throw new Error(apiResponse.message);
+
+                const pageData = apiResponse.data;
+                const recordDates = pageData.result;
+
+                dateListDiv.innerHTML = "";
+                if (!recordDates || recordDates.length === 0) {
+                    dateListDiv.innerHTML = `<p class="no-data-message">답변 이력이 없습니다.</p>`;
+                    return;
+                }
+
+                recordDates.forEach(dateSummary => {
+                    const dateElement = createDateAccordionElement(childId, dateSummary.recordDate);
+                    dateListDiv.appendChild(dateElement);
+                });
+
+                createPagination(pageData, (p) => loadRecordDates(childId, p));
+
+            } catch (error) {
+                console.error("날짜 이력 로딩 중 오류:", error);
+                dateListDiv.innerHTML = `<p class="error-message">날짜 목록을 불러오는 중 오류가 발생했습니다.</p>`;
+            }
+        }
+
+        /**
+         * 특정 날짜에 해당하는 상세 답변 목록을 비동기적으로 가져와 표시하는 함수입니다.
+         * @param {string} childId - 자녀 ID
+         * @param {string} dateStr - 조회할 날짜 (yyyy-MM-dd)
+         * @param {HTMLElement} bodyElement - 답변 목록을 표시할 div 요소
+         */
+        async function loadDetailedAnswers(childId, dateStr, bodyElement) {
+            bodyElement.innerHTML = '<p class="loading-message">상세 답변 로딩 중...</p>';
+            try {
+                const url = `/survey/record/history/${childId}/date/${dateStr}`;
+                const response = await fetch(url);
+                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const apiResponse = await response.json();
+                if (apiResponse.code !== 'SWD') throw new Error(apiResponse.message);
+
+                const detailedAnswers = apiResponse.data;
+
+                bodyElement.innerHTML = '';
+                if (!detailedAnswers || detailedAnswers.length === 0) {
+                     bodyElement.innerHTML = `<p class="no-data-message">이 날짜의 답변이 없습니다.</p>`;
+                     return;
+                }
+
+                const ul = document.createElement('ul');
+                ul.className = 'space-y-3';
+                detailedAnswers.forEach((answer, index) => {
+                    const li = document.createElement("li");
+                    li.className = "border-b pb-2";
+                    li.innerHTML = `
+                        <p class="font-semibold">${index + 1}. ${answer.question}</p>
+                        <p class="text-gray-700 whitespace-pre-line pl-2">→ ${answer.answer}</p>`;
+                    ul.appendChild(li);
+                });
+                bodyElement.appendChild(ul);
+            } catch (error) {
+                 console.error(`상세 답변 로딩 중 오류 (${dateStr}):`, error);
+                 bodyElement.innerHTML = `<p class="error-message">상세 답변을 불러오는 중 오류가 발생했습니다.</p>`;
+            }
+        }
+
+        /**
+         * 날짜 하나에 대한 아코디언 UI 요소(헤더, 바디)를 생성합니다.
+         * @param {string} childId
+         * @param {string} dateStr
+         * @returns {HTMLElement} 생성된 div 컨테이너 요소
+         */
+        function createDateAccordionElement(childId, dateStr) {
+            const container = document.createElement("div");
+            container.className = "border rounded mb-2 shadow-sm";
+
+            const header = document.createElement("button");
+            header.className = "w-full text-left px-4 py-3 bg-gray-50 font-semibold hover:bg-gray-100 flex justify-between items-center transition-colors";
+            header.innerHTML = `<span>📅 ${dateStr}</span><span class="toggle-icon text-lg font-bold text-gray-400">+</span>`;
+
+            const body = document.createElement("div");
+            body.className = "hidden p-4 bg-white";
+
+            let isLoaded = false;
+            header.addEventListener("click", () => {
+                const icon = header.querySelector('.toggle-icon');
+                const isHidden = body.classList.toggle("hidden");
+
+                if (!isHidden) {
+                    icon.textContent = '−';
+                    if (!isLoaded) {
+                        loadDetailedAnswers(childId, dateStr, body);
+                        isLoaded = true;
+                    }
+                } else {
+                    icon.textContent = '+';
+                }
+            });
+
+            container.appendChild(header);
+            container.appendChild(body);
+            return container;
+        }
+
+        /**
+         * 페이징 데이터를 기반으로 페이지네이션 버튼 UI를 생성합니다.
+         * @param {object} pageData - 백엔드에서 받은 페이징 데이터 객체
+         * @param {Function} loadFn - 페이지 번호 클릭 시 호출될 함수
+         */
+        function createPagination(pageData, loadFn) {
+            const paginationContainer = document.getElementById("paginationControls");
+            paginationContainer.innerHTML = '';
+
+            const totalPages = pageData.totalPages;
+            const currentPage = pageData.page - 1;
+            if (totalPages <= 1) return;
+
+            const renderButton = (text, pageNum, disabled = false, isCurrent = false) => {
+                const button = document.createElement('button');
+                button.textContent = text;
+                button.disabled = disabled;
+                button.className = `page-number px-3 py-1 border rounded ${ isCurrent ? 'active bg-blue-100' : 'hover:bg-gray-100' }`;
+                if(disabled) button.classList.add('pagination-button');
+                if (!disabled) button.onclick = () => loadFn(pageNum);
+                return button;
+            };
+
+            paginationContainer.appendChild(renderButton('이전', currentPage - 1, currentPage === 0));
+
+            const pageList = pageData.pageList;
+            pageList.forEach(p => {
+                const pageNum = p - 1;
+                paginationContainer.appendChild(renderButton(p, pageNum, false, pageNum === currentPage));
+            });
+
+            paginationContainer.appendChild(renderButton('다음', currentPage + 1, currentPage >= totalPages - 1));
+        }
+    </script>
+</th:block>
+</html>

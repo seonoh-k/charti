@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+        <h1 class="text-2xl font-bold mb-4">담당자 가입 요청 목록</h1>
+
+        <form id="searchForm"
+            th:action="@{/admin/manager-applicants}"
+            th:method="GET"
+            class="flex justify-end gap-2 mb-6">
+            <!-- 검색 기준 -->
+            <select name="type" id="searchType"
+                class="border border-gray-300 rounded px-3 py-2 text-sm">
+                <option value="name" th:selected="${type=='name'}" >이름</option>
+                <option value="email" th:selected="${type=='email'}" >이메일</option>
+                <option value="phoneNumber" th:selected="${type=='phoneNumber'}" >전화번호</option>
+                <option value="groupName" th:selected="${type=='groupName'}" >소속이름</option>
+            </select>
+        
+            <!-- 검색 입력 -->
+            <div class="relative w-full max-w-xs">
+                <input type="text" name="keyword" id="searchInput" placeholder="검색어 입력" th:value="${keyword}"
+                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring" />
+                <div id="suggestions"
+                    class="absolute top-full left-0 w-full mt-1 bg-white border border-gray-300 rounded shadow hidden z-20 max-h-60 overflow-y-auto text-sm">
+                </div>
+            </div>
+        
+            <button id="searchBtn"
+                type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        
+            <!-- 리셋 버튼: 폼 리셋 -->
+            <button id="resetBtn" 
+                type="button"
+                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+        </form>
+
+        <form th:action="@{/admin/approve-manager}" method="post" id="approveForm">
+            <th:block th:if="${hasManagerApplicant}">
+                <table class="w-full table-auto border text-center" id="manager-table">
+                    <thead>
+                        <tr>
+                            <th class="border px-4 py-2">
+                                <input type="checkbox" id="select-all" onclick="toggleCheckboxes(this)">
+                            </th>
+                            <th class="border px-4 py-2">id</th>
+                            <th class="border px-4 py-2">이름</th>
+                            <th class="border px-4 py-2">이메일</th>
+                            <th class="border px-4 py-2">전화번호</th>
+                            <th class="border px-4 py-2">소속</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <tr th:each="dto : ${result.dtoList}">
+                            <td class="border px-4 py-2">
+                                <input type="checkbox" class="ids" name="ids" th:value="${dto.id}" />
+                            </td>
+                            <td class="border px-4 py-2" th:text="${dto.id}">홍길동</td>
+                            <td class="border px-4 py-2" th:text="${dto.name}">홍길동</td>
+                            <td class="border px-4 py-2" th:text="${dto.username}">hong@test.com</td>
+                            <td class="border px-4 py-2" th:text="${dto.phoneNumber}"></td>
+                            <td class="border px-4 py-2" th:text="${dto.groupName}">OO대학교</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </th:block>
+            <th:block th:unless="${hasManagerApplicant}">
+                <div class="text-center text-gray-500 text-lg py-10">
+                    <i class="fa-solid fa-user-check fa-2x mb-2"></i><br>
+                    담당자 신청자가 없습니다.
+                </div>
+            </th:block>
+            <!-- 일괄 승인 버튼 -->
+            <div class="mt-4 flex justify-end">
+                <button type="button"
+                        onclick="showApproveModal()"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                    선택 승인
+                </button>
+            </div>
+        </form>
+
+        <!-- 페이징 -->
+        <div class="mt-4 flex justify-center gap-2" id="pagination">
+
+            <!-- ◀ 이전 페이지 -->
+            <a th:href="@{/admin/manager-applicants(
+                page=${result.startPage - 1},
+                size=10,
+                sort=${sort},
+                type=${type},
+                keyword=${keyword})}"
+                th:if="${result.startPage - 1 > 0}"
+                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">◀</a>
+                
+            <!-- 페이지 번호 목록 -->
+            <a th:each="p : ${result.pageList}"
+                th:text="${p}"
+                th:href="@{/admin/manager-applicants(
+                page=${p},
+                size=10,
+                sort=${sort},
+                type=${type},
+                keyword=${keyword})}"
+                th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
+                class="px-3 py-1 rounded hover:bg-blue-500"></a>
+                
+            <!-- ▶ 다음 페이지 -->
+            <a th:href="@{/admin/manager-applicants(
+                page=${result.endPage + 1},
+                size=10,
+                sort=${sort},
+                type=${type},
+                keyword=${keyword})}"
+                th:if="${result.endPage + 1 < result.totalPages}"
+                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">▶</a>
+
+
+        </div>
+    </main>
+    </div>
+    <!-- 승인 확인 모달 -->
+    <div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded shadow-lg text-center w-80">
+            <p class="text-lg mb-4">정말 승인하시겠습니까?</p>
+            <div class="flex justify-center gap-4">
+                <button onclick="submitApprove()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">확인</button>
+                <button onclick="hideApproveModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">취소</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    function showApproveModal() {
+        document.getElementById("approveModal").classList.remove("hidden");
+    }
+    function hideApproveModal() {
+        document.getElementById("approveModal").classList.add("hidden");
+    }
+    
+</script>
+<script>
+    const input = document.getElementById('searchInput');
+    const type = document.getElementById('searchType');
+    const btn = document.getElementById('searchBtn');
+    const suggestions = document.getElementById('suggestions');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let debounceTimer;
+
+  // 입력 감지
+    input.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const keyword = input.value.trim(); 
+        if (!keyword) {
+            suggestions.classList.add('hidden');
+            return;
+        }   
+        debounceTimer = setTimeout(() => {
+            fetchSuggestions(keyword);
+        }, 300);
+    });
+    // 검색 버튼 클릭 시 페이지 이동
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const keyword = input.value.trim();
+        if (!keyword) return;
+        window.location.href = `/admin/manager-applicants?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`;
+    });
+    // Reset 검색 조건 초기화
+    resetBtn.addEventListener('click', () => {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchType').value = 'name'; // 초기값 선택
+        window.location.href = '/admin/manager-applicants'; // 기본 조회 페이지로 이동
+    });  
+
+    // 비동기 검색 요청
+    async function fetchSuggestions(keyword) {
+        try {
+            const response = await fetch(`/admin/manager-applicants/search?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`);
+            if (response.status === 204) {
+                suggestions.classList.add('hidden');
+                return;
+            }
+            const result = await response.json();
+            const list = result.data?.dtoList || [];
+            if (result.code !== "SWD" || list.length === 0) {
+                suggestions.classList.add('hidden');
+                return;
+            }
+            suggestions.innerHTML = '';
+            list.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
+                div.textContent = `${item.name} [${item.username}] 
+                [${item.phoneNumber}] [${item.groupName || "기재X"}]`;
+                div.onclick = () => {
+                    input.value = item[type.value] || item.name;
+                    suggestions.classList.add('hidden');
+                };
+                suggestions.appendChild(div);
+            });
+            suggestions.classList.remove('hidden');
+        } catch (e) {
+            console.error('검색 실패:', e);
+            suggestions.classList.add('hidden');
+        }
+    }  
+    function toggleCheckboxes(master) {
+        document.querySelectorAll('input[name="ids"]').forEach(cb => cb.checked = master.checked);
+    }
+</script>
+<script>
+
+    async function submitApprove() {
+        hideApproveModal(); 
+        const form = document.getElementById("approveForm");
+        const formData = new FormData(form);    
+        // 체크된 id값 수집
+        const ids = [];
+        formData.forEach((v, k) => {
+            if (k === 'ids') ids.push(v);
+        });
+
+        try {
+            const res = await fetch(form.action, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids: ids })
+            });
+        
+            // 표준 ApiResponse 구조로 파싱
+            const data = await res.json();
+        
+            // code, message 활용
+            if (data.code === "OK" || data.code === "SWD") {
+                showToast(data.message || "승인 성공", "success");
+                setTimeout(() => window.location.reload(), 1200);
+            } else {
+                // code/fieldName 등도 필요시 활용 가능
+                showToast(data.message || "승인 실패", "error");
+                setTimeout(() => window.location.reload(), 1200);
+            }
+        } catch (e) {
+            showToast("서버 오류 발생", "error");
+            setTimeout(() => window.location.reload(), 1200);
+        }
+    }
+
+    function showToast(message, type = 'success', duration = 3000) {    
+        const container = document.getElementById("toast-container");   
+        const colors = {
+            success: {
+                bg: "bg-green-500",
+                icon: "✅"
+            },
+            error: {
+                bg: "bg-red-500",
+                icon: "❌"
+            }
+        };
+        console.log(type);
+        const toast = document.createElement("div");
+        toast.className = `flex items-center text-white px-4 py-2 rounded shadow-lg ${colors[type].bg} animate-slide-in-right`;
+        toast.innerHTML = 
+        `<span class="mr-2">${colors[type].icon}</span>
+        <span>${message}</span>`;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.remove("animate-slide-in-right");
+            toast.classList.add("animate-fade-out");
+        
+            setTimeout(() => container.removeChild(toast), 5000);   
+        }, duration);
+    }        
+</script>
+<div id="toast-container" class="fixed inset-x-0 top-0 z-50 space-y-3 text-center"></div>
+</th:block>
+</html>

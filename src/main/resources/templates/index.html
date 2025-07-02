@@ -1,44 +1,145 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charti</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
-          rel="stylesheet">
-    <style>
-        body { font-family: 'Poppins', sans-serif; }
-    </style>
-</head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
 <th:block layout:fragment="content">
-    <div class="text-center bg-gray-100 h-[330px] content-center">
-        <h2 class="pb-3 text-2xl">서비스 소개</h2>
-        <p class="pb-7">서비스 설명</p>
+    <div class="text-center bg-[#FAF1E3] h-[330px] content-center">
+        <h2 class="pb-3 text-2xl">Charti – 오늘의 기록이, 아이의 내일을 지켜줍니다</h2>
+        <p class="pb-3">
+            Charti는 0세부터 5세까지,
+            가장 예민하고 소중한 시기를 보내는 아이를 위한 문진 기반 헬스케어 서비스입니다.
+        </p>
+        <p class="pb-7">
+            아이의 하루와 건강 상태를 섬세하게 기록하고 분석해, 부모의 직감에 데이터 기반의 신뢰를 더해주는 스마트한 솔루션을 제공합니다.
+        </p>
         <div class="space-x-5">
-            <button class="bg-blue-500 text-white p-3 rounded-lg w-[150px] hover:bg-blue-600">문진표 작성하기</button>
-            <button class="bg-blue-500 text-white p-3 rounded-lg w-[150px] hover:bg-blue-600">진단 요청하기</button>
+            <a href="/survey/record" class="text-white p-3 rounded-lg w-[150px] bg-[#E3A67A] hover:bg-[#D39459] transition">기록 문진 작성하기</a>
+            <a href="/dailySurvey" class="text-white p-3 rounded-lg w-[150px] bg-[#7CA48C] hover:bg-[#628C73] transition">데일리 문진 작성하기</a>
         </div>
     </div>
 
     <div class="flex h-[350px] mt-10 content-center justify-center space-x-16">
-        <div class="text-center content-center h-[300px] w-[300px] bg-blue-100">
-            <h3 class="mb-3 text-lg">서비스 제목01</h3>
-            <p class="mb-5 text-sm">서비스 자세한 설명01</p>
-            <button class="bg-blue-500 text-white p-3 rounded-lg w-[150px] hover:bg-blue-600">서비스 이동하기</button>
+        <div class="text-center content-center h-[300px] w-[300px] bg-[#F7E8D0]">
+            <h3 class="mb-3 text-lg">기록 문진</h3>
+            <p class="mb-5 text-sm">아이의 하루를 기록합니다</p>
+            <a href="/survey/record" class="text-white p-3 rounded-lg w-[150px] bg-[#7CA48C] hover:bg-[#628C73] transition">서비스 이동하기</a>
         </div>
-        <div class="text-center content-center h-[300px] w-[300px] bg-blue-200">
-            <h3 class="mb-3 text-lg">서비스 제목02</h3>
-            <p class="mb-5 text-sm">서비스 자세한 설명02</p>
-            <button class="bg-blue-500 text-white p-3 rounded-lg w-[150px] hover:bg-blue-600">서비스 이동하기</button>
+        <div class="text-center content-center h-[300px] w-[300px] bg-[#C5A586]">
+            <h3 class="mb-3 text-lg">데일리 문진</h3>
+            <p class="mb-5 text-sm">아이의 건강 상태를 확인합니다</p>
+            <a href="/dailySurvey" class="text-white p-3 rounded-lg w-[150px] bg-[#7CA48C] hover:bg-[#628C73] transition">서비스 이동하기</a>
         </div>
-        <div class="text-center content-center h-[300px] w-[300px] bg-blue-300">
-            <h3 class="mb-3 text-lg">서비스 제목03</h3>
-            <p class="mb-5 text-sm">서비스 자세한 설명03</p>
-            <button class="bg-blue-500 text-white p-3 rounded-lg w-[150px] hover:bg-blue-600">서비스 이동하기</button>
+        <div class="text-center content-center h-[300px] w-[300px] bg-[#E9B895]">
+            <h3 class="mb-3 text-lg">앨범</h3>
+            <p class="mb-5 text-sm">아이 사진으로 앨범을 만들어보세요</p>
+            <a href="/albumList" class="text-white p-3 rounded-lg w-[150px] bg-[#7CA48C] hover:bg-[#628C73] transition">서비스 이동하기</a>
         </div>
     </div>
+
+
+<!--    <div class="flex justify-center mt-6 space-x-6">-->
+
+<!--        &lt;!&ndash; 테스트 할 때마다 링크 치기 불편해서 만든 임시 버튼 &ndash;&gt;-->
+
+<!--        <a href="/admin/point" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            포인트 지급-->
+<!--        </a>-->
+<!--        <a href="/admin/notification/form" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            알림 메시지 발송-->
+<!--        </a>-->
+<!--        <a href="/admin/surveys/record" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            기록 문진 관리-->
+<!--        </a>-->
+<!--        <a href="/survey/record" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            기록 문진 작성-->
+<!--        </a>-->
+<!--        <a href="/survey/record/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            문진 이력 보기-->
+<!--        </a>-->
+<!--        <a href="/admin/surveys/record/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            관리자 이력 보기-->
+<!--        </a>-->
+<!--    </div>-->
+
+<!--    <div class="flex justify-center mt-6 space-x-6">-->
+
+<!--        &lt;!&ndash; 테스트 할 때마다 링크 치기 불편해서 만든 임시 버튼 &ndash;&gt;-->
+
+<!--        <a href="/dailySurvey" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            데일리 문진하기-->
+<!--        </a>-->
+<!--        <a href="/dailyAnswer/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            데일리 문진 응답 조회-->
+<!--        </a>-->
+<!--        <a href="/groupSurvey" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            그룹 문진하기-->
+<!--        </a>-->
+
+<!--        <a href="/groupAnswer/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            그룹 문진 응답 조회-->
+<!--        </a>-->
+<!--        <a href="/specialSurvey" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            특별 문진하기-->
+<!--        </a>-->
+<!--        <a href="/specialAnswer/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            특별 문진 응답 조회-->
+<!--        </a>-->
+<!--        &lt;!&ndash; [수정] a 태그를 올바르게 닫도록 수정 &ndash;&gt;-->
+<!--        <a href="/admin/surveys/group" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            그룹 문진 관리-->
+<!--        </a>-->
+<!--        <a href="/admin/surveys/special" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            특별 문진 관리-->
+<!--        </a>-->
+
+<!--    </div>-->
+
+<!--    <div class="flex justify-center mt-6 space-x-6">-->
+
+<!--        &lt;!&ndash; 테스트 할 때마다 링크 치기 불편해서 만든 임시 버튼 &ndash;&gt;-->
+
+<!--        <a href="/surveySets" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            문진 세트 메인 페이지-->
+<!--        </a>-->
+<!--        <a href="/surveySets/create?type=GROUP" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            그룹 문진 세트 생성-->
+<!--        </a>-->
+<!--        <a href="/surveySets/create?type=SPECIAL" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            특별 문진 세트 생성-->
+<!--        </a>-->
+<!--        <a href="/admin/surveys/daily" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            관리자 - 데일리 문진 목록-->
+<!--        </a>-->
+<!--        <a href="/admin/surveys/daily/new" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            관리자 - 데일리 문진 생성-->
+<!--        </a>-->
+<!--        <a href="/albumList" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            앨범-->
+<!--        </a>-->
+<!--    </div>-->
+
+<!--    <div class="flex justify-center mt-6 space-x-6">-->
+
+<!--        &lt;!&ndash; 테스트 할 때마다 링크 치기 불편해서 만든 임시 버튼 &ndash;&gt;-->
+
+<!--        <a href="/manager/notification/form" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            담당자 문진 알림 발송-->
+<!--        </a>-->
+<!--        <a href="/dailyAnswer/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            데-->
+<!--        </a>-->
+<!--        <a href="/groupSurvey" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            그-->
+<!--        </a>-->
+
+<!--        <a href="/groupAnswer/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            그-->
+<!--        </a>-->
+<!--        <a href="/specialSurvey" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            특-->
+<!--        </a>-->
+<!--        <a href="/specialAnswer/history" class="bg-blue-500 text-white p-3 rounded-lg w-[150px] text-center hover:bg-blue-600">-->
+<!--            특-->
+<!--        </a>-->
+<!--    </div>-->
+
 </th:block>
 </html>

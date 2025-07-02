@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Fontawesome 연결 Embed Code Start-->
+    <script src="https://kit.fontawesome.com/0f39c44f6d.js" crossorigin="anonymous"></script> <!-- Fontawesome 연결 -->
+    <!-- Fontawesome 연결 Embed Code End-->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>관리자 페이지</title>
+</head>
+<body class="h-screen flex flex-col">
+        <main class="flex-1 flex flex-col items-center justify-start bg-gray-100 p-6">
+            <!-- (기존) 콘텐츠 영역 헤딩 -->
+            <h1 class="text-2xl font-bold my-12">관리자 로그인 페이지</h1>
+        
+            <!-- 로그인 카드 -->
+            <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
+                <!-- 관리자 아이콘 -->
+                <div class="flex justify-center mb-6">
+                    <i class="fas fa-user-shield fa-3x text-gray-600"></i>
+                </div>
+                <!-- 제목 -->
+                <h2 class="text-2xl font-bold text-center mb-8 text-gray-800">관리자 로그인</h2>
+        
+                <form th:action="@{/admin/login}" method="post" id="adminLoginForm" class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-envelope mr-2 text-gray-500"></i>아이디
+                        </label>
+                        <input type="email" name="username" id="username"
+                            class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-gray-500 transition" />
+                    </div>
+        
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-lock mr-2 text-gray-500"></i>비밀번호
+                        </label>
+                        <input type="password" name="password" id="password"
+                            class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-gray-500 transition" />
+                    </div>
+        
+                    <button id="loginBtn"
+                            type="submit"
+                            onclick="login()"
+                            class="w-full bg-gray-600 hover:bg-gray-400 text-white font-semibold py-2 rounded-lg transition">
+                        로그인
+                    </button>
+                </form>
+            </div>
+        </main>
+        
+    
+    </div>
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    const loginURL = '/admin/login';
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
+        authDomain: "charti-5da7d.firebaseapp.com",
+        projectId: "charti-5da7d",
+        storageBucket: "charti-5da7d.firebasestorage.app",
+        messagingSenderId: "308166362794",
+        appId: "1:308166362794:web:00035f97aca288228972d3",
+        measurementId: "G-TYBBZC80J9"
+    };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById('loginBtn').addEventListener('click',(e) => {
+            e.preventDefault();
+            login();
+        });
+
+        async function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+    
+            try {
+                // Firebase Auth 로그인 시도
+                const userCredential = await signInWithEmailAndPassword(auth, username, password);
+                
+                const idToken = await userCredential.user.getIdToken();
+                
+    
+                // 서버로 ID 토큰 전송
+                const response = await fetch(loginURL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: username })
+                });
+                
+                // 원본 HTML 전체 출력
+                // const html = await response.text();
+                // console.log(html);    // 개발자 콘솔에 뷰 전체가 뜹니다
+                // 서버 응답(JSON) 파싱
+                const result = await response.json();
+
+                if (response.status === 200 && result.code === 'AS') {
+                    
+                    showToast(result.message, 'success',3000);
+
+                    setTimeout(() => {
+                        window.location.href = '/admin/main';
+                    }, 1500);
+                
+                } else {
+
+                    showToast(result.message, 'error',3000);
+                    
+                    const recordAttemptFailRes = await fetch('/admin/login/attempt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username,
+                            success: false,
+                            failureReason: result.message
+                        })
+                    });
+
+                    const recordResult = await recordAttemptFailRes.json();
+
+                    setTimeout(() => {
+                        window.location.href = '/admin/loginForm';
+                    }, 1500);
+                }
+            } catch (error) {
+                
+                showToast("아이디 비밀번호를 확인해주세요.", 'error',3000);
+                console.log(error.message);
+                const recordAttemptFailRes = await fetch('/admin/login/attempt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username,
+                            success: false,
+                            failureReason: error.message
+                        })
+                    });
+                
+                const recordResult = await recordAttemptFailRes.json();
+
+                setTimeout(() => {
+                    window.location.href = '/admin/loginForm';
+                }, 1500);
+
+            }
+        }
+    
+    function showToast(message, type = 'success', duration = 3000) {
+    
+        const container = document.getElementById("toast-container");
+    
+        const colors = {
+            success: {
+                bg: "bg-green-500",
+                icon: "✅"
+            },
+            error: {
+                bg: "bg-red-500",
+                icon: "❌"
+            }
+        };
+        console.log(type);
+        const toast = document.createElement("div");
+        toast.className = `flex items-center text-white px-4 py-2 rounded shadow-lg ${colors[type].bg} animate-slide-in-right`;
+        toast.innerHTML = 
+        `<span class="mr-2">${colors[type].icon}</span>
+        <span>${message}</span>`;
+    
+        container.appendChild(toast);
+    
+        setTimeout(() => {
+            toast.classList.remove("animate-slide-in-right");
+            toast.classList.add("animate-fade-out");
+    
+            setTimeout(() => container.removeChild(toast), 5000);
+            
+        }, duration);
+    }
+    </script>
+
+
+
+
+<div id="toast-container" class="fixed inset-x-0 top-0 z-50 space-y-3 text-center"></div>
+</body>
+</html>

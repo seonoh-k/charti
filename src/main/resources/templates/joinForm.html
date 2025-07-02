@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 유효성 검사 js -->
+    <script src="/js/validation.js"></script>
+    <!-- 주소 조회 js -->
+    <script src="/js/addressSearch.js"></script>
+
+</head>
+<body class="bg-black text-white min-h-screen flex items-center justify-center p-4 overflow-auto"></body>
+    <div class="bg-white text-black rounded-2xl shadow-lg p-10 w-full max-w-lg">
+
+    <!-- 네비게이션 탭 -->
+    <nav class="flex mb-6 border-b border-gray-200">
+    <a href="joinForm"
+        class="flex-1 text-center py-2 font-medium border-b-2
+                border-blue-600 text-black
+                hover:text-black hover:border-gray-300
+                transition-colors duration-200">
+        일반회원가입
+    </a>
+    <a href="/expertJoinForm"
+        class="flex-1 text-center py-2 font-medium border-b-2
+                border-transparent text-gray-500
+                hover:text-black hover:border-gray-300
+                transition-colors duration-200">
+        전문가회원가입
+    </a>
+    <a href="/managerJoinForm"
+        class="flex-1 text-center py-2 font-medium border-b-2
+                border-transparent text-gray-500
+                hover:text-black hover:border-gray-300
+                transition-colors duration-200">
+        담당자회원가입
+    </a>
+    </nav>
+
+        <h2 class="text-2xl font-bold mb-6 text-center">회원가입</h2>
+        <!-- id="signupForm" 추가, th:action/@{...}은 제거 -->
+        <form id="signupForm" class="space-y-4" novalidate>
+            <!-- ① 사용자 실제 이름(name) 입력란 -->
+            <div>
+                <label for="name" class="block mb-1">이름</label>
+                <input type="text" name="name" id="name"
+                        class="w-full p-2 rounded border border-gray-300" >
+            </div>
+
+            <!-- ① nickname 입력란 -->
+            <div>
+                <label for="nickname" class="block mb-1">닉네임</label>
+                <input type="text" name="nickname" id="nickname"
+                        class="w-full p-2 rounded border border-gray-300" placeholder="2~10자: 한글·영문·숫자·_,- 만 가능합니다." >
+            </div>
+
+            <!-- ② username 입력란(이메일) -->
+            <div>
+                <label for="username" class="block mb-1">아이디(이메일)</label>
+                <input type="email" name="username" id="username"
+                        class="w-full p-2 rounded border border-gray-300" >
+            </div>
+
+            <!-- ③ password 입력란 -->
+            <div>
+                <label for="password" class="block mb-1">비밀번호</label>
+                <input type="password" name="password" id="password"
+                        class="w-full p-2 rounded border border-gray-300" >
+            </div>
+
+            <button type="button" onclick="openAddressModal()"
+            class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+            주소 검색
+            </button>
+
+            <input type="text"  id="zipNum" name="zipNum" readonly class="mt-2 border px-4 py-2 rounded w-full" />
+            <input type="text"  id="addr1" name="addr1" readonly class="mt-2 border px-4 py-2 rounded w-full" />
+            <input type="hidden" id="addressId" name="addressId" />
+
+            <!-- sms 인증 부분-->
+            <div id="recaptcha-container"></div>
+            <div class="mt-4">
+                <label for="phone1">휴대전화</label>
+                <div class="flex space-x-2">
+                    <select id="phone1" class="p-2 rounded border" style="width:70px">
+                        <option value="010">010</option>
+                        <option value="011">011</option>
+                        <option value="016">016</option>
+                        <option value="017">017</option>
+                        <option value="018">018</option>
+                        <option value="019">019</option>
+                    </select>
+                    <input id="phone2" type="text" maxlength="4" pattern="\d*" placeholder="1234"
+                            class="p-2 rounded border w-20" />
+                    <input id="phone3" type="text" maxlength="4" pattern="\d*" placeholder="5678"
+                            class="p-2 rounded border w-20" />
+                    <button type="button" id="send-otp-btn"
+                            class="px-4 py-2 bg-blue-600 text-white rounded">
+                        인증번호 받기
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-2">
+                <label for="otp">인증번호</label>
+                <input id="otp" type="text" placeholder="6자리 코드"
+                        class="w-full p-2 rounded border" disabled />
+                <button type="button" id="verify-otp-btn"
+                        class="mt-2 px-4 py-2 bg-green-600 text-white rounded"
+                        disabled>
+                    인증 확인
+                </button>
+            </div>
+
+        <!-- memberJoin.html -->
+        <div th:replace="fragments/terms-agree :: terms-agree(${false})"></div>
+
+
+            <div class="mt-6">
+                <button 
+                    id="signupBtn"
+                    type="submit"
+                    class="w-full py-3 rounded-lg font-bold transition
+                            bg-blue-500 hover:bg-blue-600
+                            disabled:bg-gray-400 disabled:hover:bg-gray-400
+                            disabled:cursor-not-allowed"
+                    disabled>
+                    회원가입
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-4 text-center">
+            <a th:href="@{/loginForm}" class="text-sm text-gray-700 hover:underline">로그인</a>
+        </div>
+    </div>
+
+    <!-- 로딩/에러 공용 모달 -->
+    <div id="loading-modal" class="fixed inset-0 z-[50] bg-black bg-opacity-50  flex items-center justify-center hidden">
+        <div class="bg-white text-black p-6 rounded-lg shadow-lg flex flex-col items-center">
+            <!-- 회전 스피너 -->
+            <div id="loading-spinner" class="w-12 h-12 border-4 border-gray-300 border-t-blue-700 rounded-full animate-spin mb-4"></div>
+                <!-- 에러 아이콘 (처음에는 숨김) -->
+            <div id="error-icon" class="hidden text-red-600 text-4xl">❌</div>
+            <!-- 성공 아이콘 -->
+            <div id="success-icon" class="hidden text-green-600 text-4xl">✅</div>
+            <!-- 메시지 -->
+            <div id="loading-message" class="text-lg font-semibold text-center">처리 중입니다...</div>
+        </div>
+    </div>
+
+    <!-- 주소 검색 모달 -->
+    <div id="addressModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xl animate-fade-in">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">주소 검색</h2>
+
+            <div class="flex gap-2 mb-4">
+            <input id="dongInput" type="text" placeholder="동 이름 입력 (최소 2자 이상)"
+                    class="flex-1 border border-gray-300 text-gray-900 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+            <button onclick="searchAddress()"
+                    class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">검색</button>
+            </div>
+
+            <div id="addressResult" class="max-h-60 overflow-y-auto border-t border-gray-200 pt-2 space-y-2">
+            <!-- 검색 결과가 여기 표시됨 -->
+            </div>
+            <div class="flex justify-end mt-4">
+            <button onclick="closeAddressModal()"
+                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">닫기</button>
+            </div>
+        </div>
+    </div>
+
+
+
+<script  type="module" th:inline="javascript">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+    getAuth,
+    RecaptchaVerifier,
+    signInWithPhoneNumber
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+    import { showLoadingModal } from "/js/loadingModal.js"; //   모달 동작 함수
+    import { showErrorModal } from "/js/loadingModal.js"; //   에러 모달 동작 함수
+    import { showSuccessModal } from "/js/loadingModal.js"; //   성공 모달 동작 함수
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsnvbbi1SQSHe9v3Nzt7R23eELXlv4KMI",
+        authDomain: "charti-5da7d.firebaseapp.com",
+        projectId: "charti-5da7d",
+        storageBucket: "charti-5da7d.firebasestorage.app",
+        messagingSenderId: "308166362794",
+        appId: "1:308166362794:web:00035f97aca288228972d3",
+        measurementId: "G-TYBBZC80J9"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+      // 2) Invisible reCAPTCHA 준비
+    window.recaptchaVerifier = new RecaptchaVerifier(
+        'recaptcha-container',
+        { size: 'invisible' },
+        auth
+    );
+
+       // 전역 변수
+    let confirmationResult = null;
+    let smsIdToken = null;
+
+      // 3) SMS 전송 함수
+    window.sendSmsOtp = async () => {
+
+        // 각 부분의 값을 가져옴
+        const p1 = document.getElementById('phone1').value;
+        const p2 = document.getElementById('phone2').value.trim();
+        const p3 = document.getElementById('phone3').value.trim();
+
+        // 숫자 검사
+        if (!/^\d{4}$/.test(p2) || !/^\d{4}$/.test(p3)) {
+            alert('휴대폰 번호를 정확히 입력하세요 (4자리씩).');
+            return;
+        }
+
+        // 국제 전화번호로 변환
+        // 01012345678 → +821012345678
+        const phoneNumber = `+82${p1.substring(1)}${p2}${p3}`;
+
+        // 1. 먼저 서버에 중복 체크 요청
+        const checkRes = await fetch('/api/check-phone', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({phoneNumber})
+        });
+        const checkData = await checkRes.json();
+        if (!checkRes.ok || checkData.exists) {
+            alert('이미 가입된 전화번호입니다.');
+            return;
+        }
+
+        try {
+            confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+            alert('인증번호가 전송되었습니다.');
+            // 인증 입력란 활성화
+            document.getElementById('otp').disabled         = false;
+            document.getElementById('verify-otp-btn').disabled = false;
+        } catch (err) {
+            console.error(err);
+            alert('인증번호 전송 실패: ' + err.message);
+        }
+    };
+
+    // 4) OTP 확인 함수
+    window.verifySmsOtp = async () => {
+        const code = document.getElementById('otp').value.trim();
+        if (!code) { alert('인증번호를 입력하세요.'); return; }
+        try {
+            const userCredential = await confirmationResult.confirm(code);
+            const user = userCredential.user;
+            smsIdToken = await user.getIdToken();
+            alert('휴대전화 인증이 완료되었습니다.');
+            // 입력란·버튼 비활성화
+            document.getElementById('phone1').disabled       = true;
+            document.getElementById('phone2').disabled       = true;
+            document.getElementById('phone3').disabled       = true;
+            document.getElementById('send-otp-btn').disabled = true;
+            document.getElementById('otp').disabled         = true;
+            document.getElementById('verify-otp-btn').disabled = true;
+        } catch (err) {
+            console.error(err);
+            alert('인증 실패: ' + err.message);
+        }
+    };
+
+    document.getElementById('send-otp-btn').addEventListener('click', sendSmsOtp);
+    document.getElementById('verify-otp-btn').addEventListener('click', verifySmsOtp);
+
+
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // SMS 인증 토큰 체크
+        if (!smsIdToken) {
+            alert('휴대전화 인증을 먼저 완료해주세요.');
+            return;
+        }
+
+        const name = document.getElementById('name').value.trim();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const nickname = document.getElementById('nickname').value.trim();
+        const addressId = document.getElementById('addressId').value.trim();
+        
+
+        if (!name || !username || !password || !nickname) {
+            alert('모든 필드를 입력해주세요.');
+            return;
+        }
+
+        try {
+            // // 🔵 먼저 로딩 모달 표시
+            showLoadingModal("회원가입 진행중...");      
+
+            const response = await fetch('/join/member', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': "application/json"
+                },
+                body: JSON.stringify({
+                    commonInfo: {
+                        name,
+                        username,
+                        password,
+                        nickname,
+                        smsIdToken
+                    },
+                    memberInfo: {
+                    }
+                    ,
+                    addressInfo: {
+                        addressId
+                    }
+                })
+            });
+           // 여기서 응답 body를 JSON으로 파싱 시도
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (jsonErr) {
+                console.error('응답 JSON 파싱 오류:', jsonErr);
+                throw new Error('서버 응답을 파싱할 수 없습니다.');
+            }
+
+            if (response.ok) {
+                //  로딩 메시지를 완료 메시지로 변경
+                showSuccessModal("회원가입 완료!", () => {
+                    window.location.href = "/loginForm";
+                });
+                return;
+            } 
+
+            if (data.code === "VF") {     //  유효성 검사 실패
+                const fieldName = data.fieldName;
+                console.log(data);
+                console.log(fieldName);
+                // 모달 띄우고 필드 포커싱
+                showErrorModal(data.message, () => {
+                    const inputField = document.getElementById(fieldName);
+                    if (inputField) {
+                        inputField.focus();
+                        inputField.setCustomValidity(data.data);
+                        inputField.reportValidity();
+                        inputField.addEventListener('input', () => {
+                            inputField.setCustomValidity('');
+                        }, { once: true });
+                    }
+                });
+                return;
+            }else if (data.code === "DU") {
+                console.log(data);
+                showErrorModal("이미 가입된 이메일입니다.", () => {
+                    const inputField = document.getElementById('username');
+                    if (inputField) {
+                        inputField.focus();
+                    }
+                });
+                return;
+            }else if (data.code === "AIU") {
+                console.log(data);
+                showErrorModal("사용할수 없는 주소입니다.") 
+                return;
+            }else {
+               // 400, 500 등 에러 코드인 경우
+                const errorMsg = data && data.message ? data.message :
+                '서버 오류 코드 ' + response.status;
+                showErrorModal(errorMsg);
+                return;     
+            }
+        } catch (err) {
+            console.error('Fetch 통신 중 오류 발생:', err);
+            showErrorModal(data.message);
+            alert('통신 오류: ' + err.message);
+        }
+    });
+</script>
+</body>
+</html>

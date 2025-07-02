@@ -1,0 +1,16 @@
+package com.example.demo.users.repository;
+
+import com.example.demo.dto.auth.UserAuthDTO;
+import com.example.demo.dto.UserDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Optional;
+
+public interface UserQueryRepository {
+    Optional<UserAuthDTO> getUserAuthDTOByUuid(String uuid);
+    Page<UserDTO> searchDeletedUsers(String type, String keyword, Pageable pageable);
+    Page<UserDTO> getDeletedUserList(Pageable pageable);
+    Optional<UserDTO> getDeletedUserDTOById(Long usersId);
+
+}

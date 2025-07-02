@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
+<th:block layout:fragment="content">
+    <div class="flex gap-6 m-10">
+        <aside class="w-[20%] p-4">
+            <th:block th:replace="~{fragments/subMenu :: subMenuFragment}"></th:block>
+        </aside>
+
+        <main class="w-[75%] p-6 space-y-6 bg-white rounded-lg shadow">
+            <!-- 회원 정보 -->
+            <div>
+                <div>
+                    <h2 th:text="|반갑습니다 ${member.name}님|" class="text-3xl font-bold text-gray-800 mb-4"></h2>
+                    <ul class="flex space-x-4 mb-6 text-gray-700">
+                        <li th:text="|닉네임 : ${member.nickname}|"></li>
+                        <li th:text="|소지 포인트 : ${member.totalPoint}|"></li>
+                        <li th:text="|가입일 : ${member.created}|"></li>
+                    </ul>
+                </div>
+                <hr class="mb-4 border-gray-300">
+            </div>
+
+            <div class="space-y-4">
+                <!-- 아이 정보 -->
+                <div th:each="child : ${childList}">
+                    <div class="flex flex-col justify-between mb-4">
+                        <h3 th:text="${child.name}" class="text-xl font-semibold text-gray-700"></h3>
+                        <p th:text="${child.birthdate}" class="text-sm text-gray-500"></p>
+                    </div>
+                    <ul class="grid grid-cols-2 gap-4 text-gray-700 mb-4">
+                        <li><span class="font-medium">태명 : </span> <span th:text="${child.nickname}"></span></li>
+                        <li><span class="font-medium">성별 : </span> <span th:text="${child.gender}"></span></li>
+                        <li><span class="font-medium">몸무게 : </span> <span th:text="${child.weight}"></span></li>
+                        <li><span class="font-medium">키 : </span> <span th:text="${child.height}"></span></li>
+                        <li th:if="${child.groupName != null}"><span th:text="|${child.groupName}에 다니고 있어요|"></span></li>
+                    </ul>
+                    <hr class="mb-4 border-gray-300">
+
+                    <div class="grid grid-cols-2 gap-6 mb-4">
+                       <div>
+                           <h4 class="text-lg font-medium text-gray-700 mb-2">데일리 문진 작성 이력</h4>
+                           <ul class="space-y-1 text-fray-600">
+                               <li th:each="dAns : ${child.DAnswers}" th:text="|작성일 : ${dAns.created}|"></li>
+                               <li th:if="${#lists.isEmpty(child.DAnswers)}">작성 이력이 없습니다.</li>
+                           </ul>
+                       </div>
+
+                        <div>
+                           <h4 class="text-lg font-medium text-gray-700 mb-2">기록 문진 작성 이력</h4>
+                           <ul class="space-y-1 text-fray-600">
+                               <li th:each="rAns : ${child.RAnswers}" th:text="|작성일 : ${rAns.created}|"></li>
+                               <li th:if="${#lists.isEmpty(child.RAnswers)}">작성 이력이 없습니다.</li>
+                           </ul>
+                       </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</th:block>
+</html>

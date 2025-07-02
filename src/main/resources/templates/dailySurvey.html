@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>데일리 문진</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet"/>
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-4">데일리 문진</h1>
+
+        <!-- 1) 자녀 선택 -->
+        <label for="childSelect" class="block mb-2 font-semibold">자녀 선택:</label>
+        <select id="childSelect" class="border p-2 rounded mb-4">
+
+            <!-- 자녀가 한 명도 없으면 -->
+            <option th:if="${children.empty}"
+                    value=""
+                    disabled
+                    selected>
+                등록된 자녀가 없습니다.
+            </option>
+
+            <!-- 자녀가 있으면 -->
+            <option th:if="${!children.empty}"
+                    value=""
+                    th:selected="${selectedChildId == null}">
+                -- 자녀를 선택하세요 --
+            </option>
+
+            <option th:each="c : ${children}"
+                    th:value="${c.id}"
+                    th:selected="${c.id == selectedChildId}"
+                    th:text="${c.name + ' (' + c.ageDisplay + ')'}">
+            </option>
+        </select>
+
+        <a href="/member/child" class="text-sm text-blue-600 px-4 hover:underline">+ 자녀 추가하기</a>
+
+        <!-- 2) 이미 작성했으면 이 메시지만 보이고, 나머지는 숨김 -->
+        <div id="alreadyMessage"
+             class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 hidden"
+             th:classappend="${isAlreadyWritten} ? '' : ' hidden'">
+            <p class="font-bold">안내</p>
+            <p>선택하신 자녀는 오늘 이미 데일리 문진을 작성했습니다.</p>
+            <p class="text-sm mt-2">
+                이전 기록은
+                <a id="historyLink"
+                   class="underline text-blue-600"
+                   href="#">문진 이력</a>
+                에서 확인하세요.
+            </p>
+        </div>
+
+        <!-- 3) 자녀 정보 (항상 렌더링, hidden 클래스 토글) -->
+        <div id="child-info"
+             class="mb-4 p-4 border rounded bg-gray-50 hidden"
+             th:classappend="${isAlreadyWritten} ? ' hidden' : ''">
+            <!-- JS 로 채울 예정 -->
+        </div>
+
+        <!-- 4) 설문 영역 -->
+        <div id="survey-container"
+             class="mb-4 hidden"
+             th:classappend="${isAlreadyWritten} ? ' hidden' : ''">
+            <!-- JS 로 채울 예정 -->
+        </div>
+
+        <!-- 5) 제출 버튼 -->
+        <button id="submitBtn"
+                class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded hidden"
+                th:classappend="${isAlreadyWritten} ? ' hidden' : ''">
+            제출하기
+        </button>
+    </div>
+
+    <!-- 초기 Thymeleaf 변수 전달 -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const initialChildId     = /*[[${selectedChildId}]]*/ null;
+        const initialWrittenFlag = /*[[${isAlreadyWritten}]]*/ false;
+        /*]]>*/
+    </script>
+
+    <!-- JS 로딩 이후 토글 로직 -->
+    <script>
+        const childSelect     = document.getElementById("childSelect");
+        const alreadyMessage  = document.getElementById("alreadyMessage");
+        const childInfoDiv    = document.getElementById("child-info");
+        const surveyContainer = document.getElementById("survey-container");
+        const submitBtn       = document.getElementById("submitBtn");
+        let surveys = [], ageGroup = "";
+
+        childSelect.addEventListener("change", onChildChange);
+
+        async function onChildChange() {
+          const childId = childSelect.value;
+
+          // 1) 초기 숨김 처리
+          alreadyMessage.classList.add("hidden");
+          childInfoDiv.classList.add("hidden");
+          surveyContainer.classList.add("hidden");
+          submitBtn.classList.add("hidden");
+
+          if (!childId) return;
+
+          // 2) 오늘 작성 여부 체크
+          try {
+            const checkRes = await fetch(`/api/surveys/check/${childId}`);
+            if (checkRes.status === 409) {
+              alreadyMessage.classList.remove("hidden");
+
+              const link = document.getElementById("historyLink");
+              link.href = `/dailyAnswer/history?childId=${childId}`;
+
+              return;
+            }
+          } catch (e) {
+            console.error("체크 오류:", e);
+          }
+
+          // 3) 자녀 정보 로드
+          const r1 = await fetch(`/api/child/info/${childId}`);
+          const data = await r1.json();
+          childInfoDiv.innerHTML = `
+            <p><strong>이름:</strong> ${data.name}</p>
+            <p><strong>성별:</strong> ${data.gender}</p>
+            <p><strong>나이:</strong> ${data.ageDisplay}</p>
+            <p><strong>키:</strong> ${data.height}</p>
+            <p><strong>체중:</strong> ${data.weight}</p>
+          `;
+          childInfoDiv.classList.remove("hidden");
+
+          // 4) 설문 목록 로드
+          ageGroup = data.ageGroup;
+          const r2 = await fetch(`/api/surveys/${encodeURIComponent(ageGroup)}`);
+          surveys = await r2.json();
+
+          // 5) 설문 렌더링
+          renderSurveys();
+          surveyContainer.classList.remove("hidden");
+          submitBtn.classList.remove("hidden");
+        }
+
+        function renderSurveys() {
+          surveyContainer.innerHTML = "";
+          surveys.forEach((s, idx) => {
+            const div = document.createElement("div");
+            div.className = "mb-4";
+            div.innerHTML = `
+              <p class="font-semibold mb-2">Q${idx+1}. ${s.question}</p>
+              ${[s.answer1, s.answer2, s.answer3, s.answer4, s.answer5]
+                .map((opt,i) => `<label class="block"><input type="radio" name="q${s.id}" value="${i+1}"> ${opt}</label>`)
+                .join("")}
+            `;
+            surveyContainer.appendChild(div);
+          });
+        }
+
+        submitBtn.addEventListener("click", async () => {
+          const answers = [];
+          const allAnswered = surveys.every(s => {
+            const sel = document.querySelector(`input[name="q${s.id}"]:checked`);
+            if (!sel) return false;
+            answers.push(+sel.value);
+            return true;
+          });
+          if (!allAnswered) {
+            alert("모든 질문에 답변해주세요!");
+            return;
+          }
+
+          const res = await fetch("/api/surveys/submit", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json; charset=UTF-8" },
+            body:    JSON.stringify({ ageGroup, childId: +childSelect.value, answers })
+          });
+
+          if (res.status === 409) {
+            alert("오늘 이미 작성하셨습니다.");
+            onChildChange();
+            return;
+          }
+
+          const data = await res.json();
+          const rs   = encodeURIComponent(JSON.stringify(data));
+
+            const query = new URLSearchParams({
+              ageGroup: encodeURIComponent(ageGroup),
+              riskScores: rs,
+              childId: childSelect.value,
+              needsSpecial: data.needsSpecialSurvey  // 컨트롤러에서 내려준 boolean 플래그
+            });
+
+            window.location.href = `/dailySurvey/result?${query.toString()}`;
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+          // 페이지 로드 시 이미 선택된 자녀가 있으면 onChildChange 실행
+          if (initialChildId) {
+            childSelect.value = initialChildId;
+            onChildChange();
+          }
+          // 서버사이드 플래그에 따라 '이미 작성' 메시지 보이기
+          if (initialWrittenFlag) {
+            alreadyMessage.classList.remove("hidden");
+          }
+        });
+    </script>
+
+</th:block>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그룹 문진</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">그룹 문진</h1>
+
+        <!-- 1) 자녀 선택 -->
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold">자녀 선택</label>
+            <select id="childSelect" class="border p-2 rounded w-64">
+                <option value="">-- 자녀를 선택하세요 --</option>
+                <option th:each="c : ${children}"
+                        th:value="${c.id}"
+                        th:text="${c.name + ' (' + c.nickname + ')'}">
+                </option>
+            </select>
+        </div>
+
+        <!-- 2) 연령대 선택 -->
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold">연령대</label>
+            <select id="ageSelect" class="border p-2 rounded w-64">
+                <option value="">-- 연령대를 선택하세요 --</option>
+                <option th:each="ag : ${ageGroups}"
+                        th:value="${ag.name()}"
+                        th:text="${ag.displayName}">
+                </option>
+            </select>
+        </div>
+
+        <!-- 3) 대상 그룹 선택 -->
+        <div class="mb-4">
+            <label class="block mb-1 font-semibold">대상 그룹</label>
+            <select id="targetSelect" class="border p-2 rounded w-64">
+                <option value="">-- 대상그룹을 선택하세요 --</option>
+                <option th:each="tg : ${targetGroups}"
+                        th:if="${tg != T(com.example.demo.enums.TargetGroup).ALL}"
+                        th:value="${tg.name()}"
+                        th:text="${tg.displayName}">
+                </option>
+            </select>
+        </div>
+
+        <!-- 4) 문진 출력 영역 -->
+        <div id="surveyContainer" class="mb-6 space-y-4"></div>
+
+        <!-- 5) 제출 버튼 -->
+        <button id="submitBtn"
+                class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+            제출하기
+        </button>
+    </div>
+
+    <script>
+        const childSelect   = document.getElementById('childSelect');
+        const ageSelect     = document.getElementById('ageSelect');
+        const targetSelect  = document.getElementById('targetSelect');
+        const container     = document.getElementById('surveyContainer');
+        const submitBtn     = document.getElementById('submitBtn');
+        let surveys = [];
+
+        const params      = new URLSearchParams(window.location.search);
+        const preChildId  = params.get('childId');
+        if (preChildId) {
+            Array.from(childSelect.options)
+                 .find(opt => opt.value === preChildId)
+                 ?.setAttribute('selected', 'selected');
+        }
+
+        function loadSurveys() {
+          const age = ageSelect.value;
+          if (!age) { container.innerHTML=''; return; }
+
+          fetch(`/api/group-surveys/by-age/${encodeURIComponent(age)}`)
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(data => {
+              // 대상 그룹 필터링
+              const tg = targetSelect.value;
+              surveys = tg
+                ? data.filter(s => s.targetGroup===document.querySelector('#targetSelect option:checked').text)
+                : data;
+              renderSurveys();
+            })
+            .catch(() => alert('문진 데이터를 불러오는 중 오류 발생'));
+        }
+
+        ageSelect .addEventListener('change', loadSurveys);
+        targetSelect.addEventListener('change', loadSurveys);
+
+        function renderSurveys() {
+          container.innerHTML = '';
+          surveys.forEach((s, i) => {
+            const div = document.createElement('div');
+            div.className = 'border p-4 rounded';
+            div.innerHTML = `
+              <p class="font-semibold mb-2">Q${i+1}. ${s.question} <span class="text-sm text-gray-500">(${s.category})</span></p>
+              ${[1,2,3,4,5].map(v=>
+                `<label class="block"><input type="radio"
+                      name="q${s.id}" value="${v}"> ${s['answer'+v]}</label>`
+              ).join('')}
+            `;
+            container.appendChild(div);
+          });
+        }
+
+        submitBtn.addEventListener('click', () => {
+          // 6) 전부 답했는지 확인
+          const answers = [];
+          if (!childSelect.value) { return alert('자녀를 선택해주세요'); }
+          if (!ageSelect.value)   { return alert('연령대를 선택해주세요'); }
+          if (!targetSelect.value){ return alert('대상 그룹을 선택해주세요'); }
+
+          for (let s of surveys) {
+            const sel = document.querySelector(`input[name="q${s.id}"]:checked`);
+            if (!sel) { return alert('모든 문진에 답변해주세요'); }
+            answers.push(+sel.value);
+          }
+
+          // 7) 제출
+          fetch('/api/group-surveys/submit', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+              ageGroup:    ageSelect.value,
+              targetGroup: targetSelect.value,
+              answers:     answers,
+              childId:     Number(childSelect.value),
+            })
+          })
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then(res => {
+            const payload = encodeURIComponent(JSON.stringify(res));
+            window.location.href = `/groupSurvey/result?data=${payload}`;
+          })
+          .catch(() => alert('제출 중 오류 발생'));
+        });
+    </script>
+</th:block>
+</html>

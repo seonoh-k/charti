@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>기록 문진 목록</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+        <div class="flex justify-center mt-3 mb-5 space-x-6">
+            <a href="/admin/surveys/record" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+                문진 목록
+            </a>
+            <a href="/admin/surveys/record/history" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+                문진 이력
+            </a>
+        </div>
+        <h1 class="text-2xl font-bold mb-4">기록 문진 목록</h1>
+        <form th:action="@{/admin/surveys/record}" method="get" class="mb-6 flex gap-4">
+            <select name="ageGroup" class="border p-2 rounded">
+                <option value="ALL" th:selected="${selectedAgeGroup == 'ALL'}">전체</option>
+                <option th:each="ag : ${ageGroups}"
+                        th:value="${ag.name()}"
+                        th:text="${ag.displayName}"
+                        th:selected="${selectedAgeGroup == ag.name()}">
+                </option>
+            </select>
+
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">필터 적용</button>
+        </form>
+
+        <!-- 등록 버튼 -->
+        <div class="text-right mb-4">
+            <a href="/admin/surveys/record/new" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ 새 문진 등록</a>
+        </div>
+
+        <!-- 문진 목록 테이블 -->
+        <table class="w-full table-auto border-collapse">
+            <thead>
+            <tr class="bg-gray-100 text-left">
+                <th class="border px-4 py-2">ID</th>
+                <th class="border px-4 py-2">연령대</th>
+                <th class="border px-4 py-2">질문</th>
+                <th class="border px-4 py-2">예시 답변</th>
+                <th class="border px-4 py-2 text-center">관리</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="survey : ${pagingDto.data}">
+                <td class="border px-4 py-2" th:text="${survey.surveyId}"></td>
+                <td class="border px-4 py-2" th:text="${survey.ageGroup.displayName}"></td>
+                <td class="border px-4 py-2" th:text="${survey.question}"></td>
+                <td class="border px-4 py-2" th:text="${survey.answer}"></td>
+                <td class="border px-4 py-2 text-center">
+                    <a th:href="@{'/admin/surveys/record/' + ${survey.surveyId} + '/edit'}"
+                       class="text-blue-500 hover:underline mr-2">수정</a>
+                    <form th:action="@{'/admin/surveys/record/' + ${survey.surveyId} + '/delete'}"
+                          method="post" th:onsubmit="return confirm('정말 삭제하시겠습니까?')" class="inline">
+                        <button type="submit" class="text-red-500 hover:underline">삭제</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(pagingDto.data)}">
+                <td colspan="5" class="text-center text-gray-500 py-4">표시할 문진이 없습니다.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- 페이징 -->
+        <div class="mt-6 flex justify-center space-x-2">
+            <a th:each="i : ${#numbers.sequence(1, totalPages)}"
+               th:href="@{|/admin/surveys/record?page=${i}&ageGroup=${selectedAgeGroup}|}"
+               th:text="${i}"
+               th:classappend="${i == currentPage} ? 'font-bold text-blue-600 underline' : 'text-gray-600 hover:text-black'">
+            </a>
+        </div>
+    </div>
+</th:block>
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{layout/default_layout}">
+<th:block layout:fragment="content">
+    <div class="flex gap-6 m-10">
+        <aside class="w-[20%] p-4">
+            <th:block th:replace="~{fragments/subMenu :: subMenuFragment}"></th:block>
+        </aside>
+        <main class="w-[75%] p-6 space-y-6 bg-white rounded-lg shadow">
+            
+            <div class="flex items-center justify-between min-h-[48px] mb-2 px-2">
+                <!-- 왼쪽: 제목 -->
+                <div>
+                    <h1 class="text-2xl font-bold flex items-center mb-0">
+                        <span class="mr-2"></span> 내 자녀 목록
+                    </h1>
+                </div>
+                <!-- 오른쪽: 메시지(위) + 버튼(아래) 세로 정렬 -->
+                <div class="flex flex-col items-end gap-1">
+                    <div class="min-h-[32px]">
+                        <div id="flashMsg" th:if="${msg}" class="bg-green-100 border border-green-300 px-3 py-1 rounded text-green-700 text-sm">
+                            <span th:text="${msg}"></span>
+                        </div>
+                        <div id="flashError" th:if="${error}" class="bg-red-100 border border-red-300 px-3 py-1 rounded text-red-700 text-sm">
+                            <span th:text="${error}"></span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openChildAddModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 mt-2">
+                        자녀 추가
+                    </button>
+                </div>
+            </div>
+            
+            
+            <!-- 자녀가 있을 때: 카드 반복 -->
+            <div th:if="${children != null and #lists.size(children) > 0}" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+                <div th:each="child : ${children}" class="bg-white shadow rounded-2xl p-6 flex flex-col gap-2">
+                    <div class="font-bold text-xl" th:text="${child.name}">이름</div>
+                    <div class="text-sm text-gray-600">나이: <span th:text="${child.ageDisplay}">2세</span></div>
+                    <!-- <div class="text-sm">성별: <span th:text="${child.gender}">남</span></div> -->
+                    <div class="text-sm">
+                        소속: 
+                        <span th:text="${child.group != null ? child.group.groupName : '-'}"></span>
+                        (
+                        <span th:text="${child.group != null ? child.group.targetGroup.displayName : '-'}"></span>
+                        )
+                    </div>
+                    <!-- <div class="text-sm">키/몸무게: <span th:text="${child.height}">85</span> / <span th:text="${child.weight}">11</span></div> -->
+                    <div class="text-sm">위험군: 
+                        <span th:text="${child.riskGroup} ? 'O' : 'X'" th:classappend="${child.riskGroup} ? 'text-red-500 font-semibold' : ''"></span>
+                    </div>
+                    <div class="flex gap-3 mt-4">
+                    <button
+                        type="button"
+                        class="text-indigo-600 hover:underline text-sm"
+                        th:attr="data-child-id=${child.id}"
+                        th:onclick="|openChildDetailModal(${child.id})|">
+                        상세보기
+                    </button>
+                        <!-- 필요시 수정/삭제 버튼 추가 가능 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 자녀가 없을 때 -->
+            <div th:if="${children == null or #lists.size(children) == 0}" class="flex flex-col items-center text-gray-400 py-16">
+                <span class="text-3xl mb-3"></span>
+                <span>등록된 자녀가 없습니다.</span>
+            </div>
+
+            <!-- 자녀 추가 모달 -->
+            <div id="childAddModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl shadow-lg w-[90vw] max-w-lg p-8 relative">
+                    <button type="button" onclick="closeChildAddModal()"
+                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">
+                        &times;
+                    </button>
+
+                    <form id="childAddForm" autocomplete="off" action="/member/child/create" method="post">
+                        <h2 class="text-2xl font-bold mb-4">자녀 등록</h2>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">이름</label>
+                            <input id="addChildName" name="name" required class="w-full border border-gray-300 p-2 rounded" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">태명</label>
+                            <input id="addChildNickname" name="nickname" class="w-full border border-gray-300 p-2 rounded" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">생일</label>
+                            <input id="addChildBirthday" name="birthday" type="date" required class="w-full border border-gray-300 p-2 rounded" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">성별</label>
+                            <select id="addChildGender" name="gender" class="w-full border border-gray-300 p-2 rounded">
+                                <option value="남">남</option>
+                                <option value="여">여</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2 mb-2">
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold mb-1">키</label>
+                                <input id="addChildHeight" name="height" type="text" placeholder="예: 100cm"
+                                    class="w-full border border-gray-300 p-2 rounded" />
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold mb-1">몸무게</label>
+                                <input id="addChildWeight" name="weight" type="text" placeholder="예: 40kg"
+                                    class="w-full border border-gray-300 p-2 rounded" />
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">출생순서</label>
+                            <input id="addChildBirthOrder" name="birthOrder" type="number" min="1"
+                            class="w-full border border-gray-300 p-2 rounded" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">소속(기관명)</label>
+                            <input type="text" id="addGroupName" name="groupName"
+                            class="w-full p-2 rounded border bg-gray-100 border-gray-300" readonly />
+                            <button type="button" onclick="openGroupModalForChildAdd()"
+                            class="mt-2 px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition">
+                            그룹 찾기
+                            </button>
+                            <input type="hidden" id="addGroupId" name="groupId" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">기관 분류</label>
+                            <input type="text" id="addTargetGroup" name="targetGroup"
+                            class="w-full p-2 rounded border bg-gray-100 border-gray-300" readonly />
+                        </div>
+                        <div class="flex gap-2 pt-2 justify-end">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">등록</button>
+                            <button type="button" onclick="closeChildAddModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 상세 모달 -->
+            <div id="childDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl shadow-lg w-[90vw] max-w-lg p-8 relative">
+                    <!-- 닫기 버튼 -->
+                    <button type="button" onclick="closeChildDetailModal()"
+                            class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">
+                        &times;
+                    </button>
+                    <h2 class="text-2xl font-bold mb-4">
+                        <span id="modalChildName">이름</span>
+                        <span class="ml-2 text-base text-gray-500" id="modalChildNickname"></span>
+                    </h2>
+                    <div class="mb-2 text-gray-600">나이: <span id="modalChildAge"></span></div>
+                    <div class="mb-2">성별: <span id="modalChildGender"></span></div>
+                    <div class="mb-2">생일: <span id="modalChildBirthday"></span></div>
+                    <div class="mb-2">키/몸무게: <span id="modalChildHeight"></span> / <span id="modalChildWeight"></span></div>
+                    <div class="mb-2">소속: <span id="modalChildGroup"></span> (<span id="modalChildTarget"></span>)</div>
+                    <div class="mb-2">위험군: <span id="modalChildRisk"></span></div>
+                    <div class="mb-2">출생순서: <span id="modalChildBirthOrder"></span>번째</div>
+                    <div class="flex gap-3 mt-6 justify-end">
+                        <button type="button"
+                                onclick="openChildEditModal()"
+                                class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow">
+                            수정하기
+                        </button>
+                        <form id="deleteChildForm" action="/member/child/delete" method="post" style="display:none;">
+                            <input type="hidden" name="id" id="deleteChildId" />
+                        </form>
+                        <button type="button"
+                                onclick="submitDeleteChild()"
+                                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow">
+                            삭제
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- 수정 모달: childEditModal -->
+            <div id="childEditModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl shadow-lg w-[90vw] max-w-lg p-8 relative">
+                    <!-- 닫기 버튼 -->
+                    <button type="button" onclick="closeChildEditModal()"
+                    class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;
+                    </button>
+                    <form id="childEditForm" autocomplete="off" action="/member/child/update" method="post">
+                        <h2 class="text-2xl font-bold mb-4">자녀 정보 수정</h2>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">이름</label>
+                            <input id="editChildName" name="name" required class="w-full border border-gray-300 p-2 rounded" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">태명</label>
+                            <input id="editChildNickname" name="nickname" class="w-full border border-gray-300 p-2 rounded" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">생일</label>
+                            <input id="editChildBirthday" name="birthday" type="date" required class="w-full border border-gray-300 p-2 rounded" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">성별</label>
+                            <select id="editChildGender" name="gender" class="w-full border border-gray-300 p-2 rounded">
+                                <option value="남">남</option>
+                                <option value="여">여</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2 mb-2">
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold mb-1">키</label>
+                                <input id="editChildHeight" name="height" type="text" placeholder="예: 100cm"
+                                    class="w-full border border-gray-300 p-2 rounded" />
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-semibold mb-1">몸무게</label>
+                                <input id="editChildWeight" name="weight" type="text" placeholder="예: 40kg"
+                                    class="w-full border border-gray-300 p-2 rounded" />
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">출생순서</label>
+                            <input id="editChildBirthOrder" name="birthOrder" type="number" min="1" class="w-full border border-gray-300 p-2 rounded" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">소속(기관명)</label>
+                            <input type="text" id="editGroupName" name="groupName"
+                                class="w-full p-2 rounded border bg-gray-100 border-gray-300" readonly />
+                            <!-- 그룹 찾기 버튼: 필요시! -->
+                            <button type="button" onclick="openGroupModal()"
+                                    class="mt-2 px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition">
+                            그룹 찾기
+                            </button>
+                            <input type="hidden" id="editChildId" name="id" />            
+                            <input type="hidden" id="editGroupId" name="groupId" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm font-semibold mb-1">기관 분류</label>
+                            <input type="text" id="editTargetGroup" name="targetGroup"
+                                class="w-full p-2 rounded border bg-gray-100 border-gray-300" readonly />
+                        </div>
+                        <div class="mb-2 hidden" >
+                            <label class="block text-sm font-semibold mb-1">위험군</label>
+                            <input type="text" id="editChildRisk" name="riskGroup"
+                                class="w-full p-2 rounded border bg-gray-100 border-gray-300" readonly />
+                        </div>
+                        <div class="flex gap-2 pt-2 justify-end">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">저장</button>
+                            <button type="button"onclick="closeChildEditModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
+                            <form id="deleteChildForm" action="/member/child/delete" method="post" style="display:none;">
+                                <input type="hidden" name="id" id="deleteChildId" />
+                            </form>
+                            <button type="button" onclick="submitDeleteChild()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">삭제</button>
+                            
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 그룹 검색 모달 -->
+            <div id="groupModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden">
+                <div class="bg-white w-full max-w-md text-gray-900 rounded-lg p-6 shadow-lg">
+                    <h2 class="text-xl font-bold mb-4">그룹(기관) 검색</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input id="groupSearchInput" type="text" placeholder="기관 이름 입력" class="flex-grow border px-3 py-2 rounded" />
+                        <button onclick="searchGroup()" class="bg-blue-500 text-white px-4 py-2 rounded">검색</button>
+                    </div>
+                    <div id="groupResult" class="max-h-60 overflow-y-auto border rounded p-2 text-sm space-y-2">
+                        <!-- 검색 결과 리스트 들어감 -->
+                    </div>
+                    <div class="mt-4 text-right">
+                        <button onclick="closeGroupModal()" class="text-sm text-gray-600 hover:underline">닫기</button>
+                    </div>
+                </div>
+            </div>
+
+
+            
+            <script>
+                let currentChildId = null;
+                let currentChildData = null;
+
+                // 상세 모달 열기
+                function openChildDetailModal(childId) {
+                fetch('/member/child/' + childId)   //서버에 해당 id 자녀 정보 요청
+                    .then(res => res.json())        // 응답을 json으로 변환
+                    .then(child => {
+                        console.log("자녀 데이터",child)
+                    currentChildId = child.id;       // 현재 id 저장
+                    currentChildData = child;        // 현재 자녀 데이터 전체 저장
+                    // 상세 정보 바인딩
+                    document.getElementById('modalChildName').textContent = child.name || '';
+                    document.getElementById('modalChildNickname').textContent = child.nickname || '';
+                    document.getElementById('modalChildAge').textContent = child.ageDisplay || (child.age + '세');
+                    document.getElementById('modalChildBirthday').textContent = child.birthday ? child.birthday.split('T')[0] : '';
+                    document.getElementById('modalChildGender').textContent = child.gender || '';
+                    document.getElementById('modalChildHeight').textContent = child.height || '';
+                    document.getElementById('modalChildWeight').textContent = child.weight || '';
+                    document.getElementById('modalChildGroup').textContent = child.groupName || '';
+                    document.getElementById('modalChildTarget').textContent = child.targetGroup || '';
+                    document.getElementById('modalChildRisk').textContent = child.riskGroup ? 'O' : 'X';
+                    document.getElementById('modalChildBirthOrder').textContent = child.birthOrder || '-';
+                    document.getElementById('childDetailModal').classList.remove('hidden');
+                    });
+                }
+
+                // 상세모달 닫기
+                function closeChildDetailModal() {
+                document.getElementById('childDetailModal').classList.add('hidden');
+                }
+
+                // 수정모달 열기
+                function openChildEditModal() {
+                    window.groupSetMode = 'childEdit';
+                    closeChildDetailModal(); // 상세모달 닫기
+
+                    if (!currentChildData) return;
+
+                    document.getElementById('editChildName').value = currentChildData.name || '';
+                    document.getElementById('editChildNickname').value = currentChildData.nickname || '';
+                    document.getElementById('editChildBirthday').value = currentChildData.birthday ? currentChildData.birthday.split('T')[0] : '';
+                    document.getElementById('editChildGender').value = currentChildData.gender || '';
+                    document.getElementById('editChildHeight').value = currentChildData.height || '';
+                    document.getElementById('editChildWeight').value = currentChildData.weight || '';
+                    document.getElementById('editChildBirthOrder').value = currentChildData.birthOrder || '';
+                    document.getElementById('editGroupName').value = currentChildData.groupName || '';
+                    document.getElementById('editTargetGroup').value = currentChildData.targetGroup || '';
+                    document.getElementById('editChildRisk').value = currentChildData.riskGroup ? '위험군' : '일반';
+
+                    document.getElementById('editChildId').value = currentChildData.id || '';     // ← 자녀 id
+                    document.getElementById('editGroupId').value = currentChildData.groupId || ''; // ← 소속 groupId
+
+                    document.getElementById('childEditModal').classList.remove('hidden');
+                }       
+                //수정모달 닫기
+                function closeChildEditModal() {
+                    document.getElementById('childEditModal').classList.add('hidden');
+                }
+
+
+
+                // (1) 그룹 검색 모달 열기
+                function openGroupModal() {
+                    document.getElementById('groupModal').classList.remove('hidden');
+                    // 검색 입력창, 결과 초기화
+                    document.getElementById('groupSearchInput').value = '';
+                    document.getElementById('groupResult').innerHTML = '';
+                }
+
+                // (2) 그룹 검색 모달 닫기
+                function closeGroupModal() {
+                    document.getElementById('groupModal').classList.add('hidden');
+                }
+
+                // (3) 그룹 검색 및 결과 출력
+                async function searchGroup() {
+                    const name = document.getElementById('groupSearchInput').value.trim();
+                    const resultDiv = document.getElementById('groupResult');
+                    resultDiv.innerHTML = '';
+
+                    if (name.length < 2) {
+                        alert("기관 이름을 두 글자 이상 입력하세요.");
+                        return;
+                    }
+                    const res = await fetch(`/api/group/search?name=${encodeURIComponent(name)}`);
+                    const list = await res.json();
+                    if (!Array.isArray(list) || list.length === 0) {
+                        resultDiv.innerHTML = '<p class="text-gray-500">검색 결과가 없습니다.</p>';
+                        return;
+                    }
+
+                    list.forEach(group => {
+                        const item = document.createElement('div');
+                        item.className = 'cursor-pointer hover:bg-gray-100 p-2 border rounded';
+                        item.innerHTML = `<strong>${group.name}</strong> <span class="ml-2">${group.targetGroupName || ''}</span>`;
+                        item.onclick = () => {
+                            // 자녀 수정 모달 폼에 값 바인딩
+                            fillGroupFields(group); // << 이 한 줄로 통일
+                            closeGroupModal();
+                        };
+                        resultDiv.appendChild(item);
+                    });
+                }
+
+                function fillGroupFields(group) {
+                    if (window.groupSetMode === 'childAdd') {
+                        document.getElementById('addGroupId').value = group.id;
+                        document.getElementById('addGroupName').value = group.name;
+                        document.getElementById('addTargetGroup').value = group.targetGroupName || group.targetGroup || '';
+                    } else if (window.groupSetMode === 'childEdit') {
+                        document.getElementById('editGroupId').value = group.id;
+                        document.getElementById('editGroupName').value = group.name;
+                        document.getElementById('editTargetGroup').value = group.targetGroupName || group.targetGroup || '';
+                    }
+                }
+
+                // 자녀 추가 모달 열기 
+                function openChildAddModal() {
+                    // 값 초기화
+                    document.getElementById('childAddForm').reset();
+                    document.getElementById('childAddModal').classList.remove('hidden');
+                    }
+                    function closeChildAddModal() {
+                    document.getElementById('childAddModal').classList.add('hidden');
+                }
+
+                function openGroupModalForChildAdd() {
+                    document.getElementById('groupModal').classList.remove('hidden');
+                    // 검색값, 결과 초기화
+                    document.getElementById('groupSearchInput').value = '';
+                    document.getElementById('groupResult').innerHTML = '';
+                    // 어디에 선택 결과 넣을지 상태 저장
+                    window.groupSetMode = 'childAdd';  // childAdd 모드 표시
+                }
+
+
+
+                // 자녀 삭제 (소프트딜리트)
+                function submitDeleteChild() {
+                    if (!currentChildId) return;
+                    if (!confirm('정말 삭제하시겠습니까?')) return;
+                    document.getElementById('deleteChildId').value = currentChildId;
+                    document.getElementById('deleteChildForm').submit();
+                }
+            </script>
+            <script src="/js/flashMsg.js"></script>
+        </main>   
+    </div>
+
+</th:block>
+</html>

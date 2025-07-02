@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+    <!-- 헤더 (햄버거 버튼) -->
+	<!-- 가져다가 쓰세요-->
+	<div th:fragment="hamburger">
+        <header class="flex justify-start items-center bg-gray-100 h-8 px-4">
+            <button id="hamburgerBtn" onclick="openSidebar()" class="text-gray-700 text-2xl">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </header>
+        <!-- <button id="hamburgerBtn" onclick="openSidebar()" class="text-gray-700 text-2xl fixed top-3 left-3 z-50 md:hidden">
+            <i class="fa-solid fa-bars"></i>
+        </button> -->
+        
+	</div>
+	<!-- 여기 part2 조각 있습니다 가져다가 쓰세요-->
+	<div th:fragment="sideBar">
+	    <!-- 사이드바 -->
+        <nav id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4 space-y-2 z-40 overflow-y-auto hidden opacity-75">
+            <!-- X 닫기 버튼 -->
+            <div class="flex justify-end mb-2">
+                <button onclick="closeSidebar()" class="text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex justify-center">
+                <img th:src="@{/images/logo.png}" alt="로고" class="mb-4 size-32" />
+            </div>
+
+            <ul class="space-y-2 text-sm">
+                <li><a th:href="@{/expert/main}" class="block hover:bg-gray-700 px-2 py-1 rounded">홈</a></li>
+                <li><a th:href="@{/expert/myPage}" class="block hover:bg-gray-700 px-2 py-1 rounded">회원 정보</a></li>
+                <li><a th:href="@{/expert/matching}" class="block hover:bg-gray-700 px-2 py-1 rounded">상담</a></li>
+                <li><a th:href="@{/qnaList}" class="block hover:bg-gray-700 px-2 py-1 rounded">문의 내역</a></li>
+            </ul>
+        </nav>
+	</div>
+	<!-- 여기 part3 조각 있습니다 가져다가 쓰세요-->
+	<div th:fragment="part3">
+	    <h2>Part 3</h2>
+	</div>
+	
+</body>
+</html>

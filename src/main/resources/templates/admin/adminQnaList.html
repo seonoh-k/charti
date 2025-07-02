@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+        <div class="flex-1 p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">1:1 문의 관리</h1>
+            <hr class="mb-8 border-gray-300">
+
+            <!-- 필터 & 검색 폼 (버튼 type="button" 으로 폼 제출 방지) -->
+            <form id="qnaFilterForm" class="mb-6 flex space-x-4">
+                <!-- 카테고리 -->
+                <div class="w-1/4">
+                    <label for="categorySelect" class="block text-sm font-medium text-gray-700 mb-1">
+                        카테고리
+                    </label>
+                    <select id="categorySelect" name="category"
+                            class="block w-full py-2 px-3 border rounded-md">
+                        <option value="" th:selected="${selectedCategory == null}">전체</option>
+                        <option th:each="cat : ${category}"
+                                th:value="${cat.name()}"
+                                th:text="${cat.displayName}"
+                                th:selected="${cat == selectedCategory}">
+                        </option>
+                    </select>
+                </div>
+
+                <!-- 상태 -->
+                <div>
+                    <label for="statusSelect" class="block text-sm font-medium text-gray-700 mb-1">
+                        상태
+                    </label>
+                    <select id="statusSelect" name="status"
+                            class="block py-2 px-3 border rounded-md">
+                        <option value="" th:selected="${selectedStatus == null}">전체</option>
+                        <option value="waiting" th:selected="${selectedStatus=='waiting'}">답변대기</option>
+                        <option value="done"    th:selected="${selectedStatus=='done'}">답변완료</option>
+                    </select>
+                </div>
+
+                <!-- 제목 검색 -->
+                <div class="flex-1">
+                    <label for="keywordInput" class="block text-sm font-medium text-gray-700 mb-1">
+                        제목 검색
+                    </label>
+                    <div class="flex">
+                        <input id="keywordInput" type="text" name="keyword"
+                               th:value="${keyword}"
+                               placeholder="제목 검색"
+                               class="flex-1 border rounded-l-md px-3 py-2"/>
+                        <button id="searchBtn" type="button"
+                                class="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600">
+                            검색
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- QnA 테이블 -->
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
+                <table class="min-w-full divide-y divide-gray-200 table-fixed">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            번호
+                        </th>
+                        <th class="w-[50%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            제목
+                        </th>
+                        <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            상태
+                        </th>
+                        <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            작성자
+                        </th>
+                        <th class="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            작성일
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tr th:each="qna : ${qnaList}">
+                        <td th:text="${qna.id}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a th:href="@{/admin/qna/{id}(id=${qna.id})}"
+                               th:text="|${qna.title}${qna.deleted ? ' (삭제됨)' : ''}|"
+                               class="text-sm text-gray-700 hover:underline"></a>
+                        </td>
+                        <td th:text="${qna.isAnswered ? '답변 완료' : '답변 대기'}"
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                        <td th:text="${qna.nickname != null ? qna.nickname : qna.name}"
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                        <td th:text="${qna.createdAt}"
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 페이징 -->
+            <div class="flex justify-center mt-6">
+                <nav id="pagination"
+                     th:data-current-page="${currentPage}"
+                     th:data-total-pages="${totalPages}"
+                     class="inline-flex -space-x-px">
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const categorySelect = document.getElementById("categorySelect");
+          const statusSelect   = document.getElementById("statusSelect");
+          const keywordInput   = document.getElementById("keywordInput");
+          const searchBtn      = document.getElementById("searchBtn");
+          const nav            = document.getElementById("pagination");
+          const current        = Number(nav.dataset.currentPage);
+          const total          = Number(nav.dataset.totalPages);
+
+          // URL 빌더
+          function buildUrl(page = 1) {
+            const params = new URLSearchParams();
+            if (categorySelect.value) params.set("category", categorySelect.value);
+            if (statusSelect.value)   params.set("status",   statusSelect.value);
+            if (keywordInput.value.trim()) params.set("keyword", keywordInput.value.trim());
+            params.set("page", page);
+            return `/admin/qna?${params.toString()}`;
+          }
+
+          // 필터 즉시 적용
+          categorySelect.addEventListener("change", () => {
+            window.location.href = buildUrl(1);
+          });
+          statusSelect.addEventListener("change", () => {
+            window.location.href = buildUrl(1);
+          });
+
+          // 제목 검색 버튼
+          searchBtn.addEventListener("click", () => {
+            if (!keywordInput.value.trim()) return;
+            window.location.href = buildUrl(1);
+          });
+
+          // 페이징 버튼 렌더링
+          function pageBtn(label, page, opts = {}) {
+            const { active = false, disabled = false, rounded = "" } = opts;
+            const a = document.createElement("a");
+            if (typeof label === "number") a.textContent = label;
+            else {
+              const i = document.createElement("i");
+              i.className = label === "left"
+                ? "fa-solid fa-angle-left"
+                : "fa-solid fa-angle-right";
+              a.appendChild(i);
+            }
+            a.className = "px-3 py-1 border";
+            if (active) a.classList.add("bg-blue-500","text-white","border-blue-500");
+            else        a.classList.add("bg-white","text-gray-500","border-gray-300","hover:bg-gray-100");
+            if (disabled) {
+              a.href = "javascript:;";
+              a.classList.add("cursor-not-allowed","opacity-50");
+            } else {
+              a.href = buildUrl(page);
+            }
+            if (rounded === "left")  a.classList.add("rounded-l-lg");
+            if (rounded === "right") a.classList.add("rounded-r-lg");
+            return a;
+          }
+
+          // Prev
+          nav.appendChild(pageBtn("left", current - 1, {
+            disabled: current === 1, rounded: "left"
+          }));
+          // 페이지 번호
+          for (let p = 1; p <= total; p++) {
+            nav.appendChild(pageBtn(p, p, { active: p === current }));
+          }
+          // Next
+          nav.appendChild(pageBtn("right", current + 1, {
+            disabled: current === total, rounded: "right"
+          }));
+        });
+    </script>
+</th:block>
+</html>

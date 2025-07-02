@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>내 정보 수정</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 주소 조회 js -->
+    <script src="/js/addressSearch.js"></script>
+
+    <!-- Firebase SMS 인증  -->
+<script type="module" src="/js/smsAuth.js"></script>
+
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+<div class="bg-white p-8 rounded-xl shadow-md w-full max-w-2xl">
+    
+    <a th:href="@{/main}" class="inline-block bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+    메인으로
+    </a>
+    <h1 class="text-2xl font-bold mb-6 text-center">👤 내 정보 수정</h1>
+    <form id="userEditForm" class="space-y-4">
+    <!-- 이름 -->
+    <div>
+        <label class="block text-sm font-semibold mb-1">이름</label>
+        <input type="text" name="name" id="name" th:value="${userInfo.name}" class="w-full border p-2 rounded" />
+    </div>
+
+    <!-- 닉네임 -->
+    <div>
+        <label class="block text-sm font-semibold mb-1">닉네임</label>
+        <input type="text" name="nickname" id="nickname" th:value="${userInfo.nickname}" class="w-full border p-2 rounded" />
+    </div>
+
+    <!-- 이메일 (읽기 전용) -->
+    <div>
+        <label class="block text-sm font-semibold mb-1">이메일</label>
+        <input type="email" name="username" id="username" th:value="${userInfo.username}" class="w-full border p-2 rounded bg-gray-100" readonly />
+    </div>
+
+    <!-- 전화번호 (검증후 수정 가능 예정) -->
+    <div>
+        <label class="block text-sm font-semibold mb-1">전화번호</label>
+        <input type="text" name="phoneNumber" id="phoneNumber" th:value="${userInfo.phoneNumber}" class="w-full border p-2 rounded bg-gray-100" readonly />
+    </div>
+    <!-- 🔐 휴대전화 입력 및 인증 -->
+    <div class="mt-4">
+        <label for="phone" class="block text-sm font-semibold mb-1">휴대전화</label>
+        <div class="flex space-x-2">
+            <select id="phone1" class="p-2 rounded border w-20">
+            <option value="010">010</option>
+            <option value="011">011</option>
+            <option value="016">016</option>
+            <option value="017">017</option>
+            <option value="018">018</option>
+            <option value="019">019</option>
+            </select>
+            <input id="phone2" type="text" maxlength="4" placeholder="1234"
+                class="p-2 rounded border w-20" pattern="\d*" />
+            <input id="phone3" type="text" maxlength="4" placeholder="5678"
+                class="p-2 rounded border w-20" pattern="\d*" />
+            <button type="button" id="send-otp-btn"
+            class="px-4 py-2 bg-blue-600 text-white rounded" onclick="sendSmsOtp()">
+            인증번호 받기
+            </button>
+        </div>
+    </div>
+
+    <!-- 인증번호 입력 -->
+    <div class="mt-2">
+        <label for="otp" class="block text-sm font-semibold mb-1">인증번호</label>
+        <input id="otp" type="text" placeholder="6자리 코드"
+                class="w-full p-2 rounded border" disabled />
+        <button type="button" id="verify-otp-btn" 
+                class="mt-2 px-4 py-2 bg-green-600 text-white rounded" onclick="verifySmsOtp()" disabled>
+            인증 확인
+        </button>
+    </div>
+    <!-- Firebase Recaptcha 영역 -->
+    <div id="recaptcha-container"></div>
+
+
+
+    <div>
+    <label class="block text-sm font-semibold mb-1">주소</label>
+    <button type="button" onclick="openAddressModal()"
+            class="mb-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+        주소 검색
+    </button>
+    <input type="text" id="zipNum" class="w-full mb-2 border p-2 bg-gray-100 rounded" readonly
+            th:value="${userInfo.address.zipNum}" />
+
+    <input type="text" id="addr1"
+            class="w-full border p-2 bg-gray-100 rounded" readonly
+            th:value="${userInfo.address.sido + ' ' + userInfo.address.gugun + ' ' + userInfo.address.dong
+                    + (userInfo.address.bunji != null && !#strings.isEmpty(userInfo.address.bunji) ? ' ' + userInfo.address.bunji : '')}" />
+
+    <!-- ✅ addressId는 반드시 hidden & name 있어야 백엔드로 전송됨 -->
+    <input type="hidden" id="addressId" name="addressId" th:value="${userInfo.address.id}" />
+    </div>
+    
+    <!-- 링크 및 버튼 -->
+    <div class="flex justify-between items-center mt-6">
+        <button type="submit" id="saveBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">수정 완료</button>
+        <button type="button" onclick="openPasswordModal()" class="text-sm text-purple-600 hover:underline">비밀번호 변경</button>
+        <button type="button" onclick="confirmDelete()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">회원 탈퇴</button>
+    </div>
+    </form>
+</div>
+
+<!-- 📍 주소 검색 모달 -->
+<div id="addressModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xl animate-fade-in">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">주소 검색</h2>
+        <div class="flex gap-2 mb-4">
+            <input id="dongInput" type="text" placeholder="동 이름 입력 (최소 2자 이상)"
+                class="flex-1 border text-gray-900 rounded px-4 py-2 focus:ring-2 focus:ring-purple-500" />
+            <button onclick="searchAddress()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">검색</button>
+        </div>
+        <div id="addressResult" class="max-h-60 overflow-y-auto border-t border-gray-200 pt-2 space-y-2">
+            <!-- 검색 결과 표시 -->
+        </div>
+        <div class="flex justify-end mt-4">
+            <button onclick="closeAddressModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">닫기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 🔐 비밀번호 변경 모달 -->
+<div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+    <h2 class="text-lg font-bold mb-4">비밀번호 변경</h2>
+    <form id="passwordForm" class="space-y-4">
+        <div>
+            <label class="block text-sm font-semibold mb-1">현재 비밀번호</label>
+            <input type="password" id="currentPassword" class="w-full border p-2 rounded" required />
+        </div>
+        <div>
+            <label class="block text-sm font-semibold mb-1">새 비밀번호</label>
+            <input type="password" id="newPassword" class="w-full border p-2 rounded" required />
+        </div>
+        <div>
+            <label class="block text-sm font-semibold mb-1">새 비밀번호 확인</label>
+            <input type="password" id="confirmPassword" class="w-full border p-2 rounded" required />
+        </div>
+    </form>
+    <div class="mt-6 flex justify-between">
+        <button onclick="closePasswordModal()" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">닫기</button>
+        <button onclick="submitPasswordChange()" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">비밀번호 변경</button>
+    </div>
+    </div>
+</div>
+
+<!-- 📜 JS 스크립트 -->
+<script>
+
+    // 비밀번호 모달
+    function openPasswordModal() {
+        document.getElementById('passwordModal').classList.remove('hidden');
+    }
+    function closePasswordModal() {
+        document.getElementById('passwordModal').classList.add('hidden');
+    }
+    async function submitPasswordChange() {
+        const current = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+
+        if (newPass !== confirm) {
+            alert("새 비밀번호가 일치하지 않습니다.");
+            return;
+        }
+
+        const response = await fetch('/api/users/update/password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                currentPassword: current,
+                newPassword: newPass,
+                confirmPassword: confirm
+            })
+        });
+
+        if (response.ok) {
+            alert("비밀번호가 변경되었습니다.");
+            closePasswordModal();
+        } else {
+            const result = await response.json();
+            alert(result.message || "비밀번호 변경 실패");
+        }
+    }
+
+
+    // "수정 완료" 버튼 클릭 시 API 호출
+    document.getElementById('saveBtn').addEventListener('click', async (e) => {
+        e.preventDefault(); // form 전송 막기
+
+                // const name = document.getElementById("name").value.trim();
+                // const nickname = document.getElementById("nickname").value.trim();
+
+                // if (!/^[가-힣]{2,}$/.test(name)) {
+                //     alert("이름은 한글 2자 이상만 가능합니다.");
+                //     return;
+                // }
+
+                // if (!/^[가-힣a-zA-Z0-9_-]{2,10}$/.test(nickname)) {
+                //     alert("닉네임은 2~10자의 한글, 영문, 숫자, _, - 만 사용 가능해요.");
+                //     return;
+                // }
+
+
+        const payload = {
+        name: document.getElementById('name').value,
+        nickname: document.getElementById('nickname').value,
+        addressId: parseInt(document.getElementById('addressId').value),// 주소 ID도 포함!
+        phoneNumber: document.getElementById('phoneNumber').value,
+        newUid: getNewUid()  
+        };
+
+        try {
+        const res = await fetch('/api/users/update', {
+            method: 'PUT',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+console.log(payload); // ✅ 여기서 먼저 확인
+        const result = await res.json();
+
+        if (res.ok) {
+            alert(result.message || "회원 정보가 수정되었습니다.");
+            location.reload(); // 또는 location.href = "/user/my-info"
+        } else {
+            alert(result.message || "수정에 실패했습니다.");
+        }
+        } catch (error) {
+        console.error("요청 중 에러 발생:", error);
+        alert("알 수 없는 오류가 발생했습니다.");
+        }
+    });
+
+
+    // 회원 탈퇴
+    function confirmDelete() {
+        if (!confirm("정말로 탈퇴하시겠습니까?")) return;
+        fetch('/api/users/delete', {
+            method: 'DELETE'
+        }).then(res => {
+            if (res.ok) {
+                alert("탈퇴되었습니다.");
+                location.href = "/loginForm";
+            } else {
+                alert("탈퇴 실패");
+            }
+        });
+    }
+</script>
+</body>
+</html>

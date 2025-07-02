@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>기록 문진</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 모달 오버레이 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 모달 내용 */
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh; /* 높이 제한 및 스크롤 가능하게 */
+            overflow-y: auto; /* 내용이 넘칠 경우 스크롤 */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* 토스트 알림 */
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1001;
+            font-size: 0.9rem;
+        }
+
+        .toast-message.show {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">기록 문진</h1>
+
+        <div class="mb-4 p-4 border rounded bg-gray-50">
+            <p><strong>회원:</strong> <span th:text="${member.name}"></span> (<span th:text="${member.email}"></span>)</p>
+        </div>
+
+        <form method="get" th:action="@{/survey/record}" class="mb-6 flex gap-4 items-center">
+            <label for="childId" class="font-semibold">자녀 선택:</label>
+            <select name="childId" id="childId" class="border p-2 rounded w-64">
+                <option value="" disabled selected th:if="${#lists.isEmpty(children)}">
+                    등록된 자녀가 없습니다.
+                </option>
+                <option value="" disabled th:selected="${selectedChild == null and !#lists.isEmpty(children)}">
+                    자녀를 선택하세요
+                </option>
+                <option th:each="child : ${children}"
+                        th:value="${child.id}"
+                        th:text="${child.name}"
+                        th:selected="${selectedChild != null and selectedChild.id == child.id}">
+                </option>
+            </select>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">선택</button>
+            <a href="/member/child" class="text-sm text-blue-600 hover:underline">+ 자녀 추가하기</a>
+        </form>
+
+        <div th:if="${selectedChild != null}" class="mb-6 p-4 border rounded bg-gray-50">
+            <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
+            <p><strong>이름:</strong> <span th:text="${selectedChild.name}"></span></p>
+            <p><strong>성별:</strong> <span th:text="${selectedChild.gender}"></span></p>
+            <p><strong>나이:</strong> <span th:text="${selectedChild.age}+'세'"></span></p>
+            <p><strong>키:</strong> <span th:text="${selectedChild.height} "></span></p>
+            <p><strong>체중:</strong> <span th:text="${selectedChild.weight} "></span></p>
+        </div>
+
+        <div th:if="${selectedChild != null and isAlreadyWritten != null and isAlreadyWritten}"
+             class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
+            <p class="font-bold">안내</p>
+            <p>선택하신 자녀는 오늘 이미 기록 문진을 작성했습니다. 문진은 자녀당 하루 한 번만 작성할 수 있습니다.</p>
+            <p class="text-sm mt-2">이전 문진 기록은 <a href="/survey/record/history" class="underline text-blue-600 hover:text-blue-800">기록 문진 이력</a>에서 확인하실 수 있습니다.</p>
+        </div>
+
+
+        <form id="surveyForm" th:if="${selectedChild != null and surveys != null and (isAlreadyWritten == null or !isAlreadyWritten)}" method="post" th:action="@{/survey/record/submit}">
+            <input type="hidden" name="childId" th:value="${selectedChild.id}" />
+
+            <div id="surveyArea">
+                <div th:each="survey, i : ${surveys}" class="mb-6">
+                    <label th:for="${'answer_' + i.index}" class="block font-semibold mb-1"
+                           th:text="${i.index + 1 + '. ' + survey.question}"></label>
+                    <p class="text-sm text-gray-500 italic mb-1"
+                       th:if="${survey.answer != null}"
+                       th:text="'예시: ' + ${survey.answer}"></p>
+                    <textarea th:id="${'answer_' + i.index}"
+                              th:name="${'answers[' + i.index + '].text'}"
+                              class="w-full border p-2 rounded" rows="3"
+                              placeholder="답변을 입력하세요..." required></textarea> <input type="hidden" th:name="${'answers[' + i.index + '].questionId'}" th:value="${survey.surveyId}" />
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-8">
+                <button type="button" id="submitSurveyButton" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+                    문진 제출
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">문진 답변 최종 확인</h2>
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mb-4" role="alert">
+                <p class="font-bold">⚠️ 중요 안내</p>
+                <p class="text-sm">한번 작성 완료된 문진 답변은 **수정 및 삭제가 불가능합니다.**</p>
+                <p class="text-sm mt-1">신중하게 확인하신 후 `확인하고 전송하기` 버튼을 눌러주세요.</p>
+            </div>
+
+            <div id="answerSummary" class="mb-6 text-sm max-h-60 overflow-y-auto border p-3 rounded bg-gray-50">
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancelSubmitButton" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
+                    이전으로 돌아가기
+                </button>
+                <button type="button" id="finalSubmitButton" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    확인하고 전송하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastMessage" class="toast-message"></div>
+
+</th:block>
+
+<script layout:fragment="script" th:inline="javascript">
+    // Thymeleaf 변수를 JavaScript로 가져오기 (th:inline="javascript" 적용)
+    const selectedChildId = /*[[${selectedChild?.id}]]*/ null;
+    const isAlreadyWritten = /*[[${isAlreadyWritten}]]*/ false;
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const submitSurveyButton = document.getElementById('submitSurveyButton');
+        const confirmModal = document.getElementById('confirmModal');
+        const answerSummary = document.getElementById('answerSummary');
+        const cancelSubmitButton = document.getElementById('cancelSubmitButton');
+        const finalSubmitButton = document.getElementById('finalSubmitButton');
+        const surveyForm = document.getElementById('surveyForm');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && confirmModal.classList.contains('active')) {
+                confirmModal.classList.remove('active');
+            }
+        });
+
+        if (submitSurveyButton) { // 자녀가 선택되어 폼이 보이는 경우에만 이벤트 리스너 등록
+            submitSurveyButton.addEventListener('click', async () => {
+            console.log('문진 제출 버튼 클릭됨')
+                // 1. 유효성 검사 (모든 답변이 작성되었는지)
+                const textareas = surveyForm.querySelectorAll('textarea[name^="answers["]');
+                let allAnswered = true;
+
+                // forEach 대신 for...of 루프 사용 (break 가능)
+                for (const textarea of textareas) {
+                    if (textarea.value.trim() === '') {
+                        allAnswered = false;
+                        textarea.focus(); // 미작성된 필드로 포커스 이동
+                        break; // 빈 답변을 찾으면 즉시 루프 중단
+                    }
+                }
+
+                if (!allAnswered) {
+                    showToast('모든 질문에 답변해주세요.', 'error');
+                    return; // 함수 실행 중단
+                }
+
+                // 2. 답변 요약 생성
+                answerSummary.innerHTML = ''; // 기존 내용 초기화
+                textareas.forEach((textarea, index) => {
+                    const questionElement = document.querySelector(`label[for="answer_${index}"]`);
+                    const questionText = questionElement ? questionElement.textContent.trim() : `질문 ${index + 1}`;
+                    const answerText = textarea.value.trim();
+
+                    const qaPairDiv = document.createElement('div');
+                    qaPairDiv.className = 'mb-2 pb-2 border-b last:border-b-0'; // 마지막 항목은 border-b 없음
+                    qaPairDiv.innerHTML = `<p class="font-semibold text-gray-700">${questionText}</p><p class="text-gray-600 pl-4">→ ${answerText}</p>`;
+                    answerSummary.appendChild(qaPairDiv);
+                });
+
+                // 3. 모달 표시
+                confirmModal.classList.add('active');
+            });
+        }
+
+        // 모달 닫기 버튼
+        cancelSubmitButton.addEventListener('click', () => {
+            confirmModal.classList.remove('active');
+        });
+
+        // 최종 전송 버튼
+        finalSubmitButton.addEventListener('click', async () => {
+            // 모달 닫기 (선택 사항, 전송 후 자동으로 닫히는 것이 더 자연스러울 수 있음)
+            confirmModal.classList.remove('active');
+
+            // 폼 데이터 수집
+            const formData = new FormData(surveyForm);
+            const answers = [];
+            let i = 0;
+            while (formData.has(`answers[${i}].questionId`)) {
+                answers.push({
+                    questionId: formData.get(`answers[${i}].questionId`),
+                    text: formData.get(`answers[${i}].text`),
+                    childId: formData.get('childId') // childId는 폼의 hidden input에서 가져옴
+                });
+                i++;
+            }
+
+            try {
+                const response = await fetch('/survey/record/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+
+                    },
+                    body: JSON.stringify(answers)
+                });
+
+                if (response.ok) {
+                    showToast('문진 답변이 성공적으로 저장되었습니다!', 'success');
+                    // 성공 후 리다이렉트 또는 UI 업데이트
+                    /*
+                        setTimeout(() => {
+                            window.location.href = `/mypage/survey/record/history?childId=${selectedChildId}`; // 이력 페이지로 이동 아직 mypage 구현 전이라 주석처리
+                        }, 1500); // 1.5초 후 이동
+                        */
+                        // 새로운 링크로 즉시 이동
+                        window.location.href = `/survey/record/history`;
+                } else {
+                    const errorData = await response.json();
+                    let errorMessage = errorData.message || '문진 답변 저장에 실패했습니다.';
+                    // 중복 작성 에러 처리
+                    if (response.status === 409) { // HTTP 409 Conflict
+                        errorMessage = '오늘 해당 자녀의 문진을 이미 작성했습니다. 다시 작성할 수 없습니다.';
+                    }
+                    showToast(errorMessage, 'error');
+                }
+            } catch (error) {
+                console.error('문진 제출 중 오류 발생:', error);
+                showToast('문진 제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'error');
+            }
+        });
+
+        function showToast(message, type = 'info') {
+            toastMessage.textContent = message;
+            toastMessage.classList.add('show');
+            if (type === 'error') {
+                toastMessage.style.backgroundColor = '#ef4444'; // Tailwind red-500
+            } else if (type === 'success') {
+                toastMessage.style.backgroundColor = '#22c55e'; // Tailwind green-500
+            } else {
+                toastMessage.style.backgroundColor = '#333';
+            }
+
+            setTimeout(() => {
+                toastMessage.classList.remove('show');
+            }, 3000); // 3초 후 사라짐
+        }
+
+        // 초기 로드 시 자녀가 선택되어 있고 이미 작성되었는지 확인
+        if (selectedChildId && isAlreadyWritten) {
+            showToast('선택하신 자녀는 오늘 이미 문진을 작성했습니다.', 'info');
+        }
+    });
+</script>
+</html>

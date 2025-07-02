@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
+<th:block layout:fragment="content">
+    <div class="max-w-5xl mx-auto p-6">
+        <div class="relative flex items-center justify-between">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">1:1 문의</h1>
+            <div th:if="${isOwner}" class="absolute top-0 right-0 m-3">
+                <div class="relative inline-block text-left">
+                    <button id="kebabMenuBtn" class="text-gray-500 text-2xl hover:text-gray-700">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+
+                    <div id="kebabDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
+                        <div class="p-2 space-y-2">
+                            <label class="flex items-center cursor-pointer text-sm space-x-2">
+                                <span th:text="${qna.isPublic} ? '공개' : '비공개'" id="isPublic"
+                                      th:classappend="${qna.isPublic} ? 'text-green-600' : 'text-red-500'">
+                                </span>
+                                <input type="checkbox" id="publicToggle" class="sr-only peer" th:checked="${qna.isPublic}" th:attr="data-qna-id=${qna.id}">
+                                <div class="relative w-9 h-5 bg-gray-200 rounded-full peer dark:bg-gray-600
+                                    peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
+                                    peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]
+                                    after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full
+                                    after:h-4 after:w-4 after:transition-all dark:border-gray-500 peer-checked:bg-blue-500"></div>
+                            </label>
+
+                            <button id="qnaUpdateBtn" class="w-full text-left text-sm text-gray-700 hover:text-blue-600">
+                                <i class="fa-solid fa-pen-to-square mr-2"></i>글 수정
+                            </button>
+
+                            <button id="qnaDeleteBtn" class="w-full text-left text-sm text-gray-700 hover:text-red-600">
+                                <i class="fa-solid fa-trash-can mr-2.5"></i>글 삭제
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr class="mb-8 border-gray-300">
+
+        <div class="space-y-6">
+            <div class="flex gap-4">
+                <div class="w-1/5">
+                    <p class="text-sm font-medium text-gray-700 mb-1">카테고리</p>
+                    <p th:text="${qna.category.displayName}" class="py-2 px-3 text-center bg-gray-100 rounded-md"></p>
+                </div>
+                <div class="w-2/5"></div>
+                <div class="w-1/5">
+                    <p class="text-sm font-medium text-gray-700 mb-1">작성자</p>
+                    <p th:text="${qna.nickname != null ? qna.nickname : qna.name}" class="py-2 px-3 text-center bg-gray-100 rounded-md"></p>
+                </div>
+
+                <div class="w-1/5">
+                    <p class="text-sm font-medium text-gray-700 mb-1">작성일</p>
+                    <p th:text="${qna.createdAt}" class="py-2 px-3 text-center bg-gray-100 rounded-md"></p>
+                </div>
+            </div>
+
+            <div>
+                <p class="text-sm font-medium text-gray-700 mb-1">제목</p>
+                <p th:text="${qna.title}" class="py-2 px-3 bg-gray-100 rounded-md"></p>
+            </div>
+
+            <div>
+                <p class="text-sm font-medium text-gray-700 mb-1">문의 내용</p>
+                <div th:text="${qna.content}" class="p-4 bg-gray-100 rounded-md whitespace-pre-wrap"></div>
+            </div>
+        </div>
+
+        <hr class="mb-8 border-gray-100">
+        <div>
+            <p class="text-sm font-medium text-gray-700 mb-1">답변</p>
+            <p th:text="${ans != null and ans.content != null ? ans.content : '답변이 등록되지 않았습니다.'}"
+               class="p-4 bg-gray-100 rounded-md whitespace-pre-wrap"></p>
+        </div>
+
+        <div class="flex justify-center mt-6">
+            <a href="/qna" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow">목록</a>
+        </div>
+
+        <!-- 글 수정 모달창 -->
+        <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex hidden items-center justify-center z-50">
+            <!-- 모달 박스 -->
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+                <button id="modalClose"
+                        class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <h2 class="text-2xl font-semibold mb-4">문의글 수정</h2>
+                <form id="editForm" class="space-y-4">
+                    <input type="hidden" id="qnaId" th:value="${qna.id}">
+                    <!-- 카테고리 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">카테고리</label>
+                        <select id="editCategory" name="category"
+                                class="mt-1 block w-full border-gray-300 rounded-md focus:ring-blue-500"
+                                th:value="${qna.category.name}">
+                            <option th:each="category : ${category}"
+                                    th:value="${category.name()}"
+                                    th:text="${category.displayName}"></option>
+                        </select>
+                    </div>
+                    <!-- 제목 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">제목</label>
+                        <input type="text" th:value="${qna.title}" id="editTitle" name="title"
+                               class="mt-1 block w-full border-gray-300 rounded-md focus:ring-blue-500"/>
+                    </div>
+                    <!-- 내용 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">내용</label>
+                        <textarea th:text="${qna.content}" id="editContent" name="content" rows="4"
+                                  class="mt-1 block w-full border-gray-300 rounded-md focus:ring-blue-500"></textarea>
+                    </div>
+                    <!-- 버튼 -->
+                    <div class="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+                        <button type="button" id="cancelEdit"
+                                class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                            취소
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            저장
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+
+        const isOwner = [[${isOwner}]];
+        const qnaId = document.querySelector("#qnaId").value;
+        const editForm = document.querySelector("#editForm");
+
+        // 모달 변수
+        const modal = document.querySelector("#modal");
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if(isOwner) {
+                loadEvt();
+            }
+        })
+
+        function loadEvt() {
+            document.querySelector("#publicToggle").addEventListener("change", async (e) => {
+                const isChecked = e.target.checked;
+
+                const formData = new FormData();
+                formData.append("id", qnaId);
+                formData.append("isPublic", isChecked);
+
+                const res = await fetch("/api/qna/visibility", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (res.ok) {
+                    document.querySelector("#isPublic").textContent = isChecked ? "공개" : "비공개";
+                    document.querySelector("#isPublic").className = isChecked ? 'text-green-600' : 'text-red-500';
+                } else {
+                    e.target.checked = !isChecked;
+                    alert("공개 설정 변경에 실패했습니다.");
+                }
+            })
+
+            document.querySelector("#qnaUpdateBtn").addEventListener("click", () => {
+                openModal();
+            })
+
+            document.querySelector("#qnaDeleteBtn").addEventListener("click", async () => {
+
+                const res = await fetch(`/api/qna/delete?id=${qnaId}`);
+
+                if(res.ok) {
+                    alert("문의글을 삭제했습니다.")
+                    window.location.href = `/qna`;
+                }
+            });
+
+            const kebabBtn = document.getElementById("kebabMenuBtn");
+            const kebabDropdown = document.getElementById("kebabDropdown");
+
+            kebabBtn.addEventListener("click", () => {
+                kebabDropdown.classList.toggle("hidden");
+            });
+
+            // 바깥 클릭 시 닫기
+            document.addEventListener("click", (e) => {
+                if (!kebabBtn.contains(e.target) && !kebabDropdown.contains(e.target)) {
+                    kebabDropdown.classList.add("hidden");
+                }
+            });
+
+            document.querySelectorAll("#modalClose, #cancelEdit").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    closeModal();
+                })
+            })
+
+            editForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const category = document.querySelector("#editCategory").value;
+                const title = document.querySelector("#editTitle").value.trim();
+                const content = document.querySelector("#editContent").value.trim();
+
+                const formData = new FormData();
+                formData.append("id", qnaId);
+                formData.append("category", category);
+                formData.append("title", title);
+                formData.append("content", content);
+
+                const res = await fetch(`/api/qna/update`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if(!res.ok) {
+                    alert("문의글 등록에 실패했습니다. 다시 시도해두세요.");
+                    editForm.reset();
+                }else {
+                    location.reload();
+                }
+            })
+        }
+
+        function openModal() {
+            modal.classList.remove("hidden");
+        }
+
+        function closeModal() {
+            modal.classList.add("hidden");
+        }
+    </script>
+</th:block>
+</html>

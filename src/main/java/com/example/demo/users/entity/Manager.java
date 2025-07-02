@@ -1,0 +1,33 @@
+package com.example.demo.users.entity;
+
+import com.example.demo.entity.Address;
+import com.example.demo.entity.BaseEntity;
+import com.example.demo.entity.Group;
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Manager{
+
+    @Id
+    @Column(name = "users_id")
+    private Long id;
+
+    @OneToOne()
+    @MapsId
+    @JoinColumn(name = "users_id")
+    private Users users;
+
+    @OneToOne
+    @JoinColumn(name = "group_id")
+    private Group group;
+
+    @Column(nullable = false)
+    private Boolean isApproved = false;
+
+}
