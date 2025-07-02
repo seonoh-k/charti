@@ -27,7 +27,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/manager/surveySet")
 @RequiredArgsConstructor
-public class ManagerSurveySetController {
+public class SurveySetManagerController {
 
     private final SurveySetService service;
     private final ManagerRepository managerRepo;

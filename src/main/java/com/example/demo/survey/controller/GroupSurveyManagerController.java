@@ -2,22 +2,27 @@ package com.example.demo.survey.controller;
 
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
+import com.example.demo.enums.TargetGroup;
 import com.example.demo.survey.entity.DailySurvey;
 import com.example.demo.survey.entity.GroupAnswer;
 import com.example.demo.survey.entity.GroupSurvey;
 import com.example.demo.survey.service.GroupAnswerService;
 import com.example.demo.survey.service.GroupSurveyService;
+import com.example.demo.users.entity.Manager;
+import com.example.demo.users.repository.ManagerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -26,6 +31,7 @@ import java.util.stream.Collectors;
 public class GroupSurveyManagerController {
 
     private final GroupSurveyService groupSurveyService;
+    private final ManagerRepository managerRepository;
     private final List<AgeGroup> ageGroups = Arrays.stream(AgeGroup.values())
             .filter(ag -> ag != AgeGroup.ALL && ag != AgeGroup.VARIOUS)
             .collect(Collectors.toList());
@@ -34,38 +40,34 @@ public class GroupSurveyManagerController {
             .collect(Collectors.toList());
     private final GroupAnswerService groupAnswerService;
 
-    // 1. 설문 리스트 (연령대, 카테고리 필터링)
+    // 1. 설문 리스트 (연령대, 카테고리 필터링, TargetGroup 필터링)
     @GetMapping({"", "/list"})
     public String list(
             @RequestParam(defaultValue = "ALL") AgeGroup ageGroup,
             @RequestParam(defaultValue = "ALL") SurveyCategory category,
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication auth ,
             Model model
     ) {
         // service 쪽에서 distinct 카테고리를 enum 리스트로 반환하도록 수정했다면
         List<SurveyCategory> categories = groupSurveyService.getDistinctCategories();
 
-        Page<GroupSurvey> surveys;
-        if (ageGroup == AgeGroup.ALL && category == SurveyCategory.ALL) {
-            // 전체
-            surveys = groupSurveyService.findAllSurveys(pageable);
-        } else if (ageGroup != AgeGroup.ALL && category == SurveyCategory.ALL) {
-            // 연령대만 필터
-            surveys = groupSurveyService.getSurveysByAgeGroup(ageGroup, pageable);
-        } else if (ageGroup == AgeGroup.ALL && category != SurveyCategory.ALL) {
-            // 카테고리만 필터
-            surveys = groupSurveyService.getSurveysByCategory(category, pageable);
-        } else {
-            // 둘 다 필터
-            surveys = groupSurveyService.getSurveysByAgeAndCategory(ageGroup, category, pageable);
-        }
+        // 로그인한 매니저
+        Manager mgr = managerRepository.findByUsers_Uuid(auth.getName())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저"));
+        TargetGroup myGroup = mgr.getGroup().getTargetGroup();
+
+        // service 쪽에서 TargetGroup까지 처리하도록 새 메서드
+        Page<GroupSurvey> surveys = groupSurveyService.findByFilters(
+                ageGroup, category, myGroup, pageable
+        );
 
         model.addAttribute("ageGroup", ageGroup);
         model.addAttribute("category", category);
         model.addAttribute("ageGroups", ageGroups);
-        model.addAttribute("categories", categories);
+        model.addAttribute("categories", allCategories);
         model.addAttribute("surveys", surveys);
-        return "admin/manager/groupList";
+        return "manager/surveys/groupList";
     }
 
     // 2. 설문 작성 폼
@@ -74,12 +76,18 @@ public class GroupSurveyManagerController {
         model.addAttribute("survey", new GroupSurvey());
         model.addAttribute("ageGroups", ageGroups);
         model.addAttribute("categories", allCategories);
-        return "admin/manager/groupForm";
+        return "manager/surveys/groupForm";
     }
 
-    // 2. 설문 저장 처리
+    // 2. 설문 저장 처리(TargetGroup 자동 설정)
     @PostMapping
-    public String create(@ModelAttribute GroupSurvey survey) {
+    public String create(
+            @ModelAttribute GroupSurvey survey,
+            Authentication auth
+    ) {
+        Manager mgr = managerRepository.findByUsers_Uuid(auth.getName())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저"));
+        survey.setTargetGroup(mgr.getGroup().getTargetGroup());
         groupSurveyService.save(survey);
         return "redirect:/manager/surveys/group";
     }
@@ -91,7 +99,7 @@ public class GroupSurveyManagerController {
         model.addAttribute("survey", survey);
         model.addAttribute("ageGroups", ageGroups);
         model.addAttribute("categories", allCategories);
-        return "admin/manager/groupForm";
+        return "manager/surveys/groupForm";
     }
 
     // 3. 설문 수정 처리
@@ -101,6 +109,7 @@ public class GroupSurveyManagerController {
             @ModelAttribute DailySurvey formData
     ) {
         GroupSurvey survey = groupSurveyService.findById(id);
+
         // formData.getAgeGroup() 은 이제 AgeGroup enum
         survey.setAgeGroup(formData.getAgeGroup());
         survey.setCategory(formData.getCategory());

@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}"
-      th:with="userService=${@userService}">
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,15 +18,11 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-700 mb-6">
             <p><span class="font-medium">카테고리:</span> <span th:text="${board.category2}"></span></p>
             <p><span class="font-medium">조회수:</span>   <span th:text="${board.views}"></span></p>
-            <!-- usersId null 체크 후 닉네임 또는 '손님' -->
             <p><span class="font-medium">작성자:</span>
-                <span th:text="${board.usersId != null
-                    ? userService.getMemberEntityById(board.usersId).nickname
-                    : '손님'}">
-                </span>
-            </p>
+                <span th:text="${authorNickname}">닉네임</span></p>
             <p><span class="font-medium">작성일:</span>
                 <span th:text="${#temporals.format(board.createdAt,'yyyy.MM.dd HH:mm')}"></span>
+                <br>
             </p>
         </div>
 
@@ -37,20 +32,72 @@
 
         <h3 class="text-2xl font-semibold text-gray-800 mb-4">댓글</h3>
         <div class="space-y-4 mb-6">
-            <div th:each="c : ${commentsPage.content}" class="border-b pb-2">
-                <p>
-                    <strong class="text-[#7CA48C]"
-                            th:text="${c.usersId != null
-                                ? userService.getMemberEntityById(c.usersId).nickname
-                                : '손님'}">
-                    </strong>:
-                    <span th:text="${c.content}"></span>
-                    <small class="text-gray-500 ml-2"
-                           th:text="${#temporals.format(c.createdAt,'yyyy.MM.dd HH:mm')}"></small>
-                </p>
+            <div th:each="c,stat : ${commentsPage.content}" class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                    <!-- 좌측: 작성자·내용·시간 -->
+                    <div class="flex-1">
+                        <p class="text-gray-800 break-words">
+                            <span class="font-semibold text-[#7CA48C]" th:text="${commentNicknames[stat.index]}">닉네임</span>
+                            <span>·</span>
+                            <span class="text-gray-600" th:text="${c.content}">댓글 내용</span>
+                        </p>
+                        <p class="text-xs text-gray-400 mt-1" th:text="${#temporals.format(c.createdAt,'yyyy.MM.dd HH:mm')}">
+                            2025.06.27 19:13
+                        </p>
+                    </div>
+
+                    <!-- 우측: 내 댓글일 때만 버튼 그룹 -->
+                    <div th:if="${c.usersId eq currentUserId}" class="ml-4 flex-shrink-0 flex space-x-2">
+                        <!-- 수정 버튼 -->
+                        <button type="button"
+                                class="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800"
+                                th:attr="data-comment-id=${c.id}, data-comment-content=${c.content}"
+                                onclick="openEditModal(
+                          this.getAttribute('data-comment-id'),
+                          this.getAttribute('data-comment-content')
+                        )">
+                            <i class="fas fa-pencil-alt"></i>
+                            <span>수정</span>
+                        </button>
+                        <!-- 삭제 버튼 -->
+                        <form th:action="@{/community/allPosts/{b}/comments/{c}/delete(
+                          b=${board.communityId},c=${c.id})}"
+                              method="post"
+                              class="flex items-center space-x-1"
+                              onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                            <i class="fas fa-trash-alt text-red-500"></i>
+                            <button type="submit" class="text-sm text-red-500 hover:text-red-700">
+                                삭제
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <!-- 수정 모달 -->
+        <div id="editModal"
+             class="fixed inset-0 flex items-center justify-center
+                bg-black bg-opacity-50 hidden">
+            <div class="bg-white rounded-lg p-6 w-2/3 max-w-lg">
+                <h2 class="text-xl font-semibold mb-4">댓글 수정</h2>
+                <form id="editCommentForm" method="post" class="space-y-4">
+          <textarea name="content" id="editContent" rows="4"
+                    class="w-full border rounded px-3 py-2
+                           focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" onclick="closeModal()"
+                                class="px-4 py-2 border rounded hover:bg-gray-100">취소</button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-[#7CA48C] text-white rounded hover:opacity-90">
+                            저장
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 댓글 페이징 -->
         <nav th:if="${commentsPage.totalElements > 0}" class="flex justify-center space-x-2 mb-6">
             <span th:if="${commentsPage.hasPrevious()}">
                 <a th:href="@{/community/allPosts/{id}(id=${board.communityId},commentPage=${commentsPage.number-1})}"
@@ -83,5 +130,28 @@
 
         <a th:href="@{/community/allPosts/list}" class="inline-block text-[#E3A67A] hover:underline">◀ 목록으로 돌아가기</a>
     </div>
+
+    <script th:inline="javascript">
+
+        // Thymeleaf → JS 변수
+        var boardId = /*[[${board.communityId}]]*/ 0;
+
+        function openEditModal(commentId, content) {
+          // 1) textarea 채우기
+          document.getElementById('editContent').value = content;
+          // 2) form.action 조립
+          document.getElementById('editCommentForm').action
+            = '/community/allPosts/' + boardId
+            + '/comments/' + commentId;
+          // 3) 모달 열기
+          document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+          document.getElementById('editModal').classList.add('hidden');
+        }
+
+    </script>
+
 </th:block>
 </html>

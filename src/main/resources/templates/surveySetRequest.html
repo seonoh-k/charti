@@ -132,7 +132,6 @@
             return r.json();
           })
           .then(res => {
-              alert('저장 완료');
               const typeLabel = document.querySelector("#typeLabel").textContent.trim();
               const payload = encodeURIComponent(JSON.stringify(res));
               if(typeLabel === '그룹 문진') {
