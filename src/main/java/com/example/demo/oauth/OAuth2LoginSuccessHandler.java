@@ -105,7 +105,12 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
             } else if (existsByEmailInFirebase && existsByEmailInDB) {
 
-                userDTO =  userService.getMemberByEmail(oAuth2UserInfo.getEmail());
+                try {
+                    userDTO = userService.getMemberByEmail(oAuth2UserInfo.getEmail());
+                } catch (IllegalStateException e) {
+                    response.sendRedirect("/loginForm?error=withdrawn");
+                    return;
+                }
                 // 변경
                 String customToken = firebaseService.createFirebaseCustomToken(userDTO.getUuid(), Map.of("role", userDTO.getRole()));
                 log.info("customToken : {} ", customToken);
