@@ -168,5 +168,18 @@ const firebaseConfig = {
     }
 </script>
 
+<script>
+
+// URL 파라미터에서 error 체크 (/loginForm?error=withdrawn)
+document.addEventListener("DOMContentLoaded", function() {
+    const params = new URLSearchParams(window.location.search);
+    if(params.get("error") === "withdrawn") {
+        alert("탈퇴한 회원입니다.");
+         window.location.replace('/loginForm')
+    }
+});
+
+</script>
+
 </body>
 </html>
