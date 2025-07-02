@@ -1,10 +1,12 @@
 package com.example.demo.survey.entity;
 
+import com.example.demo.converter.TargetGroupConverter;
 import com.example.demo.entity.BaseEntity;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.converter.AgeGroupConverter;
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.converter.SurveyCategoryConverter;
+import com.example.demo.enums.TargetGroup;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,6 +35,13 @@ public class SurveySet extends BaseEntity {
 
     @Column(nullable = false)
     private String type; // 예: "GROUP" / "SPECIAL"
+
+//    @Enumerated(EnumType.STRING)
+//    @Column(name = "target_group", nullable = true)
+//    private TargetGroup targetGroup;
+    @Convert(converter = TargetGroupConverter.class)
+    @Column(name = "target_group", nullable = true)
+    private TargetGroup targetGroup;
 
     @ManyToMany
     @JoinTable(

@@ -1,5 +1,6 @@
 package com.example.demo.survey.dto;
 
+import com.example.demo.enums.TargetGroup;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.Getter;
@@ -19,4 +20,5 @@ public class SurveySetForm {
     @NotBlank
     private String type;               // GROUP 또는 SPECIAL
     private List<Long> surveyIds;
+    private TargetGroup targetGroup;
 }

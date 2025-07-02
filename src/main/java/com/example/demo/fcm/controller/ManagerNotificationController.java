@@ -35,7 +35,12 @@ public class ManagerNotificationController {
         UserDTO user = authService.getLoginUser();
         Long managerId = user.getId();
 
-        List<SurveySet> surveySets = surveySetService.getSetsForManager(managerId); // 담당자에게 배정된 세트만 조회
+        List<SurveySet> surveySets = surveySetService.getSetsForManager(managerId);
+
+        log.info("🔎 매니저 ID: {}, 조회된 문진 세트 수: {}", managerId, surveySets.size());
+        for (SurveySet set : surveySets) {
+            log.info("📌 세트 ID: {}, 제목: {}, 타입: {}, 그룹: {}", set.getSetId(), set.getSetTitle(), set.getType(), set.getTargetGroup());
+        }
 
         model.addAttribute("surveySets", surveySets);
         return "manager/notification/notificationForm";

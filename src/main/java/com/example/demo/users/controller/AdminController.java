@@ -79,11 +79,11 @@ public class AdminController {
         Pageable pageable = PageRequest.of(0, 5, sort);
 
         List<ManagerDTO> managerDTOList = managerService.getLatestUnapproving(pageable);
-        List<ExpertDTO> expertDTOList = expertService.getLatestUnapproving(pageable);
+//        List<ExpertDTO> expertDTOList = expertService.getLatestUnapproving(pageable);
         List<MemberDTO> memberDTOList = memberService.getLatestSignups(pageable);
 
         model.addAttribute("managerDTOList",managerDTOList);
-        model.addAttribute("expertDTOList",expertDTOList);
+//        model.addAttribute("expertDTOList",expertDTOList);
         model.addAttribute("memberDTOList",memberDTOList);
 
         return "admin/main";

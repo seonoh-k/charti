@@ -15,9 +15,16 @@ public class AdminFcmSendResultDto {
     private final int totalTargetCount;
     private final int successCount;
 
-    // 특정 그룹 발송 시에만 채워질 상세 명단
     @Builder.Default
-    private final List<String> successfulRecipientNames = new ArrayList<>();
+    private final List<RecipientResultDto> successfulRecipients  = new ArrayList<>();
     @Builder.Default
-    private final List<String> failedRecipientNames = new ArrayList<>();
+    private final List<RecipientResultDto> failedRecipients  = new ArrayList<>();
+
+    public static AdminFcmSendResultDto createEmptyResult(String targetType) {
+        return AdminFcmSendResultDto.builder()
+                .targetType(targetType)
+                .totalTargetCount(0)
+                .successCount(0)
+                .build();
+    }
 }
