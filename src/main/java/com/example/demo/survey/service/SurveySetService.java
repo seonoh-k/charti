@@ -3,13 +3,14 @@ package com.example.demo.survey.service;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.enums.TargetGroup;
+import com.example.demo.survey.dto.SpecialSurveyResponseDto;
+import com.example.demo.survey.dto.SurveySetDTO;
 import com.example.demo.survey.dto.SurveySetSearchDto;
 import com.example.demo.survey.dto.SurveySetForm;
 import com.example.demo.survey.entity.*;
 import com.example.demo.survey.repository.*;
 import com.example.demo.users.entity.Manager;
 import com.example.demo.users.repository.ManagerRepository;
-import com.example.demo.users.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import com.example.demo.exception.SurveySetNotFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -227,5 +229,22 @@ public class SurveySetService {
         set.getSpecialSurveys().clear();
 
         surveySetRepo.delete(set);
+    }
+
+    @Transactional
+    public SurveySetDTO getSurveySet(AgeGroup age, SurveyCategory category) {
+        String title = age.getDisplayName() + " " + category.getDisplayName();
+        SurveySet surveySet = surveySetRepo.findBySetTitleAndType(title, "SPECIAL");
+
+        List<SpecialSurvey> specialSurveys = surveySet.getSpecialSurveys();
+        List<SpecialSurveyResponseDto> specialSurveyResponseDtos = new ArrayList<>();
+        for(SpecialSurvey specialSurvey : specialSurveys) {
+            specialSurveyResponseDtos.add(new SpecialSurveyResponseDto(specialSurvey));
+        }
+
+        SurveySetDTO surveySetDTO = new SurveySetDTO();
+        surveySetDTO.setSetId(surveySet.getSetId());
+        surveySetDTO.setSurveyList(specialSurveyResponseDtos);
+        return surveySetDTO;
     }
 }

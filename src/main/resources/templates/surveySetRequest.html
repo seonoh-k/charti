@@ -52,8 +52,8 @@
 
         <!-- 문항별 라디오 버튼 폼 -->
         <form id="surveyForm">
-            <input type="hidden" name="childId" th:value="${child.id}" />
-            <input type="hidden" name="setId"    th:value="${surveySet.setId}" />
+            <input type="hidden" name="childId" id="childId" th:value="${child.id}" />
+            <input type="hidden" name="setId" id="setId" th:value="${surveySet.setId}" />
 
             <div th:each="q, idx : ${questions}"
                  class="question-block mb-5 p-4 border rounded">
@@ -96,6 +96,8 @@
           const form  = document.getElementById('surveyForm');
           const ageGroup = document.querySelector("#ageGroup").textContent.trim();
           const category = document.querySelector("#category").textContent.trim();
+          const childId = document.querySelector("#childId").value;
+          const setId = document.querySelector("#setId").value;
           const answerList = [];
           const data  = new FormData(form);
 
@@ -115,8 +117,8 @@
           });
 
           const payload = {
-              childId: Number(data.get('childId')),
-              setId:   Number(data.get('setId')),
+              childId: Number(childId),
+              setId:   Number(setId),
               answerList: answerList,
               ageGroup: ageGroup,
               category: category

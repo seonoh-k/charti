@@ -1,15 +1,16 @@
 package com.example.demo.survey.controller;
 
+import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.enums.TargetGroup;
+import com.example.demo.survey.dto.SurveySetDTO;
 import com.example.demo.survey.entity.BaseSurvey;
 import com.example.demo.survey.service.SurveySetService;
+import com.example.demo.util.GlobalStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -45,5 +46,14 @@ public class SurveyApiController {
             // 그룹 문진만 targetGroup 필터 적용
             return service.allGroup(age, category, tg);
         }
+    }
+
+    @PostMapping("/findSet")
+    public ResponseEntity<ApiResponse> getSurveySet(@RequestParam(defaultValue = "ALL") AgeGroup age,
+                                                    @RequestParam(defaultValue = "ALL") SurveyCategory category) {
+
+        SurveySetDTO set = service.getSurveySet(age, category);
+
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK, set));
     }
 }
