@@ -4,6 +4,8 @@ import com.example.demo.dto.*;
 import com.example.demo.dto.request.ChildCreateRequest;
 import com.example.demo.dto.request.ChildUpdateRequest;
 import com.example.demo.dto.request.UserUpdateRequest;
+import com.example.demo.fcm.dto.NoticeDto;
+import com.example.demo.fcm.service.FcmService;
 import com.example.demo.service.AddressService;
 import com.example.demo.service.PointService;
 import com.example.demo.survey.dto.DailyAnswerDto;
@@ -13,6 +15,7 @@ import com.example.demo.survey.service.RecordAnswerService;
 import com.example.demo.users.entity.Child;
 import com.example.demo.users.entity.Member;
 import com.example.demo.users.entity.Role;
+import com.example.demo.users.entity.Users;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.ChildService;
 import com.example.demo.users.service.MemberService;
@@ -45,6 +48,7 @@ public class MemberController {
     private final RecordAnswerService recordAnswerService;
     private final MemberService memberService;
     private final PointService pointService;
+    private final FcmService fcmService;
 
     @GetMapping("/member")
     public String showMemberPage() {
@@ -104,6 +108,17 @@ public class MemberController {
         model.addAttribute("childList", childList);
 
         return "member/main";
+    }
+
+    @GetMapping("/member/notice")
+    public String noticeHistory(Model model) {
+        UserDTO user = authService.getLoginUser();
+
+        Users currentUser = userService.dtoToEntity(user);
+        List<NoticeDto> noticeList = fcmService.getNotices(currentUser);
+
+        model.addAttribute("noticeList", noticeList);
+        return "member/noticeHistory";
     }
 
     @GetMapping("/member/myPage")

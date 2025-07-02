@@ -9,12 +9,14 @@
         <main class="w-[75%] p-6 space-y-6 bg-white rounded-lg shadow">
             <!-- 회원 정보 -->
             <div>
-                <h2 th:text="|반갑습니다 ${member.name}님|" class="text-3xl font-bold text-gray-800 mb-4"></h2>
-                <ul class="flex space-x-4 mb-6 text-gray-700">
-                    <li th:text="|닉네임 : ${member.nickname}|"></li>
-                    <li th:text="|소지 포인트 : ${member.totalPoint}|"></li>
-                    <li th:text="|가입일 : ${member.created}|"></li>
-                </ul>
+                <div>
+                    <h2 th:text="|반갑습니다 ${member.name}님|" class="text-3xl font-bold text-gray-800 mb-4"></h2>
+                    <ul class="flex space-x-4 mb-6 text-gray-700">
+                        <li th:text="|닉네임 : ${member.nickname}|"></li>
+                        <li th:text="|소지 포인트 : ${member.totalPoint}|"></li>
+                        <li th:text="|가입일 : ${member.created}|"></li>
+                    </ul>
+                </div>
                 <hr class="mb-4 border-gray-300">
             </div>
 
@@ -34,11 +36,12 @@
                     </ul>
                     <hr class="mb-4 border-gray-300">
 
-                    <div class="grid grid-cols-2 gap-6">
+                    <div class="grid grid-cols-2 gap-6 mb-4">
                        <div>
                            <h4 class="text-lg font-medium text-gray-700 mb-2">데일리 문진 작성 이력</h4>
                            <ul class="space-y-1 text-fray-600">
                                <li th:each="dAns : ${child.DAnswers}" th:text="|작성일 : ${dAns.created}|"></li>
+                               <li th:if="${#lists.isEmpty(child.DAnswers)}">작성 이력이 없습니다.</li>
                            </ul>
                        </div>
 
@@ -46,6 +49,7 @@
                            <h4 class="text-lg font-medium text-gray-700 mb-2">기록 문진 작성 이력</h4>
                            <ul class="space-y-1 text-fray-600">
                                <li th:each="rAns : ${child.RAnswers}" th:text="|작성일 : ${rAns.created}|"></li>
+                               <li th:if="${#lists.isEmpty(child.RAnswers)}">작성 이력이 없습니다.</li>
                            </ul>
                        </div>
                     </div>

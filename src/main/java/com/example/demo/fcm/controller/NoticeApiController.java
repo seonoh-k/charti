@@ -1,11 +1,13 @@
 package com.example.demo.fcm.controller;
 
+import com.example.demo.dto.UserDTO;
 import com.example.demo.enums.FcmCategory;
 import com.example.demo.fcm.dto.NoticeDto;
 import com.example.demo.fcm.entity.Notice;
 import com.example.demo.fcm.repository.NoticeRepository;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.repository.UserRepository;
+import com.example.demo.users.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +44,14 @@ public class NoticeApiController {
         return notices.stream()
                 .map(NoticeDto::from)
                 .collect(Collectors.toList());
+    }
+
+    @PostMapping("/{id}")
+    public void markRead(@PathVariable Long id) {
+        Notice notice = noticeRepo.findById(id).get();
+
+        notice.setReadFlag(true);
+        noticeRepo.save(notice);
     }
 
     /**

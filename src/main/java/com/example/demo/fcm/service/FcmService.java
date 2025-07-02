@@ -5,6 +5,7 @@ import com.example.demo.enums.FcmCategory;
 import com.example.demo.enums.TargetGroup;
 import com.example.demo.fcm.dto.AdminFcmSendResultDto;
 import com.example.demo.fcm.dto.FcmSendResultDto;
+import com.example.demo.fcm.dto.NoticeDto;
 import com.example.demo.fcm.entity.FcmSendHistory;
 import com.example.demo.fcm.entity.Notice;
 import com.example.demo.fcm.entity.UserFcmToken;
@@ -23,6 +24,9 @@ import com.example.demo.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -370,5 +374,16 @@ public class FcmService {
             }
         }
         return sentSuccessfully;
+    }
+
+    // 특정 유저가 받은 알림을 최신 순으로 10개만 조회
+    public List<NoticeDto> getNotices(Users user) {
+        PageRequest pageable = PageRequest.of(0, 15, Sort.by("sentAt").descending());
+        Page<Notice> pagedList = noticeRepository.findByUserAndDeletedFalse(user, pageable);
+        List<NoticeDto> noticeList = new ArrayList<>();
+        for(Notice notice : pagedList) {
+            noticeList.add(NoticeDto.from(notice));
+        }
+        return noticeList;
     }
 }

@@ -4,18 +4,21 @@ import com.example.demo.entity.BaseEntity;
 import com.example.demo.enums.AgeGroup;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter @Setter
 @Table(name = "community_board")
+@NoArgsConstructor
 public class CommunityBoard extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long communityId;
 
-    @Column(nullable = false)
     private Long usersId;
+
+    private Long adminId;
 
     @Column(length = 50, nullable = false)
     private String category;             // 부모 카테고리 (ex. "parentingInformation")
@@ -37,5 +40,6 @@ public class CommunityBoard extends BaseEntity {
 
     @Column(nullable = false)
     private Integer views = 0;
+
 }
 

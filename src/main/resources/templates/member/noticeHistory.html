@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/default_layout">
+<th:block layout:fragment="content">
+    <div class="flex gap-6 m-10">
+        <aside class="w-[20%] p-4">
+            <th:block th:replace="~{fragments/subMenu :: subMenuFragment}"></th:block>
+        </aside>
+
+        <main class="w-[75%] p-6 space-y-6 bg-white rounded-lg shadow">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">알림 이력</h2>
+                <span class="text-md text-gray-500">수신한 알림을 최근 순으로 15개까지 다시 확인할 수 있습니다.</span>
+            </div>
+            <hr class="mb-4 border-gray-300">
+            <div>
+                <ul id="noticeList" class="divide-y divide-gray-100">
+                    <li th:each="notice : ${noticeList}" class="flex justify-between items-start p-3 hover:bg-gray-50">
+                        <div class="noticeDiv flex-1 pr-2 cursor-pointer">
+                            <p th:text="${notice.id}" class="noticeId hidden"></p>
+                            <p th:text="${notice.url}" class="url hidden"></p>
+                            <p th:text="${notice.title}" class="font-semibold text-gray-800 text-xl pointer-events-none"></p>
+                            <p th:text="${notice.body}" class="text-lg text-gray-600 pointer-events-none"></p>
+                            <p th:text="${#temporals.format(notice.sentAt, 'yyyy-MM-dd HH:mm')}" class="text-md text-gray-400 mt-1 pointer-events-none"></p>
+                        </div>
+                        <button class="text-gray-400 hover:text-red-500 text-xl p-1">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </main>
+    </div>
+    <script>
+        const noticeDiv = document.querySelectorAll(".noticeDiv");
+
+        noticeDiv.forEach(div => {
+            const id = div.querySelector(".noticeId").textContent.trim();
+            const url = div.querySelector(".url").textContent.trim();
+
+            div.addEventListener("click", () => {
+                fetch(`/api/notices/${id}`, { method: 'POST' })
+                    .finally(() => window.location.href = url);
+            })
+
+            const btn = div.nextElementSibling;
+            const li = div.querySelector("li");
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if(confirm("이 알림을 삭제하시겠습니까?")){
+                    fetch(`/api/notices/${id}`, { method: 'DELETE' })
+                        .then(resp => { if (resp.ok) li.remove(); });
+                }
+            })
+        })
+    </script>
+</th:block>
+</html>

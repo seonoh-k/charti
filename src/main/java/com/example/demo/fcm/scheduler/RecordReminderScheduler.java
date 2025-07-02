@@ -27,7 +27,7 @@ public class RecordReminderScheduler {
      * 매일 오후 9시(Asia/Seoul)마다 실행
      * 0 0 21 -> 초 분 시
      */
-    @Scheduled(cron = "00 36 16 * * *", zone = "Asia/Seoul")
+//    @Scheduled(cron = "00 36 16 * * *", zone = "Asia/Seoul")
     @Transactional
     public void remindMissedDailyPerChild() {
         LocalDate today = LocalDate.now();

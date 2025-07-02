@@ -109,11 +109,11 @@
                             const li = document.createElement("li");
                             li.className = "flex justify-between items-start p-3 hover:bg-gray-50";
 
-                const linkBtn = document.createElement("button");
-                linkBtn.textContent = "바로가기";
-                linkBtn.className = "bg-[#7CA48C] hover:bg-[#628C73] text-white px-2 py-1 rounded text-sm transition";
-                linkBtn.addEventListener("click", () => window.location.href = n.url);
-                          
+                            const linkBtn = document.createElement("button");
+                            linkBtn.textContent = "바로가기";
+                            linkBtn.className = "bg-[#7CA48C] hover:bg-[#628C73] text-white px-2 py-1 rounded text-sm transition";
+                            linkBtn.addEventListener("click", () => window.location.href = n.url);
+
                             const content = document.createElement("div");
                             content.className = "flex-1 pr-2 cursor-pointer";
                             content.innerHTML = `
@@ -124,7 +124,7 @@
                             // 내용 클릭 시 바로가기 (링크가 있을 경우)
                             if (n.url) {
                                 content.addEventListener("click", () => {
-                                    fetch(`/api/notices/${n.id}`, { method: 'DELETE' })
+                                    fetch(`/api/notices/${n.id}`, { method: 'POST' })
                                       .finally(() => window.location.href = n.url);
                                 });
                             }

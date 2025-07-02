@@ -85,6 +85,24 @@ public class StorageAPIController {
         return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
     }
 
+    @PostMapping("/api/album/create")
+    public ResponseEntity<ApiResponse> createAlbum(@RequestParam(value = "file", required = false) MultipartFile file,
+                                                   @RequestParam(value = "title", required = false) String title) throws IOException {
+
+        UserDTO user = authService.getLoginUser();
+        Member member = memberService.get(user.getId());
+        String filename = uploadImage(file);
+
+        Album album = new Album();
+        album.setMember(member);
+        album.setTitle(title);
+        album.setThumbnail(filename);
+
+        albumService.create(album);
+
+        return ResponseEntity.ok(new ApiResponse(GlobalStatus.OK));
+    }
+
     @PostMapping("/api/album/update")
     public ResponseEntity<ApiResponse> updateAlbum(@RequestParam("id") Long id,
                                                    @RequestParam(value = "file", required = false) MultipartFile file,
