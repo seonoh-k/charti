@@ -12,21 +12,26 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RequiredArgsConstructor
 @Slf4j
 public class MainController {
+
     private final AuthService authService;
 
-    @GetMapping({"/", "/main"})
-    public String index() {
-        UserDTO loginUser = authService.getLoginUser();
-        Role role = Role.valueOf(loginUser.getRole());
+    @GetMapping("/")
+    public String index() { return "index"; }
 
-        // ✅ 권한에 따라 마이페이지 리다이렉트
+    @GetMapping( "/main")
+    public String toMain() { return "redirect:/role"; }
+
+    @GetMapping("/role")
+    public String role() {
+        UserDTO userDTO = authService.getLoginUser();
+        Role role = Role.valueOf(userDTO.getRole());
+
         return switch (role) {
-            case ROLE_MEMBER -> "redirect:index";
+            case ROLE_MEMBER -> "index";
             case ROLE_EXPERT -> "redirect:/expert/main";
             case ROLE_MANAGER -> "redirect:/manager/main";
             default -> "redirect:/error";
         };
-
     }
 
     @GetMapping("/dailySurvey/result")

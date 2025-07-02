@@ -21,18 +21,10 @@
                  class="w-[150px] h-auto cursor-pointer"/>
             <nav id="hdNav" class="mt-6">
                 <ul id="hdUl" class="flex gap-6 items-center">
-                    <th:block th:if="${session.userId == null}">
-                        <button>
-                            <a href="/" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">메인 홈페이지</a>
-                        </button>
-                        <li><a id="loginBtn" href="/admin/loginForm">로그인</a></li>
-                    </th:block>
-                    <th:block th:if="${session.userId != null}">
-                        <button>
-                            <a href="/" class="p-4 mx-3 text-md hover:text-[#FEF9F3]">메인 홈페이지</a>
-                        </button>
-                        <li><a id="logoutBtn" href="/logout">로그아웃</a></li>
-                    </th:block>
+                    <li><span id="welcomeText" class="hidden text-gray-700 font-semibold"></span></li>
+                    <li><a id="toMain" href="/">메인 페이지</a></li>
+                    <li><a id="loginBtn" href="/admin/loginForm">로그인</a></li>
+                    <li><a id="logoutBtn" href="/logout">로그아웃</a></li>
                 </ul>
             </nav>
         </div>
@@ -68,5 +60,32 @@
             </div>
         </nav>
     </header>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/api/users/me", {
+                method: "GET",
+                credentials: "include"  // 쿠키 자동 전송
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error("Not logged in");
+                    return response.json();
+                })
+                .then(user => {
+                    // 로그인된 경우 UI 수정
+                    document.getElementById("loginBtn")?.classList.add("hidden");
+                    const welcomeText = document.getElementById("welcomeText");
+                    if (welcomeText) {
+                        welcomeText.textContent = `${user.nickname || user.name}님, 환영합니다!`;
+                        welcomeText.classList.remove("hidden");
+                    }
+                    document.getElementById("logoutBtn")?.classList.remove("hidden");
+
+                })
+                .catch(() => {
+                    document.getElementById("logoutBtn")?.classList.add("hidden");
+                    document.getElementById("loginBtn")?.classList.remove("hidden");
+                });
+        });
+    </script>
 </th:block>
 </html>
