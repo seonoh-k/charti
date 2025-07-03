@@ -16,8 +16,12 @@ public class CommunityBoard extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long communityId;
 
+    // 일반 게시판 작성자(users) FK
+    @Column(name="users_id")
     private Long usersId;
 
+    // 공지사항 전용 작성자(관리자) FK
+    @Column(name="admin_id")
     private Long adminId;
 
     @Column(length = 50, nullable = false)

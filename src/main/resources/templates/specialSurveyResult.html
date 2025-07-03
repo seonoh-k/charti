@@ -18,16 +18,15 @@
         </div>
 
         <div class="mt-8">
-            <button onclick="history.back()"
-                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                다시 문진하기
+            <button id="historyBtn"
+                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                문진 이력 보러가기
             </button>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("▶ 렌더링 시작", window.location.search);
 
             const params = new URLSearchParams(window.location.search);
             const dataParam = params.get("data");
@@ -50,6 +49,11 @@
 
             const container = document.getElementById("resultContainer");
             container.innerHTML = "";
+
+            const btn = document.getElementById("historyBtn");
+            btn.addEventListener("click", () => {
+              window.location.href = `/specialAnswer/history?childId=${childId}`;
+            });
 
             if (!Object.keys(categoryScores).length) {
                 container.innerHTML = `<p class="text-gray-600">평가 항목이 없습니다.</p>`;

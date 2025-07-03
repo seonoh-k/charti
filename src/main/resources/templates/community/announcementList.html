@@ -90,7 +90,7 @@
                     <td class="px-4 py-3 text-gray-800"
                         th:text="${b.views}"/>
                     <td class="px-4 py-3 text-gray-800"
-                        th:text="${userService.getNicknameByUsersId(b.usersId)}"/>
+                        th:text="${authorNames[stat.index]}"/>
                     <td class="px-4 py-3 text-gray-800"
                         th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}"/>
                 </tr>

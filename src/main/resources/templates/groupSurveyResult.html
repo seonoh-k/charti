@@ -1,12 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>그룹 문진 결과</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 
@@ -14,104 +18,105 @@
     <div class="max-w-5xl mx-auto p-6">
         <h1 class="text-3xl font-bold mb-6">문진 결과</h1>
 
-        <div id="resultContainer" class="space-y-6">
-
-        </div>
+        <div id="resultContainer" class="space-y-6"></div>
 
         <div class="mt-8">
-            <button onclick="location.href='/groupSurvey'"
-                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                다시 문진하기
+            <button id="historyBtn"
+                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                문진 이력 보러가기
             </button>
         </div>
     </div>
 
-    <script>
-        // 1. URL에서 데이터 파라미터 가져오기
-        const params = new URLSearchParams(window.location.search);
-        const dataParam = params.get("data");
-        const container = document.getElementById("resultContainer");
-        let result;
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+            // 1. URL에서 data 파라미터 가져오기
+            const params     = new URLSearchParams(window.location.search);
+            const dataParam  = params.get("data");
+            const container  = document.getElementById("resultContainer");
+            const historyBtn = document.getElementById("historyBtn");
+            let result       = null;
+            const childId   = params.get("childId")
+                              || ( (() => {
+                                   try {
+                                     return JSON.parse(decodeURIComponent(dataParam)).childId;
+                                   } catch { return null; }
+                                 })() );
 
-        // 2. 데이터 파라미터 유효성 검사 및 파싱
-        if (!dataParam) {
-            console.error("URL에 'data' 파라미터가 없습니다.");
-            container.innerHTML = `<p class="text-red-500">결과 데이터가 없습니다. 다시 시도해주세요.</p>`;
-        } else {
+            // 2. data 파싱
             try {
-                result = JSON.parse(decodeURIComponent(dataParam));
+                result  = JSON.parse(decodeURIComponent(dataParam));
+                childId = result.childId; // childId는 무조건 넘어온다고 가정
             } catch (e) {
-                console.error("결과 파싱 실패", e);
-                container.innerHTML = `<p class="text-red-500">결과를 불러오는 데 실패했습니다.</p>`;
-                result = null; // 오류 발생 시 result를 null로 명확히 설정
+                container.innerHTML = `<p class="text-red-500">결과 로드 중 오류가 발생했습니다.</p>`;
+                console.error("파싱 실패:", e);
             }
-        }
 
-        // 3. 파싱된 결과가 있을 경우에만 렌더링 진행
-        if (result) {
-            // [핵심 수정] Destructuring 대신 안전한 속성 접근 방식으로 변경하고 기본값을 할당
-            const categoryScores = result.categoryScores || {};
-            const needsSpecialSurvey = result.needsSpecialSurvey || false;
-            const childId = result.childId;
-            const ageGroup = result.ageGroup;
+            // 3. 결과가 있으면 렌더링
+            if (result) {
+                const scores  = result.categoryScores || {};
+                const needsSS = result.needsSpecialSurvey || false;
+                const ageGrp  = result.ageGroup;
 
-            container.innerHTML = ''; // 컨테이너 초기화
+                // 카테고리 매핑
+                const enumMap = {
+                    "의사소통/정서/심리": "COMMUNICATION",
+                    "운동/인지 발달": "MOTOR_COGNITIVE",
+                    "사회성/인지/창의": "SOCIAL_COGNITIVE",
+                    "생활습관": "LIFESTYLE"
+                };
 
-            // Java Enum 클래스와 정확히 일치하도록 매핑 객체
-            const categoryEnumMap = {
-                "의사소통/정서/심리": "COMMUNICATION",
-                "운동/인지 발달": "MOTOR_COGNITIVE",
-                "사회성/인지/창의": "SOCIAL_COGNITIVE",
-                "생활습관": "LIFESTYLE"
-            };
+                // 아무 점수도 없으면 안내
+                if (Object.keys(scores).length === 0) {
+                    container.innerHTML = `<p class="text-gray-500">표시할 점수 결과가 없습니다.</p>`;
+                } else {
+                    container.innerHTML = "";
+                    Object.entries(scores).forEach(([name, score]) => {
+                        const high = score >= 60;
+                        const box = document.createElement("div");
+                        box.className = `p-4 border rounded-lg ${high ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'}`;
 
-            // categoryScores 객체의 키 개수를 확인하여 데이터 유무 판단
-            if (Object.keys(categoryScores).length > 0) {
-                // 카테고리별로 결과를 표시
-                for (const [catDisplayName, score] of Object.entries(categoryScores)) {
-                    const isHighRisk = score >= 60;
+                        let html = `
+                          <div class="flex justify-between items-center">
+                            <p class="font-semibold text-lg">${name}</p>
+                            <p class="text-2xl font-bold ${high ? 'text-orange-600' : 'text-green-700'}">
+                              ${score.toFixed(2)}%
+                            </p>
+                          </div>`;
 
-                    const wrapperDiv = document.createElement('div');
-                    wrapperDiv.className = `p-4 border rounded-lg ${isHighRisk ? 'border-orange-300 bg-orange-50' : 'border-gray-200 bg-white'}`;
-
-                    let contentHTML = `
-                        <div class="flex justify-between items-center">
-                            <p class="font-semibold text-lg">${catDisplayName}</p>
-                            <p class="text-2xl font-bold ${isHighRisk ? 'text-orange-600' : 'text-green-700'}">${score.toFixed(2)}%</p>
-                        </div>
-                    `;
-
-                    // 고위험군일 경우, 필요한 모든 정보가 있는지 확인 후 버튼 생성
-                    if (isHighRisk && needsSpecialSurvey && childId && ageGroup) {
-                        const catEnumName = categoryEnumMap[catDisplayName];
-
-                        if (catEnumName) {
-                            const specialParams = new URLSearchParams();
-                            specialParams.append('childId', childId);
-                            specialParams.append('ageGroup', ageGroup);
-                            specialParams.append('categories', catEnumName);
-
-                            contentHTML += `
-                                <div class="mt-3 pt-3 border-t border-orange-200">
+                        // 특별 문진이 필요한 경우
+                        if (high && needsSS && childId && ageGrp) {
+                            const eName = enumMap[name];
+                            if (eName) {
+                                const sp = new URLSearchParams({ childId, ageGroup: ageGrp, categories: eName });
+                                html += `
+                                  <div class="mt-3 pt-3 border-t border-orange-200">
                                     <p class="text-sm text-orange-800">
-                                        <i class="fas fa-exclamation-circle mr-1"></i>
-                                        <strong>'${catDisplayName}'</strong> 항목에 대한 심층적인 확인이 권장됩니다.
+                                      <i class="fas fa-exclamation-circle mr-1"></i>
+                                      <strong>'${name}'</strong> 심층 확인 권장
                                     </p>
-                                    <p class="text-xs text-gray-600 mt-1">아래 버튼을 눌러 관련된 특별 문진을 진행해주세요.</p>
-                                    <a href="/specialSurvey/by-risk?${specialParams.toString()}" class="mt-2 inline-block bg-orange-500 text-white px-4 py-1 rounded hover:bg-orange-600 text-sm font-bold">
-                                        특별 문진 시작하기
+                                    <p class="text-xs text-gray-600 mt-1">
+                                      아래 버튼을 눌러 특별 문진을 진행하세요.
+                                    </p>
+                                    <a href="/specialSurvey/by-risk?${sp.toString()}"
+                                       class="mt-2 inline-block bg-orange-500 text-white px-4 py-1 rounded hover:bg-orange-600 text-sm font-bold">
+                                      특별 문진 시작하기
                                     </a>
-                                </div>
-                            `;
+                                  </div>`;
+                            }
                         }
-                    }
 
-                    wrapperDiv.innerHTML = contentHTML;
-                    container.appendChild(wrapperDiv);
+                        box.innerHTML = html;
+                        container.appendChild(box);
+                    });
                 }
-            } else {
-                container.innerHTML = `<p class="text-gray-500">표시할 점수 결과가 없습니다.</p>`;
             }
-        }
+
+            // 4. 문진 이력 보러가기 버튼 (항상 활성화)
+            historyBtn.addEventListener("click", () => {
+                window.location.href = `/groupAnswer/history?childId=${childId}`;
+            });
+        /*]]>*/
     </script>
 </th:block>
+</html>

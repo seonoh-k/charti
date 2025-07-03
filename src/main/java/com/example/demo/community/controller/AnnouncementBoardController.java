@@ -8,6 +8,7 @@ import com.example.demo.dto.AdminDTO;
 import com.example.demo.enums.AgeGroup;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
+import com.example.demo.users.service.AdminService;
 import com.example.demo.users.service.AuthService;
 import com.example.demo.users.service.UserService;
 import org.springframework.data.domain.Page;
@@ -28,18 +29,21 @@ public class AnnouncementBoardController {
     private final CommunityBoardService boardService;
     private final CommentService commentService;
     private final UserService userService;
+    private final AdminService adminService;
     private final AuthService authService;
 
     public AnnouncementBoardController(
             CommunityBoardService boardService,
             CommentService commentService,
             UserService userService,
+            AdminService adminService,
             AuthService authService
     ) {
         this.boardService   = boardService;
         this.commentService = commentService;
-        this.userService    = userService;
+        this.adminService    = adminService;
         this.authService  = authService;
+        this.userService = userService;
     }
 
     private final List<String> subCategories = Arrays.asList(
@@ -62,6 +66,12 @@ public class AnnouncementBoardController {
                 sort,
                 page
         );
+
+        List<String> authorNames = result.getContent().stream()
+                .map(b -> adminService.getAdminById(b.getAdminId()).getName())
+                .collect(Collectors.toList());
+
+        model.addAttribute("authorNames",    authorNames);
         model.addAttribute("boards",        result.getContent());
         model.addAttribute("pageData",      result);
         model.addAttribute("subCategory",   subCategory);
@@ -109,7 +119,7 @@ public class AnnouncementBoardController {
         boardService.save(board);
 
         // 글 작성자 닉네임
-        String authorNickname = userService.findNicknameOrDefault(board.getUsersId());
+        String authorName = adminService.getAdminById(board.getAdminId()).getName();
 
         // 댓글 페이징
         Page<Comment> commentsPage = commentService.getCommentsPage(id, commentPage);
@@ -128,7 +138,7 @@ public class AnnouncementBoardController {
         Long currentUserId = getCurrentUserId(auth);
 
         model.addAttribute("board",             board);
-        model.addAttribute("authorNickname", authorNickname);
+        model.addAttribute("authorName",       authorName);
         model.addAttribute("commentsPage",      commentsPage);
         model.addAttribute("commentNicknames",  commentNicknames);
         model.addAttribute("commentUserIds",    commentUserIds);

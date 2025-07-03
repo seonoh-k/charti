@@ -29,7 +29,10 @@ public class SpecialAnswerController {
 
     /** 뷰: 이력 페이지 */
     @GetMapping("/history")
-    public String historyPage(Authentication auth, Model model) {
+    public String historyPage(
+            @RequestParam(value="childId", required=false) Long childId,
+            Authentication auth,
+            Model model) {
         Users me;
         try {
             me = userService.findByUsernameEntity(auth.getName());
@@ -37,6 +40,7 @@ public class SpecialAnswerController {
             me = userService.findByUuidEntity(auth.getName());
         }
         model.addAttribute("children", childService.findByUsersId(me.getId()));
+        model.addAttribute("selectedChildId", childId);
         return "survey/specialAnswerHistory";
     }
 

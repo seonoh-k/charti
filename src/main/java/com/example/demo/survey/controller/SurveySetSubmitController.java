@@ -40,6 +40,7 @@ public class SurveySetSubmitController {
                 groupAnswerService.saveAnswers(dto.getChildId(), dto.getSetId(), dto.getAnswerList());
                 Map<String,Object> result = groupSurveyService.evaluate(dto);
                 log.info(result.toString());
+                result.put("childId", dto.getChildId());
                 return ResponseEntity.ok(result);
             } else if ("SPECIAL".equalsIgnoreCase(type)) {
                 AgeGroup ag = AgeGroup.fromValue(dto.getAgeGroup());
@@ -53,7 +54,7 @@ public class SurveySetSubmitController {
                             .collect(Collectors.toList());
                     result.put("answerIds", answerIds);
                 }
-
+                result.put("childId", dto.getChildId());
                 return ResponseEntity.ok(result);
             } else {
                 return ResponseEntity.badRequest()

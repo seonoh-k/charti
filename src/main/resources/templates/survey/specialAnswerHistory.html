@@ -1,12 +1,17 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/default_layout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default_layout}"
+      th:with="selectedChildId=${selectedChildId}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>특별 문진 응답 이력</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+          rel="stylesheet">
     <style> body { font-family: 'Poppins', sans-serif; } </style>
 </head>
 <th:block layout:fragment="content">
@@ -16,30 +21,24 @@
         <div class="mb-4">
             <label for="childSelect" class="font-semibold mr-2">자녀 선택:</label>
             <select id="childSelect" class="border p-2 rounded w-64">
-
-                <!-- 자녀가 한 명도 없으면 -->
                 <option th:if="${children.empty}"
                         value=""
                         disabled
                         selected>
                     등록된 자녀가 없습니다.
                 </option>
-
-                <!-- 자녀가 있으면 -->
                 <option th:if="${!children.empty}"
                         value=""
                         th:selected="${selectedChildId == null}">
                     -- 자녀를 선택하세요 --
                 </option>
-
                 <option th:each="c : ${children}"
                         th:value="${c.id}"
-                        th:text="${c.name + ' (' + c.nickname + ')'}">
+                        th:text="${c.name + ' (' + c.nickname + ')'}"
+                        th:selected="${c.id == selectedChildId}">
                 </option>
             </select>
-
             <a href="/member/child" class="text-sm text-blue-600 px-4 hover:underline">+ 자녀 추가하기</a>
-
         </div>
 
         <div id="childInfo" class="mb-6 p-4 border rounded bg-gray-50 hidden">
@@ -65,146 +64,112 @@
         </div>
     </div>
 
-    <script>
-        const childSelect = document.getElementById('childSelect');
-        const childInfo   = document.getElementById('childInfo');
-        const infoName    = document.getElementById('infoName');
-        const infoGender  = document.getElementById('infoGender');
-        const infoAge     = document.getElementById('infoAge');
-        const infoHeight  = document.getElementById('infoHeight');
-        const infoWeight  = document.getElementById('infoWeight');
-        const answerList  = document.getElementById('answerList');
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+          // 서버에서 넘어온 값
+          const selectedChildId = /*[[${selectedChildId}]]*/ null;
 
-        let historyData = [];
-        let currentId   = null;
+          // DOM 요소
+          const childSelect = document.getElementById('childSelect');
+          const childInfo   = document.getElementById('childInfo');
+          const infoName    = document.getElementById('infoName');
+          const infoGender  = document.getElementById('infoGender');
+          const infoAge     = document.getElementById('infoAge');
+          const infoHeight  = document.getElementById('infoHeight');
+          const infoWeight  = document.getElementById('infoWeight');
+          const answerList  = document.getElementById('answerList');
 
-        /**
-         * 답변 값과 '선택지 배열'에 따라 위험도 퍼센트를 반환하는 헬퍼 함수
-         */
-        function getRiskPercentage(selectedValue, possibleAnswers) {
-            if (!possibleAnswers || possibleAnswers.length === 0) {
-                return 0; // 안전 장치
+          let historyData = [];
+          let currentId   = null;
+
+          function getRiskPercentage(selectedValue, possibleAnswers) {
+            if (!possibleAnswers || !possibleAnswers.length) return 0;
+            const total = possibleAnswers.length;
+            if (total === 5) {
+              if (selectedValue === 1) return 100;
+              if (selectedValue === 2) return 75;
+              if (selectedValue === 3) return 50;
+              if (selectedValue === 4) return 25;
+              return 0;
             }
-            const totalOptions = possibleAnswers.length;
-
-            switch (totalOptions) {
-                case 5: // 5지선다
-                    switch (selectedValue) {
-                        case 1: return 100;
-                        case 2: return 75;
-                        case 3: return 50;
-                        case 4: return 25;
-                        case 5: return 0;
-                        default: return 0;
-                    }
-                case 3: // 3지선다
-                    switch (selectedValue) {
-                        case 1: return 100;
-                        case 2: return 50;
-                        case 3: return 0;
-                        default: return 0;
-                    }
-                case 2: // 2지선다 (역계산)
-                    switch (selectedValue) {
-                        case 1: return 0;
-                        case 2: return 100;
-                        default: return 0;
-                    }
-                default: // 그 외
-                    return 0;
+            if (total === 3) {
+              if (selectedValue === 1) return 100;
+              if (selectedValue === 2) return 50;
+              return 0;
             }
-        }
-
-        /**
-         * 위험도에 따라 다른 색상 클래스를 반환하는 헬퍼 함수
-         */
-        function getRiskColorClass(percentage) {
-            // [수정] groupAnswerHistory와 기준 통일
-            if (percentage >= 60) return 'text-red-600 font-semibold';
-            if (percentage >= 40) return 'text-orange-500 font-semibold';
-            return 'text-green-600';
-        }
-
-        childSelect.addEventListener('change', () => {
-          const childId = childSelect.value;
-          if (!childId) {
-            childInfo.classList.add('hidden');
-            answerList.innerHTML = '';
-            return;
+            if (total === 2) {
+              return selectedValue === 2 ? 100 : 0;
+            }
+            return 0;
           }
 
-          // [수정] 자녀 정보 조회 후 화면에 표시하는 로직 추가
-          fetch(`/api/child/info/${childId}`)
-            .then(r => r.ok ? r.json() : Promise.reject(r))
-            .then(data => {
+          function getRiskColorClass(pct) {
+            if (pct >= 60) return 'text-red-600 font-semibold';
+            if (pct >= 40) return 'text-orange-500 font-semibold';
+            return 'text-green-600';
+          }
+
+          function loadSpecialHistory(childId) {
+            // 자녀 정보
+            fetch(`/api/child/info/${childId}`)
+              .then(r => r.ok ? r.json() : Promise.reject(r))
+              .then(data => {
                 childInfo.classList.remove('hidden');
-                infoName.textContent = data.name;
+                infoName.textContent   = data.name;
                 infoGender.textContent = data.gender;
-                infoAge.textContent = data.age + '세';
+                infoAge.textContent    = data.age + '세';
                 infoHeight.textContent = data.height;
                 infoWeight.textContent = data.weight;
-            }).catch(() => {
-                console.error('자녀 정보를 불러오는 데 실패했습니다.');
-            });
+              })
+              .catch(() => console.error('자녀 정보 로드 실패'));
 
-          // 이력 조회
-          fetch(`/specialAnswer/api/history/${childId}`)
-            .then(r => r.ok ? r.json() : Promise.reject(r))
-            .then(data => {
-              historyData = data;
-              answerList.innerHTML = '';
-              if (data.length === 0) {
-                answerList.innerHTML = `<p class="text-gray-500 text-center italic">답변 이력이 없습니다.</p>`;
-                return;
-              }
-              const byDate = {};
-              data.forEach(a => {
-                const d = a.createdAt.substring(0,10);
-                (byDate[d] = byDate[d]||[]).push(a);
-              });
-
-              Object.keys(byDate)
-                .sort((a,b) => new Date(b) - new Date(a))
-                .forEach(date => {
+            // 이력 조회
+            fetch(`/specialAnswer/api/history/${childId}`)
+              .then(r => r.ok ? r.json() : Promise.reject(r))
+              .then(data => {
+                historyData = data;
+                answerList.innerHTML = '';
+                if (!data.length) {
+                  answerList.innerHTML = `<p class="text-gray-500 text-center italic">답변 이력이 없습니다.</p>`;
+                  return;
+                }
+                const byDate = {};
+                data.forEach(a => {
+                  const d = a.createdAt.substring(0,10);
+                  (byDate[d] = byDate[d]||[]).push(a);
+                });
+                Object.keys(byDate).sort((a,b)=>new Date(b)-new Date(a)).forEach(date => {
                   const section = document.createElement('div');
                   section.className = 'border rounded mb-4';
 
-                  const dailyAnswers = byDate[date];
-                  // [수정] getRiskPercentage 호출 시 두 번째 인자(ans.possibleAnswers) 추가
-                  const totalMultiplierSum = dailyAnswers.reduce((sum, ans) => sum + (getRiskPercentage(ans.selectedValue, ans.possibleAnswers) / 100), 0);
-                  const averageRisk = dailyAnswers.length > 0 ? (totalMultiplierSum / dailyAnswers.length) * 100 : 0;
+                  const daily = byDate[date];
+                  const sum = daily.reduce((s,ans)=>s + (getRiskPercentage(ans.selectedValue, ans.possibleAnswers)/100),0);
+                  const avg = daily.length ? (sum/daily.length)*100 : 0;
 
                   const header = document.createElement('button');
                   header.type = 'button';
                   header.className = 'w-full flex justify-between items-center text-left px-4 py-2 bg-blue-100 font-semibold hover:bg-blue-200';
                   header.innerHTML = `
                     <span>${date} 문진 답변</span>
-                    <span class="text-sm ${getRiskColorClass(averageRisk)}">
-                        전체 위험도: ${averageRisk.toFixed(1)}%
-                    </span>
-                  `;
+                    <span class="text-sm ${getRiskColorClass(avg)}">
+                      전체 위험도: ${avg.toFixed(1)}%
+                    </span>`;
 
                   const body = document.createElement('div');
                   body.className = 'hidden p-4 space-y-4 bg-gray-50';
 
-                  dailyAnswers.forEach((ans,i) => {
+                  daily.forEach((ans,i) => {
+                    const risk = getRiskPercentage(ans.selectedValue, ans.possibleAnswers);
                     const card = document.createElement('div');
                     card.className = 'border p-3 rounded flex justify-between items-start';
-
-                    // [수정] getRiskPercentage 호출 시 두 번째 인자(ans.possibleAnswers) 추가
-                    const riskPercentage = getRiskPercentage(ans.selectedValue, ans.possibleAnswers);
-                    const riskColorClass = getRiskColorClass(riskPercentage);
-
                     card.innerHTML = `
                       <div class="flex-grow">
                         <p class="font-semibold">
-                          ${i+1}. [${ans.ageGroup || ''} | ${ans.category || ''}] ${ans.question || ''}
+                          ${i+1}. [${ans.ageGroup||''} | ${ans.category||''}] ${ans.question||''}
                         </p>
-                        <p class="text-sm text-gray-700" id="answerText_${ans.id}">
-                          ${ans.answer || ''}
-                        </p>
+                        <p class="text-sm text-gray-700">${ans.answer||''}</p>
                         <p class="text-xs mt-1">
-                            위험도: <span class="${riskColorClass}">${riskPercentage}%</span>
+                          위험도: <span class="${getRiskColorClass(risk)}">${risk}%</span>
                         </p>
                       </div>
                       <div class="flex flex-col items-end gap-2 ml-4 flex-shrink-0">
@@ -212,75 +177,91 @@
                                 class="text-blue-600 hover:underline text-sm">수정</button>
                         <button onclick="deleteAnswer(${ans.id})"
                                 class="text-red-600 hover:underline text-sm">삭제</button>
-                      </div>
-                    `;
+                      </div>`;
                     body.appendChild(card);
                   });
 
-                  header.addEventListener('click', () => body.classList.toggle('hidden'));
+                  header.addEventListener('click', ()=>body.classList.toggle('hidden'));
                   section.append(header, body);
-                  answerList.append(section);
+                  answerList.appendChild(section);
                 });
-            })
-            .catch(err => {
-                console.error("특별문진 이력을 불러오는 중 오류:", err);
-                answerList.innerHTML = `<p class="text-red-500">답변 이력을 불러오는 중 오류가 발생했습니다.</p>`;
-            });
-        });
-
-        window.deleteAnswer = function(id) {
-          if (!confirm('정말 삭제하시겠습니까?')) return;
-          fetch(`/specialAnswer/api/answer/${id}`, { method: 'DELETE' })
-            .then(r => {
-              if (r.ok) {
-                  alert('삭제되었습니다.');
-                  childSelect.dispatchEvent(new Event('change'));
-              }
-              else alert('삭제 중 오류 발생');
-            });
-        }
-
-        window.showEditModal = function(id) {
-          currentId = id;
-          const dto = historyData.find(a => a.id === id);
-          if (!dto) return;
-          const opts = document.getElementById('modalOptions');
-          opts.innerHTML = '';
-          if(Array.isArray(dto.possibleAnswers)) {
-            dto.possibleAnswers.forEach((txt,i) => {
-                const v = i+1;
-                opts.insertAdjacentHTML('beforeend', `
-                <label class="flex items-center gap-2">
-                    <input type="radio" name="editAnswer" value="${v}"
-                    ${dto.selectedValue===v ? 'checked' : ''}/>
-                    ${txt}
-                </label>
-                `);
-            });
+              })
+              .catch(err => {
+                console.error('특별 문진 이력 로드 실패', err);
+                answerList.innerHTML = `<p class="text-red-500">이력을 불러오는 중 오류가 발생했습니다.</p>`;
+              });
           }
-          document.getElementById('editModal').classList.remove('hidden');
-        }
 
-        document.getElementById('cancelEdit').onclick = () =>
-          document.getElementById('editModal').classList.add('hidden');
-
-        document.getElementById('saveEdit').onclick = () => {
-          const selNode = document.querySelector('input[name="editAnswer"]:checked');
-          if (!selNode) return alert('답변을 선택해주세요');
-          const sel = +selNode.value;
-          fetch(`/specialAnswer/api/answer/${currentId}`, {
-            method: 'PUT',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({answerValue: sel})
-          })
-          .then(r => {
-            if (r.ok) {
-              alert('수정되었습니다.');
-              document.getElementById('editModal').classList.add('hidden');
-              childSelect.dispatchEvent(new Event('change'));
+          document.addEventListener('DOMContentLoaded', () => {
+            // 선택 변경 시
+            childSelect.addEventListener('change', () => {
+              const cid = childSelect.value;
+              if (!cid) {
+                childInfo.classList.add('hidden');
+                answerList.innerHTML = '';
+                return;
+              }
+              loadSpecialHistory(cid);
+            });
+            // 자동 선택/조회
+            if (selectedChildId) {
+              childSelect.value = selectedChildId;
+              loadSpecialHistory(selectedChildId);
             }
           });
-        };
+
+          // 삭제
+          window.deleteAnswer = id => {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+            fetch(`/specialAnswer/api/answer/${id}`, { method: 'DELETE' })
+              .then(r => {
+                if (r.ok) {
+                  alert('삭제되었습니다.');
+                  childSelect.dispatchEvent(new Event('change'));
+                } else {
+                  alert('삭제 중 오류 발생');
+                }
+              });
+          };
+
+          // 수정 모달
+          window.showEditModal = id => {
+            currentId = id;
+            const dto = historyData.find(a=>a.id===id);
+            if (!dto) return;
+            const opts = document.getElementById('modalOptions');
+            opts.innerHTML = '';
+            dto.possibleAnswers.forEach((txt,i) => {
+              const v = i+1;
+              opts.insertAdjacentHTML('beforeend', `
+                <label class="flex items-center gap-2">
+                  <input type="radio" name="editAnswer" value="${v}"
+                    ${dto.selectedValue===v?'checked':''}/>
+                  ${txt}
+                </label>`);
+            });
+            document.getElementById('editModal').classList.remove('hidden');
+          };
+
+          document.getElementById('cancelEdit').onclick = () =>
+            document.getElementById('editModal').classList.add('hidden');
+
+          document.getElementById('saveEdit').onclick = () => {
+            const sel = document.querySelector('input[name="editAnswer"]:checked');
+            if (!sel) return alert('답변을 선택해주세요');
+            fetch(`/specialAnswer/api/answer/${currentId}`, {
+              method: 'PUT',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({answerValue: +sel.value})
+            }).then(r => {
+              if (r.ok) {
+                alert('수정되었습니다.');
+                document.getElementById('editModal').classList.add('hidden');
+                childSelect.dispatchEvent(new Event('change'));
+              }
+            });
+          };
+        /*]]>*/
     </script>
 </th:block>
 </html>

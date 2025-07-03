@@ -20,17 +20,47 @@
         </aside>
 
         <main class="w-[75%] p-6 space-y-6 bg-white rounded-lg shadow">
-            <h1 class="text-3xl font-bold mb-4">상담 상세</h1>
-
+            <div class="flex items-center mb-4">
+                <!-- 제목 -->
+                <h2 th:text="${matching.title}"
+                    class="text-2xl font-bold mr-3">
+                </h2>
+                <!-- 카테고리 -->
+                <span th:text="${matching.category.displayName}"
+                      class="text-sm font-medium bg-gray-100 px-2 py-1 rounded">
+                </span>
+            </div>
             <!-- 기본 정보 -->
             <section class="mb-6 border p-4 rounded bg-white">
-                <p><strong>카테고리:</strong> <span th:text="${matching.category.displayName}"/></p>
-                <p><strong>자녀:</strong> <span th:text="${matching.child.name}"/>
-                    (<span th:text="${matching.child.age}"/>세)</p>
-                <p><strong>제목:</strong> <span th:text="${matching.title}"/></p>
-                <p><strong>내용:</strong></p>
-                <div class="mt-2 p-2 bg-gray-50 rounded"
+                <div class="mb-6 p-4 border rounded bg-gray-50">
+                    <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
+                    <p><strong>이름:</strong> <span th:text="${matching.child.name}"/></p>
+                    <p><strong>성별:</strong>
+                        <span th:switch="${matching.child.gender}">
+                            <span th:case="'남'">남자</span>
+                            <span th:case="'여'">여자</span>
+                        </span>
+                    </p>
+                    <p><strong>나이:</strong> <span th:text="${matching.child.age}"/>세</p>
+                    <p><strong>신장:</strong> <span th:text="${matching.child.height}"/></p>
+                    <p><strong>체중:</strong> <span th:text="${matching.child.weight}"/></p>
+                </div>
+
+                <p><strong>내용</strong></p>
+                <div class="mt-2 p-2 bg-gray-50 rounded mb-5"
                      th:text="${matching.content}"/>
+
+                <!-- 문진 질문/답변 -->
+                <details class="mb-6 border rounded">
+                    <summary class="px-4 py-2 bg-gray-100 cursor-pointer">문진 질문/답변</summary>
+                    <div class="p-4 space-y-4 bg-white">
+                        <div th:each="ans : ${matching.answers}">
+                            <p class="font-semibold" th:text="${ans.question}"/>
+                            <p class="ml-2" th:text="${ans.answer}"/>
+                            <hr/>
+                        </div>
+                    </div>
+                </details>
 
                 <!-- 첨부 이미지 -->
                 <div th:if="${photos != null and !photos.isEmpty()}">
@@ -54,17 +84,10 @@
                 </div>
             </section>
 
-            <!-- 문진 질문/답변 -->
-            <details class="mb-6 border rounded">
-                <summary class="px-4 py-2 bg-gray-100 cursor-pointer">문진 질문/답변</summary>
-                <div class="p-4 space-y-4 bg-white">
-                    <div th:each="ans : ${matching.answers}">
-                        <p class="font-semibold" th:text="${ans.question}"/>
-                        <p class="ml-2" th:text="${ans.answer}"/>
-                        <hr/>
-                    </div>
-                </div>
-            </details>
+            <!-- 매칭 전 안내 -->
+            <div th:if="${matching.status.name() == 'REQUESTED'}" class="mb-6 p-4 bg-yellow-50 rounded">
+                <p class="text-gray-700">아직 전문가 매칭이 되지 않았습니다.</p>
+            </div>
 
             <!-- 전문가 답변 (배정된 이후) -->
             <div th:if="${matching.status.name() != 'REQUESTED'}" class="mb-6">

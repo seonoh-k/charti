@@ -3,20 +3,50 @@
 <th:block layout:fragment="content">
     <div class="flex flex-1">
         <div class="flex-1 justify-center items-center p-20">
-            <h1 class="text-3xl font-bold mb-4">상담 상세 및 답변</h1>
+            <div class="flex items-center mb-4">
+                <!-- 제목 -->
+                <h2 th:text="${matching.title}"
+                    class="text-2xl font-bold mr-3">
+                </h2>
+                <!-- 카테고리 -->
+                <span th:text="${matching.category.displayName}"
+                      class="text-sm font-medium bg-white px-2 py-1 rounded">
+                </span>
+            </div>
 
-            <!-- 1) 기본 정보 -->
-            <section class="mb-6 border p-4 rounded">
-                <p><strong>카테고리:</strong>
-                    <span th:text="${matching.category.displayName}"></span></p>
-                <p><strong>자녀:</strong>
-                    <span th:text="${matching.child.name}"></span>
-                    (<span th:text="${matching.child.age}"></span>세)</p>
-                <p><strong>제목:</strong>
-                    <span th:text="${matching.title}"></span></p>
-                <p><strong>내용:</strong></p>
-                <div class="p-2 bg-gray-50 rounded"
-                     th:text="${matching.content}"></div>
+            <!-- 기본 정보 -->
+            <section class="mb-6 border p-4 rounded bg-white">
+                <div class="mb-6 p-4 border rounded bg-gray-50">
+                    <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
+                    <p><strong>이름:</strong> <span th:text="${matching.child.name}"/></p>
+                    <p><strong>성별:</strong>
+                        <span th:switch="${matching.child.gender}">
+                            <span th:case="'남'">남자</span>
+                            <span th:case="'여'">여자</span>
+                        </span>
+                    </p>
+                    <p><strong>나이:</strong> <span th:text="${matching.child.age}"/>세</p>
+                    <p><strong>신장:</strong> <span th:text="${matching.child.height}"/></p>
+                    <p><strong>체중:</strong> <span th:text="${matching.child.weight}"/></p>
+                </div>
+
+                <p><strong>내용</strong></p>
+                <div class="mt-2 p-2 bg-gray-50 rounded mb-5"
+                     th:text="${matching.content}"/>
+
+                <!-- 문진 질문/답변 -->
+                <details class="mb-6 border rounded">
+                    <summary class="px-4 py-2 bg-gray-100 cursor-pointer">
+                        문진 질문/답변
+                    </summary>
+                    <div class="p-4 space-y-4">
+                        <div th:each="ans : ${matching.answers}">
+                            <p class="font-semibold" th:text="${ans.question}"></p>
+                            <p th:text="${ans.answer}"></p>
+                            <hr/>
+                        </div>
+                    </div>
+                </details>
 
                 <!-- 첨부 이미지 -->
                 <div th:if="${photos.size()>0}" class="mb-6">
@@ -29,6 +59,8 @@
                                  th:alt="${fileName}"/>
                         </div>
                     </div>
+
+                    <!-- 모달 -->
                     <div id="image-modal"
                          class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
                         <button id="image-modal-close"
@@ -36,24 +68,9 @@
                         <img id="image-modal-img" class="max-h-[90%] max-w-[90%] rounded shadow-lg"/>
                     </div>
                 </div>
-
             </section>
 
-            <!-- 2) 문진 질문/답변 -->
-            <details class="mb-6 border rounded">
-                <summary class="px-4 py-2 bg-gray-100 cursor-pointer">
-                    문진 질문/답변
-                </summary>
-                <div class="p-4 space-y-4">
-                    <div th:each="ans : ${matching.answers}">
-                        <p class="font-semibold" th:text="${ans.question}"></p>
-                        <p th:text="${ans.answer}"></p>
-                        <hr/>
-                    </div>
-                </div>
-            </details>
-
-            <!-- 3) 이미 답변 완료된 경우 -->
+            <!-- 이미 답변 완료된 경우 -->
             <div th:if="${matching.status == T(com.example.demo.enums.MatchingStatus).RESPONDED}"
                  class="mb-6 p-4 border rounded bg-green-50">
                 <h2 class="font-semibold mb-2">전문가 답변</h2>
@@ -61,11 +78,10 @@
                     <p th:text="${a.content}"></p>
                     <p class="text-sm text-gray-500 mt-1"
                        th:text="${#temporals.format(a.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
-                    <hr class="my-2"/>
                 </div>
             </div>
 
-            <!-- 4) 아직 답변 전일 때만 폼 보이기 -->
+            <!-- 아직 답변 전일 때만 폼 보이기 -->
             <form th:if="${matching.status != T(com.example.demo.enums.MatchingStatus).RESPONDED}"
                   th:action="@{/expert/matching/{id}/respond(id=${matching.id})}"
                   th:object="${answerForm}"
