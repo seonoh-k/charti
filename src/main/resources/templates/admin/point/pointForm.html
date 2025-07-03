@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charti</title>
+    <title>포인트 관리</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -21,8 +21,17 @@
                 <option value="name">이름</option>
                 <option value="nickname">닉네임</option>
             </select>
-            <input type="text" id="searchValue" placeholder="검색어 입력" class="border rounded p-1 ml-2">
-            <button onclick="searchUser()" class="ml-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">검색</button>
+            <input type="text"
+                   id="searchValue"
+                   placeholder="검색어 입력"
+                   class="border rounded p-1 ml-2"
+                   th:value="${prefillName} ?: ''">
+            <button
+                    id="searchBtn"
+                    onclick="searchUser()"
+                    class="ml-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                검색
+            </button>
         </div>
 
         <!-- 사용자 선택 -->
@@ -98,13 +107,11 @@
 
         async function searchUser() {
             const type = document.getElementById('searchType').value;
-            const value = document.getElementById('searchValue').value;
+            const value = document.getElementById('searchValue').value.trim();
+            if (!value) return alert('검색어를 입력하세요');
 
             const res = await fetch(`/api/user/search?type=${type}&value=${value}`);
-            if (!res.ok) {
-                alert('회원 검색 실패');
-                return;
-            }
+            if (!res.ok) return alert('회원 검색 실패');
             userList = await res.json();
 
             const selectBox = document.getElementById('userSelectBox');
@@ -212,6 +219,42 @@
                 resultText.innerText = `${err}`;
             }
         }
+
+<!--        // 페이지 로딩 시, prefillName이 있으면 바로 검색-->
+<!--        document.addEventListener('DOMContentLoaded', () => {-->
+<!--            const prefillName = /*[[${prefillName}]]*/ '';-->
+<!--            if (prefillName) {-->
+<!--                // 검색어 input에 이미 th:value로 채워져 있음-->
+<!--                searchUser();-->
+<!--            }-->
+<!--        });-->
+
     </script>
+
+    <!-- 페이지 로딩 시, prefillName이 있으면 바로 검색 & 선택 -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+          (async function() {
+            var prefillName = [[${prefillName}]];
+            var prefillId   = [[${prefillId}]];
+
+            if (prefillName) {
+              // 검색어 셋팅
+              document.getElementById('searchValue').value = prefillName;
+              // 검색 실행 → 내부에서 selectUser() 까지 자동 호출
+              await searchUser();
+              // userList 중에 prefillId와 일치하는 인덱스 찾아 바로 선택
+              for (let i = 0; i < userList.length; i++) {
+                if (String(userList[i].id) === String(prefillId)) {
+                  document.getElementById('userSelect').value = i;
+                  selectUser();
+                  break;
+                }
+              }
+            }
+          })();
+        /*]]>*/
+    </script>
+
 </th:block>
 </html>

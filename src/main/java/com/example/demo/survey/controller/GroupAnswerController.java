@@ -63,10 +63,13 @@ public class GroupAnswerController {
 
     /** 뷰: 이력 페이지 */
     @GetMapping("/history")
-    public String historyPage(Authentication auth, Model model) {
+    public String historyPage(@RequestParam(value="childId", required=false) Long childId,
+                              Authentication auth,
+                              Model model) {
         try {
             Users me = getCurrentUser(auth); // 헬퍼 메소드 사용
             model.addAttribute("children", childService.findByUsersId(me.getId()));
+            model.addAttribute("selectedChildId", childId);
             return "survey/groupAnswerHistory";
         } catch (UserNotFoundException e) {
             // 사용자를 찾지 못하면 로그인 페이지로 리다이렉트

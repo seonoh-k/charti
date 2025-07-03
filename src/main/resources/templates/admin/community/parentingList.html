@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>관리자 – 육아정보 게시판</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<th:block layout:fragment="content">
+    <h2 class="text-2xl font-bold mb-4">육아정보 게시판 관리</h2>
+
+    <!-- 필터 폼 -->
+    <form th:action="@{/admin/community/parenting/list}" method="get"
+          class="flex gap-4 mb-6">
+        <select name="subCategory" class="border p-1">
+            <option value="전체" th:selected="${subCategory == '전체'}">전체</option>
+            <option th:each="c : ${subCategories}"
+                    th:value="${c}"
+                    th:text="${c}"
+                    th:selected="${c == subCategory}"/>
+        </select>
+
+        <select name="ageGroup" class="border p-1">
+            <option th:value="${T(com.example.demo.enums.AgeGroup).ALL}"
+                    th:selected="${ageGroup == T(com.example.demo.enums.AgeGroup).ALL}">
+                전체
+            </option>
+            <option th:each="a : ${ageGroups}"
+                    th:value="${a}"
+                    th:text="${a.displayName}"
+                    th:selected="${a == ageGroup}"/>
+        </select>
+
+        <input type="text" name="keyword" placeholder="제목 검색"
+               th:value="${keyword}"
+               class="border p-1 flex-1"/>
+
+        <select name="sort" class="border p-1">
+            <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
+            <option value="new"     th:selected="${sort == 'new'}">최신순</option>
+        </select>
+
+        <button class="bg-[#7CA48C] text-white px-4 py-1 rounded">검색</button>
+    </form>
+
+    <!-- 게시글 리스트 -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg overflow-hidden">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="px-4 py-2 text-left">카테고리</th>
+                <th class="px-4 py-2 text-left">제목</th>
+                <th class="px-4 py-2 text-left">연령대</th>
+                <th class="px-4 py-2 text-left">조회수</th>
+                <th class="px-4 py-2 text-left">작성일</th>
+                <th class="px-4 py-2 text-left">관리</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="b : ${boards}" class="hover:bg-gray-50">
+                <td class="px-4 py-3" th:text="${b.category2}">수유</td>
+                <td class="px-4 py-3 text-[#628C73] hover:underline">
+                    <a th:href="@{/admin/community/parenting/{id}(id=${b.communityId})}"
+                       th:text="${b.title}">제목</a>
+                </td>
+                <td class="px-4 py-3" th:text="${b.ageGroup.displayName}">0~1세</td>
+                <td class="px-4 py-3" th:text="${b.views}">123</td>
+                <td class="px-4 py-3"
+                    th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}">2025.07.03</td>
+                <td class="px-4 py-3 space-x-2">
+                    <a th:href="@{/admin/community/parenting/{id}/edit(id=${b.communityId})}"
+                       class="text-blue-600">수정</a>
+                    <form th:action="@{/admin/community/parenting/{id}/delete(id=${b.communityId})}"
+                          method="post" class="inline"
+                          onsubmit="return confirm('삭제하시겠습니까?');">
+                        <button class="text-red-600">삭제</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 페이징 -->
+    <nav class="mt-6 flex justify-center space-x-2">
+        <a th:if="${pageData.hasPrevious()}"
+           th:href="@{/admin/community/parenting/list(
+             page=${pageData.number-1},
+             subCategory=${subCategory},
+             ageGroup=${ageGroup},
+             keyword=${keyword},
+             sort=${sort})}"
+           class="px-3 py-1 bg-gray-200 rounded">&lt; 이전</a>
+
+        <span th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}">
+            <a th:href="@{/admin/community/parenting/list(
+               page=${i},
+               subCategory=${subCategory},
+               ageGroup=${ageGroup},
+               keyword=${keyword},
+               sort=${sort})}"
+               th:text="${i + 1}"
+               th:classappend="${i == pageData.number} ? 'bg-[#7CA48C] text-white' : 'bg-gray-200'"
+               class="px-3 py-1 rounded hover:bg-[#7CA48C] hover:text-white transition"/>
+        </span>
+
+        <a th:if="${pageData.hasNext()}"
+           th:href="@{/admin/community/parenting/list(
+             page=${pageData.number+1},
+             subCategory=${subCategory},
+             ageGroup=${ageGroup},
+             keyword=${keyword},
+             sort=${sort})}"
+           class="px-3 py-1 bg-gray-200 rounded">다음 &gt;</a>
+    </nav>
+</th:block>
+</html>

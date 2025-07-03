@@ -175,7 +175,7 @@ public class MatchingController {
         // 4) 저장
         matchingService.save(m);
 
-        return "redirect:/";
+        return "redirect:/matching";
     }
 
     /** 4) 부모용 상담 리스트 */

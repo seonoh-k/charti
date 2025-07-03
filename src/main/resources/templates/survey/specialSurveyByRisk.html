@@ -164,8 +164,6 @@
                     return res.json();
                 })
                 .then(data => {
-                    alert('문진이 성공적으로 제출되었습니다.');
-
                     // [최종 수정] 새로운 위험군 '결과' 페이지로 이동
                     const payload = encodeURIComponent(JSON.stringify(data));
                     window.location.href = `/specialSurvey/result/by-risk?data=${payload}`;
