@@ -5,7 +5,6 @@ import com.example.demo.matching.entity.Matching;
 import com.example.demo.matching.repository.MatchingRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +25,7 @@ public class MatchingService {
     }
 
     // 전문가별 단순 조회
-    public List<Matching> findAllById(Long id) { return matchingRepository.findAllById(id); }
+    public List<Matching> findAllByExpertId(Long id) { return matchingRepository.findAllByExpertId(id); }
 
     public Page<Matching> findAll(Pageable pageable) {
         return matchingRepository.findAll(pageable);

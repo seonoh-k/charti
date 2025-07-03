@@ -78,6 +78,6 @@ public interface MatchingRepository extends JpaRepository<Matching, Long> {
                                                                                Pageable pageable);
   
     // 전문가별 단순 조회
-    List<Matching> findAllById(Long id);
+    List<Matching> findAllByExpertId(Long id);
 
 }

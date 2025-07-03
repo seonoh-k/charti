@@ -89,7 +89,9 @@
                     type=${type},
                     keyword=${keyword})}"
                 th:if="${result.startPage - 1 > 0}"
-                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">◀</a>
+                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
+                    <i class="fas fa-angle-left"></i>
+                </a>
                 
                 <!-- 페이지 번호 목록 -->
                 <a th:each="p : ${result.pageList}"
@@ -111,7 +113,9 @@
                     type=${type},
                     keyword=${keyword})}"
                 th:if="${result.endPage + 1 < result.totalPages}"
-                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">▶</a>
+                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
+                    <i class="fas fa-angle-right"></i>
+                </a>
             </div>
         </div>
 

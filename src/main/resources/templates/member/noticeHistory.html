@@ -43,7 +43,7 @@
             })
 
             const btn = div.nextElementSibling;
-            const li = div.querySelector("li");
+            const li = div.closest("li");
             btn.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if(confirm("이 알림을 삭제하시겠습니까?")){

@@ -109,11 +109,11 @@
             </div>
 
             <!-- 페이징 -->
-            <div class="flex justify-center mt-6">
+            <div class="mt-6 flex justify-center">
                 <nav id="pagination"
                      th:data-current-page="${currentPage}"
                      th:data-total-pages="${totalPages}"
-                     class="inline-flex -space-x-px">
+                     class="inline-flex space-x-2">
                 </nav>
             </div>
         </div>
@@ -121,76 +121,99 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-          const categorySelect = document.getElementById("categorySelect");
-          const statusSelect   = document.getElementById("statusSelect");
-          const keywordInput   = document.getElementById("keywordInput");
-          const searchBtn      = document.getElementById("searchBtn");
-          const nav            = document.getElementById("pagination");
-          const current        = Number(nav.dataset.currentPage);
-          const total          = Number(nav.dataset.totalPages);
+            const categorySelect = document.getElementById("categorySelect");
+            const statusSelect   = document.getElementById("statusSelect");
+            const keywordInput   = document.getElementById("keywordInput");
+            const searchBtn      = document.getElementById("searchBtn");
+            const nav            = document.getElementById("pagination");
+            const current        = Number(nav.dataset.currentPage);
+            const total          = Number(nav.dataset.totalPages);
 
-          // URL 빌더
-          function buildUrl(page = 1) {
-            const params = new URLSearchParams();
-            if (categorySelect.value) params.set("category", categorySelect.value);
-            if (statusSelect.value)   params.set("status",   statusSelect.value);
-            if (keywordInput.value.trim()) params.set("keyword", keywordInput.value.trim());
-            params.set("page", page);
-            return `/admin/qna?${params.toString()}`;
-          }
-
-          // 필터 즉시 적용
-          categorySelect.addEventListener("change", () => {
-            window.location.href = buildUrl(1);
-          });
-          statusSelect.addEventListener("change", () => {
-            window.location.href = buildUrl(1);
-          });
-
-          // 제목 검색 버튼
-          searchBtn.addEventListener("click", () => {
-            if (!keywordInput.value.trim()) return;
-            window.location.href = buildUrl(1);
-          });
-
-          // 페이징 버튼 렌더링
-          function pageBtn(label, page, opts = {}) {
-            const { active = false, disabled = false, rounded = "" } = opts;
-            const a = document.createElement("a");
-            if (typeof label === "number") a.textContent = label;
-            else {
-              const i = document.createElement("i");
-              i.className = label === "left"
-                ? "fa-solid fa-angle-left"
-                : "fa-solid fa-angle-right";
-              a.appendChild(i);
+            // URL 빌더
+            function buildUrl(page = 1) {
+                const params = new URLSearchParams();
+                if (categorySelect.value) params.set("category", categorySelect.value);
+                if (statusSelect.value)   params.set("status",   statusSelect.value);
+                if (keywordInput.value.trim()) params.set("keyword", keywordInput.value.trim());
+                params.set("page", page);
+                return `/admin/qna?${params.toString()}`;
             }
-            a.className = "px-3 py-1 border";
-            if (active) a.classList.add("bg-blue-500","text-white","border-blue-500");
-            else        a.classList.add("bg-white","text-gray-500","border-gray-300","hover:bg-gray-100");
-            if (disabled) {
-              a.href = "javascript:;";
-              a.classList.add("cursor-not-allowed","opacity-50");
-            } else {
-              a.href = buildUrl(page);
-            }
-            if (rounded === "left")  a.classList.add("rounded-l-lg");
-            if (rounded === "right") a.classList.add("rounded-r-lg");
-            return a;
-          }
 
-          // Prev
-          nav.appendChild(pageBtn("left", current - 1, {
-            disabled: current === 1, rounded: "left"
-          }));
-          // 페이지 번호
-          for (let p = 1; p <= total; p++) {
-            nav.appendChild(pageBtn(p, p, { active: p === current }));
-          }
-          // Next
-          nav.appendChild(pageBtn("right", current + 1, {
-            disabled: current === total, rounded: "right"
-          }));
+            // 필터 즉시 적용
+            categorySelect.addEventListener("change", () => {
+                window.location.href = buildUrl(1);
+            });
+            statusSelect.addEventListener("change", () => {
+                window.location.href = buildUrl(1);
+            });
+
+            // 제목 검색 버튼
+            searchBtn.addEventListener("click", () => {
+                if (!keywordInput.value.trim()) return;
+                window.location.href = buildUrl(1);
+            });
+
+            // 페이징 버튼 렌더링
+            function pageBtn(label, page, opts = {}) {
+                const { active = false, disabled = false } = opts;
+                const a = document.createElement("a");
+
+                a.className = "px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"
+
+                if(typeof label === "number") {
+                    a.textContent = label;
+                }else if(label === "first") {
+                    const i = document.createElement("i");
+                    i.className = "fas fa-angle-double-left";
+                    a.appendChild(i)
+                }else if(label === "end") {
+                    const i = document.createElement("i");
+                    i.className = "fas fa-angle-double-right";
+                    a.appendChild(i)
+                }else {
+                    const i = document.createElement("i");
+                    i.className = label === "left" ? "fas fa-angle-left" : "fas fa-angle-right";
+                    a.appendChild(i)
+                }
+
+                if(active) {
+                    a.classList.add("bg-[#E3A67A]", "text-white");
+                }else {
+                    a.classList.add("bg-gray-200", "text-[#E3A67A]");
+                }
+
+                if (disabled) {
+                  a.href = "javascript:;";
+                  a.classList.add("hidden");
+                } else {
+                  a.href = buildUrl(page);
+                  a.classList.remove("hidden");
+                }
+
+                return a;
+            }
+
+            nav.appendChild(pageBtn("first", 1, {
+                disabled: current === 1,
+            }));
+
+            nav.appendChild(pageBtn("left", current-1, {
+                disabled: current === 1,
+            }));
+
+            for(let p=1; p<=total; p++) {
+                nav.appendChild(pageBtn(p, p, {
+                    active: p === current,
+                }));
+            }
+
+            nav.appendChild(pageBtn("right", current+1, {
+                disabled: current === total,
+            }));
+
+            nav.appendChild(pageBtn("end", total, {
+                disabled: current === total,
+            }));
         });
     </script>
 </th:block>

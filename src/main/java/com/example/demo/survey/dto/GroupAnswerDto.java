@@ -44,10 +44,25 @@ public class GroupAnswerDto {
         d.setCreatedAt(a.getCreatedAt());
 
         // 1 SurveySet에서 question이 같은 GroupSurvey 객체 찾기
-        GroupSurvey s = a.getSurveySet().getGroupSurveys().stream()
-                .filter(gs -> gs.getQuestion().equals(a.getQuestion()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("문진 항목 없음: " + a.getQuestion()));
+//        GroupSurvey s = a.getSurveySet().getGroupSurveys().stream()
+//                .filter(gs -> gs.getQuestion().equals(a.getQuestion()))
+//                .findFirst()
+//                .orElseThrow(() -> new IllegalStateException("문진 항목 없음: " + a.getQuestion()));
+
+        List<GroupSurvey> groupSurveys = a.getSurveySet().getGroupSurveys();
+        GroupSurvey found = null;
+        for(int i=0; i<groupSurveys.size(); i++) {
+            GroupSurvey gs = groupSurveys.get(i);
+            if(gs.getId().equals(a.getSurveySet().getGroupSurveys().get(i).getId())) {
+                found = gs;
+                break;
+            }
+        }
+        if(found == null) {
+            throw new IllegalStateException("문진 항목 없음: " + a.getQuestion());
+        }
+
+        GroupSurvey s = found;
 
         // 2 그 객체에서 옵션 꺼내기
         List<String> opts = List.of(

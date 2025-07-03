@@ -28,7 +28,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                     <tr th:each="ph : ${pointHistory}">
-                        <td th:text="${ph.created}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
+                        <td th:text="${ph.createdFormatted}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
                         <td th:text="|${ph.beforePoint} ➡ ${ph.afterPoint}|"
                             class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
                         <td th:text="|${ph.changeAmount > 0 ? '+' + ph.changeAmount : ph.changeAmount} [${ph.description}]|"
