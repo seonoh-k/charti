@@ -1,6 +1,7 @@
 package com.example.demo.config;
 
 import com.example.demo.filter.JwtAuthenticationFilter;
+import com.example.demo.oauth.CustomLogoutSuccessHandler;
 import com.example.demo.oauth.CustomOAuth2UserService;
 import com.example.demo.oauth.OAuth2LoginSuccessHandler;
 import com.example.demo.util.AppURLs;
@@ -63,7 +64,7 @@ public class SecurityConfig {
                         .logoutUrl("/logout")
                         .deleteCookies("token")
                         .addLogoutHandler(new CookieClearingLogoutHandler("token"))
-                        .logoutSuccessUrl("/")
+                        .logoutSuccessHandler(new CustomLogoutSuccessHandler())
                 )
                 /**
                  * 현재 View 를 반환하는 형태 -> 데이터를 반환하는 형식으로 변경할 예정

@@ -130,11 +130,12 @@
                     const questionCard = input.closest(".questionCard");
                     const setId = questionCard.querySelector(".setId").value;
                     const question = questionCard.querySelector(".question").textContent.trim();
+                    const q = question.replace(/^\d+\.\s*/, '');
                     const answerText = input.nextElementSibling.textContent.trim();
                     answers.push({
                         surveyId: Number(input.name),
                         surveySetId: Number(setId),
-                        question: question,
+                        question: q,
                         answerText: answerText
                     });
                 });
