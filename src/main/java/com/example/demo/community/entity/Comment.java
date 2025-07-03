@@ -16,7 +16,6 @@ public class Comment extends BaseEntity {
     @Column(nullable = false)
     private Long communityId;
 
-    @Column(nullable = false)
     private Long usersId;
 
     @Column(columnDefinition = "TEXT", nullable = false)
