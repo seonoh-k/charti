@@ -5,7 +5,6 @@ import com.example.demo.enums.FcmCategory;
 import com.example.demo.enums.SurveyCategory;
 import com.example.demo.enums.TargetGroup;
 import com.example.demo.fcm.dto.AdminFcmSendResultDto;
-import com.example.demo.fcm.dto.FcmSendResultDto;
 import com.example.demo.fcm.dto.NoticeDto;
 import com.example.demo.fcm.dto.RecipientResultDto;
 import com.example.demo.fcm.entity.FcmSendHistory;
@@ -25,7 +24,6 @@ import com.example.demo.users.repository.ManagerRepository;
 import com.example.demo.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,8 +42,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class FcmService {
-//    @Value("${app.domain}")
-    private String appDomain;
+
 
     private final UserRepository userRepository;
     private final UserFcmTokenRepository tokenRepository;
@@ -60,51 +57,27 @@ public class FcmService {
      * 관리자 알림 발송 메인 서비스 메소드
      * - 컨트롤러로부터 모든 요청 파라미터를 받아 로직을 오케스트레이션합니다.
      */
-    public AdminFcmSendResultDto sendAdvancedNotification(Admin sender, String targetType, AgeGroup ageGroup, TargetGroup targetGroup, FcmCategory fcmCategory, SurveyCategory surveyCategory, Long setId, String customTitle, String customBody) {
+    public AdminFcmSendResultDto sendAdvancedNotification(Admin sender, String targetType, AgeGroup ageGroupFromFilter, TargetGroup targetGroup, FcmCategory fcmCategory, SurveyCategory surveyCategory, Long setId, String customTitle, String customBody) {
 
-        Map<Users, List<Child>> targetUserMap = findTargetParentAndChildMap(targetType, ageGroup, targetGroup, surveyCategory);
+        SurveySet set = null;
+        if (setId != null) {
+            set = surveySetService.getById(setId);
+        }
+
+        AgeGroup finalAgeGroup = (set != null) ? set.getAgeGroup() : ageGroupFromFilter;
+
+        Map<Users, List<Child>> targetUserMap = findTargetParentAndChildMap(targetType, finalAgeGroup, targetGroup, surveyCategory);
+
         if (targetUserMap.isEmpty()) {
             return AdminFcmSendResultDto.createEmptyResult(targetType);
         }
 
         String targetCondition = String.format("target=%s, ageGroup=%s, targetGroup=%s, surveyCategory=%s, setId=%s",
-                targetType, ageGroup, targetGroup, surveyCategory, (setId != null ? setId.toString() : "null"));
+                targetType, finalAgeGroup, targetGroup, surveyCategory, (setId != null ? setId.toString() : "null"));
 
-        return sendBulkNotificationAndSaveHistory(sender, targetUserMap, setId, customTitle, customBody, fcmCategory, targetCondition, targetType);
+        return sendBulkNotificationAndSaveHistory(sender, targetUserMap, set, customTitle, customBody, fcmCategory, targetCondition, targetType);
     }
 
-    /**
-     *  대상자 조회 로직 분리
-     * - 각 조건에 맞는 사용자 목록을 DB에서 직접 조회
-     */
-    private List<Users> findTargetUsers(String targetType, AgeGroup ageGroup, TargetGroup targetGroup, SurveyCategory surveyCategory) { // 파라미터명을 category -> surveyCategory로 명확화
-
-        // "SPECIAL_RISK" 대상: 위험군 사용자 조회
-        if ("SPECIAL_RISK".equals(targetType)) {
-            return userRepository.findUsersByChildRiskCategory(surveyCategory);
-        }
-        // "GROUP" 대상: 기관 그룹별 사용자 조회
-        else if ("GROUP".equals(targetType) && targetGroup != null) {
-            return userRepository.findUsersByChildrenInTargetGroup(targetGroup);
-        }
-        // "ALL" 대상: 전체 또는 연령대별 사용자 조회
-        else if ("ALL".equals(targetType)) {
-            // 1. 먼저 삭제되지 않은 모든 사용자를 DB에서 조회합니다.
-            List<Users> allUsers = userRepository.findAllByDeletedFalse();
-
-            // 2. 만약 ageGroup 필터가 있다면, 자바 코드로 2차 필터링을 수행합니다.
-            if (ageGroup != null) {
-                return allUsers.stream()
-                        .filter(user -> user.getMember() != null &&
-                                user.getMember().getChildren().stream()
-                                        .anyMatch(child -> child.getAgeGroup() == ageGroup))
-                        .collect(Collectors.toList());
-            }
-            return allUsers;
-        }
-
-        return new ArrayList<>();
-    }
     /**
      *  대상자 조회 로직: 이제 학부모와 해당 자녀를 Map으로 묶어서 반환합니다.
      */
@@ -148,64 +121,59 @@ public class FcmService {
                 .collect(Collectors.groupingBy(child -> child.getParent().getUsers()));
     }
 
-
     /**
-     *  발송 및 저장 로직 통합
+     * 발송 및 저장 로직 통합: 자녀별 개별 알림 발송
      */
-    private AdminFcmSendResultDto sendBulkNotificationAndSaveHistory(Admin sender, Map<Users, List<Child>> targetUserMap, Long setId, String customTitle, String customBody, FcmCategory fcmCategory, String targetCondition, String targetType) {
+    private AdminFcmSendResultDto sendBulkNotificationAndSaveHistory(Admin sender, Map<Users, List<Child>> targetUserMap, SurveySet set, String customTitle, String customBody, FcmCategory fcmCategory, String targetCondition, String targetType) {
         List<RecipientResultDto> successfulRecipients = new ArrayList<>();
         List<RecipientResultDto> failedRecipients = new ArrayList<>();
         List<Notice> noticesToSave = new ArrayList<>();
+        // [변경] 전체 대상자 수를 부모(user)가 아닌 자녀(child) 기준으로 세기 위해 변수 추가
+        int totalChildCount = 0;
 
-        SurveySet set = (setId != null) ? surveySetService.getById(setId) : null;
+//        SurveySet set = (setId != null) ? surveySetService.getById(setId) : null;
 
         for (Map.Entry<Users, List<Child>> entry : targetUserMap.entrySet()) {
             Users user = entry.getKey();
             List<Child> children = entry.getValue();
 
-            String personalizedTitle, personalizedBody, personalizedUrl = null;
+            totalChildCount += children.size();
 
-            if (set != null && !children.isEmpty()) {
-                String childrenNames = children.stream().map(Child::getName).collect(Collectors.joining(", "));
-                personalizedTitle = String.format("[문진 요청] %s 어린이를 위한 새 문진이 도착했어요!", childrenNames);
-                personalizedBody = String.format("'%s' 문진을 확인하고 답변을 부탁드립니다.", set.getSetTitle());
-                personalizedUrl = appDomain + "/surveySet/request/" + setId + "?childId=" + children.get(0).getId();
-            } else {
-                personalizedTitle = customTitle;
-                personalizedBody = customBody;
-            }
+            for (Child child : children) {
+                String personalizedTitle, personalizedBody, personalizedUrl = null;
 
-            noticesToSave.add(Notice.builder().user(user).title(personalizedTitle).body(personalizedBody).category(fcmCategory).url(personalizedUrl).sentAt(LocalDateTime.now()).build());
-            boolean sent = sendFcmOnly(user, personalizedTitle, personalizedBody, personalizedUrl);
-            if (sent) {
-                List<String> childNames = children.stream().map(Child::getName).collect(Collectors.toList());
-                successfulRecipients.add(new RecipientResultDto(user.getName(), childNames));
-            } else {
-                List<String> childNames = children.stream().map(Child::getName).collect(Collectors.toList());
-                failedRecipients.add(new RecipientResultDto(user.getName(), childNames));
+                if (set != null) {
+                    personalizedTitle = String.format("[문진 요청] %s 어린이를 위한 새 문진이 도착했어요!", child.getName());
+                    personalizedBody = String.format("'%s' 문진을 확인하고 답변을 부탁드립니다.", set.getSetTitle());
+                    personalizedUrl = "/surveySet/request/" + set.getSetId() + "?childId=" + child.getId();
+                } else {
+                    personalizedTitle = customTitle;
+                    personalizedBody = customBody;
+                }
+
+                //  한 명의 자녀에 대한 알림 1개를 생성하고 발송합니다.
+                noticesToSave.add(Notice.builder().user(user).title(personalizedTitle).body(personalizedBody).category(fcmCategory).url(personalizedUrl).sentAt(LocalDateTime.now()).build());
+                boolean sent = sendFcmOnly(user, personalizedTitle, personalizedBody, personalizedUrl);
+
+                if (sent) {
+                    successfulRecipients.add(new RecipientResultDto(user.getName(), List.of(child.getName())));
+                } else {
+                    failedRecipients.add(new RecipientResultDto(user.getName(), List.of(child.getName())));
+                }
             }
         }
 
         noticeRepository.saveAll(noticesToSave);
 
-        String historyTitle;
+        String historyTitle = (set != null) ? set.getSetTitle() : customTitle;
         String historyBody = String.format("관리자(%s)가 발송한 알림", sender.getName());
-        String historyLink = null;
-
-        if (set != null) {
-            historyTitle = set.getSetTitle();
-            historyLink = appDomain + "/admin/surveySet/" + setId;
-        } else {
-            historyTitle = customTitle;
-        }
+        String historyLink = (set != null) ? "/admin/surveySet/" + set.getSetId() : null;
 
         historyRepository.save(FcmSendHistory.builder()
                 .adminSender(sender)
-                .title(historyTitle)
-                .body(historyBody)
-                .category(fcmCategory)
+                .title(historyTitle).body(historyBody).category(fcmCategory)
                 .targetCondition(targetCondition)
-                .targetCount(targetUserMap.size())
+                .targetCount(totalChildCount)
                 .successCount(successfulRecipients.size())
                 .sentAt(LocalDateTime.now())
                 .link(historyLink)
@@ -213,7 +181,7 @@ public class FcmService {
 
         return AdminFcmSendResultDto.builder()
                 .targetType(targetType)
-                .totalTargetCount(targetUserMap.size())
+                .totalTargetCount(totalChildCount)
                 .successCount(successfulRecipients.size())
                 .successfulRecipients(successfulRecipients)
                 .failedRecipients(failedRecipients)
@@ -338,19 +306,26 @@ public class FcmService {
     /**
      * 담당자용 문진 세트 발송
      */
-    public FcmSendResultDto sendSurveySetToGroupMembers(Long managerId, Long setId) {
+    public AdminFcmSendResultDto sendSurveySetToGroupMembers(Long managerId, Long setId) {
         Manager manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매니저입니다. ID: " + managerId));
         SurveySet set = surveySetService.getById(setId);
-        List<Child> targetChildren = childRepository.findByGroupId(manager.getGroup().getId());
+
+        List<Child> childrenInGroup = childRepository.findByGroupId(manager.getGroup().getId());
+
+        AgeGroup surveySetAgeGroup = set.getAgeGroup();
+        List<Child> targetChildren = childrenInGroup.stream()
+                .filter(child -> child.getAgeGroup() == surveySetAgeGroup)
+                .collect(Collectors.toList());
 
         if (targetChildren.isEmpty()) {
-            log.info("그룹 ID {} 에 해당하는 자녀가 없어 알림을 발송하지 않습니다.", manager.getGroup().getId());
-            return new FcmSendResultDto(0, 0, new ArrayList<>(), new ArrayList<>());
+            log.info("그룹 ID {} 에는 해당 문진 세트({})의 연령대에 맞는 자녀가 없어 알림을 발송하지 않습니다.",
+                    manager.getGroup().getId(), set.getSetTitle());
+            return AdminFcmSendResultDto.createEmptyResult("GROUP");
         }
 
-        List<String> successfulNames = new ArrayList<>();
-        List<String> failedNames = new ArrayList<>();
+        List<RecipientResultDto> successfulRecipients = new ArrayList<>();
+        List<RecipientResultDto> failedRecipients = new ArrayList<>();
         List<Notice> noticesToSave = new ArrayList<>();
         Users sender = manager.getUsers();
 
@@ -362,13 +337,13 @@ public class FcmService {
         for (Child child : targetChildren) {
             Users parent = child.getParent().getUsers();
             if (parent == null || parent.isDeleted()) {
-                failedNames.add(child.getName() + " (학부모 정보 없음)");
+                failedRecipients.add(new RecipientResultDto("정보 없음", List.of(child.getName() + " (학부모 정보 없음)")));
                 continue;
             }
 
             String title = String.format("[문진 요청] %s 어린이를 위한 새 문진이 도착했어요!", child.getName());
             String body = String.format("'%s' 문진을 확인하고 답변을 부탁드립니다.", set.getSetTitle());
-            String link = "http://localhost:8080/surveySet/request/" + setId + "?childId=" + child.getId();
+            String link = "/surveySet/request/" + setId + "?childId=" + child.getId();
 
             noticesToSave.add(Notice.builder().user(parent).title(title).body(body)
                     .category(FcmCategory.GROUP).url(link).sentAt(LocalDateTime.now()).build());
@@ -376,9 +351,9 @@ public class FcmService {
             boolean sent = sendFcmOnly(parent, title, body, link);
 
             if (sent) {
-                successfulNames.add(child.getName());
+                successfulRecipients.add(new RecipientResultDto(parent.getName(), List.of(child.getName())));
             } else {
-                failedNames.add(child.getName() + " (발송 실패)");
+                failedRecipients.add(new RecipientResultDto(parent.getName(), List.of(child.getName() + " (발송 실패)")));
             }
         }
 
@@ -388,17 +363,23 @@ public class FcmService {
                 FcmSendHistory.builder()
                         .sender(sender)
                         .title(set.getSetTitle())
-                        .body(String.format("%s 담당자가 그룹 문진을 발송했습니다.", sender.getName()))
+                        .body(String.format("담당자(%s)가 발송한 알림.", sender.getName()))
                         .category(FcmCategory.GROUP)
                         .targetCondition(targetCondition)
-                        .link("/surveySet/request/" + setId)
+                        .link("/admin/surveySet/" + setId)
                         .targetCount(targetChildren.size())
-                        .successCount(successfulNames.size())
+                        .successCount(successfulRecipients.size())
                         .sentAt(LocalDateTime.now())
                         .build()
         );
 
-        return new FcmSendResultDto(targetChildren.size(), successfulNames.size(), successfulNames, failedNames);
+        return AdminFcmSendResultDto.builder()
+                .targetType("GROUP")
+                .totalTargetCount(targetChildren.size())
+                .successCount(successfulRecipients.size())
+                .successfulRecipients(successfulRecipients)
+                .failedRecipients(failedRecipients)
+                .build();
     }
 
     // 특정 유저가 받은 알림을 최신 순으로 10개만 조회
