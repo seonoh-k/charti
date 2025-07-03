@@ -6,6 +6,7 @@ import com.example.demo.dto.paging.PagingResultDTO;
 import com.example.demo.dto.request.AdminCreateRequest;
 import com.example.demo.users.entity.Admin;
 import com.example.demo.users.entity.Manager;
+import com.example.demo.users.entity.Member;
 import com.example.demo.users.entity.Role;
 import com.example.demo.users.exception.AdminAlreadyExistsException;
 import com.example.demo.users.exception.AdminNotFoundException;

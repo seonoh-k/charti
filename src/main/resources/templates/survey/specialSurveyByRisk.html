@@ -130,11 +130,12 @@
                     const questionCard = input.closest(".questionCard");
                     const setId = questionCard.querySelector(".setId").value;
                     const question = questionCard.querySelector(".question").textContent.trim();
+                    const q = question.replace(/^\d+\.\s*/, '');
                     const answerText = input.nextElementSibling.textContent.trim();
                     answers.push({
                         surveyId: Number(input.name),
                         surveySetId: Number(setId),
-                        question: question,
+                        question: q,
                         answerText: answerText
                     });
                 });
@@ -163,8 +164,6 @@
                     return res.json();
                 })
                 .then(data => {
-                    alert('문진이 성공적으로 제출되었습니다.');
-
                     // [최종 수정] 새로운 위험군 '결과' 페이지로 이동
                     const payload = encodeURIComponent(JSON.stringify(data));
                     window.location.href = `/specialSurvey/result/by-risk?data=${payload}`;

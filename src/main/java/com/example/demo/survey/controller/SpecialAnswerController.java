@@ -1,10 +1,9 @@
 package com.example.demo.survey.controller;
 
 import com.example.demo.survey.dto.AnswerUpdateRequest;
-import com.example.demo.survey.dto.GroupAnswerDto;
 import com.example.demo.survey.dto.SpecialAnswerDto;
-import com.example.demo.survey.service.GroupAnswerService;
 import com.example.demo.survey.service.SpecialAnswerService;
+import com.example.demo.survey.service.SurveySetService;
 import com.example.demo.users.entity.Users;
 import com.example.demo.users.exception.UserNotFoundException;
 import com.example.demo.users.service.ChildService;
@@ -26,10 +25,14 @@ public class SpecialAnswerController {
     private final UserService userService;
     private final ChildService childService;
     private final SpecialAnswerService answerService;
+    private final SurveySetService surveySetService;
 
     /** 뷰: 이력 페이지 */
     @GetMapping("/history")
-    public String historyPage(Authentication auth, Model model) {
+    public String historyPage(
+            @RequestParam(value="childId", required=false) Long childId,
+            Authentication auth,
+            Model model) {
         Users me;
         try {
             me = userService.findByUsernameEntity(auth.getName());
@@ -37,6 +40,7 @@ public class SpecialAnswerController {
             me = userService.findByUuidEntity(auth.getName());
         }
         model.addAttribute("children", childService.findByUsersId(me.getId()));
+        model.addAttribute("selectedChildId", childId);
         return "survey/specialAnswerHistory";
     }
 
@@ -44,6 +48,7 @@ public class SpecialAnswerController {
     @GetMapping("/api/history/{childId}")
     @ResponseBody
     public List<SpecialAnswerDto> apiHistory(@PathVariable Long childId) {
+//        SurveySet surveySet =
         return answerService.findByChild(childId).stream()
                 .map(SpecialAnswerDto::fromEntity)
                 .collect(Collectors.toList());

@@ -10,8 +10,8 @@
                 <h2 class="text-2xl font-bold mb-4">신규 상담</h2>
                 <div class="space-y-4">
                     <div th:each="matching : ${matchingList}" class="block p-4 bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
-                        <a th:href="@{/expert/matching/${matching.id}}" th:text="${matching.title}" class="text-lg font-medium text-gray-800">상담 제목</a>
-                        <p class="text-sm text-gray-500 mt-1" th:text="${#dates.format(matching.createdAt, 'yyyy-MM-dd HH:mm')}">상담 신청 일자</p>
+                        <a th:href="@{/expert/matching/{id}(id=${matching.id})}" th:text="${matching.title}" class="text-lg font-medium text-gray-800">상담 제목</a>
+                        <p class="text-sm text-gray-500 mt-1" th:text="${#temporals.format(matching.createdAt, 'yyyy-MM-dd HH:mm')}">상담 신청 일자</p>
                     </div>
                 </div>
             </section>

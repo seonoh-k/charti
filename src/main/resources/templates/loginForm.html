@@ -154,10 +154,16 @@ const firebaseConfig = {
                 alert('이메일 형식이 올바르지 않습니다.\n이메일 주소를 정확히 입력해주세요.');
             } else if (error.code === 'auth/user-not-found') {
                 alert('입력하신 이메일로 등록된 계정이 없습니다.');
+
+            } else if (error.code === 'auth/missing-password') {
+                alert('비밀번호를 입력해주세요.');
+
             } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-login-credentials') {
                 alert('아이디 또는 비밀번호가 틀렸습니다');
+
             } else if (error.code === 'auth/user-disabled') {
                 alert('이 계정은 비활성화(정지) 상태입니다.\n관리자에게 문의해주세요.');
+                
             } else {
                 alert('Firebase 로그인 오류: ' + error.message);
             }

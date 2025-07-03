@@ -22,7 +22,7 @@
             <p><span class="font-medium">조회수:</span>
                 <span th:text="${board.views}">0</span></p>
             <p><span class="font-medium">작성자:</span>
-                <span th:text="${authorNickname}">닉네임</span></p>
+                <span th:text="${authorName}">관리자 이름</span></p>
             <p><span class="font-medium">작성일:</span>
                 <span th:text="${#temporals.format(board.createdAt,'yyyy.MM.dd HH:mm')}">2025.06.27 16:00</span></p>
         </div>

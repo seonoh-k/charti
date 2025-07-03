@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin_layout}">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>관리자 – 육아정보 게시글 수정</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<th:block layout:fragment="content">
+    <div class="max-w-3xl mx-auto p-6 bg-white shadow rounded-lg">
+        <h1 class="text-2xl font-bold mb-4">게시글 수정</h1>
+        <form th:action="@{/admin/community/parenting/{id}(id=${board.communityId})}"
+              th:object="${board}"
+              method="post"
+              class="space-y-4">
+
+            <!-- 하위 카테고리 -->
+            <div>
+                <label class="block mb-1">하위 카테고리</label>
+                <select th:field="*{category2}" class="w-full border p-2 rounded">
+                    <option th:each="cat : ${subCategories}"
+                            th:value="${cat}"
+                            th:text="${cat}"
+                            th:selected="${cat == board.category2}"/>
+                </select>
+            </div>
+
+            <!-- 연령대 -->
+            <div>
+                <label class="block mb-1">연령대</label>
+                <select th:field="*{ageGroup}" class="w-full border p-2 rounded">
+                    <option th:value="${T(com.example.demo.enums.AgeGroup).ALL}"
+                            th:text="'전체'"
+                            th:selected="${board.ageGroup == T(com.example.demo.enums.AgeGroup).ALL}"/>
+                    <option th:each="ag : ${ageGroups}"
+                            th:value="${ag}"
+                            th:text="${ag.displayName}"
+                            th:selected="${ag == board.ageGroup}"/>
+                </select>
+            </div>
+
+            <!-- 제목 -->
+            <div>
+                <label class="block mb-1">제목</label>
+                <input type="text" th:field="*{title}" required
+                       class="w-full border p-2 rounded"/>
+            </div>
+
+            <!-- 내용 -->
+            <div>
+                <label class="block mb-1">내용</label>
+                <textarea th:field="*{content}" rows="6" required
+                          class="w-full border p-2 rounded"></textarea>
+            </div>
+
+            <!-- 버튼 -->
+            <div class="text-right">
+                <button type="submit"
+                        class="bg-green-600 text-white px-4 py-2 rounded">저장</button>
+            </div>
+        </form>
+    </div>
+</th:block>
+</html>

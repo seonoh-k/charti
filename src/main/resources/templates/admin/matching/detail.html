@@ -14,23 +14,62 @@
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
-        <h1 class="text-2xl font-bold mb-4">관리자용 상담 상세</h1>
+        <div class="flex items-center mb-4">
+            <!-- 제목 -->
+            <h2 th:text="${matching.title}"
+                class="text-2xl font-bold mr-3">
+            </h2>
+            <!-- 카테고리 -->
+            <span th:text="${matching.category.displayName}"
+                  class="text-sm font-medium bg-gray-100 px-2 py-1 rounded">
+                </span>
+        </div>
 
         <!-- 기본 정보 -->
         <section class="mb-6 border p-4 rounded bg-white">
-            <p><strong>카테고리:</strong>
-                <span th:text="${matching.category.displayName}"/></p>
-            <p><strong>자녀:</strong>
-                <span th:text="${matching.child.name}"/>
-                (<span th:text="${matching.child.age}"/>세)
-            </p>
-            <p><strong>제목:</strong> <span th:text="${matching.title}"/></p>
-            <p><strong>내용:</strong></p>
-            <div class="mt-2 p-2 bg-gray-50 rounded" th:text="${matching.content}"/>
-        </section>
+            <div class="mb-6 p-4 border rounded bg-gray-50">
+                <h2 class="text-lg font-semibold mb-2">자녀 정보</h2>
+                <p><strong>이름:</strong>
+                    <span th:text="${matching.child.name}"></span>
+                </p>
+                <p><strong>성별:</strong>
+                    <span th:switch="${matching.child.gender}">
+                        <span th:case="'남'">남자</span>
+                        <span th:case="'여'">여자</span>
+                    </span>
+                </p>
+                <p><strong>나이:</strong>
+                    <span th:text="${matching.child.age}"></span>세
+                </p>
+                <p><strong>신장:</strong>
+                    <span th:text="${matching.child.height}"></span>
+                </p>
+                <p><strong>체중:</strong>
+                    <span th:text="${matching.child.weight}"></span>
+                </p>
+            </div>
+
+            <p><strong>내용</strong></p>
+            <div class="mt-2 p-2 bg-gray-50 rounded mb-5"
+                 th:text="${matching.content}">
+            </div>
+
+        <!-- 문진 질문/답변 -->
+        <details class="mb-6 border rounded">
+            <summary class="px-4 py-2 bg-gray-100 cursor-pointer">
+                문진 질문/답변
+            </summary>
+            <div class="p-4 space-y-4 bg-white">
+                <div th:each="ans : ${matching.answers}">
+                    <p class="font-semibold" th:text="${ans.question}"></p>
+                    <p class="ml-2" th:text="${ans.answer}"></p>
+                    <hr/>
+                </div>
+            </div>
+        </details>
 
         <!-- 첨부 이미지 -->
-        <div th:if="${photos.size()>0}" class="mb-6">
+        <div th:if="${photos.size() > 0}" class="mb-6">
             <h2 class="font-semibold mb-2">첨부 이미지</h2>
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div th:each="fileName : ${photos}">
@@ -43,24 +82,15 @@
             <div id="image-modal"
                  class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
                 <button id="image-modal-close"
-                        class="absolute top-4 right-4 text-white text-2xl font-bold">&times;</button>
+                        class="absolute top-4 right-4 text-white text-2xl font-bold">
+                    &times;
+                </button>
                 <img id="image-modal-img" class="max-h-[90%] max-w-[90%] rounded shadow-lg"/>
             </div>
         </div>
+        </section>
 
-        <!-- 문진 질문/답변 -->
-        <details class="mb-6 border rounded">
-            <summary class="px-4 py-2 bg-gray-100 cursor-pointer">문진 질문/답변</summary>
-            <div class="p-4 space-y-4 bg-white">
-                <div th:each="ans : ${matching.answers}">
-                    <p class="font-semibold" th:text="${ans.question}"/>
-                    <p class="ml-2"      th:text="${ans.answer}"/>
-                    <hr/>
-                </div>
-            </div>
-        </details>
-
-        <!-- 전문가 배정 폼 (REQUESTED) -->
+        <!-- 전문가 배정 폼 -->
         <div th:if="${matching.status == T(com.example.demo.enums.MatchingStatus).REQUESTED}"
              class="mb-6 border p-4 rounded bg-yellow-50">
             <h2 class="text-xl font-semibold mb-2">전문가 배정</h2>
@@ -74,11 +104,13 @@
                 <label for="expert" class="block font-semibold">전문가 선택</label>
                 <select id="expert" name="expertId"
                         required class="w-full border p-2 rounded">
-                    <option value="" disabled selected>배정할 전문가를 선택하세요</option>
-                    <!-- controller 에서 넘긴 experts 그대로 출력 -->
+                    <option value="" disabled selected>
+                        배정할 전문가를 선택하세요
+                    </option>
                     <option th:each="e : ${experts}"
                             th:value="${e.id}"
-                            th:text="${e.users.name + ' (' + e.users.nickname + ')'}"/>
+                            th:text="${e.users.name + ' (' + e.users.nickname + ')'}">
+                    </option>
                 </select>
 
                 <button type="submit"
@@ -95,14 +127,17 @@
 
             <div th:if="${#lists.isEmpty(expertAnswers)}"
                  class="p-4 bg-gray-50 rounded">
-                <p class="text-gray-600">아직 전문가가 답변하지 않았습니다.</p>
+                <p class="text-gray-600">
+                    아직 전문가가 답변하지 않았습니다.
+                </p>
             </div>
 
             <div th:each="ea : ${expertAnswers}"
                  class="border p-4 rounded bg-green-50 mt-4">
-                <p th:text="${ea.content}"/>
+                <p th:text="${ea.content}"></p>
                 <p class="text-sm text-gray-500 mt-2"
-                   th:text="${#temporals.format(ea.createdAt,'yyyy-MM-dd HH:mm')}"/>
+                   th:text="${#temporals.format(ea.createdAt,'yyyy-MM-dd HH:mm')}">
+                </p>
             </div>
         </div>
     </div>
@@ -110,23 +145,23 @@
     <!-- 이미지 모달 스크립트 -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-          const modal = document.getElementById('image-modal');
-          const modalImg = document.getElementById('image-modal-img');
-          const btnClose = document.getElementById('image-modal-close');
-          document.querySelectorAll('.thumbnail').forEach(el => {
-            el.addEventListener('click', () => {
-              modalImg.src = el.dataset.full;
-              modal.classList.remove('hidden');
-              modal.classList.add('flex');
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('image-modal-img');
+            const btnClose = document.getElementById('image-modal-close');
+            document.querySelectorAll('.thumbnail').forEach(el => {
+                el.addEventListener('click', () => {
+                    modalImg.src = el.dataset.full;
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                });
             });
-          });
-          btnClose.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            modalImg.src = '';
-          });
-          modal.addEventListener('click', e => {
-            if (e.target === modal) btnClose.click();
-          });
+            btnClose.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                modalImg.src = '';
+            });
+            modal.addEventListener('click', e => {
+                if (e.target === modal) btnClose.click();
+            });
         });
     </script>
 </th:block>

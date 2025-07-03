@@ -283,16 +283,16 @@
                     }
                 });
 
-                document.querySelector("#photoDeleteBtn").addEventListener("click", async () => {
-
+                  document.querySelector("#photoDeleteBtn").addEventListener("click", async () => {
                     const photoId = modalImage.dataset.photoid;
                     const res = await fetch(`/api/photo/delete?id=${photoId}`);
-
-                    if(res.ok) {
-                        closeModal();
-                        await loadPhotos({reset: true});
+                    if (!res.ok) {
+                      alert("삭제 중 오류 발생");
+                      return;
                     }
-                })
+                    closeModal(modal);
+                    await loadPhotos({ reset: true });
+                  });
 
                 const kebabBtn = document.getElementById("kebabMenuBtn");
                 const kebabDropdown = document.getElementById("kebabDropdown");

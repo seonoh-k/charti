@@ -49,7 +49,7 @@ public class ExpertController {
     @GetMapping("/expert/main")
     public String showExpertPage(Model model) {
         UserDTO user = authService.getLoginUser();
-        List<Matching> totalMatching = matchingService.findAllById(user.getId());
+        List<Matching> totalMatching = matchingService.findAllByExpertId(user.getId());
 
         int matchingCount = 0;
         int endCount = 0;
