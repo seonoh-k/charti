@@ -179,8 +179,14 @@
                     div.textContent = `${item.name} [${item.username}] 
                     [${item.phoneNumber}] [${item.major || "기재X"}]`;
                     div.onclick = () => {
-                        input.value = item[type.value] || item.name;
+                        input.value = item[type.value === "email" ? "username" : type.value] || item.name;
                         suggestions.classList.add('hidden');
+                        
+                        const keyword = input.value.trim();
+            
+                        if (!keyword) return;
+                        window.location.href = `/admin/expert/all?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`;                        
+
                     };
                     suggestions.appendChild(div);
                 });

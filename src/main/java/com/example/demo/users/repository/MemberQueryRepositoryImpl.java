@@ -101,6 +101,8 @@ public class MemberQueryRepositoryImpl implements MemberQueryRepository{
         BooleanExpression baseCond = u.role.eq(Role.ROLE_MEMBER)
                 .and(u.deleted.isFalse());
 
+        OrderSpecifier<?> orderByDeletedAtDesc = u.createdAt.desc();
+
         // 프로젝션 쿼리
         JPAQuery<MemberDTO> query = queryFactory
                 .select(Projections.constructor(MemberDTO.class,
@@ -111,7 +113,9 @@ public class MemberQueryRepositoryImpl implements MemberQueryRepository{
                         u.deleted))
                 .from(u)
                 .join(u.member, m)
-                .where(baseCond);
+                .where(baseCond)
+                .orderBy(u.createdAt.desc());
+
 
         // 전체 카운트
         long total = query.fetchCount();

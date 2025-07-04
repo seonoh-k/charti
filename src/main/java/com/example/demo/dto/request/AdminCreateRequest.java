@@ -13,7 +13,7 @@ public class AdminCreateRequest {
 
     private Long id;
     // 공통
-    @Pattern(regexp = "^[가-힣]{1,}$", message = "이름 한글만 사용할 수 있어요.")
+    @Pattern(regexp = "^[가-힣]{2,8}$", message = "이름은 한글만 사용할 수 있어요.")
     @NotBlank(message = "이름은 필수 입력 값이에요.")
     private String name;
 

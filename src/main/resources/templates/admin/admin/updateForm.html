@@ -32,7 +32,7 @@
                     <input type="email" th:field="*{username}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring text-gray-500 bg-gray-100 cursor-not-allowed" readonly />
                 </div>
                 <div>
-                    <label class="block mb-1 text-sm font-medium">비밀먼호</label>
+                    <label class="block mb-1 text-sm font-medium">비밀번호</label>
                     <input type="password" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring text-gray-500 bg-gray-100 cursor-not-allowed" readonly />
                 </div>
                 <div>
@@ -52,7 +52,7 @@
                 
                 <div class="pt-4 flex flex-row justify-end">
                     <button type="button" onclick="showModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                        수정하기
+                        비밀번호 초기화
                     </button>
                 </div>
             </form>
@@ -64,8 +64,12 @@
 
 
 <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white p-6 rounded shadow-lg text-center w-80">
-        <p class="text-lg mb-4">현재 수정할 수 없습니다.<br/>비밀번호를 초기화 하시겠습니까? </p>
+    <div class="bg-white p-6 rounded shadow-lg text-center w-96">
+        <p class="text-lg mb-4">
+            비밀번호를 초기화 하시겠습니까?
+            <br/>
+            비밀번호는 <strong class="text-red-600">@Charti1234</strong>로 초기화 됩니다.</strong>
+        </p>
         <div class="flex justify-center gap-4">
             <button onclick="confirmUpdate()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">확인</button>
             <button onclick="hideModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">취소</button>
