@@ -13,7 +13,7 @@
                     <h2 th:text="|반갑습니다 ${member.name}님|" class="text-3xl font-bold text-gray-800 mb-4"></h2>
                     <ul class="flex space-x-4 mb-6 text-gray-700">
                         <li th:text="|닉네임 : ${member.nickname}|"></li>
-                        <li th:text="|소지 포인트 : ${member.totalPoint}|"></li>
+                        <li th:text="${member.totalPoint != null ? '소지 포인트 : ' + member.totalPoint : '소지 포인트 : 0'}"></li>
                         <li th:text="|가입일 : ${member.created}|"></li>
                     </ul>
                 </div>
