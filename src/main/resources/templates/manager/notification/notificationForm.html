@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default_layout}">
+      layout:decorate="~{layout/managerLayout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -63,10 +63,10 @@
 
             <div class="p-4 border rounded bg-gray-50 mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <p class="font-semibold text-gray-800">✅ 성공: <span class="text-green-600 font-bold" th:text="${sendResult.successCount}">0</span> 명</p>
-                <p class="font-semibold text-gray-800">❌ 실패: <span class="text-red-600 font-bold" th:text="${sendResult.failedRecipientNames.size()}">0</span> 명</p>
+                <p class="font-semibold text-gray-800">❌ 실패: <span class="text-red-600 font-bold" th:text="${sendResult.failedRecipients.size()}">0</span> 명</p>
             </div>
 
-            <div th:if="${!#lists.isEmpty(sendResult.successfulRecipientNames)}" id="success-accordion" class="border rounded mb-3">
+            <div th:if="${sendResult != null && !#lists.isEmpty(sendResult.successfulRecipients)}" id="success-accordion" class="border rounded mb-3">
                 <div class="accordion-header cursor-pointer bg-gray-100 p-3 flex justify-between items-center hover:bg-gray-200 transition">
                     <span class="font-semibold text-gray-700">성공 내역 확인하기</span>
                     <i class="chevron-icon fa-solid fa-chevron-down"></i>
@@ -75,12 +75,13 @@
                     <ul class="data-list list-disc pl-5 space-y-2 text-gray-600"></ul>
                     <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
                     <div class="hidden-data" style="display:none;">
-                        <span th:each="name : ${sendResult.successfulRecipientNames}" th:text="${name}"></span>
+                         <span th:each="res : ${sendResult.successfulRecipients}"
+                               th:text="${res.parentName + ' 님 [자녀: ' + #strings.listJoin(res.childNames, ', ') + ']'}"></span>
                     </div>
                 </div>
             </div>
 
-            <div th:if="${!#lists.isEmpty(sendResult.failedRecipientNames)}" id="failure-accordion" class="border rounded border-red-200">
+            <div th:if="${sendResult != null && !#lists.isEmpty(sendResult.failedRecipients)}" id="failure-accordion" class="border rounded border-red-200">
                 <div class="accordion-header cursor-pointer bg-red-50 p-3 flex justify-between items-center hover:bg-red-100 transition">
                     <span class="font-semibold text-red-700">실패 내역 확인하기</span>
                     <i class="chevron-icon fa-solid fa-chevron-down text-red-700"></i>
@@ -89,7 +90,8 @@
                     <ul class="data-list list-disc pl-5 space-y-2 text-red-600"></ul>
                     <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
                     <div class="hidden-data" style="display:none;">
-                        <span th:each="name : ${sendResult.failedRecipientNames}" th:text="${name}"></span>
+                        <span th:each="res : ${sendResult.failedRecipients}"
+                              th:text="${res.parentName + ' 님 [자녀: ' + #strings.listJoin(res.childNames, ', ') + ']'}"></span>
                     </div>
                 </div>
             </div>
