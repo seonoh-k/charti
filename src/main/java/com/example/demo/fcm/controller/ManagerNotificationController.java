@@ -2,6 +2,7 @@ package com.example.demo.fcm.controller;
 
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.fcm.dto.AdminFcmSendResultDto;
 import com.example.demo.fcm.dto.FcmSendResultDto;
 import com.example.demo.fcm.service.FcmService;
 import com.example.demo.survey.entity.SurveySet;
@@ -56,7 +57,7 @@ public class ManagerNotificationController {
 
         try {
             // 서비스로부터 발송 결과(DTO)를 받습니다.
-            FcmSendResultDto result = fcmService.sendSurveySetToGroupMembers(managerId, setId);
+            AdminFcmSendResultDto result = fcmService.sendSurveySetToGroupMembers(managerId, setId);
             model.addAttribute("sendResult", result);
             model.addAttribute("message", "✅ 문진 알림이 정상적으로 요청되었습니다. 아래에서 발송 결과를 확인하세요.");
         } catch (Exception e) {

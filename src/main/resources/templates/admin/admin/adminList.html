@@ -81,15 +81,27 @@
             </th:block>
             <!-- 페이징 -->
             <div class="mt-4 flex justify-center gap-2" id="pagination">
-                <!-- ◀ 이전 페이지 -->
+                <!-- 첫페이지 -->
                 <a th:href="@{/admin/admin/all(
-                    page=${result.startPage - 1},
+                    page=1,
                     size=10,
                     sort=${sort},
                     type=${type},
                     keyword=${keyword})}"
-                th:if="${result.startPage - 1 > 0}"
-                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
+                   th:if="${result.page > 1}"
+                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+
+                <!-- ◀ 이전 페이지 -->
+                <a th:href="@{/admin/admin/all(
+                    page=${result.page - 1},
+                    size=10,
+                    sort=${sort},
+                    type=${type},
+                    keyword=${keyword})}"
+                th:if="${result.page > 1}"
+                class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
                     <i class="fas fa-angle-left"></i>
                 </a>
                 
@@ -102,19 +114,31 @@
                     sort=${sort},
                     type=${type},
                     keyword=${keyword})}"
-                th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
-                class="px-3 py-1 rounded hover:bg-blue-500"></a>
+                th:classappend="${p == result.page} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"
+                class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"></a>
                 
                 <!-- ▶ 다음 페이지 -->
                 <a th:href="@{/admin/admin/all(
-                    page=${result.endPage + 1},
+                    page=${result.page + 1},
                     size=10,
                     sort=${sort},
                     type=${type},
                     keyword=${keyword})}"
-                th:if="${result.endPage + 1 < result.totalPages}"
-                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
+                th:if="${result.page < result.totalPages}"
+                class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
                     <i class="fas fa-angle-right"></i>
+                </a>
+
+                <!-- 마지막 페이지 -->
+                <a th:href="@{/admin/admin/all(
+                    page=${result.endPage},
+                    size=10,
+                    sort=${sort},
+                    type=${type},
+                    keyword=${keyword})}"
+                   th:if="${result.page != result.totalPages}"
+                   class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-double-right"></i>
                 </a>
             </div>
         </div>

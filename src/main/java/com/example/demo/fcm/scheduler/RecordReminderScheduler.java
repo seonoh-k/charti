@@ -44,7 +44,7 @@ public class RecordReminderScheduler {
                     .forEach(child -> {
                         String title = child.getName() + "님, 오늘의 기록 문진을 잊으셨네요!";
                         String body  = "지금 바로 문진을 완료해주세요.";
-                        String url   = "http://localhost:8080/survey/record?childId=" + child.getId();
+                        String url   = "/survey/record?childId=" + child.getId();
 
                         fcmService.sendNotification(
                                 null, // sender

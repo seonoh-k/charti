@@ -179,7 +179,7 @@
             filtered.forEach(h => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-<!--                    <td>${h.createdAt.replace('T', ' ').substring(0, 19)}</td>-->
+                <!--  <td>${h.createdAt.replace('T', ' ').substring(0, 19)}</td>-->
                     <td>${h.created}</td>
                     <td>${h.beforePoint} ➡ ${h.afterPoint}</td>
                     <td>${h.changeAmount > 0 ? '+' : ''}${h.changeAmount} [${h.description}]</td>
@@ -220,14 +220,14 @@
             }
         }
 
-<!--        // 페이지 로딩 시, prefillName이 있으면 바로 검색-->
-<!--        document.addEventListener('DOMContentLoaded', () => {-->
-<!--            const prefillName = /*[[${prefillName}]]*/ '';-->
-<!--            if (prefillName) {-->
-<!--                // 검색어 input에 이미 th:value로 채워져 있음-->
-<!--                searchUser();-->
-<!--            }-->
-<!--        });-->
+        <!-- 페이지 로딩 시, prefillName이 있으면 바로 검색-->
+        <!--document.addEventListener('DOMContentLoaded', () => {-->
+            <!--const prefillName = /*[[${prefillName}]]*/ '';-->
+            <!--if (prefillName) {-->
+                <!-- 검색어 input에 이미 th:value로 채워져 있음-->
+                <!--searchUser();-->
+            <!--}-->
+        <!--});-->
 
     </script>
 

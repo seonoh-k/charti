@@ -74,7 +74,7 @@ public class ExpertController {
         model.addAttribute("matchingCount", matchingCount);
         model.addAttribute("endCount", endCount);
 
-        return "/expert/main";
+        return "expert/main";
     }
 
     @GetMapping("/expert/myPage")
