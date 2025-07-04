@@ -77,6 +77,7 @@ public class AuthService {
         Expert expert = Expert.builder()
                 .major(expertInfo.getMajor())
                 .license(expertInfo.getLicense())
+                .career(expertInfo.getCareer())
                 .isApproved(false)
                 .build();
 
@@ -145,26 +146,13 @@ public class AuthService {
         // Expert 저장 (isApproved = false)
         ExpertInfo expertInfo = expertJoinRequest.getExpertInfo();
 
-        Expert expert = new Expert();
+        Expert expert = expertInfoToEntity(expertInfo);
         expert.setUsers(users);
         expert.setAddress(address);
-        expert.setMajor(expertInfo.getMajor());
-        expert.setCareer(expertInfo.getCareer());
-        expert.setLicense(expertInfo.getLicense());
 
         expertRepository.save(expert);
         return AuthStatus.EXPERT_JOIN_REQUEST_SUCCESS;
 
-
-//        Expert expert = this.expertInfoToEntity(expertInfo);
-        // 주소 기입 했으면
-        // 당장은 DB 조회 후 id 값을 추출해 저장하기 때문에 필요없는 로직 상황이 바뀌면 쓸수도 있다
-//        if(addressInfo.getZipNum() != null){
-//            Optional<Address> address = addressService.getAddressByAllFields(addressInfo);
-//            if(address.isPresent()) {
-//                expert.setAddress(address.get());
-//            }
-//        }
     }
 
     /**
