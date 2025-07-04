@@ -145,9 +145,9 @@ public class QnaController {
         if(user.getRole().equals(Role.ROLE_MEMBER.getKey())) {
             return "personalQnaList";
         }else if(user.getRole().equals(Role.ROLE_EXPERT.getKey())) {
-            return "/admin/expert/expertPersonalQnaList";
+            return "admin/expert/expertPersonalQnaList";
         }else {
-            return "/admin/manager/managerPersonalQnaList";
+            return "admin/manager/managerPersonalQnaList";
         }
     }
 
@@ -167,9 +167,9 @@ public class QnaController {
         if(user.getRole().equals(Role.ROLE_MEMBER.getKey())) {
             return "personalQna";
         }else if(user.getRole().equals(Role.ROLE_EXPERT.getKey())) {
-            return "/admin/expert/expertPersonalQna";
+            return "admin/expert/expertPersonalQna";
         }else {
-            return "/admin/manager/managerPersonalQna";
+            return "admin/manager/managerPersonalQna";
         }
 
     }

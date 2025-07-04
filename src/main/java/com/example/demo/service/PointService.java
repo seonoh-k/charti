@@ -68,7 +68,12 @@ public class PointService {
     public int getCurrentPoint(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
-        return member.getTotalPoint();
+        if(member.getTotalPoint() != null) {
+            return member.getTotalPoint();
+        }else {
+            return 0;
+        }
+
     }
 
     /**
@@ -98,7 +103,12 @@ public class PointService {
         int limit = Math.min(10, fullListDesc.size());
 
         List<PointHistoryView> result = new ArrayList<>();
-        int currentTotalPoint = member.getTotalPoint();
+
+        int currentTotalPoint = 0;
+        if(member.getTotalPoint() != null) {
+            currentTotalPoint = member.getTotalPoint();
+        }
+
 
 
         for (int i = 0; i < limit; i++) {
