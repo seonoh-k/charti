@@ -21,10 +21,12 @@
             <div>
                 <label class="block mb-1 text-sm font-medium">이름</label>
                 <input type="text" th:field="*{name}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                <p id="name-error-message" class="text-red-600" ></p>
             </div>
             <div>
                 <label class="block mb-1 text-sm font-medium">닉네임</label>
                 <input type="text" th:field="*{nickname}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring" />
+                <p id="nickname-error-message" class="text-red-600" ></p>
             </div>
 
             <div>
@@ -32,7 +34,7 @@
                 <input type="email" th:field="*{username}" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring text-gray-500 bg-gray-100 cursor-not-allowed" readonly />
             </div>
             <div>
-                <label class="block mb-1 text-sm font-medium">비밀먼호</label>
+                <label class="block mb-1 text-sm font-medium">비밀번호</label>
                 <input type="password" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring text-gray-500 bg-gray-100 cursor-not-allowed" readonly />
             </div>
             <div>
@@ -97,16 +99,20 @@
 
 
         async function updateExpert(){
+            
             const form = document.getElementById("expertForm");
             const formData = new FormData(form);
             const data = {};
-
+            
+            
             formData.forEach((value,key) => {
                 data[key] = value;
                 console.log("Key : "+key+"Value : "+value)
             });
 
-            const res = await fetch(`/admin/expert/${data.id}`, {
+            showToast("전문가 수정 데이터 검사 진행 중", 'success',3000);
+
+            const checkResponse = await fetch(`/admin/check/expert`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -114,15 +120,53 @@
                 body: JSON.stringify(data)
             });
 
-            const result = await res.json();
-            if (result.code === 'OK') {
-                showToast(result.message, 'success',3000);
-                setTimeout(() => {
-                window.location.href = `/admin/expert/${data.id}`;
-                }, 1500);
+            const checkResult = await checkResponse.json();
+
+            if (checkResult.code === 'OK') {
+
+                const updateResponse = await fetch(`/admin/expert/${data.id}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const createResult = await updateResponse.json();
+            
+                if(createResult.code === "OK"){
+                    showToast("전문가 수정 절차 진행 중", 'success',3000);
+
+                    setTimeout(() => {
+                        window.location.href = `/admin/expert/${data.id}`;
+                    }, 1500);
+                } else{
+                    showToast(checkResult.message || '생성 중 오류 발생','error',3000);
+
+                }
+
+                
+
             } else {
-                showToast('error', result.message || '수정 중 오류 발생',3000);
+                showToast(checkResult.message || '생성 중 오류 발생','error',3000);
+                // 1) 기존 에러 메시지 모두 초기화
+                ['name','nickname'].forEach(field => {
+                    const p = document.getElementById(`${field}-error-message`);
+                    if (p) p.textContent = '';
+                });
+
+                // 2) error 배열 순회, 같은 필드에 메시지 여러 개면 첫 번째만 출력
+                checkResult.data.forEach(err => {
+                    const p = document.getElementById(`${err.field}-error-message`);
+
+                    if (p && !p.textContent) {
+                        p.textContent = err.message;
+                    }
+                });
+
             }
+            
+
         }
 
         downloadBtn.addEventListener("click", async () => {
@@ -131,6 +175,7 @@
 
             if(licenseURL == null){
                 alert("파일 이름이 없습니다.");
+                return;
             }
 
             try {

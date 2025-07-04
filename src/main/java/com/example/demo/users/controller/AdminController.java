@@ -79,11 +79,15 @@ public class AdminController {
         Pageable pageable = PageRequest.of(0, 5, sort);
 
         List<ManagerDTO> managerDTOList = managerService.getLatestUnapproving(pageable);
-//        List<ExpertDTO> expertDTOList = expertService.getLatestUnapproving(pageable);
+        List<ExpertDTO> expertDTOList = expertService.getLatestUnapproving(pageable);
         List<MemberDTO> memberDTOList = memberService.getLatestSignups(pageable);
 
+        model.addAttribute("hasExpert",!expertDTOList.isEmpty());
+        model.addAttribute("hasManager",!managerDTOList.isEmpty());
+        model.addAttribute("hasMember",!memberDTOList.isEmpty());
+
         model.addAttribute("managerDTOList",managerDTOList);
-//        model.addAttribute("expertDTOList",expertDTOList);
+        model.addAttribute("expertDTOList",expertDTOList);
         model.addAttribute("memberDTOList",memberDTOList);
 
         return "admin/main";
@@ -139,6 +143,91 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse(GlobalStatus.OK));
     }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.CHECK_VALIDATION_UPDATE_EXPERT)
+    @PostMapping("/admin/check/expert")
+    public ResponseEntity<ApiResponse> checkExpertValidation(@Valid @RequestBody ExpertUpdateRequestByAdmin request,
+                                                            BindingResult bindingResult,
+                                                            Model model) {
+        log.info("[POST] 👨‍💼 request Update Expert Page");
+
+        Long id = request.getId();
+
+        List<ErrorDetail> errors = new ArrayList<ErrorDetail>();
+
+        if (bindingResult.hasErrors()) {
+            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+
+            errors = fieldErrors.stream()
+                    .map(fe -> new ErrorDetail(fe.getField(), fe.getDefaultMessage()))
+                    .collect(Collectors.toList());
+
+            // ⇒ 여러 개의 FieldError를 한꺼번에 가져옴 :contentReference[oaicite:2]{index=2}
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.responseError(GlobalStatus.VALIDATION_FAIL, errors));
+        }
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse(GlobalStatus.OK));
+    }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.CHECK_VALIDATION_UPDATE_MANAGER)
+    @PostMapping("/admin/check/manager")
+    public ResponseEntity<ApiResponse> checkManagerValidation(@Valid @RequestBody ManagerUpdateRequestByAdmin request,
+                                                             BindingResult bindingResult,
+                                                             Model model) {
+        log.info("[POST] 👨‍💼 request Update Manager Page");
+        // 중복검사
+        // 1. 암호화
+        // 2.
+        Long id = request.getId();
+
+        List<ErrorDetail> errors = new ArrayList<ErrorDetail>();
+
+        if (bindingResult.hasErrors()) {
+            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+
+            errors = fieldErrors.stream()
+                    .map(fe -> new ErrorDetail(fe.getField(), fe.getDefaultMessage()))
+                    .collect(Collectors.toList());
+
+            // ⇒ 여러 개의 FieldError를 한꺼번에 가져옴 :contentReference[oaicite:2]{index=2}
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.responseError(GlobalStatus.VALIDATION_FAIL, errors));
+        }
+
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse(GlobalStatus.OK));
+    }
+    @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.CHECK_VALIDATION_UPDATE_MEMBER)
+    @PostMapping("/admin/check/member")
+    public ResponseEntity<ApiResponse> checkMemberValidation(@Valid @RequestBody MemberUpdateRequestByAdmin request,
+                                                              BindingResult bindingResult,
+                                                              Model model) {
+        log.info("[POST] 👨‍💼 request Update Member Page");
+        // 중복검사
+        // 1. 암호화
+        // 2.
+
+
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        if (bindingResult.hasErrors()) {
+            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+
+            errors = fieldErrors.stream()
+                    .map(fe -> new ErrorDetail(fe.getField(), fe.getDefaultMessage()))
+                    .collect(Collectors.toList());
+
+            // ⇒ 여러 개의 FieldError를 한꺼번에 가져옴 :contentReference[oaicite:2]{index=2}
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.responseError(GlobalStatus.VALIDATION_FAIL, errors));
+        }
+
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new ApiResponse(GlobalStatus.OK));
+    }
+
     @AdminActionHistoryAuditLog(category = AdminActionHistoryCategory.CREATE_ADMIN)
     @PostMapping("/admin/create/admin")
     public ResponseEntity<ApiResponse> createAdmin(@RequestBody AdminCreateRequest request,

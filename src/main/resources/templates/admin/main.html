@@ -1,11 +1,112 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/admin_layout">
 <th:block layout:fragment="content">
-    <div class="text-center bg-[#FAF1E3] h-[330px] content-center">
-        <h2 class="pb-3 text-2xl">콘텐츠 1 지워도됨</h2>
-    </div>
-    <div class="text-center bg-[#C5A586] h-[330px] content-center">
-        <h2 class="pb-3 text-2xl">콘텐츠 2 지워도됨</h2>
+    <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
+        <h1 class="text-2xl font-bold mb-4">최근 회원가입자 목록</h1>
+        <th:block th:if="${hasExpert}">
+            <h2 class="text-xl font-bold mb-2">전문가</h2>
+            <table class="w-full table-auto border text-center" id="expert-table">
+                <thead>
+                <tr>
+                    <th class="border px-4 py-2">id</th>
+                    <th class="border px-4 py-2">이름</th>
+                    <th class="border px-4 py-2">이메일</th>
+                    <th class="border px-4 py-2">전화번호</th>
+                    <th class="border px-4 py-2">전공</th>
+                </tr>
+                </thead>
+                <tbody id="table-body">
+                <tr th:each="expert : ${expertDTOList}" 
+                    class="cursor-pointer 
+                            hover:bg-gray-300 
+                            transition-colors 
+                            duration-100 
+                            ease-in-out"
+                            th:onclick="|window.location='@{/admin/expert-applicants}'|">
+                    <td class="border px-4 py-2" th:text="${expert.id}"></td>
+                    <td class="border px-4 py-2" th:text="${expert.name}"></td>
+                    <td class="border px-4 py-2" th:text="${expert.username}"></td>
+                    <td class="border px-4 py-2" th:text="${expert.phoneNumber}"></td>
+                    <td class="border px-4 py-2" th:text="${expert.major}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </th:block>
+        <th:block th:if="${hasManager}">
+            <h2 class="text-xl font-bold mb-2">담당자</h2>
+            <table class="w-full table-auto border text-center" id="manager-table">
+                <thead>
+                <tr>
+                    <th class="border px-4 py-2">id</th>
+                    <th class="border px-4 py-2">이름</th>
+                    <th class="border px-4 py-2">이메일</th>
+                    <th class="border px-4 py-2">전화번호</th>
+                    <th class="border px-4 py-2">그룹이름</th>
+                </tr>
+                </thead>
+                <tbody id="table-body">
+                <tr th:each="manager : ${managerDTOList}"
+                    class="cursor-pointer 
+                        hover:bg-gray-300 
+                        transition-colors 
+                        duration-100 
+                        ease-in-out"
+                        th:onclick="|window.location='@{/admin/manager-applicants}'|">
+
+                    <td class="border px-4 py-2" th:text="${manager.id}"></td>
+                    <td class="border px-4 py-2" th:text="${manager.name}"></td>
+                    <td class="border px-4 py-2" th:text="${manager.username}"></td>
+                    <td class="border px-4 py-2" th:text="${manager.phoneNumber}"></td>
+                    <td class="border px-4 py-2" th:text="${manager.groupName}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </th:block>
+        <th:block th:unless="${hasManager}">
+            <div class="text-center text-gray-500 text-lg py-10">
+                <i class="fa-solid fa-person-breastfeeding fa-2x my-4"></i><br/>
+                담당자 회원이 없습니다.
+            </div>
+        </th:block>
+
+        <th:block th:if="${hasMember}">
+            <h2 class="text-xl font-bold mb-2">회원</h2>
+            <table class="w-full table-auto border text-center" id="member-table">
+                <thead>
+                <tr>
+                    <th class="border px-4 py-2">id</th>
+                    <th class="border px-4 py-2">이름</th>
+                    <th class="border px-4 py-2">이메일</th>
+                    <th class="border px-4 py-2">전화번호</th>
+                    <th class="border px-4 py-2">포인트</th>
+                </tr>
+                </thead>
+                <tbody id="table-body">
+                <tr th:each="member : ${memberDTOList}"
+                    class="cursor-pointer 
+                        hover:bg-gray-300 
+                        transition-colors 
+                        duration-100 
+                        ease-in-out"
+                        th:onclick="|window.location='@{/admin/member/all}'|">
+
+                    <td class="border px-4 py-2" th:text="${member.id}"></td>
+                    <td class="border px-4 py-2" th:text="${member.name}"></td>
+                    <td class="border px-4 py-2" th:text="${member.username}"></td>
+                    <td class="border px-4 py-2" th:text="${member.phoneNumber}"></td>
+                    <td class="border px-4 py-2" th:text="${member.totalPoint == null ? 0 : member.totalPoint}" ></td>
+                </tr>
+                </tbody>
+            </table>
+        </th:block>
+        <th:block th:unless="${hasMember}">
+            <div class="text-center text-gray-500 text-lg py-10">
+                <i class="fa-solid fa-user-large fa-2x my-4"></i><br/>
+                회원이 없습니다.
+            </div>
+        </th:block>
+
+
     </div>
 </th:block>
 </html>
