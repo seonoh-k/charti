@@ -78,4 +78,8 @@ public class GroupSurvey extends BaseEntity implements BaseSurvey {
     public Optional<TargetGroup> getTargetGroup() {
         return Optional.of(targetGroup);
     }
+
+    public TargetGroup getRawTargetGroup() {
+        return this.targetGroup;
+    }
 }

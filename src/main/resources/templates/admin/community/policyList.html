@@ -5,17 +5,17 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>관리자 – 육아정보 게시판</title>
+    <title>관리자 – 정책정보 게시판</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <th:block layout:fragment="content">
 
     <div class="container max-w-5xl mx-auto p-6 bg-white shadow rounded-lg">
 
-        <h2 class="text-2xl font-bold mb-4">육아정보 게시판 관리</h2>
+        <h2 class="text-2xl font-bold mb-4">정책정보 게시판 관리</h2>
 
         <!-- 필터 폼 -->
-        <form th:action="@{/admin/community/parenting/list}" method="get"
+        <form th:action="@{/admin/community/policy/list}" method="get"
               class="flex items-end gap-4 mb-6">
 
             <div class="flex flex-col">
@@ -55,7 +55,7 @@
             <div class="flex flex-col">
                 <label class="text-gray-700 font-medium mb-1">정렬</label>
                 <select name="sort"
-                        class="w-32 h-11 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        class="h-11 w-32 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="popular" th:selected="${sort == 'popular'}">인기순</option>
                     <option value="new"     th:selected="${sort == 'new'}">최신순</option>
                 </select>
@@ -64,7 +64,6 @@
             <button class="h-11 bg-[#374151] text-white font-semibold px-6 py-2 rounded hover:opacity-90 transition">
                 검색</button>
         </form>
-
 
         <!-- 게시글 리스트 -->
         <div class="overflow-x-auto">
@@ -81,26 +80,25 @@
                 </thead>
                 <tbody>
                 <tr th:each="b : ${boards}" class="hover:bg-gray-50">
-                    <td class="px-4 py-3" th:text="${b.category2}">수유</td>
+                    <td class="px-4 py-3" th:text="${b.category2}">카테고리</td>
                     <td class="px-4 py-3 text-[#374151] hover:underline">
-                        <a th:href="@{/admin/community/parenting/{id}(id=${b.communityId})}"
+                        <a th:href="@{/admin/community/policy/{id}(id=${b.communityId})}"
                            th:text="${b.title}">제목</a>
                     </td>
-                    <td class="px-4 py-3" th:text="${b.ageGroup.displayName}">0~1세</td>
-                    <td class="px-4 py-3" th:text="${b.views}">123</td>
+                    <td class="px-4 py-3" th:text="${b.ageGroup.displayName}">연령대</td>
+                    <td class="px-4 py-3" th:text="${b.views}">조회수</td>
                     <td class="px-4 py-3"
-                        th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}">2025.07.03</td>
+                        th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}">작성일</td>
                     <td class="px-4 py-3 space-x-2">
-                        <a th:href="@{/admin/community/parenting/{id}/edit(id=${b.communityId})}"
+                        <a th:href="@{/admin/community/policy/{id}/edit(id=${b.communityId})}"
                            class="text-blue-600">수정</a>
-                        <form th:action="@{/admin/community/parenting/{id}/delete(id=${b.communityId})}"
+                        <form th:action="@{/admin/community/policy/{id}/delete(id=${b.communityId})}"
                               method="post" class="inline"
                               onsubmit="return confirm('삭제하시겠습니까?');">
                             <button class="text-red-600">삭제</button>
                         </form>
                     </td>
                 </tr>
-                <!-- 데이터가 없을 때 -->
                 <tr th:if="${#lists.isEmpty(boards)}">
                     <td colspan="6" class="px-4 py-6 text-center text-gray-500">
                         검색 결과가 없습니다.
@@ -109,63 +107,40 @@
                 </tbody>
             </table>
         </div>
-      
-    <!-- 페이징 -->
-    <nav class="mt-6 flex justify-center space-x-2">
-        <a th:if="${pageData.hasPrevious()}"
-           th:href="@{/admin/community/parenting/list(
-             page=0,
-             subCategory=${subCategory},
-             ageGroup=${ageGroup},
-             keyword=${keyword},
-             sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">
-            <i class="fas fa-angle-double-left"></i>
-        </a>
 
-        <a th:if="${pageData.hasPrevious()}"
-           th:href="@{/admin/community/parenting/list(
-             page=${pageData.number-1},
-             subCategory=${subCategory},
-             ageGroup=${ageGroup},
-             keyword=${keyword},
-             sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">
-            <i class="fas fa-angle-left"></i>
-        </a>
-      
-        <a th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}"
-           th:href="@{/admin/community/parenting/list(
-           page=${i},
-           subCategory=${subCategory},
-           ageGroup=${ageGroup},
-           keyword=${keyword},
-           sort=${sort})}"
-           th:text="${i + 1}"
-           th:classappend="${i == pageData.number} ? 'bg-[#374151] text-white' : 'bg-gray-200'"
-           class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition"/>
+        <!-- 페이징 -->
+        <nav th:if="${pageData.totalElements > 0}"
+             class="mt-6 flex justify-center space-x-2">
+            <a th:if="${pageData.hasPrevious()}"
+               th:href="@{/admin/community/policy/list(
+                 page=${pageData.number-1},
+                 subCategory=${subCategory},
+                 ageGroup=${ageGroup},
+                 keyword=${keyword},
+                 sort=${sort})}"
+               class="px-3 py-1 bg-gray-200 rounded">&lt; 이전</a>
 
-        <a th:if="${pageData.hasNext()}"
-           th:href="@{/admin/community/parenting/list(
-             page=${pageData.number+1},
-             subCategory=${subCategory},
-             ageGroup=${ageGroup},
-             keyword=${keyword},
-             sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">
-            <i class="fas fa-angle-right"></i>
-        </a>
+            <span th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}">
+                <a th:href="@{/admin/community/policy/list(
+                   page=${i},
+                   subCategory=${subCategory},
+                   ageGroup=${ageGroup},
+                   keyword=${keyword},
+                   sort=${sort})}"
+                   th:text="${i + 1}"
+                   th:classappend="${i == pageData.number} ? 'bg-[#374151] text-white' : 'bg-gray-200'"
+                   class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition"/>
+            </span>
 
-        <a th:if="${pageData.hasNext()}"
-           th:href="@{/admin/community/parenting/list(
-             page=${pageData.totalPages - 1},
-             subCategory=${subCategory},
-             ageGroup=${ageGroup},
-             keyword=${keyword},
-             sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">
-            <i class="fas fa-angle-double-right"></i>
-        </a>
-    </nav>
+            <a th:if="${pageData.hasNext()}"
+               th:href="@{/admin/community/policy/list(
+                 page=${pageData.number+1},
+                 subCategory=${subCategory},
+                 ageGroup=${ageGroup},
+                 keyword=${keyword},
+                 sort=${sort})}"
+               class="px-3 py-1 bg-gray-200 rounded">다음 &gt;</a>
+        </nav>
+    </div>
 </th:block>
 </html>

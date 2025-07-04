@@ -74,6 +74,7 @@ public class ParentingBoardAdminController {
                 .collect(Collectors.toList());
         model.addAttribute("commentList", commentsPage.getContent());
         model.addAttribute("commentNicknames", commentNicknames);
+        model.addAttribute("commentPageData",  commentsPage);
 
         return "admin/community/parentingDetail";
     }
