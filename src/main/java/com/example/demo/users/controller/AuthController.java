@@ -12,6 +12,7 @@ import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.entity.Address;
 import com.example.demo.entity.Group;
 import com.example.demo.entity.LoginHistory;
+import com.example.demo.enums.SurveyCategory;
 import com.example.demo.enums.TargetGroup;
 import com.example.demo.exception.JwtTokenFormatInvalidException;
 import com.example.demo.exception.JwtTokenNotFoundException;
@@ -767,8 +768,13 @@ public class AuthController {
         return "joinForm";
     }
     @GetMapping("/expertJoinForm")
-    public String showExpertJoinForm() {
+    public String showExpertJoinForm(Model model) {
         log.info("[GET] 🟢 전문가 회원가입 폼 요청");
+        // ALL을 제외한 4개를 그대로 내려주거나, values() 전체를 내려줘도 됩니다.
+        model.addAttribute("majorList",
+                Arrays.stream(SurveyCategory.values())
+                        .filter(sc -> sc != SurveyCategory.ALL && sc != SurveyCategory.VARIOUS)
+                        .toList());
         return "expertJoin";
     }
     @GetMapping("/managerJoinForm")

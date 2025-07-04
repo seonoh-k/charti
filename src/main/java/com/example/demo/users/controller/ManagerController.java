@@ -9,6 +9,7 @@ import com.example.demo.service.AddressService;
 import com.example.demo.service.GroupService;
 import com.example.demo.users.service.*;
 import com.google.firebase.auth.FirebaseAuthException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -32,9 +34,7 @@ public class ManagerController {
 
     private final AuthService authService;
     private final ManagerService managerService;
-    private final UserService userService;
     private final AddressService addressService;
-    private final FirebaseService firebaseService;
     private final ChildService childService;
     private final GroupService groupService;
     private final FcmHistoryService historyService;
@@ -107,14 +107,21 @@ public class ManagerController {
     }
     @PostMapping("/manager/update")
     public String updateManager(
-            @ModelAttribute ManagerUpdateRequest req,
+            @Valid @ModelAttribute ManagerUpdateRequest req,
+            BindingResult bindingResult,
             Authentication authentication,
             RedirectAttributes rttr) {
 
+        // 1. 유효성 검사 실패 시 바로 리다이렉트 + 에러메시지 전달
+        if (bindingResult.hasErrors()) {
+            // 모든 에러 메시지 중 첫번째 에러만 전달
+            String msg = bindingResult.getFieldError() != null ?
+                    bindingResult.getFieldError().getDefaultMessage() : "입력값을 확인해주세요.";
+            rttr.addFlashAttribute("error", msg);
+            return "redirect:/manager/myPage";
+        }
+
         String uid = authentication.getPrincipal().toString();
-        log.info("📞 /manager/update정보 이름 : {}", req.getName());
-        log.info("📞 /manager/update정보 닉네임 : {}", req.getNickname());
-        log.info("📞 /manager/update정보 전화번호 : {}", req.getPhoneNumber());
         try {
             managerService.updateManager(req, uid);
             rttr.addFlashAttribute("msg", "정보가 성공적으로 수정되었습니다.");

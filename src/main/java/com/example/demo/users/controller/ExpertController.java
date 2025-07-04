@@ -5,6 +5,7 @@ import com.example.demo.dto.ExpertDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.request.ExpertUpdateRequest;
 import com.example.demo.enums.MatchingStatus;
+import com.example.demo.enums.SurveyCategory;
 import com.example.demo.matching.entity.Matching;
 import com.example.demo.matching.service.MatchingService;
 import com.example.demo.service.AddressService;
@@ -13,6 +14,7 @@ import com.example.demo.users.repository.ExpertRepository;
 import com.example.demo.users.repository.UserRepository;
 import com.example.demo.users.service.*;
 import com.google.firebase.auth.FirebaseAuthException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -29,6 +32,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,9 +42,6 @@ import java.util.UUID;
 public class ExpertController {
 
     private final ExpertService expertService;
-    private final FirebaseService firebaseService;
-    private final ExpertRepository expertRepository;
-    private final UserRepository usersRepository;
     private final AuthService authService;
     private final AddressService addressService;
     private final MatchingService matchingService;
@@ -84,22 +85,33 @@ public class ExpertController {
         ExpertDTO expertDTO = expertService.getExpertByIdWithAddress(userDTO.getId());
         AddressDTO address = addressService.getAddressByUid(userDTO.getUuid());
         expertDTO.setAddress(address);
-                model.addAttribute("userInfo", expertDTO);
+        model.addAttribute("majorList",
+                Arrays.stream(SurveyCategory.values())
+                        .filter(sc -> sc != SurveyCategory.ALL && sc != SurveyCategory.VARIOUS)
+                        .toList());
+        model.addAttribute("userInfo", expertDTO);
 
         return "expert/myPage";
     }
 
     @PostMapping("/expert/update")
     public String updateManager(
-            @ModelAttribute ExpertUpdateRequest req,
+            @Valid @ModelAttribute ExpertUpdateRequest req,
+            BindingResult bindingResult,
             Authentication authentication,
             RedirectAttributes rttr,
             @RequestParam("file") MultipartFile file) throws IOException {
 
+        // 1. 유효성 검사 실패 시 바로 리다이렉트 + 에러메시지 전달
+        if (bindingResult.hasErrors()) {
+            // 모든 에러 메시지 중 첫번째 에러만 전달
+            String msg = bindingResult.getFieldError() != null ?
+                    bindingResult.getFieldError().getDefaultMessage() : "입력값을 확인해주세요.";
+            rttr.addFlashAttribute("error", msg);
+            return "redirect:/expert/myPage";
+        }
+
         String uid = authentication.getPrincipal().toString();
-        log.info("📞 /manager/update정보 이름 : {}", req.getName());
-        log.info("📞 /manager/update정보 닉네임 : {}", req.getNickname());
-        log.info("📞 /manager/update정보 전화번호 : {}", req.getPhoneNumber());
 
         if(!file.isEmpty()) {
             urlService.deleteFile("license/" + req.getLicense());
