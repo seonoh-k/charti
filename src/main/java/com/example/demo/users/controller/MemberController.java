@@ -207,28 +207,29 @@ public class MemberController {
 
     @PostMapping("/member/update")
     public String updateMemberInfo(
-            @ModelAttribute UserUpdateRequest req,
+            @Valid @ModelAttribute UserUpdateRequest req,
+            BindingResult bindingResult,
             Authentication authentication,
             RedirectAttributes rttr) {
 
+        // 1. 유효성 검사 실패 시 바로 리다이렉트 + 에러메시지 전달
+        if (bindingResult.hasErrors()) {
+            // 모든 에러 메시지 중 첫번째 에러만 전달
+            String msg = bindingResult.getFieldError() != null ?
+                    bindingResult.getFieldError().getDefaultMessage() : "입력값을 확인해주세요.";
+            rttr.addFlashAttribute("error", msg);
+            return "redirect:/member/myPage";
+        }
+
         // 1. 인증된 유저 정보 확인
         String uid = authentication.getPrincipal().toString();
-
-        // 2. 유효성 검사 (빈 값 체크 등)
-        if (req.getName() == null || req.getName().isBlank() ||
-                req.getNickname() == null || req.getNickname().isBlank() ||
-                req.getPhoneNumber() == null || req.getPhoneNumber().isBlank() ||
-                req.getAddressId() == null) {
-            rttr.addFlashAttribute("msg", "입력값을 모두 입력해주세요.");
-            return "redirect:/member/myPage";  // 다시 마이페이지로
-        }
 
         // 3. 서비스 호출 (실제 정보 수정)
         try {
             userService.updateMember(req, uid);
             rttr.addFlashAttribute("msg", "정보가 성공적으로 수정되었습니다.");
         } catch (Exception e) {
-            rttr.addFlashAttribute("msg", "수정 중 오류 발생: " + e.getMessage());
+            rttr.addFlashAttribute("error", "수정 중 오류 발생: " + e.getMessage());
         }
 
         // 4. 리다이렉트(페이지 새로고침)
