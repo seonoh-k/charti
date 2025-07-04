@@ -34,6 +34,8 @@ public interface GroupSurveyRepository extends JpaRepository<GroupSurvey, Long> 
 
     List<GroupSurvey> findByCategoryAndDeletedFalse(SurveyCategory sc);
 
+    Page<GroupSurvey> findByCategoryAndDeletedFalse(SurveyCategory sc, Pageable pageable);
+
 
     @Query("select gs from GroupSurvey gs where gs.targetGroup like concat(:groupPrefix, '%') and gs.deleted = false")
     List<GroupSurvey> findByTargetGroupPrefix(@Param("groupPrefix") String groupPrefix);

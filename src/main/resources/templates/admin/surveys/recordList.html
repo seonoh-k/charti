@@ -71,10 +71,30 @@
 
         <!-- 페이징 -->
         <div class="mt-6 flex justify-center space-x-2">
+            <a th:if="${currentPage > 1}"
+               th:href="@{|/admin/surveys/record?page=1&ageGroup=${selectedAgeGroup}|}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a th:if="${currentPage > 1}" th:href="@{|/admin/surveys/record?page=${currentPage - 1}&ageGroup=${selectedAgeGroup}|}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-left"></i>
+            </a>
             <a th:each="i : ${#numbers.sequence(1, totalPages)}"
                th:href="@{|/admin/surveys/record?page=${i}&ageGroup=${selectedAgeGroup}|}"
                th:text="${i}"
-               th:classappend="${i == currentPage} ? 'font-bold text-blue-600 underline' : 'text-gray-600 hover:text-black'">
+               class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"
+               th:classappend="${i == currentPage} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'">
+            </a>
+            <a th:if="${currentPage != totalPages}"
+               th:href="@{|/admin/surveys/record?page=${currentPage + 1}&ageGroup=${selectedAgeGroup}|}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            <a th:if="${currentPage != totalPages}"
+               th:href="@{|/admin/surveys/record?page=${totalPages}&ageGroup=${selectedAgeGroup}|}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-double-right"></i>
             </a>
         </div>
     </div>

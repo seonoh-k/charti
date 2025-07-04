@@ -46,7 +46,7 @@ public class DailyReminderScheduler {
                     .forEach(child -> {
                         String title = child.getName() + "님, 오늘의 데일리 문진을 잊으셨네요!";
                         String body  = "지금 바로 문진을 완료해주세요.";
-                        String url   = "http://localhost:8080/dailySurvey?childId=" + child.getId();
+                        String url   = "/dailySurvey?childId=" + child.getId();
 
                         fcmService.sendNotification(
                                 null, // sender

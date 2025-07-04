@@ -5,7 +5,7 @@
         <div class="flex justify-between">
             <h1 class="text-2xl font-bold text-gray-800 mb-6">공지사항</h1>
             <a th:href="@{/community/announcement/new}"
-               class="inline-flex mt-2 p-2 h-10 items-center bg-[#7CA48C] active:bg-[#628C73] text-white font-semibold rounded hover:opacity-90 transition">
+               class="inline-flex mt-2 p-2 h-10 items-center bg-[#628C73] active:opacity-90 text-white font-semibold rounded hover:opacity-90 transition">
                 <i class="fas fa-plus mr-2"></i>새 공지 작성
             </a>
         </div>
@@ -44,7 +44,7 @@
             <nav id="pagination"
                  th:data-current-page="${currentPage}"
                  th:data-total-pages="${totalPages}"
-                 class="inline-flex -space-x-px">
+                 class="inline-flex space-x-2">
 
             </nav>
         </div>
@@ -56,42 +56,51 @@
             const current = Number(nav.dataset.currentPage);
             const total = Number(nav.dataset.totalPages);
 
-            function pageBtn(label, page, option = {}) {
-                const {active = false, disabled = false, rounded = ""} = option;
+            function pageBtn(label, page, opts = {}) {
+                const { active = false, disabled = false } = opts;
                 const a = document.createElement("a");
+
+                a.className = "px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"
 
                 if(typeof label === "number") {
                     a.textContent = label;
+                }else if(label === "first") {
+                    const i = document.createElement("i");
+                    i.className = "fas fa-angle-double-left";
+                    a.appendChild(i)
+                }else if(label === "end") {
+                    const i = document.createElement("i");
+                    i.className = "fas fa-angle-double-right";
+                    a.appendChild(i)
                 }else {
                     const i = document.createElement("i");
-                    i.className = label === "left" ? "fa-solid fa-angle-left" : "fa-solid fa-angle-right";
+                    i.className = label === "left" ? "fas fa-angle-left" : "fas fa-angle-right";
                     a.appendChild(i)
                 }
 
-                a.className = "px-3 py-1 border";
-
                 if(active) {
-                    a.classList.add("bg-blue-500", "text-white", "border-blue-500");
+                    a.classList.add("bg-[#E3A67A]", "text-white");
                 }else {
-                    a.classList.add("bg-white", "text-gray-500", "border-gray-300", "hover:bg-gray-100");
+                    a.classList.add("bg-gray-200", "text-[#E3A67A]");
                 }
 
-                if(disabled) {
+                if (disabled) {
                     a.href = "javascript:;";
-                    a.classList.add("cursor-not-allowed", "opacity-50");
-                }else {
-                    a.href = `?page=${page}`;
+                    a.classList.add("hidden");
+                } else {
+                    a.href = buildUrl(page);
+                    a.classList.remove("hidden");
                 }
-
-                if(rounded === "left") a.classList.add("rounded-l-lg");
-                if(rounded === "right") a.classList.add("rounded-r-lg");
 
                 return a;
             }
 
+            nav.appendChild(pageBtn("first", 1, {
+                disabled: current === 1,
+            }));
+
             nav.appendChild(pageBtn("left", current-1, {
                 disabled: current === 1,
-                rounded: "left",
             }));
 
             for(let p=1; p<=total; p++) {
@@ -102,7 +111,10 @@
 
             nav.appendChild(pageBtn("right", current+1, {
                 disabled: current === total,
-                rounded: "right",
+            }));
+
+            nav.appendChild(pageBtn("end", total, {
+                disabled: current === total,
             }));
         })
     </script>

@@ -75,9 +75,8 @@
                     <ul class="data-list list-disc pl-5 space-y-2 text-gray-600"></ul>
                     <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
                     <div class="hidden-data" style="display:none;">
-<!--                        <span th:each="name : ${sendResult.successfulRecipientNames}" th:text="${name}"></span>-->
-                        <span th:each="res : ${sendResult.successfulRecipients}"
-                              th:text="${res.parentName + ' 님 [자녀: ' + #strings.listJoin(res.childNames, ', ') + ']'}"></span>
+                         <span th:each="res : ${sendResult.successfulRecipients}"
+                               th:text="${res.parentName + ' 님 [자녀: ' + #strings.listJoin(res.childNames, ', ') + ']'}"></span>
                     </div>
                 </div>
             </div>
@@ -91,7 +90,6 @@
                     <ul class="data-list list-disc pl-5 space-y-2 text-red-600"></ul>
                     <div class="pagination-controls mt-4 flex justify-center items-center space-x-2 text-sm"></div>
                     <div class="hidden-data" style="display:none;">
-<!--                        <span th:each="name : ${sendResult.failedRecipientNames}" th:text="${name}"></span>-->
                         <span th:each="res : ${sendResult.failedRecipients}"
                               th:text="${res.parentName + ' 님 [자녀: ' + #strings.listJoin(res.childNames, ', ') + ']'}"></span>
                     </div>
