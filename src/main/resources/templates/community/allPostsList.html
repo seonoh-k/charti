@@ -65,12 +65,19 @@
                     <td class="px-4 py-3 text-gray-800"
                         th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}"></td>
                 </tr>
+                <!-- 데이터가 없을 때 -->
+                <tr th:if="${#lists.isEmpty(boards)}">
+                    <td colspan="6" class="px-4 py-6 text-center text-gray-500">
+                        검색 결과가 없습니다.
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
 
         <!-- 페이지네이션 -->
-        <nav class="mt-6 flex justify-center space-x-2">
+        <nav th:if="${pageData.totalElements > 0}"
+             class="mt-6 flex justify-center space-x-2">
             <span th:if="${pageData.hasPrevious()}">
                 <a th:href="@{/community/allPosts/list(page=${pageData.number-1},sort=${sort},keyword=${keyword})}"
                    class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-gray-300 transition">&lt; 이전</a>

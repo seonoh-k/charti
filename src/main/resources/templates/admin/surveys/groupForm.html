@@ -44,6 +44,24 @@
                 </select>
             </label>
 
+            <!-- 대상 그룹 -->
+            <label class="block">
+                <span class="block mb-1">대상 그룹</span>
+                <select name="targetGroup" class="border p-2 rounded w-full" required>
+                    <!-- ALL 옵션 -->
+                    <option th:value="${T(com.example.demo.enums.TargetGroup).ALL.name()}"
+                            th:text="'전체 그룹'"
+                            th:selected="${survey.rawTargetGroup == T(com.example.demo.enums.TargetGroup).ALL}">
+                    </option>
+                    <!-- 실제 enum 옵션들 -->
+                    <option th:each="tg : ${targetGroups}"
+                            th:value="${tg.name()}"
+                            th:text="${tg.displayName}"
+                            th:selected="${survey.rawTargetGroup == tg}">
+                    </option>
+                </select>
+            </label>
+
             <!-- 질문 -->
             <label class="block">
                 <span class="block mb-1">질문</span>

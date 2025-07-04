@@ -5,13 +5,13 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>관리자 – 육아정보 게시글 수정</title>
+    <title>관리자 – 정책정보 게시글 수정</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-3xl mx-auto p-6 bg-white shadow rounded-lg">
-        <h1 class="text-2xl font-bold mb-4">게시글 수정</h1>
-        <form th:action="@{/admin/community/parenting/{id}(id=${board.communityId})}"
+        <h1 class="text-2xl font-bold mb-4" th:text="${board.communityId} == null ? '게시글 작성' : '게시글 수정'">게시글 작성</h1>
+        <form th:action="@{/admin/community/policy/{id}(id=${board.communityId})}"
               th:object="${board}"
               method="post"
               class="space-y-4">
@@ -58,7 +58,9 @@
             <!-- 버튼 -->
             <div class="text-right">
                 <button type="submit"
-                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">저장</button>
+                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    저장
+                </button>
             </div>
         </form>
     </div>

@@ -55,6 +55,17 @@
             </option>
         </select>
 
+        <select th:field="*{targetGroup}"
+                class="border rounded px-2 py-1">
+            <option th:value="${T(com.example.demo.enums.TargetGroup).ALL.name()}"
+                    th:text="'전체 대상'">
+            </option>
+            <option th:each="tg : ${targetOptions}"
+                    th:value="${tg.name()}"
+                    th:text="${tg.displayName}">
+            </option>
+        </select>
+
         <!-- 타입 필터 (변경 없음) -->
         <select th:field="*{type}" class="border rounded px-2 py-1">
             <option value="all">전체 종류</option>

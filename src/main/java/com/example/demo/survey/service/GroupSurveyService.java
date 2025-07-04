@@ -279,21 +279,41 @@ public class GroupSurveyService {
             TargetGroup targetGroup,
             Pageable pageable
     ) {
-        if (ageGroup == AgeGroup.ALL && category == SurveyCategory.ALL) {
-            return groupSurveyRepository
-                    .findByTargetGroupAndDeletedFalse(targetGroup, pageable);
+        boolean allAge    = ageGroup    == AgeGroup.ALL;
+        boolean allCat    = category    == SurveyCategory.ALL;
+        boolean allTarget = targetGroup == TargetGroup.ALL;
+
+        // 1) 전체(필터 전부 무시)
+        if (allAge && allCat && allTarget) {
+            return groupSurveyRepository.findAllByDeletedFalse(pageable);
         }
-        if (ageGroup != AgeGroup.ALL && category == SurveyCategory.ALL) {
-            return groupSurveyRepository
-                    .findByAgeGroupAndTargetGroupAndDeletedFalse(ageGroup, targetGroup, pageable);
+        // 2) 그룹만
+        if (allAge && allCat && !allTarget) {
+            return groupSurveyRepository.findByTargetGroupAndDeletedFalse(targetGroup, pageable);
         }
-        if (ageGroup == AgeGroup.ALL && category != SurveyCategory.ALL) {
-            return groupSurveyRepository
-                    .findByCategoryAndTargetGroupAndDeletedFalse(category, targetGroup, pageable);
+        // 3) 연령만
+        if (!allAge && allCat && allTarget) {
+            return groupSurveyRepository.findByAgeGroupAndDeletedFalse(ageGroup, pageable);
         }
-        // 둘 다 필터
-        return groupSurveyRepository
-                .findByAgeGroupAndCategoryAndTargetGroupAndDeletedFalse(
-                        ageGroup, category, targetGroup, pageable);
+        // 4) **카테고리만**  → 이 줄이 빠지면 “전체 그룹” 분기로도, “연령+카테고리” 분기로도 안 걸러집니다!
+        if (allAge && !allCat && allTarget) {
+            return groupSurveyRepository.findByCategoryAndDeletedFalse(category, pageable);
+        }
+        // 5) 연령+카테고리
+        if (!allAge && !allCat && allTarget) {
+            return groupSurveyRepository.findByAgeGroupAndCategoryAndDeletedFalse(ageGroup, category, pageable);
+        }
+        // 6) 연령+그룹
+        if (!allAge && allCat && !allTarget) {
+            return groupSurveyRepository.findByAgeGroupAndTargetGroupAndDeletedFalse(ageGroup, targetGroup, pageable);
+        }
+        // 7) 카테고리+그룹
+        if (allAge && !allCat && !allTarget) {
+            return groupSurveyRepository.findByCategoryAndTargetGroupAndDeletedFalse(category, targetGroup, pageable);
+        }
+        // 8) 연령+카테고리+그룹
+        return groupSurveyRepository.findByAgeGroupAndCategoryAndTargetGroupAndDeletedFalse(
+                ageGroup, category, targetGroup, pageable
+        );
     }
 }

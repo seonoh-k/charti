@@ -38,6 +38,11 @@ public class SurveySetController {
             .filter(sc -> sc != SurveyCategory.ALL && sc != SurveyCategory.VARIOUS)
             .collect(Collectors.toList());
 
+    // TargetGroup 필터 옵션 (ALL 제외)
+    private final List<TargetGroup> targetOptions = Arrays.stream(TargetGroup.values())
+            .filter(t -> t != TargetGroup.ALL)
+            .collect(Collectors.toList());
+
     // 관리자 리스트 + 필터
     @GetMapping
     public String list(
@@ -49,6 +54,7 @@ public class SurveySetController {
         model.addAttribute("page", page);
         model.addAttribute("ageOptions", ageOptions);
         model.addAttribute("categoryOptions", categoryOptions);
+        model.addAttribute("targetOptions",    targetOptions);
         return "admin/surveys/setList";
     }
 

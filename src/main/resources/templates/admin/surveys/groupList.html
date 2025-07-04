@@ -52,6 +52,24 @@
                 </select>
             </label>
 
+            <label class="flex items-center gap-2">
+                <span>대상 그룹:</span>
+                <select name="targetGroup"
+                        class="border p-2 rounded">
+                    <!-- ALL 옵션 -->
+                    <option th:value="${T(com.example.demo.enums.TargetGroup).ALL.name()}"
+                            th:text="'전체 그룹'"
+                            th:selected="${targetGroup == T(com.example.demo.enums.TargetGroup).ALL}">
+                    </option>
+                    <!-- 실제 옵션 -->
+                    <option th:each="tg : ${targetGroups}"
+                            th:value="${tg.name()}"
+                            th:text="${tg.displayName}"
+                            th:selected="${tg == targetGroup}">
+                    </option>
+                </select>
+            </label>
+
             <button type="submit" class="bg-blue-500 text-white py-1 px-4 rounded">
                 검색
             </button>
@@ -68,6 +86,7 @@
             <tr class="bg-gray-100">
                 <th class="border p-2">연령대</th>
                 <th class="border p-2">카테고리</th>
+                <th class="border p-2">대상 그룹</th>
                 <th class="border p-2">질문</th>
                 <th class="border p-2">수정/삭제</th>
             </tr>
@@ -76,6 +95,13 @@
             <tr th:each="s : ${surveys}" class="hover:bg-gray-50">
                 <td class="border p-2" th:text="${s.ageGroup.displayName}"></td>
                 <td class="border p-2" th:text="${s.category.displayName}"></td>
+                <td class="border p-2"
+                    th:text="${
+      (!s.targetGroup.isPresent() or s.targetGroup.get() == T(com.example.demo.enums.TargetGroup).ALL)
+        ? '전체'
+        : s.targetGroup.get().displayName
+    }">
+                </td>
                 <td class="border p-2" th:text="${s.question}"></td>
                 <td class="border p-2">
                     <a th:href="@{/admin/surveys/group/{id}/edit(id=${s.id})}"
@@ -94,28 +120,33 @@
 
         <!-- 페이징 내비 -->
         <div class="mt-4 flex justify-center gap-2">
+            <!-- 이전 -->
             <a th:if="${surveys.hasPrevious()}"
                th:href="@{/admin/surveys/group(
-                     ageGroup=${ageGroup},
-                     category=${category},
-                     page=${surveys.number-1})}"
+                       ageGroup=${ageGroup},
+                       category=${category},
+                       targetGroup=${targetGroup},
+                       page=${surveys.number-1})}"
                class="px-3 py-1 bg-gray-200 rounded">이전</a>
 
-            <span th:each="i : ${#numbers.sequence(0, surveys.totalPages-1)}"
-                  class="px-2"
+            <!-- 페이지 번호 -->
+            <span th:each="i : ${#numbers.sequence(startPage,endPage)}" class="px-2"
                   th:classappend="${i == surveys.number} ? 'font-bold underline'">
-                <a th:href="@{/admin/surveys/group(
-                             ageGroup=${ageGroup},
-                             category=${category},
-                             page=${i})}"
-                   th:text="${i+1}">1</a>
+              <a th:href="@{/admin/surveys/group(
+                   ageGroup=${ageGroup},
+                   category=${category},
+                   targetGroup=${targetGroup},
+                   page=${i})}"
+                 th:text="${i+1}">1</a>
             </span>
 
+            <!-- 다음 -->
             <a th:if="${surveys.hasNext()}"
                th:href="@{/admin/surveys/group(
-                     ageGroup=${ageGroup},
-                     category=${category},
-                     page=${surveys.number+1})}"
+                       ageGroup=${ageGroup},
+                       category=${category},
+                       targetGroup=${targetGroup},
+                       page=${surveys.number+1})}"
                class="px-3 py-1 bg-gray-200 rounded">다음</a>
         </div>
     </div>
