@@ -104,17 +104,17 @@
             </div>
 
             <!-- 페이지네이션 -->
-            <div th:if="${historyPage.totalPages > 1}" class="px-5 py-5 bg-white border-t flex flex-col xs:flex-row items-center xs:justify-between">
+            <div th:if="${historyPage.totalPages > 1}" class="px-5 py-5 mt-6 bg-white border-t flex flex-col xs:flex-row items-center xs:justify-between">
                 <div class="text-xs xs:text-sm text-gray-900">
                     총 <b th:text="${historyPage.totalElements}"></b> 건
                 </div>
-                <div class="flex items-center">
+                <div class="flex items-center space-x-2 mt-4">
                     <a th:href="${historyPage.first} ? '#' : @{/admin/notification/history(page=0, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
-                       class="px-3 py-1 rounded-md text-sm" th:classappend="${historyPage.first} ? 'text-gray-400' : 'text-gray-700 hover:bg-gray-200'">
+                       class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition" th:classappend="${historyPage.first} ? 'hidden' : 'bg-gray-200 text-[#E3A67A]'">
                         <i class="fas fa-angle-double-left"></i>
                     </a>
                     <a th:href="${historyPage.first} ? '#' : @{/admin/notification/history(page=${historyPage.number-1}, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
-                       class="px-3 py-1 rounded-md text-sm" th:classappend="${historyPage.first} ? 'text-gray-400' : 'text-gray-700 hover:bg-gray-200'">
+                       class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition" th:classappend="${historyPage.first} ? 'hidden' : 'bg-gray-200 text-[#E3A67A]'">
                         <i class="fas fa-angle-left"></i>
                     </a>
 
@@ -124,16 +124,16 @@
                 )}">
                         <a th:href="@{/admin/notification/history(page=${i}, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
                            th:text="${i+1}"
-                           class="px-3 py-1 rounded-md text-sm"
-                           th:classappend="${i == historyPage.number} ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-200'"></a>
+                           class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"
+                           th:classappend="${i == historyPage.number} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"></a>
                     </th:block>
 
                     <a th:href="${historyPage.last} ? '#' : @{/admin/notification/history(page=${historyPage.number+1}, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
-                       class="px-3 py-1 rounded-md text-sm" th:classappend="${historyPage.last} ? 'text-gray-400' : 'text-gray-700 hover:bg-gray-200'">
+                       class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition" th:classappend="${historyPage.last} ? 'hidden' : 'bg-gray-200 text-[#E3A67A]'">
                         <i class="fas fa-angle-right"></i>
                     </a>
                     <a th:href="${historyPage.last} ? '#' : @{/admin/notification/history(page=${historyPage.totalPages-1}, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
-                       class="px-3 py-1 rounded-md text-sm" th:classappend="${historyPage.last} ? 'text-gray-400' : 'text-gray-700 hover:bg-gray-200'">
+                       class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition" th:classappend="${historyPage.last} ? 'hidden' : 'bg-gray-200 text-[#E3A67A]'">
                         <i class="fas fa-angle-double-right"></i>
                     </a>
                 </div>

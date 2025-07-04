@@ -98,25 +98,46 @@
                th:href="@{/admin/surveys/special(
                      ageGroup=${ageGroup},
                      category=${category},
+                     page=0)}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a th:if="${surveys.hasPrevious()}"
+               th:href="@{/admin/surveys/special(
+                     ageGroup=${ageGroup},
+                     category=${category},
                      page=${surveys.number-1})}"
-               class="px-3 py-1 bg-gray-200 rounded">이전</a>
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-left"></i>
+            </a>
 
-            <span th:each="i : ${#numbers.sequence(0, surveys.totalPages-1)}"
-                  class="px-2"
-                  th:classappend="${i == surveys.number} ? 'font-bold underline'">
-                <a th:href="@{/admin/surveys/special(
-                             ageGroup=${ageGroup},
-                             category=${category},
-                             page=${i})}"
-                   th:text="${i+1}">1</a>
-            </span>
+            <a th:each="i : ${#numbers.sequence(T(java.lang.Math).max(0, surveys.number - 4),
+                    T(java.lang.Math).min(surveys.totalPages-1, surveys.number+4))}"
+               th:href="@{/admin/surveys/special(
+                        ageGroup=${ageGroup},
+                        category=${category},
+                        page=${i})}"
+               th:classappend="${i == surveys.number} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"
+               th:text="${i+1}" class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition">
+                1
+            </a>
 
             <a th:if="${surveys.hasNext()}"
                th:href="@{/admin/surveys/special(
                      ageGroup=${ageGroup},
                      category=${category},
                      page=${surveys.number+1})}"
-               class="px-3 py-1 bg-gray-200 rounded">다음</a>
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            <a th:if="${surveys.hasNext()}"
+               th:href="@{/admin/surveys/special(
+                     ageGroup=${ageGroup},
+                     category=${category},
+                     page=${surveys.totalPages - 1})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
         </div>
     </div>
 </th:block>
