@@ -125,7 +125,7 @@
             cat.addEventListener("change", async (e) => {
                 const selected = e.target.value;
 
-                window.location.href = `/qna?category=${selected}&page=1`;
+                window.location.href = `/qnaList?category=${selected}&page=1`;
             })
 
             nav.appendChild(pageBtn("left", current-1, {

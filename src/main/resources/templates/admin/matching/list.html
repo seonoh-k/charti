@@ -11,78 +11,93 @@
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
-<h1 class="text-2xl font-bold mb-4">상담 내역</h1>
+    <h1 class="text-2xl font-bold mb-4">상담 내역</h1>
 
-<!-- 필터 폼 -->
-    <form th:action="@{/admin/matching}" method="get"
-          class="mb-6 flex items-center space-x-2">
-        <label for="status" class="font-semibold">상태:</label>
-        <select id="status" name="status" class="border p-1 rounded">
-            <option th:each="s : ${statuses}"
-                    th:value="${s}"
-                    th:selected="${s == currentStatus}"
-                    th:text="|${s == 'ALL' ? '전체' : T(com.example.demo.enums.MatchingStatus).valueOf(s).displayName}|">
-            </option>
-        </select>
+        <!-- 필터 폼 -->
+        <form th:action="@{/admin/matching}" method="get"
+              class="mb-6 flex items-center space-x-2">
+            <label for="status" class="font-semibold">상태:</label>
+            <select id="status" name="status" class="border p-1 rounded">
+                <option th:each="s : ${statuses}"
+                        th:value="${s}"
+                        th:selected="${s == currentStatus}"
+                        th:text="|${s == 'ALL' ? '전체' : T(com.example.demo.enums.MatchingStatus).valueOf(s).displayName}|">
+                </option>
+            </select>
 
-        <!-- 제목 검색 -->
-        <label for="keyword" class="font-semibold">제목:</label>
-        <input type="text"
-               id="keyword"
-               name="keyword"
-               placeholder="제목 검색"
-               th:value="${keyword}"
-               class="border p-1 rounded"/>
+            <!-- 제목 검색 -->
+            <label for="keyword" class="font-semibold">제목:</label>
+            <input type="text"
+                   id="keyword"
+                   name="keyword"
+                   placeholder="제목 검색"
+                   th:value="${keyword}"
+                   class="border p-1 rounded"/>
 
-        <button type="submit"
-                class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
-            조회
-        </button>
-    </form>
+            <button type="submit"
+                    class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                조회
+            </button>
+        </form>
 
-    <!-- 결과 테이블 -->
-    <table class="min-w-full border-collapse">
-        <thead>
-        <tr class="bg-gray-100">
-            <th class="border p-2">ID</th>
-            <th class="border p-2">자녀</th>
-            <th class="border p-2">카테고리</th>
-            <th class="border p-2">제목</th>
-            <th class="border p-2">상태</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="m : ${matchings}" class="odd:bg-white even:bg-gray-50">
-            <td class="border p-2" th:text="${m.id}">1</td>
-            <td class="border p-2" th:text="${m.child.name}">김철수</td>
-            <td class="border p-2" th:text="${m.category.displayName}">생활습관</td>
-            <td class="border p-2">
-                <a th:href="@{/admin/matching/{id}(id=${m.id})}"
-                   th:text="${m.title}"
-                   class="text-blue-600 hover:underline">제목</a>
-            </td>
-            <td class="border p-2" th:text="${m.status.displayName}"></td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(matchings)}">
-            <td class="border p-2 text-center" colspan="5">조회된 상담이 없습니다.</td>
-        </tr>
-        </tbody>
-    </table>
+        <!-- 결과 테이블 -->
+        <table class="min-w-full border-collapse">
+            <thead>
+            <tr class="bg-gray-100">
+                <th class="border p-2">ID</th>
+                <th class="border p-2">자녀</th>
+                <th class="border p-2">카테고리</th>
+                <th class="border p-2">제목</th>
+                <th class="border p-2">상태</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="m : ${matchings}" class="odd:bg-white even:bg-gray-50">
+                <td class="border p-2" th:text="${m.id}">1</td>
+                <td class="border p-2" th:text="${m.child.name}">김철수</td>
+                <td class="border p-2" th:text="${m.category.displayName}">생활습관</td>
+                <td class="border p-2">
+                    <a th:href="@{/admin/matching/{id}(id=${m.id})}"
+                       th:text="${m.title}"
+                       class="text-blue-600 hover:underline">제목</a>
+                </td>
+                <td class="border p-2" th:text="${m.status.displayName}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(matchings)}">
+                <td class="border p-2 text-center" colspan="5">조회된 상담이 없습니다.</td>
+            </tr>
+            </tbody>
+        </table>
 
-    <!-- 페이징 -->
-    <div class="mt-4 flex justify-center space-x-2">
-        <a th:if="${matchings.hasPrevious()}"
-           th:href="@{/admin/matching(status=${currentStatus},page=${matchings.number-1})}"
-           class="px-2 py-1 border rounded">Prev</a>
-        <span th:each="i : ${#numbers.sequence(0, matchings.totalPages-1)}">
-      <a th:href="@{/admin/matching(status=${currentStatus},page=${i})}"
-         th:text="${i+1}"
-         th:classappend="${i == matchings.number} ? ' font-bold underline' : ''"
-         class="px-2 py-1 border rounded"></a>
-    </span>
-        <a th:if="${matchings.hasNext()}"
-           th:href="@{/admin/matching(status=${currentStatus},page=${matchings.number+1})}"
-           class="px-2 py-1 border rounded">Next</a>
+        <!-- 페이징 -->
+        <div class="mt-4 flex justify-center space-x-2">
+            <a th:if="${matchings.hasPrevious()}"
+               th:href="@{/admin/matching(status=${currentStatus},page=0)}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a th:if="${matchings.hasPrevious()}"
+               th:href="@{/admin/matching(status=${currentStatus},page=${matchings.number-1})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-left"></i>
+            </a>
+            <a th:each="i : ${#numbers.sequence(0, matchings.totalPages-1)}"
+               th:href="@{/admin/matching(status=${currentStatus},page=${i})}"
+               th:text="${i+1}"
+               th:classappend="${i == matchings.number} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"
+               class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition">
+            </a>
+            <a th:if="${matchings.hasNext()}"
+               th:href="@{/admin/matching(status=${currentStatus},page=${matchings.number+1})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            <a th:if="${matchings.hasNext()}"
+               th:href="@{/admin/matching(status=${currentStatus},page=${matchings.totalPages-1})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        </div>
     </div>
 </th:block>
 </html>

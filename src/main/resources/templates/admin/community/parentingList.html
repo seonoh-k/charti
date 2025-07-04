@@ -87,12 +87,25 @@
     <nav class="mt-6 flex justify-center space-x-2">
         <a th:if="${pageData.hasPrevious()}"
            th:href="@{/admin/community/parenting/list(
+             page=0,
+             subCategory=${subCategory},
+             ageGroup=${ageGroup},
+             keyword=${keyword},
+             sort=${sort})}"
+           class="px-3 py-1 bg-gray-200 rounded">
+            <i class="fas fa-angle-double-left"></i>
+        </a>
+
+        <a th:if="${pageData.hasPrevious()}"
+           th:href="@{/admin/community/parenting/list(
              page=${pageData.number-1},
              subCategory=${subCategory},
              ageGroup=${ageGroup},
              keyword=${keyword},
              sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">&lt; 이전</a>
+           class="px-3 py-1 bg-gray-200 rounded">
+            <i class="fas fa-angle-left"></i>
+        </a>
 
         <span th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}">
             <a th:href="@{/admin/community/parenting/list(
@@ -113,7 +126,20 @@
              ageGroup=${ageGroup},
              keyword=${keyword},
              sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">다음 &gt;</a>
+           class="px-3 py-1 bg-gray-200 rounded">
+            <i class="fas fa-angle-left"></i>
+        </a>
+
+        <a th:if="${pageData.hasNext()}"
+           th:href="@{/admin/community/parenting/list(
+             page=${pageData.totalPages - 1},
+             subCategory=${subCategory},
+             ageGroup=${ageGroup},
+             keyword=${keyword},
+             sort=${sort})}"
+           class="px-3 py-1 bg-gray-200 rounded">
+            <i class="fas fa-angle-double-left"></i>
+        </a>
     </nav>
 </th:block>
 </html>

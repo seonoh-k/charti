@@ -60,13 +60,22 @@
             </table>
             <!-- 페이징 -->
             <div class="mt-4 flex justify-center gap-2" id="pagination">
-                <!-- ◀ 이전 페이지 -->
-                <a th:if="${result.startPage > 1}"
-                    th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
-                                                            page=${result.startPage - 1},
+                <!-- 첫페이지 -->
+                <a th:if="${result.page > 1}"
+                   th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
+                                                            page=1,
                                                             size=${result.size})}"
-                    class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
-                ◀
+                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+
+                <!-- ◀ 이전 페이지 -->
+                <a th:if="${result.page > 1}"
+                    th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
+                                                            page=${result.page - 1},
+                                                            size=${result.size})}"
+                    class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-left"></i>
                 </a>
 
                 <!-- 페이지 번호 목록 -->
@@ -75,8 +84,8 @@
                     th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
                                                             page=${p},
                                                             size=${result.size})}"
-                    th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
-                    class="px-3 py-1 rounded hover:bg-blue-500">
+                    th:classappend="${p == result.page} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"
+                    class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition">
                 </a>
 
                 <!-- ▶ 다음 페이지 -->
@@ -84,10 +93,18 @@
                     th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
                                                             page=${result.endPage + 1},
                                                             size=${result.size})}"
-                    class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">
-                ▶
+                    class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-right"></i>
                 </a>
 
+                <!-- 마지막 페이지 -->
+                <a th:if="${result.page != result.totalPages}"
+                   th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
+                                                            page=${result.endPage},
+                                                            size=${result.size})}"
+                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
             </div>
         </th:block>
         <th:block th:unless="${hasChildren}">
