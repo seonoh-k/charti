@@ -124,7 +124,7 @@
                 )}">
                         <a th:href="@{/admin/notification/history(page=${i}, startDate=${#temporals.format(search.startDate, 'yyyy-MM-dd')}, endDate=${#temporals.format(search.endDate, 'yyyy-MM-dd')}, category=${search.category}, senderName=${search.senderName})}"
                            th:text="${i+1}"
-                           class="px-3 py-1 rounded-md text-sm"
+                           class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"
                            th:classappend="${i == historyPage.number} ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-200'"></a>
                     </th:block>
 
