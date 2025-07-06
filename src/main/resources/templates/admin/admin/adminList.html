@@ -14,7 +14,7 @@
 </head>
 <th:block layout:fragment="content">
     <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 mb-8 rounded">
-            <h1 class="text-2xl font-bold mb-4">전문가 목록</h1>
+            <h1 class="text-2xl font-bold mb-4">관리자 목록</h1>
             <!-- 검색바  -->
             <form id="searchForm"
                 th:action="@{/admin/admin/all}"
@@ -205,10 +205,16 @@
                     const div = document.createElement('div');
                     div.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
                     div.textContent = `${item.name} [${item.username}] 
-                    [${item.phoneNumber}] [${item.major || "기재X"}]`;
+                    [${item.phoneNumber}] [${item.position || "기재X"}]`;
                     div.onclick = () => {
-                        input.value = item[type.value] || item.name;
+                    
+                        input.value = item[type.value === "email" ? "username" : type.value] || item.name;
+
                         suggestions.classList.add('hidden');
+                        const keyword = input.value.trim();
+            
+                        if (!keyword) return;
+                        window.location.href = `/admin/admin/all?type=${type.value}&keyword=${encodeURIComponent(keyword)}&sort=${type.value}`;
                     };
                     suggestions.appendChild(div);
                 });

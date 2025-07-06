@@ -169,9 +169,21 @@
                     <!-- 전공 -->
                     <div>
                         <label class="block mb-1 text-sm font-medium">전공</label>
-                        <input type="text" name="major" id="major"
+
+                        <!-- <input type="text" name="major" id="major"
                             th:value="${userInfo.major}"
-                            class="w-full border border-gray-300 rounded px-3 py-2 text-gray-900" />
+                            class="w-full border border-gray-300 rounded px-3 py-2 text-gray-900" /> -->
+
+                    <select name="major" id="major" required
+                                     class="w-full p-2 rounded border">
+                        <option value="">전공 선택</option>
+                        <th:block th:each="item : ${majorList}">
+                            <option th:value="${item.displayName}"
+                                    th:text="${item.displayName}"
+                                    th:selected="${userInfo.major == item.displayName}">
+                            </option>
+                        </th:block>
+                    </select>
                     </div>
                     <!-- 경력 -->
                     <div>
