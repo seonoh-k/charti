@@ -48,20 +48,20 @@
     </ul>
     <div class="mt-6 space-x-2">
         <a th:href="@{|/manager/surveySet/${set.setId}/edit|}"
-           class="bg-yellow-500 text-white px-4 py-1 rounded">수정</a>
+           class="bg-[#374151] text-white px-4 py-1 rounded">수정</a>
 
         <form th:action="@{|/manager/surveySet/${set.setId}/delete|}"
               method="post"
               onsubmit="return confirm('정말 이 문진 세트를 삭제하시겠습니까? 삭제 시 복구할 수 없습니다.');"
               class="inline">
             <input type="hidden" sec:csrfInput/>
-            <button type="submit" class="bg-red-500 text-white px-4 py-1 rounded">
+            <button type="submit" class="bg-gray-400 text-white px-4 py-1 rounded">
                 삭제
             </button>
         </form>
 
         <a th:href="@{/manager/surveySet}"
-           class="bg-gray-500 text-white px-4 py-1 rounded">목록</a>
+           class="bg-[#374151] text-white px-4 py-1 rounded">목록</a>
     </div>
 </div>
 </th:block>

@@ -1,5 +1,3 @@
-
-
 function fetchParentCards(page = 0) {
     fetch(`/api/group/${groupId}/parent-cards?page=${page}&size=5`)
         .then(res => res.json())
@@ -11,7 +9,7 @@ function fetchParentCards(page = 0) {
 
 function renderParentCards(cards) {
     const container = document.getElementById('parentCardList');
-    if(cards.length === 0) {
+    if (cards.length === 0) {
         container.innerHTML = `<div class="text-gray-400 text-center py-10">그룹에 속한 자녀가 없습니다.</div>`;
         return;
     }
@@ -49,13 +47,31 @@ function renderPagination(totalPages, currentPage) {
     }
     let html = '';
     if (currentPage > 0) {
-        html += `<button onclick="fetchParentCards(${currentPage - 1})">이전</button>`;
+        html += `<button onclick="fetchParentCards(0)" 
+                    class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>`;
+
+        html += `<button onclick="fetchParentCards(${currentPage - 1})" 
+                    class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                    <i class="fas fa-angle-left"></i>
+                </button>`;
     }
-    for(let i=0; i<totalPages; i++) {
-        html += `<button class="${i===currentPage?'font-bold underline':''}" onclick="fetchParentCards(${i})">${i+1}</button>`;
+    for (let i = 0; i < totalPages; i++) {
+        html += `<button class="${i === currentPage ? 
+            'px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition bg-[#374151] text-white' : 
+            'px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition bg-gray-200 text-[#374151]'}" 
+            onclick="fetchParentCards(${i})">${i + 1}</button>`;
     }
     if (currentPage < totalPages - 1) {
-        html += `<button onclick="fetchParentCards(${currentPage + 1})">다음</button>`;
+        html += `<button onclick="fetchParentCards(${currentPage + 1})" 
+                    class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                    <i class="fas fa-angle-right"></i>
+                </button>`;
+        html += `<button onclick="fetchParentCards(${totalPages - 1})" 
+                    class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>`;
     }
     container.innerHTML = html;
 }

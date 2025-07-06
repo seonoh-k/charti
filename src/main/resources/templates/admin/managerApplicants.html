@@ -40,14 +40,14 @@
         
             <button id="searchBtn"
                 type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                class="bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </button>
         
             <!-- 리셋 버튼: 폼 리셋 -->
             <button id="resetBtn" 
                 type="button"
-                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
                 <i class="fa-solid fa-rotate-left"></i>
             </button>
         </form>
@@ -91,7 +91,7 @@
             <div class="mt-4 flex justify-end">
                 <button type="button"
                         onclick="showApproveModal()"
-                        class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                        class="bg-[#374151] hover:opacity-90 text-white font-semibold py-2 px-4 rounded">
                     선택 승인
                 </button>
             </div>
@@ -99,40 +99,65 @@
 
         <!-- 페이징 -->
         <div class="mt-4 flex justify-center gap-2" id="pagination">
+            <!-- 첫페이지 -->
+            <a th:href="@{/admin/manager-applicants(
+                    page=1,
+                    size=10,
+                    sort=${sort},
+                    type=${type},
+                    keyword=${keyword})}"
+               th:if="${result.page > 1}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
 
             <!-- ◀ 이전 페이지 -->
             <a th:href="@{/admin/manager-applicants(
-                page=${result.startPage - 1},
-                size=10,
-                sort=${sort},
-                type=${type},
-                keyword=${keyword})}"
-                th:if="${result.startPage - 1 > 0}"
-                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">◀</a>
-                
+                    page=${result.page - 1},
+                    size=10,
+                    sort=${sort},
+                    type=${type},
+                    keyword=${keyword})}"
+               th:if="${result.page > 1}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-left"></i>
+            </a>
+
             <!-- 페이지 번호 목록 -->
             <a th:each="p : ${result.pageList}"
-                th:text="${p}"
-                th:href="@{/admin/manager-applicants(
-                page=${p},
-                size=10,
-                sort=${sort},
-                type=${type},
-                keyword=${keyword})}"
-                th:classappend="${p == result.page} ? 'bg-blue-500 text-white' : 'bg-gray-200'"
-                class="px-3 py-1 rounded hover:bg-blue-500"></a>
-                
+               th:text="${p}"
+               th:href="@{/admin/manager-applicants(
+                    page=${p},
+                    size=10,
+                    sort=${sort},
+                    type=${type},
+                    keyword=${keyword})}"
+               th:classappend="${p == result.page} ? 'bg-[#374151] text-white' : 'bg-gray-200 text-[#374151]'"
+               class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition"></a>
+
             <!-- ▶ 다음 페이지 -->
             <a th:href="@{/admin/manager-applicants(
-                page=${result.endPage + 1},
-                size=10,
-                sort=${sort},
-                type=${type},
-                keyword=${keyword})}"
-                th:if="${result.endPage + 1 < result.totalPages}"
-                class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">▶</a>
+                    page=${result.page + 1},
+                    size=10,
+                    sort=${sort},
+                    type=${type},
+                    keyword=${keyword})}"
+               th:if="${result.page < result.totalPages}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-right"></i>
+            </a>
 
-
+            <!-- 마지막 페이지 -->
+            <a th:href="@{/admin/manager-applicants(
+                    page=${result.endPage},
+                    size=10,
+                    sort=${sort},
+                    type=${type},
+                    keyword=${keyword})}"
+               th:if="${result.page != result.totalPages}"
+               class="px-3 py-1 bg-gray-200 rounded text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
         </div>
     </main>
     </div>

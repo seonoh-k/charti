@@ -41,14 +41,14 @@
             
                 <button id="searchBtn"
                     type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    class="bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
             
                 <!-- 리셋 버튼: 폼 리셋 -->
                 <button id="resetBtn" 
                     type="button"
-                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
                     <i class="fa-solid fa-rotate-left"></i>
                 </button>
             </form>
@@ -92,7 +92,7 @@
                     type=${type},
                     keyword=${keyword})}"
                    th:if="${result.page > 1}"
-                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                   class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                     <i class="fas fa-angle-double-left"></i>
                 </a>
 
@@ -104,7 +104,7 @@
                     type=${type},
                     keyword=${keyword})}"
                    th:if="${result.page > 1}"
-                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                   class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                     <i class="fas fa-angle-left"></i>
                 </a>
 
@@ -117,8 +117,8 @@
                     sort=${sort},
                     type=${type},
                     keyword=${keyword})}"
-                   th:classappend="${p == result.page} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"
-                   class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"></a>
+                   th:classappend="${p == result.page} ? 'bg-[#374151] text-white' : 'bg-gray-200 text-[#374151]'"
+                   class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition"></a>
 
                 <!-- ▶ 다음 페이지 -->
                 <a th:href="@{/admin/member/all(
@@ -128,7 +128,7 @@
                     type=${type},
                     keyword=${keyword})}"
                    th:if="${result.page < result.totalPages}"
-                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                   class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                     <i class="fas fa-angle-right"></i>
                 </a>
 
@@ -140,7 +140,7 @@
                     type=${type},
                     keyword=${keyword})}"
                    th:if="${result.page != result.totalPages}"
-                   class="px-3 py-1 bg-gray-200 text-[#E3A67A] rounded hover:bg-[#E3A67A] hover:text-white transition">
+                   class="px-3 py-1 bg-gray-200 rounded text-[#374151] hover:bg-[#374151] hover:text-white transition">
                     <i class="fas fa-angle-double-right"></i>
                 </a>
             </div>

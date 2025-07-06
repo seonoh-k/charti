@@ -35,7 +35,7 @@
                    class="border p-1 rounded"/>
 
             <button type="submit"
-                    class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                    class="bg-[#374151] text-white px-3 py-1 rounded hover:opacity-90">
                 조회
             </button>
         </form>
@@ -73,28 +73,28 @@
         <div class="mt-4 flex justify-center space-x-2">
             <a th:if="${matchings.hasPrevious()}"
                th:href="@{/admin/matching(status=${currentStatus},page=0)}"
-               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                 <i class="fas fa-angle-double-left"></i>
             </a>
             <a th:if="${matchings.hasPrevious()}"
                th:href="@{/admin/matching(status=${currentStatus},page=${matchings.number-1})}"
-               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                 <i class="fas fa-angle-left"></i>
             </a>
             <a th:each="i : ${#numbers.sequence(0, matchings.totalPages-1)}"
                th:href="@{/admin/matching(status=${currentStatus},page=${i})}"
                th:text="${i+1}"
-               th:classappend="${i == matchings.number} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"
-               class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition">
+               th:classappend="${i == matchings.number} ? 'bg-[#374151] text-white' : 'bg-gray-200 text-[#374151]'"
+               class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition">
             </a>
             <a th:if="${matchings.hasNext()}"
                th:href="@{/admin/matching(status=${currentStatus},page=${matchings.number+1})}"
-               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                 <i class="fas fa-angle-right"></i>
             </a>
             <a th:if="${matchings.hasNext()}"
                th:href="@{/admin/matching(status=${currentStatus},page=${matchings.totalPages-1})}"
-               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                 <i class="fas fa-angle-double-right"></i>
             </a>
         </div>

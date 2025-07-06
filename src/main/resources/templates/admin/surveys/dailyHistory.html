@@ -26,10 +26,10 @@
 <th:block layout:fragment="content">
     <div class="max-w-7xl mx-auto bg-white shadow p-6 mt-8 rounded" id="record-view-container" th:data-api-base-url="@{/admin/surveys/daily/api}" th:data-user-search-url="@{/api/user/search}">
         <div class="flex justify-center mt-3 mb-5 space-x-6">
-            <a href="/admin/surveys/daily" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+            <a href="/admin/surveys/daily" class="bg-[#374151] text-white p-3 rounded-lg w-[150px] text-center hover:opacity-90">
                 문진 목록
             </a>
-            <a href="/admin/surveys/daily/history" class="bg-gray-400 text-white p-3 rounded-lg w-[150px] text-center hover:bg-gray-500">
+            <a href="/admin/surveys/daily/history" class="bg-[#374151] text-white p-3 rounded-lg w-[150px] text-center hover:opcaity-90">
                 문진 이력
             </a>
         </div>
@@ -38,12 +38,12 @@
         <div class="mb-6">
             <label for="searchInput" class="font-semibold">보호자 이름 :</label>
             <input type="text" id="searchInput" class="border rounded p-2 ml-2" />
-            <button onclick="searchParent()" class="ml-2 bg-blue-600 text-white px-4 py-1 rounded">검색</button>
+            <button onclick="searchParent()" class="ml-2 bg-[#374151] text-white px-4 py-1 rounded">검색</button>
         </div>
         <div id="resultBox" class="mb-6 hidden">
             <label for="parentSelect" class="font-semibold">검색 결과:</label>
             <select id="parentSelect" class="border rounded p-2 ml-2"></select>
-            <button onclick="goToHistory()" class="ml-2 bg-green-600 text-white px-4 py-1 rounded">이력 보기</button>
+            <button onclick="goToHistory()" class="ml-2 bg-[#6F91C7] text-white px-4 py-1 rounded">이력 보기</button>
         </div>
 
         <div th:if="${member != null}">
@@ -71,6 +71,20 @@
         </div>
     </div>
 
+    <div id="editModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">문진 답변 수정</h2>
+            <form id="editSurveyForm">
+                <input type="hidden" id="editChildId" name="childId">
+                <input type="hidden" id="editRecordDate" name="recordDate">
+                <div id="editAnswerArea"></div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="cancelEditButton" class="bg-gray-400 text-gray-800 px-4 py-2 rounded hover:bg-gray-500">취소</button>
+                    <button type="submit" id="saveEditButton" class="bg-[#374151] text-white px-4 py-2 rounded hover:opacity-90">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div id="toastMessage" class="toast-message"></div>
 

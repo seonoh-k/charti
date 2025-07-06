@@ -96,7 +96,7 @@
                         th:selected="${selectedChild != null and selectedChild.id == child.id}">
                 </option>
             </select>
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">선택</button>
+            <button type="submit" class="bg-[#7CA48C] text-white px-4 py-2 rounded hover:opacity-90">선택</button>
             <a href="/member/child" class="text-sm text-blue-600 hover:underline">+ 자녀 추가하기</a>
         </form>
 
@@ -113,7 +113,7 @@
              class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
             <p class="font-bold">안내</p>
             <p>선택하신 자녀는 오늘 이미 기록 문진을 작성했습니다. 문진은 자녀당 하루 한 번만 작성할 수 있습니다.</p>
-            <p class="text-sm mt-2">이전 문진 기록은 <a href="/survey/record/history" class="underline text-blue-600 hover:text-blue-800">기록 문진 이력</a>에서 확인하실 수 있습니다.</p>
+            <p class="text-sm mt-2">이전 문진 기록은 <a href="/survey/record/history" class="underline text-[#628C73] hover:opacity-90">기록 문진 이력</a>에서 확인하실 수 있습니다.</p>
         </div>
 
 
@@ -135,7 +135,7 @@
             </div>
 
             <div class="flex justify-end mt-8">
-                <button type="button" id="submitSurveyButton" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+                <button type="button" id="submitSurveyButton" class="bg-[#7CA48C] text-white px-6 py-2 rounded hover:opacity-90">
                     문진 제출
                 </button>
             </div>
@@ -156,10 +156,10 @@
             </div>
 
             <div class="flex justify-end gap-3">
-                <button type="button" id="cancelSubmitButton" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
+                <button type="button" id="cancelSubmitButton" class="bg-gray-400 text-gray-800 px-4 py-2 rounded hover:bg-gray-500">
                     이전으로 돌아가기
                 </button>
-                <button type="button" id="finalSubmitButton" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                <button type="button" id="finalSubmitButton" class="bg-[#7CA48C] text-white px-4 py-2 rounded hover:opacity-90">
                     확인하고 전송하기
                 </button>
             </div>

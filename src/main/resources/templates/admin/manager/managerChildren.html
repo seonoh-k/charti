@@ -65,7 +65,7 @@
                    th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
                                                             page=1,
                                                             size=${result.size})}"
-                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                   class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                     <i class="fas fa-angle-double-left"></i>
                 </a>
 
@@ -74,7 +74,7 @@
                     th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
                                                             page=${result.page - 1},
                                                             size=${result.size})}"
-                    class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                     <i class="fas fa-angle-left"></i>
                 </a>
 
@@ -84,8 +84,8 @@
                     th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
                                                             page=${p},
                                                             size=${result.size})}"
-                    th:classappend="${p == result.page} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"
-                    class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition">
+                    th:classappend="${p == result.page} ? 'bg-[#374151] text-white' : 'bg-gray-200 text-[#374151]'"
+                    class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition">
                 </a>
 
                 <!-- ▶ 다음 페이지 -->
@@ -93,7 +93,7 @@
                     th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
                                                             page=${result.endPage + 1},
                                                             size=${result.size})}"
-                    class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                     <i class="fas fa-angle-right"></i>
                 </a>
 
@@ -102,7 +102,7 @@
                    th:href="@{/admin/manager/{id}/children(id=${managerDTO.id},
                                                             page=${result.endPage},
                                                             size=${result.size})}"
-                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                   class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                     <i class="fas fa-angle-double-right"></i>
                 </a>
             </div>

@@ -92,11 +92,11 @@
                         th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}">2025.07.03</td>
                     <td class="px-4 py-3 space-x-2">
                         <a th:href="@{/admin/community/parenting/{id}/edit(id=${b.communityId})}"
-                           class="text-blue-600">수정</a>
+                           class="text-blue-400">수정</a>
                         <form th:action="@{/admin/community/parenting/{id}/delete(id=${b.communityId})}"
                               method="post" class="inline"
                               onsubmit="return confirm('삭제하시겠습니까?');">
-                            <button class="text-red-600">삭제</button>
+                            <button class="text-red-400">삭제</button>
                         </form>
                     </td>
                 </tr>
@@ -110,62 +110,63 @@
             </table>
         </div>
       
-    <!-- 페이징 -->
-    <nav class="mt-6 flex justify-center space-x-2">
-        <a th:if="${pageData.hasPrevious()}"
-           th:href="@{/admin/community/parenting/list(
-             page=0,
-             subCategory=${subCategory},
-             ageGroup=${ageGroup},
-             keyword=${keyword},
-             sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">
-            <i class="fas fa-angle-double-left"></i>
-        </a>
+        <!-- 페이징 -->
+        <nav class="mt-6 flex justify-center space-x-2">
+            <a th:if="${pageData.hasPrevious()}"
+               th:href="@{/admin/community/parenting/list(
+                 page=0,
+                 subCategory=${subCategory},
+                 ageGroup=${ageGroup},
+                 keyword=${keyword},
+                 sort=${sort})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
 
-        <a th:if="${pageData.hasPrevious()}"
-           th:href="@{/admin/community/parenting/list(
-             page=${pageData.number-1},
-             subCategory=${subCategory},
-             ageGroup=${ageGroup},
-             keyword=${keyword},
-             sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">
-            <i class="fas fa-angle-left"></i>
-        </a>
-      
-        <a th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}"
-           th:href="@{/admin/community/parenting/list(
-           page=${i},
-           subCategory=${subCategory},
-           ageGroup=${ageGroup},
-           keyword=${keyword},
-           sort=${sort})}"
-           th:text="${i + 1}"
-           th:classappend="${i == pageData.number} ? 'bg-[#374151] text-white' : 'bg-gray-200'"
-           class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition"/>
+            <a th:if="${pageData.hasPrevious()}"
+               th:href="@{/admin/community/parenting/list(
+                 page=${pageData.number-1},
+                 subCategory=${subCategory},
+                 ageGroup=${ageGroup},
+                 keyword=${keyword},
+                 sort=${sort})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-left"></i>
+            </a>
 
-        <a th:if="${pageData.hasNext()}"
-           th:href="@{/admin/community/parenting/list(
-             page=${pageData.number+1},
-             subCategory=${subCategory},
-             ageGroup=${ageGroup},
-             keyword=${keyword},
-             sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">
-            <i class="fas fa-angle-right"></i>
-        </a>
+            <a th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}"
+               th:href="@{/admin/community/parenting/list(
+               page=${i},
+               subCategory=${subCategory},
+               ageGroup=${ageGroup},
+               keyword=${keyword},
+               sort=${sort})}"
+               th:text="${i + 1}"
+               th:classappend="${i == pageData.number} ? 'bg-[#374151] text-white' : 'bg-gray-200 text-[#374151]'"
+               class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition"/>
 
-        <a th:if="${pageData.hasNext()}"
-           th:href="@{/admin/community/parenting/list(
-             page=${pageData.totalPages - 1},
-             subCategory=${subCategory},
-             ageGroup=${ageGroup},
-             keyword=${keyword},
-             sort=${sort})}"
-           class="px-3 py-1 bg-gray-200 rounded">
-            <i class="fas fa-angle-double-right"></i>
-        </a>
-    </nav>
+            <a th:if="${pageData.hasNext()}"
+               th:href="@{/admin/community/parenting/list(
+                 page=${pageData.number+1},
+                 subCategory=${subCategory},
+                 ageGroup=${ageGroup},
+                 keyword=${keyword},
+                 sort=${sort})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-right"></i>
+            </a>
+
+            <a th:if="${pageData.hasNext()}"
+               th:href="@{/admin/community/parenting/list(
+                 page=${pageData.totalPages - 1},
+                 subCategory=${subCategory},
+                 ageGroup=${ageGroup},
+                 keyword=${keyword},
+                 sort=${sort})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        </nav>
+    </div>
 </th:block>
 </html>

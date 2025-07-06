@@ -55,7 +55,7 @@
                         </div>
                     </div>
                     <div class="flex flex-row justify-end gap-2 pt-4">
-                        <button type="button" onclick="toggleGroupEdit(true)" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">수정하기</button>
+                        <button type="button" onclick="toggleGroupEdit(true)" class="bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">수정하기</button>
                     </div>
                 </div>
 
@@ -93,7 +93,7 @@
                     <div>
                         <label class="block mb-1 text-sm font-medium">주소</label>
                         <button type="button" id="addressSearchBtn" onclick="openAddressModal()"
-                            class="mb-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                            class="mb-2 bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">
                             주소 검색
                         </button>
                         <input type="text" id="zipNum" class="w-full mb-2 border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" readonly th:value="${groupInfo.address.zipNum}" />
@@ -101,7 +101,7 @@
                         <input type="hidden" id="addressId" name="addressId" th:value="${groupInfo.address.id}" />
                     </div>
                     <div class="flex flex-row justify-end gap-2 pt-4">
-                        <button type="button" onclick="submitGroupEdit()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">저장</button>
+                        <button type="button" onclick="submitGroupEdit()" class="bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">저장</button>
                         <button type="button" onclick="toggleGroupEdit(false)" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
                     </div>
                 </form>
@@ -134,7 +134,7 @@
                 <div class="mb-2"><b>체중:</b> <span id="modalChildWeight"></span></div>
                 <div class="mb-2"><b>고위험군 여부:</b> <span id="modalChildRiskGroup"></span></div>
                 <!-- 필요하면 더 추가 가능! -->
-                <button id="removeChildBtn" class="mt-6 w-full bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2">
+                <button id="removeChildBtn" class="mt-6 w-full bg-gray-400 hover:bg-gray-500 text-white rounded-xl px-4 py-2">
                 그룹에서 제외
                 </button>
             </div>
@@ -147,7 +147,7 @@
                 <div class="flex gap-2 mb-4">
                     <input id="dongInput" type="text" placeholder="동 이름 입력 (최소 2자 이상)"
                         class="flex-1 border border-gray-300 text-gray-900 rounded px-4 py-2 focus:ring-2 focus:ring-purple-500" />
-                    <button onclick="searchAddress()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">검색</button>
+                    <button onclick="searchAddress()" class="bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">검색</button>
                 </div>
                 <div id="addressResult" class="max-h-60 overflow-y-auto border-t border-gray-200 pt-2 space-y-2"></div>
                 <div class="flex justify-end mt-4">
