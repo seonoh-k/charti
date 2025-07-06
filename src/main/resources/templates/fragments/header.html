@@ -21,9 +21,10 @@
                  class="w-[150px] h-auto cursor-pointer"/>
             <nav id="hdNav" class="mt-6">
                 <ul id="hdUl" class="flex gap-6 items-center">
-                    <li><a id="adminLogin" href="/admin/loginForm">관리자 로그인</a></li>
                     <li><a id="joinBtn" href="/JoinForm">회원가입</a></li>
-                    <li><a id="loginBtn" href="/loginForm">로그인</a></li>
+                    <li id="totalLogin">
+                        <a id="loginBtn" href="/loginForm">로그인</a> | <a id="adminLogin" href="/admin/loginForm">관리자</a>
+                    </li>
                     <li><span id="welcomeText" class="hidden text-gray-700 font-semibold"></span></li>
                     <li><a id="mypagenBtn" href="/mypage" class="hidden">마이페이지</a></li>
                     <li><a id="logoutBtn" href="/logout" class="hidden">로그아웃</a></li>
@@ -90,9 +91,8 @@
             })
             .then(user => {
                 // 로그인된 경우 UI 수정
-                document.getElementById("loginBtn")?.classList.add("hidden");
+                document.getElementById("totalLogin")?.classList.add("hidden");
                 document.getElementById("joinBtn")?.classList.add("hidden");
-                document.getElementById("adminLogin")?.classList.add("hidden");
                 const welcomeText = document.getElementById("welcomeText");
                 if (welcomeText) {
                     welcomeText.textContent = `${user.nickname || user.name}님, 환영합니다!`;
@@ -108,9 +108,8 @@
                 // 로그인 안 된 경우: 마이페이지/로그아웃 숨김
                 document.getElementById("mypagenBtn")?.classList.add("hidden");
                 document.getElementById("logoutBtn")?.classList.add("hidden");
-                document.getElementById("loginBtn")?.classList.remove("hidden");
+                document.getElementById("totalLogin")?.classList.remove("hidden");
                 document.getElementById("joinBtn")?.classList.remove("hidden");
-                document.getElementById("adminLogin")?.classList.remove("hidden");
             });
 
         });

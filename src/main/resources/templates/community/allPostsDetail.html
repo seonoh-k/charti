@@ -50,7 +50,7 @@
                     <div th:if="${c.usersId eq currentUserId}" class="ml-4 flex-shrink-0 flex space-x-2">
                         <!-- 수정 버튼 -->
                         <button type="button"
-                                class="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800"
+                                class="flex items-center space-x-1 text-sm text-blue-400 hover:text-blue-500"
                                 th:attr="data-comment-id=${c.id}, data-comment-content=${c.content}"
                                 onclick="openEditModal(
                           this.getAttribute('data-comment-id'),
@@ -66,7 +66,7 @@
                               class="flex items-center space-x-1"
                               onsubmit="return confirm('정말 삭제하시겠습니까?');">
                             <i class="fas fa-trash-alt text-red-500"></i>
-                            <button type="submit" class="text-sm text-red-500 hover:text-red-700">
+                            <button type="submit" class="text-sm text-red-400 hover:text-red-500">
                                 삭제
                             </button>
                         </form>

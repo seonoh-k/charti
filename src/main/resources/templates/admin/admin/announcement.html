@@ -28,15 +28,15 @@
         </div>
 
         <div class="flex justify-center gap-4 mb-6">
-            <a href="/admin/announcement" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">목록</a>
+            <a href="/admin/announcement" class="bg-[#6F91C7] hover:opacity-90 text-white py-2 px-4 rounded">목록</a>
             <a th:href="@{/community/announcement/{id}/edit(id=${anc.id})}"
-               class="inline-flex items-center bg-[#7CA48C] text-white px-4 py-2 rounded hover:opacity-90">
+               class="inline-flex items-center bg-[#374151] text-white px-4 py-2 rounded hover:opacity-90">
                 <i class="fas fa-edit mr-2"></i>수정
             </a>
             <form th:action="@{/community/announcement/{id}/delete(id=${anc.id})}"
                   method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
                 <button type="submit"
-                        class="inline-flex items-center bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                        class="inline-flex items-center bg-gray-400 text-white px-4 py-2 rounded hover:bg-red-600">
                     <i class="fas fa-trash mr-2"></i>삭제
                 </button>
             </form>

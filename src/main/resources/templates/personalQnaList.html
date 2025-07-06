@@ -10,7 +10,7 @@
             <h1 class="text-3xl font-bold text-gray-800 mb-6">문의내역</h1>
             <div class="relative p-4 mb-6">
                 <div class="absolute top-0 right-0 m-3 inline-flex items-center space-x-4">
-                    <a href="/qna/create" class="text-blue-500 text-xl hover:text-blue-600">
+                    <a href="/qna/create" class="text-[#E3A67A] text-xl hover:opacity-90">
                         문의하기
                     </a>
                 </div>
@@ -71,7 +71,7 @@
                 <nav id="pagination"
                      th:data-current-page="${currentPage}"
                      th:data-total-pages="${totalPages}"
-                     class="inline-flex -space-x-px">
+                     class="inline-flex space-x-2">
                 </nav>
             </div>
         </main>
@@ -85,39 +85,46 @@
             const current = Number(nav.dataset.currentPage);
             const total = Number(nav.dataset.totalPages);
 
-            function pageBtn(label, page, option = {}) {
-                const {active = false, disabled = false, rounded = "", category = ""} = option;
+            function pageBtn(label, page, opts = {}) {
+                const { active = false, disabled = false, category = "" } = opts;
                 const a = document.createElement("a");
+
+                a.className = "px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"
 
                 if(typeof label === "number") {
                     a.textContent = label;
+                }else if(label === "first") {
+                    const i = document.createElement("i");
+                    i.className = "fas fa-angle-double-left";
+                    a.appendChild(i)
+                }else if(label === "end") {
+                    const i = document.createElement("i");
+                    i.className = "fas fa-angle-double-right";
+                    a.appendChild(i)
                 }else {
                     const i = document.createElement("i");
-                    i.className = label === "left" ? "fa-solid fa-angle-left" : "fa-solid fa-angle-right";
+                    i.className = label === "left" ? "fas fa-angle-left" : "fas fa-angle-right";
                     a.appendChild(i)
                 }
 
-                a.className = "px-3 py-1 border";
-
                 if(active) {
-                    a.classList.add("bg-blue-500", "text-white", "border-blue-500");
+                    a.classList.add("bg-[#E3A67A]", "text-white");
                 }else {
-                    a.classList.add("bg-white", "text-gray-500", "border-gray-300", "hover:bg-gray-100");
+                    a.classList.add("bg-gray-200", "text-[#E3A67A]");
                 }
 
                 if(disabled) {
                     a.href = "javascript:;";
-                    a.classList.add("cursor-not-allowed", "opacity-50");
+                    a.classList.add("hidden");
                 }else {
                     if(category) {
                         a.href = `?category=${category}&page=${page}`;
+                        a.classList.remove("hidden");
                     }else {
                         a.href = `?page=${page}`;
+                        a.classList.remove("hidden");
                     }
                 }
-
-                if(rounded === "left") a.classList.add("rounded-l-lg");
-                if(rounded === "right") a.classList.add("rounded-r-lg");
 
                 return a;
             }
@@ -128,9 +135,13 @@
                 window.location.href = `/qnaList?category=${selected}&page=1`;
             })
 
+            nav.appendChild(pageBtn("first", 1, {
+                disabled: current === 1,
+                category: selectedCategory
+            }));
+
             nav.appendChild(pageBtn("left", current-1, {
                 disabled: current === 1,
-                rounded: "left",
                 category: selectedCategory
             }));
 
@@ -143,7 +154,11 @@
 
             nav.appendChild(pageBtn("right", current+1, {
                 disabled: current === total,
-                rounded: "right",
+                category: selectedCategory
+            }));
+
+            nav.appendChild(pageBtn("end", total, {
+                disabled: current === total,
                 category: selectedCategory
             }));
         })

@@ -42,7 +42,7 @@
                        class="border p-1 rounded flex-1 min-w-[200px]"/>
 
                 <button type="submit"
-                        class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                        class="bg-[#E3A67A] text-white px-3 py-1 rounded hover:opacity-90">
                     조회
                 </button>
             </form>
@@ -81,20 +81,41 @@
             </table>
 
             <!-- 페이징 -->
-            <div th:if="${matchings.totalPages > 1}"
-                 class="mt-4 flex justify-center space-x-2">
+            <div class="mt-4 flex justify-center space-x-2">
                 <a th:if="${matchings.hasPrevious()}"
-                   th:href="@{/matching(status=${currentStatus},childId=${currentChildId},keyword=${keyword},page=${matchings.number-1})}"
-                   class="px-2 py-1 border rounded">이전</a>
-                <span th:each="i : ${#numbers.sequence(0,matchings.totalPages-1)}">
-                    <a th:href="@{/matching(status=${currentStatus},childId=${currentChildId},keyword=${keyword},page=${i})}"
-                       th:text="${i+1}"
-                       th:classappend="${i==matchings.number} ? ' font-bold underline' : ''"
-                       class="px-2 py-1 border rounded"/>
-                </span>
+                   th:href="@{/matching(status=${currentStatus},childId=${currentChildId},keyword=${keyword},page=0)}"
+                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a th:if="${matchings.hasPrevious()}"
+                   th:href="@{/matching(status=${currentStatus},childId=${currentChildId},keyword=${keyword},page=${matchings.number -1})}"
+                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+
+                <a th:each="i : ${#numbers.sequence(T(java.lang.Math).max(0, matchings.number - 4),
+                    T(java.lang.Math).min(matchings.totalPages - 1, matchings.number+4))}"
+                   th:href="@{/community/parenting/list(
+                        page=${i},
+                        sort=${sort},
+                        subCategory=${subCategory},
+                        ageGroup=${ageGroup},
+                        keyword=${keyword})}"
+                   th:classappend="${i == matchings.number} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"
+                   th:text="${i+1}" class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition">
+                    1
+                </a>
+
                 <a th:if="${matchings.hasNext()}"
                    th:href="@{/matching(status=${currentStatus},childId=${currentChildId},keyword=${keyword},page=${matchings.number+1})}"
-                   class="px-2 py-1 border rounded">다음</a>
+                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a th:if="${matchings.hasNext()}"
+                   th:href="@{/matching(status=${currentStatus},childId=${currentChildId},keyword=${keyword},page=${matchings.totalPages})}"
+                   class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
             </div>
         </main>
     </div>

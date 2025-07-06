@@ -27,7 +27,7 @@
                             <span th:text="${error}"></span>
                         </div>
                     </div>
-                    <button type="button" onclick="openChildAddModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 mt-2">
+                    <button type="button" onclick="openChildAddModal()" class="px-4 py-2 bg-[#8DAE9E] text-white rounded hover:opacity-90 mt-2">
                         자녀 추가
                     </button>
                 </div>
@@ -132,7 +132,7 @@
                             class="w-full p-2 rounded border bg-gray-100 border-gray-300" readonly />
                         </div>
                         <div class="flex gap-2 pt-2 justify-end">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">등록</button>
+                            <button type="submit" class="bg-[#8DAE9E] hover:opacity-90 text-white px-4 py-2 rounded">등록</button>
                             <button type="button" onclick="closeChildAddModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
                         </div>
                     </form>
@@ -161,7 +161,7 @@
                     <div class="flex gap-3 mt-6 justify-end">
                         <button type="button"
                                 onclick="openChildEditModal()"
-                                class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow">
+                                class="bg-[#8DAE9E] hover:opacity-90 text-white px-4 py-2 rounded shadow">
                             수정하기
                         </button>
                         <form id="deleteChildForm" action="/member/child/delete" method="post" style="display:none;">
@@ -169,7 +169,7 @@
                         </form>
                         <button type="button"
                                 onclick="submitDeleteChild()"
-                                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow">
+                                class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded shadow">
                             삭제
                         </button>
                     </div>
@@ -227,7 +227,7 @@
                                 class="w-full p-2 rounded border bg-gray-100 border-gray-300" readonly />
                             <!-- 그룹 찾기 버튼: 필요시! -->
                             <button type="button" onclick="openGroupModal()"
-                                    class="mt-2 px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition">
+                                    class="mt-2 px-4 py-2 bg-[#8DAE9E] text-white text-sm rounded hover:opacity-90 transition">
                             그룹 찾기
                             </button>
                             <input type="hidden" id="editChildId" name="id" />            
@@ -244,12 +244,12 @@
                                 class="w-full p-2 rounded border bg-gray-100 border-gray-300" readonly />
                         </div>
                         <div class="flex gap-2 pt-2 justify-end">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">저장</button>
+                            <button type="submit" class="bg-[#8DAE9E] hover:opacity-90 text-white px-4 py-2 rounded">저장</button>
                             <button type="button"onclick="closeChildEditModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
                             <form id="deleteChildForm" action="/member/child/delete" method="post" style="display:none;">
                                 <input type="hidden" name="id" id="deleteChildId" />
                             </form>
-                            <button type="button" onclick="submitDeleteChild()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">삭제</button>
+                            <button type="button" onclick="submitDeleteChild()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">삭제</button>
                             
                         </div>
                     </form>
@@ -262,13 +262,13 @@
                     <h2 class="text-xl font-bold mb-4">그룹(기관) 검색</h2>
                     <div class="flex gap-2 mb-4">
                         <input id="groupSearchInput" type="text" placeholder="기관 이름 입력" class="flex-grow border px-3 py-2 rounded" />
-                        <button onclick="searchGroup()" class="bg-blue-500 text-white px-4 py-2 rounded">검색</button>
+                        <button onclick="searchGroup()" class="bg-[#8DAE9E] text-white px-4 py-2 rounded">검색</button>
                     </div>
                     <div id="groupResult" class="max-h-60 overflow-y-auto border rounded p-2 text-sm space-y-2">
                         <!-- 검색 결과 리스트 들어감 -->
                     </div>
                     <div class="mt-4 text-right">
-                        <button onclick="closeGroupModal()" class="text-sm text-gray-600 hover:underline">닫기</button>
+                        <button onclick="closeGroupModal()" class="text-sm text-gray-400 hover:underline">닫기</button>
                     </div>
                 </div>
             </div>

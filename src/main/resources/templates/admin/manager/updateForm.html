@@ -59,10 +59,10 @@
                 </div>
         
                 <div class="pt-4 flex flex-row justify-end">
-                    <button type="button" onclick="showModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    <button type="button" onclick="showModal()" class="bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">
                         수정하기
                     </button>
-                    <a th:if="${hasChildren}" th:href="@{'/admin/manager/' + ${managerDTO.id} + '/children'}" class="btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded ml-2">
+                    <a th:if="${hasChildren}" th:href="@{'/admin/manager/' + ${managerDTO.id} + '/children'}" class="btn bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded ml-2">
                         자녀 정보 보기
                     </a>
                 </div>

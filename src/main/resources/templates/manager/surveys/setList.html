@@ -47,11 +47,11 @@
             </select>
 
             <button type="submit"
-                    class="bg-blue-600 text-white px-4 py-1 rounded">
+                    class="bg-[#374151] text-white px-4 py-1 rounded">
                 검색
             </button>
             <a th:href="@{/manager/surveySet/create}"
-               class="bg-green-600 text-white px-4 py-1 rounded">
+               class="bg-[#6F91C7] text-white px-4 py-1 rounded">
                 세트 생성
             </a>
         </form>
@@ -90,7 +90,7 @@
                     th:text="${#temporals.format(set.createdAt,'yyyy.MM.dd')}">작성일</td>
                 <td class="px-2 py-1 border space-x-2">
                     <a th:href="@{|/manager/surveySet/${set.setId}/edit|}"
-                       class="bg-yellow-500 text-white px-3 py-1 rounded">
+                       class="bg-[#374151] text-white px-3 py-1 rounded">
                         수정
                     </a>
                     <form th:action="@{|/manager/surveySet/${set.setId}/delete|}"
@@ -99,7 +99,7 @@
                           class="inline">
                         <input type="hidden" sec:csrfInput/>
                         <button type="submit"
-                                class="bg-red-500 text-white px-3 py-1 rounded">
+                                class="bg-gray-400 text-white px-3 py-1 rounded">
                             삭제
                         </button>
                     </form>
@@ -111,30 +111,54 @@
         <!-- 페이징 -->
         <div class="mt-4 flex justify-center space-x-2">
             <a th:if="${page.hasPrevious()}"
+               th:href="@{/manager/surveySet(page=0,
+                                             keyword=${search.keyword},
+                                             ageGroup=${search.ageGroup},
+                                             category=${search.category},
+                                             targetGroup=${selectedTarget})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a th:if="${page.hasPrevious()}"
                th:href="@{/manager/surveySet(page=${page.number-1},
                                              keyword=${search.keyword},
                                              ageGroup=${search.ageGroup},
                                              category=${search.category},
                                              targetGroup=${selectedTarget})}"
-               class="px-2 py-1 border rounded">이전</a>
-            <span th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
-                <a th:href="@{/manager/surveySet(page=${i},
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-left"></i>
+            </a>
+
+            <a th:each="i : ${#numbers.sequence(T(java.lang.Math).max(0, page.number - 4),
+                    T(java.lang.Math).min(page.totalPages-1, page.number+4))}"
+               th:href="@{/manager/surveySet(page=${i},
                                                   keyword=${search.keyword},
                                                   ageGroup=${search.ageGroup},
                                                   category=${search.category},
                                                   targetGroup=${selectedTarget})}"
-                   th:text="${i + 1}"
-                   th:classappend="${i == page.number} ? 'font-bold underline' : ''"
-                   class="px-2 py-1 border rounded">
-                </a>
-            </span>
+               th:classappend="${i == page.number} ? 'bg-[#374151] text-white' : 'bg-gray-200 text-[#374151]'"
+               th:text="${i+1}" class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition">
+                1
+            </a>
+
             <a th:if="${page.hasNext()}"
                th:href="@{/manager/surveySet(page=${page.number+1},
                                              keyword=${search.keyword},
                                              ageGroup=${search.ageGroup},
                                              category=${search.category},
                                              targetGroup=${selectedTarget})}"
-               class="px-2 py-1 border rounded">다음</a>
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            <a th:if="${page.hasNext()}"
+               th:href="@{/manager/surveySet(page=${page.totalPages-1},
+                                             keyword=${search.keyword},
+                                             ageGroup=${search.ageGroup},
+                                             category=${search.category},
+                                             targetGroup=${selectedTarget})}"
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
         </div>
     </div>
 </th:block>
