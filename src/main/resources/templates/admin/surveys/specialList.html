@@ -52,12 +52,12 @@
                 </select>
             </label>
 
-            <button type="submit" class="bg-blue-500 text-white py-1 px-4 rounded">
+            <button type="submit" class="bg-[#374151] text-white py-1 px-4 rounded">
                 검색
             </button>
 
             <a th:href="@{/admin/surveys/special/new}"
-               class="bg-green-600 text-white px-4 py-1 rounded">
+               class="bg-[#6F91C7] text-white px-4 py-1 rounded">
                 특별 문진 추가
             </a>
 
@@ -79,11 +79,11 @@
                 <td class="border p-2" th:text="${s.question}"></td>
                 <td class="border p-2">
                     <a th:href="@{/admin/surveys/special/{id}/edit(id=${s.id})}"
-                       class="text-blue-600 mr-3 hover:underline">수정</a>
+                       class="text-blue-400 mr-3 hover:underline">수정</a>
                     <form th:action="@{/admin/surveys/special/{id}/delete(id=${s.id})}"
                           method="post" class="inline"
                           onsubmit="return confirm('삭제하시겠습니까?');">
-                        <button type="submit" class="text-red-600 hover:underline">
+                        <button type="submit" class="text-red-400 hover:underline">
                             삭제
                         </button>
                     </form>
@@ -99,7 +99,7 @@
                      ageGroup=${ageGroup},
                      category=${category},
                      page=0)}"
-               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                 <i class="fas fa-angle-double-left"></i>
             </a>
             <a th:if="${surveys.hasPrevious()}"
@@ -107,7 +107,7 @@
                      ageGroup=${ageGroup},
                      category=${category},
                      page=${surveys.number-1})}"
-               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                 <i class="fas fa-angle-left"></i>
             </a>
 
@@ -117,8 +117,8 @@
                         ageGroup=${ageGroup},
                         category=${category},
                         page=${i})}"
-               th:classappend="${i == surveys.number} ? 'bg-[#E3A67A] text-white' : 'bg-gray-200 text-[#E3A67A]'"
-               th:text="${i+1}" class="px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition">
+               th:classappend="${i == surveys.number} ? 'bg-[#374151] text-white' : 'bg-gray-200 text-[#374151]'"
+               th:text="${i+1}" class="px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition">
                 1
             </a>
 
@@ -127,7 +127,7 @@
                      ageGroup=${ageGroup},
                      category=${category},
                      page=${surveys.number+1})}"
-               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                 <i class="fas fa-angle-right"></i>
             </a>
             <a th:if="${surveys.hasNext()}"
@@ -135,7 +135,7 @@
                      ageGroup=${ageGroup},
                      category=${category},
                      page=${surveys.totalPages - 1})}"
-               class="px-3 py-1 rounded bg-gray-200 text-[#E3A67A] hover:bg-[#E3A67A] hover:text-white transition">
+               class="px-3 py-1 rounded bg-gray-200 text-[#374151] hover:bg-[#374151] hover:text-white transition">
                 <i class="fas fa-angle-double-right"></i>
             </a>
         </div>

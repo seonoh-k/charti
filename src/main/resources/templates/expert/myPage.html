@@ -82,13 +82,13 @@
                     <label class="block mb-1 text-sm font-medium">면허 파일</label>
                     <button type="button"
                             th:attr="data-filename=${userInfo.license}"
-                            class="bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1 rounded download-btn">
+                            class="bg-[#6F91C7] hover:opacity-90 text-white text-sm px-3 py-1 rounded download-btn">
                                 다운로드
                     </button>
                 </div>
                     
                     <div class="flex flex-row justify-end gap-2 pt-4">
-                        <button type="button" onclick="toggleUserEdit(true)" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
+                        <button type="button" onclick="toggleUserEdit(true)" class="bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">
                             수정하기
                         </button>
                     </div>
@@ -141,14 +141,14 @@
                             </select>
                             <input id="phone2" type="text" maxlength="4" placeholder="1234" class="p-2 rounded border w-20" pattern="\d*" />
                             <input id="phone3" type="text" maxlength="4" placeholder="5678" class="p-2 rounded border w-20" pattern="\d*" />
-                            <button type="button" id="send-otp-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" onclick="sendSmsOtp()">
+                            <button type="button" id="send-otp-btn" class="px-4 py-2 bg-[#374151] hover:opacity-90 text-white rounded" onclick="sendSmsOtp()">
                                 인증번호 받기
                             </button>
                         </div>
                         <div class="mt-2">
                             <label for="otp" class="block text-sm font-medium mb-1">인증번호</label>
                             <input id="otp" type="text" placeholder="6자리 코드" class="w-full p-2 rounded border" disabled />
-                            <button type="button" id="verify-otp-btn" class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded" onclick="verifySmsOtp()" disabled>
+                            <button type="button" id="verify-otp-btn" class="mt-2 px-4 py-2 bg-[#374151] hover:opacity-90 text-white rounded" onclick="verifySmsOtp()" disabled>
                                 인증 확인
                             </button>
                         </div>
@@ -159,7 +159,7 @@
                     <div>
                         <label class="block mb-1 text-sm font-medium">주소</label>
                         <button type="button" id="addressSearchBtn" onclick="openAddressModal()"
-                            class="mb-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                            class="mb-2 bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">
                             주소 검색
                         </button>
                         <input type="text" id="zipNum" class="w-full mb-2 border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed" readonly th:value="${userInfo.address.zipNum}" />
@@ -189,14 +189,14 @@
                     </div>
 
                     <div class="flex flex-row justify-end gap-2 pb-2">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">저장</button>
+                        <button type="submit" class="bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">저장</button>
                         <button type="button" onclick="toggleUserEdit(false)" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">취소</button>
                     </div>
                 </form>
                 <!-- --------- 비밀번호 변경/회원탈퇴 --------- -->
                 <div class="flex flex-row justify-end gap-2 pt-4">
-                    <button type="button" onclick="openPasswordModal()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">비밀번호 변경</button>
-                    <button type="button" onclick="confirmDelete()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">회원 탈퇴</button>
+                    <button type="button" onclick="openPasswordModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">비밀번호 변경</button>
+                    <button type="button" onclick="confirmDelete()" class="bg-[#374151] hover:opacity-90 text-white px-4 py-2 rounded">회원 탈퇴</button>
                 </div>
             </div>
         </div>
@@ -209,13 +209,13 @@
                 <div class="flex gap-2 mb-4">
                     <input id="dongInput" type="text" placeholder="동 이름 입력 (최소 2자 이상)"
                         class="flex-1 border text-gray-900 rounded px-4 py-2 focus:ring-2 focus:ring-purple-500" />
-                    <button onclick="searchAddress()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">검색</button>
+                    <button onclick="searchAddress()" class="bg-[#374151] text-white px-4 py-2 rounded hover:opacity-90">검색</button>
                 </div>
                 <div id="addressResult" class="max-h-60 overflow-y-auto border-t border-gray-200 pt-2 space-y-2">
                     <!-- 검색 결과 표시 -->
                 </div>
                 <div class="flex justify-end mt-4">
-                    <button onclick="closeAddressModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">닫기</button>
+                    <button onclick="closeAddressModal()" class="bg-gray-400 text-gray-700 px-4 py-2 rounded hover:bg-gray-500">닫기</button>
                 </div>
             </div>
         </div>
@@ -239,8 +239,8 @@
                 </div>
             </form>
             <div class="mt-6 flex justify-between">
-                <button onclick="closePasswordModal()" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">닫기</button>
-                <button onclick="submitPasswordChange()" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">비밀번호 변경</button>
+                <button onclick="closePasswordModal()" class="px-4 py-2 rounded bg-gray-400 hover:bg-gray-500">닫기</button>
+                <button onclick="submitPasswordChange()" class="px-4 py-2 rounded bg-[#374151] text-white hover:opacity-90">비밀번호 변경</button>
             </div>
             </div>
         </div>

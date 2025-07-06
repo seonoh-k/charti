@@ -6,7 +6,7 @@
         <hr class="mb-8 border-gray-300">
 
         <div th:each="faqList : ${faqList}" class="mb-10">
-            <button type="button" class="faq-category w-full text-left px-4 py-3 mb-4 text-xl font-semibold text-blue-600 flex justify-between items-center">
+            <button type="button" class="faq-category w-full text-left px-4 py-3 mb-4 text-xl font-semibold text-[#8DAE9E] flex justify-between items-center">
                 <span th:text="${faqList.category}"></span>
                 <i class="fa-solid fa-chevron-down transition-transform duration-300 faq-icon"></i>
             </button>

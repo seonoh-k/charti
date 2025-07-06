@@ -32,7 +32,7 @@
             <form th:action="@{/admin/community/parenting/{id}/delete(id=${board.communityId})}"
                   method="post"
                   onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                <button class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-red-600">
                     삭제
                 </button>
             </form>
@@ -61,7 +61,7 @@
                 <div class="ml-4 flex-shrink-0 flex space-x-2">
                     <!-- 수정 모달 오픈 버튼 -->
                     <button type="button"
-                            class="text-blue-600 text-sm"
+                            class="text-blue-400 text-sm"
                             th:attr="data-comment-id=${c.id},data-comment-content=${c.content}"
                             onclick="openCommentModal(this)">
                         수정
@@ -71,7 +71,7 @@
                             commentId=${c.id})}"
                           method="post"
                           onsubmit="return confirm('댓글을 삭제하시겠습니까?');">
-                        <button class="text-red-600 text-sm">삭제</button>
+                        <button class="text-red-400 text-sm">삭제</button>
                     </form>
                 </div>
             </div>

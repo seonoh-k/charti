@@ -60,7 +60,7 @@
                                placeholder="제목 검색"
                                class="flex-1 border rounded-l-md px-3 py-2"/>
                         <button id="searchBtn" type="button"
-                                class="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600">
+                                class="bg-[#374151] text-white px-4 py-2 rounded-r-md hover:opacity-90">
                             검색
                         </button>
                     </div>
@@ -158,7 +158,7 @@
                 const { active = false, disabled = false } = opts;
                 const a = document.createElement("a");
 
-                a.className = "px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"
+                a.className = "px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition"
 
                 if(typeof label === "number") {
                     a.textContent = label;
@@ -177,9 +177,9 @@
                 }
 
                 if(active) {
-                    a.classList.add("bg-[#E3A67A]", "text-white");
+                    a.classList.add("bg-[#374151]", "text-white");
                 }else {
-                    a.classList.add("bg-gray-200", "text-[#E3A67A]");
+                    a.classList.add("bg-gray-200", "text-[#374151]");
                 }
 
                 if (disabled) {

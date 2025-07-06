@@ -84,7 +84,7 @@
                 const { active = false, disabled = false, category = "" } = option;
                 const a = document.createElement("a");
 
-                a.className = "px-3 py-1 rounded hover:bg-[#E3A67A] hover:text-white transition"
+                a.className = "px-3 py-1 rounded hover:bg-[#374151] hover:text-white transition"
 
                 if(typeof label === "number") {
                     a.textContent = label;
@@ -103,9 +103,9 @@
                 }
 
                 if(active) {
-                    a.classList.add("bg-[#E3A67A]", "text-white");
+                    a.classList.add("bg-[#374151]", "text-white");
                 }else {
-                    a.classList.add("bg-gray-200", "text-[#E3A67A]");
+                    a.classList.add("bg-gray-200", "text-[#374151]");
                 }
 
                 if(disabled) {

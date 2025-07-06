@@ -5,7 +5,7 @@
         <h2 th:text="${owner.nickname != null ? owner.nickname + '님의 앨범 목록' : owner.name + '님의 앨범 목록'}" class="text-3xl font-semibold text-gray-800"></h2>
         <div class="relative p-4 mb-6">
             <div th:if="${isOwner}" class="absolute top-0 right-0 m-3 inline-flex items-center space-x-4">
-                <button id="albumCreateBtn" class="text-blue-500 text-3xl hover:text-blue-600">
+                <button id="albumCreateBtn" class="text-[#7CA48C] text-3xl hover:opacity-90">
                     <i class="fa-solid fa-square-plus"></i>
                 </button>
             </div>
@@ -75,7 +75,8 @@
                 <input type="file" name="file" id="fileInput" accept="image/*" class="hidden"/>
                 <span id="fileInputLabel">앨범 표지 선택</span>
             </label>
-            <button type="submit" id="albumFormSubmit" class="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
+            <button type="submit" id="albumFormSubmit" class="bg-[#E3A67A] text-white py-2 rounded-md hover:opacity-90 transition-colors">
+                앨범 추가
             </button>
             <div id="result" class="text-center text-sm text-red-500 mt-1"></div>
         </form>
