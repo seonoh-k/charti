@@ -69,7 +69,7 @@
                     <input type="checkbox"
                            th:field="*{surveyIds}"
                            th:value="${s.id}"
-                           th:checked="${#lists.contains(form.surveyIds, s.id)}"
+                           th:checked="${form.surveyIds != null and #lists.contains(form.surveyIds, s.id)}"
                            class="mr-2"/>
                     <span th:text="${s.question}">질문</span>
                     <span class="text-xs text-gray-500"

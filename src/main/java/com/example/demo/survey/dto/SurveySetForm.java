@@ -20,6 +20,6 @@ public class SurveySetForm {
     private String setTitle;
     @NotBlank
     private String type;               // GROUP 또는 SPECIAL
-    private List<Long> surveyIds;
+    private List<Long> surveyIds = new ArrayList<>();
     private TargetGroup targetGroup;
 }
