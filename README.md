@@ -1,15 +1,11 @@
 CHARTI
+운영서버 접속 링크 - https://charti.kr/
 
-- 프로젝트 기한 - 7월 3일까지
 - 서비스 호스팅 - Amazon AWS EC2
-- 데이터베이스 - Amazon AWS RDS (MySQL)
+- 데이터베이스 - AWS RDS (MySQL) -> Cloudtype (MariaDB) 이관
 - 스토리지 - CloudFlare R2 (개체 스토리지)
 
-application.properties 파일에
-spring.datasource.username=user1
-유저 1부터 6까지 있습니다. 2부터 6까지 각자 하나씩 정해주세요.
-
-MVP 모듈화
+모듈
 1. BaseEntity
    - 대부분의 테이블에서 저장하는 상태, 생성일, 삭제일을 공통적으로 관리하기 위해 작성
    - 이 클래스를 상속 받은 엔티티 클래스에는 상태, 생성일, 삭제일을 작성하지 않아도 됨
