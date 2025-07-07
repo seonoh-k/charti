@@ -56,12 +56,8 @@
                            th:text="${b.title}"></a>
                     </td>
                     <td class="px-4 py-3 text-gray-800" th:text="${b.views}"></td>
-                    <!-- usersId null 체크 후 닉네임 또는 '손님' -->
                     <td class="px-4 py-3 text-gray-800"
-                        th:text="${b.usersId != null
-                            ? userService.getMemberEntityById(b.usersId).nickname
-                            : '손님'}">
-                    </td>
+                        th:text="${userService.findNicknameOrDefault(b.usersId)}"></td>
                     <td class="px-4 py-3 text-gray-800"
                         th:text="${#temporals.format(b.createdAt,'yyyy.MM.dd')}"></td>
                 </tr>
