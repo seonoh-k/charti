@@ -102,6 +102,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
+            if(!jwtUtil.validateToken(token)){
+                throw new JwtException("유효하지 않은 JWT 토큰");
+            };
 
             Authentication auth = jwtUtil.getAuthentication(token);
 
